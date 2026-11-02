@@ -1,0 +1,7 @@
+{
+  "$comment": "Windows presets only (the vcpkg toolchain, x64-windows-static): zlib for libzip. macOS and Linux use the system zlib; the MinGW cross-build its own package.",
+  "dependencies": [
+    "zlib"
+  ],
+  "builtin-baseline": "f993fc42532591aeb07328bbe0add868b0629d0f"
+}

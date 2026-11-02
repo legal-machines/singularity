@@ -1,0 +1,102 @@
+/* Who sits in a seat (D-209), as onboarding asks it of a member (tour's
+   Introduce yourself): the photo beside its label and actions, then the
+   fields one under another, with the role and the position on a line. */
+.fields {
+	display: grid;
+	gap: 16px;
+}
+
+.photo {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-bottom: 4px;
+}
+
+.face {
+	display: block;
+	flex: none;
+	padding: 0;
+	line-height: 0;
+	border-radius: 14px;
+}
+
+.face:disabled {
+	cursor: default;
+}
+
+.photoText {
+	display: grid;
+	gap: 4px;
+	min-width: 0;
+}
+
+.photoLabel {
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+.photoActions {
+	display: flex;
+	gap: 16px;
+}
+
+.inline {
+	width: fit-content;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.inline:hover:not(:disabled) {
+	color: var(--ink);
+}
+
+.problem {
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+.pair {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px;
+}
+
+/* An AI colleague's faces, standing in its face's own place while one is
+   chosen (ColleagueProfileFields): the one chosen ringed in ink, as a chosen
+   thing is elsewhere, and Done at the end of the row. */
+.facesRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 56px;
+	margin-bottom: 4px;
+}
+
+.faces {
+	display: flex;
+	gap: 4px;
+}
+
+.choice {
+	display: inline-flex;
+	padding: 4px;
+	border-radius: 14px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.choice:hover:not(:disabled) {
+	background: var(--sheet-hover);
+}
+
+.choice[aria-checked="true"] {
+	background: var(--sheet-hover);
+	box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.choice {
+		transition: none;
+	}
+}

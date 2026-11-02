@@ -1,0 +1,241 @@
+/* One reading surface. Space orders the queue; a project's colour belongs
+   to its small mark, never to a slab behind the conversation (D-164). */
+.sheet {
+	/* The rows' grounds (.item), lightest to deepest: a read row under the
+	   pointer, an unread row, an unread row under the pointer - the sidebar's
+	   hover and choice. The row chosen keeps its ground and wears a ring. */
+	--inbox-read-hover: var(--sheet-quiet);
+	--inbox-unread: var(--sidebar-hover);
+	--inbox-unread-hover: var(--sidebar-press);
+	--inbox-chosen-ring: var(--ink-4);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-width: 0;
+	background: var(--sheet);
+}
+/* No room kept for a scrollbar: the window's own scrollbars float over the
+   page, and a page keeps its margins whether it scrolls or not (the owner,
+   2026-11-02: a long profile stood further in than a short one). */
+.feed_scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding-bottom: var(--foot);
+}
+/* Its left margin from the page's whole width, as every page's
+   (components/Page/stableGutter.js): a scrollbar never moves it. */
+.feed {
+	max-width: 1200px;
+	margin-left: max(0px, calc((var(--page-width, 100%) - 1200px) / 2));
+	margin-right: auto;
+	padding: 0 clamp(24px, 3.5vw, 64px);
+}
+/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s (UI-23). */
+.head {
+	padding-top: calc(var(--sidebar-label-baseline) - 28.3px + var(--firm-row));
+}
+.title {
+	font: 500 30px/36px var(--font-sans);
+	letter-spacing: -0.02em;
+}
+.title_room { visibility: hidden; }
+/* 12 under the title, as Team's line stands (the owner, 2026-11-02). */
+.summary {
+	margin-top: 12px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	margin: 28px 0 30px;
+}
+.tabs {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: 11px;
+	background: var(--tray);
+}
+.tabs button {
+	min-width: 72px;
+	padding: 6px 15px;
+	border-radius: 8px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+}
+.tabs button[aria-selected="true"] {
+	color: var(--ink);
+	background: var(--sheet);
+	box-shadow: 0 1px 3px #1d203016, 0 0 0 0.5px #1d20300a;
+}
+.tabs button:hover { color: var(--ink); }
+.unread_filter {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 10px;
+	border-radius: 8px;
+	color: var(--ink-3);
+	font: var(--type-small);
+}
+.unread_filter:hover { background: var(--sheet-hover); color: var(--ink); }
+.unread_filter[aria-pressed="true"] { color: var(--ink); background: var(--tray); }
+.group + .group { margin-top: 28px; }
+.divider {
+	margin-bottom: 10px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+}
+.lines { display: flex; flex-direction: column; }
+/* What is unread stands on a ground of its own, with no dot (the owner,
+   2026-11-02: "remove the unread dot in the Inbox - let unread simply have a
+   background, but then set the hover - look at the sidebar's palette"). The
+   grounds are the sidebar's steps, so a read row under the pointer never
+   looks unread: each state is one step deeper than the one below it. */
+.item {
+	--row-ground: transparent;
+	--row-hover: var(--inbox-read-hover);
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(100px, 160px) 96px;
+	align-items: center;
+	gap: 16px;
+	margin: 0 -12px;
+	padding: 12px;
+	border-radius: 13px;
+	background: var(--row-ground);
+	transition: background-color 120ms var(--ease-out);
+}
+.item + .item { margin-top: 4px; }
+.item_unread {
+	--row-ground: var(--inbox-unread);
+	--row-hover: var(--inbox-unread-hover);
+}
+/* Unread rows one after another are one band, not a stack of cards: no gap
+   between them, and square corners where they meet. */
+.item_unread + .item_unread {
+	margin-top: 0;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+.item_unread:has(+ .item_unread) {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+.item:hover, .item:focus-within { background: var(--row-hover); }
+/* The row chosen - the thread the member came back from, or the keys' place -
+   wears a ring and keeps its ground, so a chosen read row never reads as
+   unread. */
+.item_selected { box-shadow: inset 0 0 0 1.5px var(--inbox-chosen-ring); }
+.line {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	min-width: 0;
+	text-align: left;
+	border-radius: 6px;
+	user-select: none;
+}
+/* The row is the target, including the space around its contents. Controls
+   remain above this extension of the open button. */
+.line::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.face { position: relative; display: inline-flex; width: 40px; height: 40px; }
+.sign_face {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	color: var(--ink-2);
+	background: var(--tray);
+	border-radius: 11px;
+}
+.mail_sign {
+	position: absolute;
+	right: -4px;
+	bottom: -3px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	font: 500 11px/1 var(--font-sans);
+	color: var(--sheet);
+	background: var(--ink-3);
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px var(--sheet);
+}
+.line_text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.line_head { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+/* A thread's title leads its row, by weight (the owner, 2026-11-02: "the
+   thread's title should be bolder"); an unread one a step heavier. */
+.line_title {
+	overflow: hidden;
+	font: 500 15px/21px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.item_unread .line_title { font-weight: 620; }
+.line_time { flex: none; font: var(--type-meta); color: var(--ink-3); }
+.line_said {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.line_author { color: var(--ink-2); }
+.context {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: flex-start;
+	flex-direction: column;
+	gap: 5px;
+	min-width: 0;
+	pointer-events: none;
+}
+.context > button { max-width: 100%; padding: 0; pointer-events: auto; }
+.context > button > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unfiled { font: var(--type-small); color: var(--ink-3); }
+.status {
+	text-wrap: balance;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+.status[data-kind="due"], .status[data-kind="failed"] { color: var(--time-ink); }
+.actions { position: relative; z-index: 1; display: flex; gap: 2px; }
+.actions button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	color: var(--ink-3);
+	opacity: 0;
+	transition: opacity 120ms var(--ease-out), background-color 120ms var(--ease-out);
+}
+.item:hover .actions button, .item:focus-within .actions button, .item_selected .actions button, .actions .action_saved { opacity: 1; }
+.actions button:hover { color: var(--ink); background: var(--sheet-selected); }
+.actions .action_saved { color: var(--ink-2); }
+.empty { padding: clamp(48px, 12vh, 120px) 24px; text-align: center; }
+.empty_sign { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 20px; background: var(--tray); color: var(--ink-3); margin-bottom: 20px; }
+.empty_title { font: 500 19px/26px var(--font-sans); letter-spacing: -0.01em; }
+.empty_text { margin-top: 8px; font: var(--type-body); color: var(--ink-3); text-wrap: balance; }
+@media (max-width: 1300px) {
+	.feed { padding-inline: 32px; }
+	.item { grid-template-columns: minmax(0, 1fr) minmax(95px, 128px) 64px; gap: 12px; }
+	.actions button:first-child:not(.action_saved) { display: none; }
+	.actions:has(.action_saved) button:last-child { display: none; }
+	.line { gap: 12px; }
+}
+@media (hover: none) { .actions button { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .item, .actions button { transition: none; } }

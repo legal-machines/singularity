@@ -1,0 +1,65 @@
+/* Hiring an AI colleague, as onboarding's slides (onboarding/Onboarding.module.css,
+   Tour.module.css): the whole window, over the sidebar, on white; the
+   window's own caption buttons and the tooltips stay above it. */
+.flow {
+	position: fixed;
+	inset: 0;
+	z-index: var(--layer-dialog);
+	background: #ffffff;
+	animation: arrive 200ms ease-out both;
+}
+
+@keyframes arrive {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.flow { animation: none; }
+}
+
+/* A field of several lines, drawn as onboarding's one-line fields. */
+.field textarea {
+	display: block;
+	width: 100%;
+	min-height: 72px;
+	padding: 11px 12px;
+	border: 1px solid #d7d7d4;
+	border-radius: 6px;
+	outline: none;
+	background: #ffffff;
+	color: #10100d;
+	font: inherit;
+	font-size: 14px;
+	line-height: 20px;
+	resize: none;
+	transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.field textarea::placeholder {
+	color: #91918d;
+	opacity: 1;
+}
+
+.field textarea:hover {
+	border-color: #aaa9a5;
+}
+
+.field textarea:focus {
+	border-color: #10100d;
+	box-shadow: 0 0 0 3px rgb(16 16 13 / 0.08);
+}
+
+/* What the colleague leads, under its name. */
+.about {
+	padding: 4px 0;
+}
+
+.about p {
+	margin: 0;
+	color: var(--ink);
+	font-size: 15px;
+	line-height: 24px;
+	overflow-wrap: anywhere;
+	text-wrap: pretty;
+}

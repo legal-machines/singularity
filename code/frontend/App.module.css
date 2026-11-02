@@ -1,0 +1,110 @@
+/* The window (DESIGN.md, FOLIO-10): the desk on the left, the sheet of the
+   open place filling the rest, from the window's top edge to its bottom. */
+
+.window {
+	/* The sidebar's going and coming (the owner, 2026-11-02: "as soft as
+	   possible", read frame by frame): 340 ms, starting and ending at rest,
+	   at most 2.3 times its mean speed (it was 4 times, over 220 ms: three
+	   quarters of the way in the first 85 ms, then a crawl). */
+	--sidebar-duration: 340ms;
+	--sidebar-ease: cubic-bezier(0.36, 0, 0.3, 1);
+	display: grid;
+	grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+	height: 100%;
+	background: var(--desk);
+	transition: grid-template-columns var(--sidebar-duration) var(--sidebar-ease);
+}
+
+/* The sidebar keeps its own width while its column closes, held to the
+   column's right edge: it slides out to the left whole, in step with the
+   sheet's edge, and its words are never squeezed on the way (frame by frame
+   they were: at 60 ms the places read "I…", "Me…", "Cal…"). It fades as it
+   leaves and as it comes back. */
+.window > aside {
+	width: var(--sidebar-width);
+	justify-self: end;
+	transition: opacity var(--sidebar-duration) cubic-bezier(0, 0, 0.2, 1);
+}
+
+.window[data-sidebar="hidden"] {
+	grid-template-columns: 0 minmax(0, 1fr);
+}
+
+.window[data-sidebar="hidden"] > aside {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity var(--sidebar-duration) cubic-bezier(0.4, 0, 1, 1), visibility 0s linear var(--sidebar-duration);
+}
+
+/* The sidebar's button, level with the traffic lights: at the sidebar's top
+   right while it is shown, and beside the window's buttons once it is hidden
+   (beside the traffic lights on macOS, at the window's left edge elsewhere). */
+.sidebar_toggle {
+	position: fixed;
+	top: calc((var(--titlebar-height) - var(--control)) / 2);
+	left: calc(var(--sidebar-width) - 12px - var(--control));
+	z-index: var(--layer-caption);
+	transition: left var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.window[data-sidebar="hidden"] .sidebar_toggle {
+	left: var(--sidebar-toggle-hidden);
+}
+
+/* While a dialog's white stands, the button is put away with the rest of the
+   window under it (Dialog.jsx). */
+:global(html[data-dialog-open]) .sidebar_toggle {
+	visibility: hidden;
+}
+
+/* Over the shown sidebar the button's pointer ground is the sidebar's. */
+.window:not([data-sidebar="hidden"]) .sidebar_toggle {
+	--hover-ground: var(--sidebar-hover);
+	--press-ground: var(--sidebar-press);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.window,
+	.window > aside,
+	.window[data-sidebar="hidden"] > aside,
+	.sidebar_toggle {
+		transition: none;
+	}
+}
+
+/* The app's emulation in onboarding shows its page alone (D-134). */
+.window[data-bare] {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.sheet {
+	position: relative;
+	z-index: 1;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--sheet);
+}
+
+/* Windows' buttons, in the window's top-right corner. */
+
+.controls {
+	position: fixed;
+	top: calc((var(--titlebar-height) - 32px) / 2);
+	right: 12px;
+	z-index: var(--layer-caption);
+	display: flex;
+	height: 32px;
+}
+
+/* The app's emulation in onboarding (D-134) takes no input, so it shows no
+   scrollbar: Windows draws classic ones where macOS hides overlay scrollbars
+   (2026-10-29, the PC's first run). */
+.window[data-bare],
+.window[data-bare] * {
+	scrollbar-width: none;
+}
+
+.window[data-bare] ::-webkit-scrollbar {
+	display: none;
+}

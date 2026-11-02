@@ -1,0 +1,66 @@
+/* The welcome: the whole window white, over the painting, the organisation's
+   name in the wordmark's type, centred. */
+@font-face {
+	font-family: "Sora Welcome";
+	font-style: normal;
+	font-weight: 100 800;
+	font-display: swap;
+	src: url("./fonts/sora-variable.ttf") format("truetype");
+}
+
+.welcome {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	background: #ffffff;
+	overflow: hidden;
+}
+
+.surface {
+	isolation: isolate;
+}
+
+.group {
+	position: relative;
+	z-index: 2;
+	display: grid;
+	justify-items: center;
+	width: min(480px, 44vw);
+	padding: 24px;
+}
+
+.group:not([data-ready]) { opacity: 0; pointer-events: none; }
+
+.title {
+	margin: 0;
+	font-family: "Sora Welcome", "Roboto Variable", sans-serif;
+	font-size: clamp(32px, 3.8vw, 48px);
+	font-weight: 500;
+	line-height: 1.12;
+	letter-spacing: -0.03em;
+	text-align: center;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+
+.title:focus {
+	outline: none;
+}
+
+.company { display: block; }
+
+.action {
+	width: min(320px, 100%);
+	margin-top: 32px;
+}
+
+@media (max-width: 819px) {
+	.group {
+		width: min(448px, 100%);
+		top: 96px;
+	}
+}
+
+@media (max-width: 819px) and (max-height: 600px) {
+	.group { top: 76px; }
+}

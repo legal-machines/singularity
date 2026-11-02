@@ -1,0 +1,34 @@
+{
+  "domain": "Usage",
+  "methods": [
+    {
+      "name": "routingLog.list",
+      "policy": "worker",
+      "result": "RoutingLogEntry[]",
+      "_order": 26
+    },
+    {
+      "name": "usage.getSummary",
+      "policy": "worker",
+      "params": {
+        "periodStart": "string",
+        "periodEnd": "string",
+        "projectId": "string | undefined"
+      },
+      "result": "UsageSummary",
+      "_order": 115
+    },
+    {
+      "name": "usage.generateProjectStatement",
+      "policy": "ui",
+      "params": {
+        "projectId": "string",
+        "periodStart": "string",
+        "periodEnd": "string",
+        "structuredFormat": "string"
+      },
+      "result": "UsageStatementGenerationResult",
+      "_order": 116
+    }
+  ]
+}

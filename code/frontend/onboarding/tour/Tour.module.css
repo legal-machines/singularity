@@ -1,0 +1,127 @@
+/* The story has room to breathe. The related setup is one compact 320px
+   column; reserved scroll gutters never change the size of its fields. */
+.tour {
+	--tour-muted: #737373;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 0 calc(32px + var(--footnote-lift, 0px));
+}
+/* Hit areas extend into the margin; their visible contents align at 80px.
+   A footnote of more than one line lifts both by its extra lines
+   (--footnote-lift, Tour.jsx), so Back's hit area never reaches its words
+   (the owner, 2026-11-01: a two-line footnote stood cut under Back). */
+.tour .back { left: -16px; bottom: calc(-16px + var(--footnote-lift, 0px)); }
+.tour .progress { bottom: calc(-3px + var(--footnote-lift, 0px)); }
+.group {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: min(392px, 100%);
+	max-height: 100%;
+	min-height: 0;
+	padding: 4px;
+	margin: -4px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-gutter: stable both-edges;
+}
+.group > * { flex-shrink: 0; }
+.group:not([data-ready]) { opacity: 0; pointer-events: none; }
+.header { width: 100%; margin-bottom: 32px; text-align: center; }
+.title {
+	margin: 0;
+	font-family: "Sora Entry", "Roboto Variable", sans-serif;
+	font-size: 40px;
+	font-weight: 500;
+	line-height: 1.1;
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+.title:focus { outline: none; }
+.line { margin: 16px 0 0; color: var(--tour-muted); font-size: 15px; line-height: 22px; text-wrap: balance; }
+.note { margin: 12px 0 0; color: var(--tour-muted); font-size: 13px; line-height: 20px; text-wrap: balance; }
+/* A story's list (D-195): no wider than the action's column below it, so the
+   edges meet the button's; each item a name and its line, read left to right
+   under the centred words. Figures are a quieter list of their own. */
+.features, .facts { width: min(320px, 100%); margin: -12px 0 28px; padding: 0; list-style: none; text-align: left; }
+.features { display: grid; gap: 12px; }
+.featureName { display: block; color: #10100d; font-size: 13px; font-weight: 500; line-height: 18px; }
+.featureLine { display: block; margin-top: 2px; color: var(--tour-muted); font-size: 12px; line-height: 18px; text-wrap: pretty; }
+.facts { display: grid; gap: 8px; color: var(--tour-muted); font-size: 12px; line-height: 18px; }
+.facts li { text-wrap: pretty; }
+.facts a { color: #10100d; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.facts a:focus-visible { outline: 2px solid #10100d; outline-offset: 2px; border-radius: 2px; }
+.consent { margin-top: 16px; }
+.group[data-mode="setup"] .title { font-size: 30px; line-height: 1.15; }
+.group[data-mode="setup"] .line { margin-top: 12px; font-size: 14px; line-height: 20px; }
+/* On a shorter page (a larger text size, Onboarding.module.css) the setup's
+   heading stands closer to its form. */
+@media (max-height: 700px) {
+	.group[data-mode="setup"] .header { margin-bottom: 24px; }
+}
+.body { width: min(320px, 100%); }
+.body[hidden] { display: none; }
+.ask { display: flex; flex-direction: column; margin: 0; }
+.ask > button[type="submit"], .ask > button:last-child:not(.later) { margin-top: 24px; }
+/* A form taller than the window keeps its button in view, held at the foot
+   of the column while the fields scroll (2026-10-31: in the Windows window,
+   "That's me" stood half under the step dots). Where the form fits, it stands
+   where it always did. */
+.ask > button[type="submit"] { position: sticky; bottom: 0; z-index: 1; }
+.select { width: 100%; height: 44px; padding: 0 12px; border: 1px solid #d7d7d4; border-radius: 6px; outline: none; background: white; color: #10100d; font: inherit; font-size: 14px; }
+.select:focus { border-color: #10100d; box-shadow: 0 0 0 3px rgb(16 16 13 / 0.08); }
+.select:disabled { opacity: 0.6; }
+.optional { color: var(--tour-muted); font-weight: 400; }
+.later { display: block; min-height: 44px; width: 100%; margin-top: 8px; padding: 8px; border: 0; background: transparent; color: var(--tour-muted); font: inherit; font-size: 13px; cursor: pointer; }
+.later:hover:not(:disabled), .inline:hover:not(:disabled) { color: #10100d; text-decoration: underline; text-underline-offset: 3px; }
+.inline { width: fit-content; padding: 0; border: 0; background: transparent; color: var(--tour-muted); font: inherit; font-size: 13px; line-height: 20px; cursor: pointer; }
+.later:focus-visible, .inline:focus-visible { outline: 2px solid #10100d; outline-offset: 3px; border-radius: 3px; }
+/* The member's photo (D-163): the face the firm will see, the base face
+   until they choose one (D-188), its label and actions beside it. */
+.photo { display: flex; align-items: center; gap: 16px; margin: 0 0 20px; }
+.face { display: block; flex: none; padding: 0; border: 0; background: transparent; line-height: 0; border-radius: 14px; cursor: pointer; }
+.face:disabled { cursor: default; }
+.face:focus-visible { outline: 2px solid #10100d; outline-offset: 3px; }
+.photoText { display: grid; gap: 4px; min-width: 0; }
+.photoLabel { color: #10100d; font-size: 13px; font-weight: 500; line-height: 16px; }
+.photoActions { display: flex; gap: 16px; }
+.error { margin: 8px 0 0; color: #ae493f; font-size: 13px; line-height: 20px; text-wrap: balance; }
+.error:empty { margin: 0; }
+.help, .protection { margin: 8px 0 0; color: var(--tour-muted); font-size: 12px; line-height: 18px; text-wrap: balance; }
+.protection { margin-top: 16px; }
+/* The protection model's download fills its button from the left (the owner,
+   2026-11-01, D-198): the label reads dark on the light ground still to come
+   and white on the black already here, both in the button's own continuous
+   corners. Its figures keep their width, so the words never shift. */
+.filling { font-variant-numeric: tabular-nums; }
+.filling[data-filling], .filling[data-filling]:disabled { --entry-button-fill: var(--entry-g2-unready); color: #10100d; cursor: default; }
+.fill { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 10px 20px; color: #ffffff; clip-path: inset(0 calc(100% - var(--fill, 0%)) 0 0); transition: clip-path 480ms linear; pointer-events: none; }
+.fill::before { content: ""; position: absolute; inset: 0; z-index: 0; border: 20px solid transparent; border-image: var(--entry-g2) / 20px; }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+.ways { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.way { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: start; gap: 12px; padding: 12px; border: 1px solid #e7e7e4; border-radius: 10px; cursor: pointer; }
+.way[data-selected] { border-color: #10100d; background: #f7f7f5; }
+.way input[type="radio"] { width: 16px; height: 16px; margin: 2px 0 0; accent-color: #10100d; cursor: pointer; }
+.way:has(input:focus-visible) { outline: 2px solid #10100d; outline-offset: 3px; }
+.wayName { display: block; color: #10100d; font-size: 13px; font-weight: 500; line-height: 18px; }
+.wayLine { display: block; margin-top: 3px; color: var(--tour-muted); font-size: 12px; line-height: 18px; text-wrap: balance; }
+/* A choice's line that runs the card's full width, under its tag. */
+.wayLineFull { text-wrap: wrap; }
+/* The recommended choice's badge: a calm green, quieter than the choice. */
+.recommended { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 999px; background: #e6f2e9; color: #2c6a49; font-size: 11px; font-weight: 500; line-height: 16px; }
+.folder { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-top: 12px; font-size: 13px; line-height: 20px; }
+.folder > span { min-width: 0; overflow-wrap: anywhere; }
+.srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* A slide's notice (D-189): centred at the foot of the window, within the
+   tour's 80px boundaries and 20px above the edge, as the painting keeps its
+   corners (the owner, 2026-11-01: "in the centre"). Its lines run the full
+   width between those boundaries, never balanced into a narrow block (the
+   owner, 2026-11-01: "wider", D-198), and no word stands alone on the last
+   (UI-28). 12px in #666666 on white (5.7:1), small but clear and plainly
+   readable, as a US disclosure must be; its links open their pages. */
+.disclaimer { position: fixed; left: 80px; right: 80px; bottom: 20px; margin: 0; color: #666666; font-size: 12px; line-height: 16px; text-align: center; text-wrap: pretty; }
+.disclaimer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.disclaimer a:hover { color: #10100d; }
+.disclaimer a:focus-visible { outline: 2px solid #10100d; outline-offset: 2px; border-radius: 2px; }

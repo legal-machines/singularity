@@ -1,0 +1,39 @@
+/* The word in the accent's ink, and its dots: each lights in turn and fades,
+   as a messenger's do. */
+.typing {
+	color: var(--accent-ink);
+	white-space: nowrap;
+}
+
+.dots span {
+	display: inline-block;
+	opacity: 0.25;
+	animation: typing-dot 1.2s var(--ease-out) infinite;
+}
+
+.dots span:nth-child(2) {
+	animation-delay: 0.2s;
+}
+
+.dots span:nth-child(3) {
+	animation-delay: 0.4s;
+}
+
+@keyframes typing-dot {
+	0%,
+	60%,
+	100% {
+		opacity: 0.25;
+	}
+
+	30% {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dots span {
+		opacity: 1;
+		animation: none;
+	}
+}

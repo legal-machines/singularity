@@ -1,0 +1,117 @@
+{
+  "domain": "Privacy",
+  "methods": [
+    {
+      "name": "privacy.getOverview",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "PrivacyOverview",
+      "_order": 80
+    },
+    {
+      "name": "privacy.getCoverage",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "PrivacyCoverage",
+      "_order": 226
+    },
+    {
+      "name": "privacy.listAttentionDocuments",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "PrivacyAttentionDocumentListResult",
+      "_order": 81
+    },
+    {
+      "name": "privacy.listEntities",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "PrivacyEntityListResult",
+      "_order": 82
+    },
+    {
+      "name": "privacy.getEntityDetail",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entityId": "string"
+      },
+      "result": "PrivacyEntityDetail",
+      "_order": 83
+    },
+    {
+      "name": "privacy.resolveAmbiguity",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "ambiguityId": "string",
+        "decision": "'same' | 'separate'"
+      },
+      "result": "PrivacyAmbiguityResolution",
+      "_order": 84
+    },
+    {
+      "name": "privacy.splitEntityAlias",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entityId": "string",
+        "alias": "string"
+      },
+      "result": "PrivacyEntitySplitResult",
+      "_order": 85
+    },
+    {
+      "name": "privacy.addEntityAlias",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entityId": "string",
+        "alias": "string"
+      },
+      "result": "PrivacyEntityDetail",
+      "_order": 86
+    },
+    {
+      "name": "privacy.removeEntityAlias",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entityId": "string",
+        "alias": "string"
+      },
+      "result": "PrivacyEntityDetail",
+      "_order": 87
+    },
+    {
+      "name": "privacy.getPassageDisclosure",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string",
+        "documentId": "string",
+        "chunkId": "string"
+      },
+      "result": "PassageDisclosure",
+      "_order": 173
+    },
+    {
+      "name": "privacy.getOperationDisclosure",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string"
+      },
+      "result": "OperationDisclosure",
+      "_order": 174
+    }
+  ]
+}

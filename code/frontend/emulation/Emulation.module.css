@@ -1,0 +1,48 @@
+/* The hand the script plays: above everything in the frame, never in the way
+   of what it points at. */
+.pointer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 2147483647;
+	width: 22px;
+	height: 22px;
+	margin: -3px 0 0 -4px;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 240ms ease-out;
+	filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.25));
+}
+
+.pointer[data-shown] {
+	opacity: 1;
+}
+
+.pointer svg {
+	display: block;
+	transform-origin: 4px 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pointer {
+		display: none;
+	}
+}
+
+/* Presentation is scoped to the isolated demonstration. The real pages keep
+   their full controls; here only the chapter's function remains. */
+.feature { height: 100%; background: white; overflow: hidden; }
+.feature :global(main) { --firm-row: 0px; }
+.feature :global([data-print="hide"]), .feature :global([role="toolbar"]), .feature :global(time), .feature :global([data-part="band"]), .feature :global([data-part="faces"]) { display: none !important; }
+.feature[data-scene="team"] :global(main), .feature[data-scene="matter"] :global(main) { display: flex; align-items: stretch; justify-content: center; flex-direction: column; }
+.feature[data-scene="team"] :global(main) > div, .feature[data-scene="matter"] :global(main) > div { height: auto; width: 100%; max-height: 100%; }
+/* The work scene holds its whole exchange from the first post, so nothing
+   moves as the posts arrive. In the onboarding window, 720 high, that
+   exchange stood about 30px taller than its stage, cut at its first face and
+   its last reaction (2026-10-31); a tenth smaller, it stands whole. */
+@media (max-height: 760px) {
+	.feature[data-scene="delegate"] :global(article) { zoom: 0.9; }
+}
+.feature :global(li[id^="post-"]:not([data-demo-hidden])) { animation: messageArrives 250ms ease-out both; }
+@keyframes messageArrives { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .feature :global(li[id^="post-"]) { animation: none; } }

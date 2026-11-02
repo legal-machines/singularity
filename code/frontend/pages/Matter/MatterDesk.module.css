@@ -1,0 +1,380 @@
+/* A Matter's overview as the team's desk (MatterDesk.jsx): on the page itself,
+   with no panel, no frame and no lines between rows; sections stand apart by
+   room, each named in plain words as Team names its groups. */
+.desk {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+	margin-top: 36px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.title_row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0 0 8px;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.count {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+/* The team: faces side by side, people and AI colleagues alike, each with a
+   name and, under it, their position or what they do now. */
+.team {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.faces {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 4px;
+	margin: 0 -10px;
+}
+
+.member {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 104px;
+	padding: 10px 6px;
+	border-radius: var(--radius-lg);
+	text-align: center;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.member:not(:disabled):hover {
+	background: var(--sheet-hover);
+}
+
+.member:disabled {
+	cursor: default;
+}
+
+.member_name {
+	max-width: 100%;
+	margin-top: 10px;
+	overflow: hidden;
+	font: 500 14px/20px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.member_state {
+	max-width: 100%;
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.member_state > span {
+	font: inherit;
+}
+
+/* Who is still to come: a face's room, with a plus. */
+.add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	color: var(--ink-3);
+	background: var(--tray);
+	border-radius: 14px;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.member:hover .add {
+	color: var(--ink);
+}
+
+/* Threads, as the Inbox's rows: a face, the title and what was said last,
+   when, and what it waits for. */
+.rows {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 -12px;
+	padding: 0;
+	list-style: none;
+}
+
+.row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover,
+.row:focus-within {
+	background: var(--sheet-hover);
+}
+
+.line {
+	display: grid;
+	flex: 1;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 16px;
+	min-width: 0;
+	padding: 12px;
+	text-align: left;
+}
+
+.sign {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	color: var(--ink-3);
+	background: var(--tray);
+	border-radius: 11px;
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.row_head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	min-width: 0;
+}
+
+/* Unread, as the Inbox's unread rows: one band on its ground, no gap and
+   square corners where they meet (InboxPage.module.css). */
+.rows_unread {
+	gap: 0;
+}
+
+.row_unread {
+	background: var(--sidebar-hover);
+}
+
+.row_unread:hover,
+.row_unread:focus-within {
+	background: var(--sidebar-press);
+}
+
+.row_unread + .row_unread {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.row_unread:has(+ .row_unread) {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.row_title {
+	overflow: hidden;
+	font: 500 15px/21px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_time {
+	flex: none;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.row_said {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_author {
+	color: var(--ink-2);
+}
+
+.row_word {
+	padding-left: 8px;
+}
+
+.row_action {
+	display: flex;
+	flex: none;
+	gap: 8px;
+	padding-right: 12px;
+}
+
+/* The way to all of them, beside a section's name. */
+.all {
+	font: var(--type-small);
+	color: var(--ink-3);
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.all:hover {
+	color: var(--ink);
+}
+
+/* Which threads: open or archived (components/Views), over the list. */
+.views {
+	display: flex;
+	margin-bottom: 24px;
+}
+
+.none {
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+/* The archived threads, under a word that shows them. */
+.more {
+	align-self: flex-start;
+	margin-top: 8px;
+	padding: 4px 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.more:hover {
+	color: var(--ink);
+}
+
+/* What happened, in one column and one manner: a sign in its square, what
+   happened and, under it, what it concerned, and when on the right. */
+.events {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 -12px;
+	padding: 0;
+	list-style: none;
+}
+
+.event {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+	padding: 8px 12px;
+	border-radius: var(--radius-lg);
+	text-align: left;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.event:not(:disabled):hover {
+	background: var(--sheet-hover);
+}
+
+.event:disabled {
+	cursor: default;
+}
+
+.event_sign {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	color: var(--ink-2);
+	background: var(--tray);
+	border-radius: 10px;
+}
+
+/* A member's arrival: their face where a sign stands. */
+.event_face {
+	display: inline-flex;
+	width: 36px;
+	height: 36px;
+}
+
+.event_sign[data-tone="yours"] {
+	color: var(--accent-ink);
+	background: var(--accent-tint);
+}
+
+.event_body {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.event_text {
+	overflow: hidden;
+	font: 500 15px/21px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.event_open {
+	color: var(--accent-ink);
+}
+
+.event_about {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.event_when {
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+/* What the firm's books say of it, as a contact card sets it. */
+.facts {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+}
+
+.fact {
+	display: grid;
+	grid-template-columns: 180px minmax(0, 1fr);
+	gap: 16px;
+	font: var(--type-body);
+}
+
+.fact dt {
+	color: var(--ink-3);
+}
+
+.fact dd {
+	margin: 0;
+	color: var(--ink);
+}

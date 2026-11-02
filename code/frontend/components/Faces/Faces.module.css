@@ -1,0 +1,20 @@
+/* A row of faces (Faces.jsx): each on a 2px ring of the ground it stands on,
+   cut to the same G2 square as the face, and over the one before it by 6px. */
+
+.faces {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+}
+
+.face {
+	display: inline-flex;
+	padding: 2px;
+	background: var(--ring, var(--sheet));
+	-webkit-mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+	mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+}
+
+.face + .face {
+	margin-left: -6px;
+}

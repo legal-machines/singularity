@@ -1,0 +1,18 @@
+NVIDIA CUDA runtime and cuBLAS
+
+A Singularity build whose local inference runs on NVIDIA GPUs carries these
+NVIDIA components inside its llama.cpp runtime, and only there:
+
+- the CUDA runtime (cudart), linked statically into llama-server;
+- cuBLAS (cublas64_<major>.dll and cublasLt64_<major>.dll on Windows), which
+  llama-server loads and which ship beside it in llama.cpp/, as the NVIDIA
+  CUDA Toolkit End User License Agreement lists them as redistributable
+  (Attachment A).
+
+The NVIDIA display driver (nvcuda.dll, libcuda.so.1) and its management
+library (nvml.dll, libnvidia-ml.so.1) are the computer's own: Singularity loads
+them at run time and never redistributes them.
+
+This software contains source code provided by NVIDIA Corporation.
+Redistributed CUDA libraries remain subject to the NVIDIA CUDA Toolkit End
+User License Agreement: https://docs.nvidia.com/cuda/eula/

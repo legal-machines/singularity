@@ -1,0 +1,8 @@
+/* The code a pane shows, as the window shows it beside its question. */
+.code {
+	font: 500 30px/36px var(--font-sans);
+	letter-spacing: 0.06em;
+	color: var(--ink);
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}

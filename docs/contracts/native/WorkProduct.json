@@ -1,0 +1,366 @@
+{
+  "domain": "WorkProduct",
+  "methods": [
+    {
+      "name": "workProduct.listTypes",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "WorkProductTypeListResult",
+      "_order": 106
+    },
+    {
+      "name": "workProduct.createType",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "name": "string",
+        "description": "string",
+        "instructions": "string | undefined",
+        "expectedStructure": "string | undefined"
+      },
+      "result": "WorkProductType",
+      "_order": 107
+    },
+    {
+      "name": "workProduct.list",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "WorkProductListResult",
+      "_order": 108
+    },
+    {
+      "name": "workProduct.create",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "typeId": "string",
+        "title": "string",
+        "content": "string"
+      },
+      "result": "WorkProduct",
+      "_order": 109
+    },
+    {
+      "name": "workProduct.retainTaskResult",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "taskId": "string",
+        "typeId": "string | undefined",
+        "title": "string | undefined"
+      },
+      "result": "WorkProduct",
+      "_order": 110
+    },
+    {
+      "name": "workProduct.get",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "workProductId": "string"
+      },
+      "result": "WorkProductDetail",
+      "_order": 111
+    },
+    {
+      "name": "workProduct.update",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "workProductId": "string",
+        "expectedRevision": "number",
+        "title": "string",
+        "content": "string"
+      },
+      "result": "WorkProduct",
+      "_order": 112
+    },
+    {
+      "name": "workProduct.updateIssueStatus",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "workProductId": "string",
+        "expectedRevision": "number",
+        "status": "string"
+      },
+      "result": "WorkProduct",
+      "_order": 113
+    },
+    {
+      "name": "workProduct.restoreRevision",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "workProductId": "string",
+        "expectedRevision": "number",
+        "revision": "number"
+      },
+      "result": "WorkProduct",
+      "_order": 114
+    },
+    {
+      "name": "matter.addNote",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "content": "string"
+      },
+      "result": "Matter",
+      "_order": 36
+    },
+    {
+      "name": "matter.removeNote",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "noteId": "string"
+      },
+      "result": "Matter",
+      "_order": 37
+    },
+    {
+      "name": "matter.addIssue",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "findingId": "string"
+      },
+      "result": "Matter",
+      "_order": 38
+    },
+    {
+      "name": "matter.updateIssueStatus",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "issueId": "string",
+        "status": "string"
+      },
+      "result": "Matter",
+      "_order": 39
+    },
+    {
+      "name": "matter.listWorkflows",
+      "policy": "worker",
+      "result": "WorkflowDefinition[]",
+      "_order": 45
+    },
+    {
+      "name": "matter.runWorkflow",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "workflowId": "string",
+        "workflowVersion": "number",
+        "selectedDocumentIds": "string[] | undefined",
+        "chatId": "string | undefined"
+      },
+      "result": "Matter",
+      "_order": 46
+    },
+    {
+      "name": "matter.exportText",
+      "policy": "ui",
+      "params": {
+        "matterId": "string",
+        "sourceType": "string",
+        "sourceId": "string",
+        "format": "string"
+      },
+      "result": "boolean",
+      "_order": 47
+    },
+    {
+      "name": "workProduct.remove",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "workProductId": "string"
+      },
+      "result": "boolean",
+      "_order": 159
+    },
+    {
+      "name": "reviewTable.list",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ReviewTableListResult",
+      "_order": 206
+    },
+    {
+      "name": "reviewTable.get",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string"
+      },
+      "result": "ReviewTableView",
+      "_order": 207
+    },
+    {
+      "name": "reviewTable.create",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "title": "string | undefined",
+        "documentIds": "string[] | undefined",
+        "columns": "ReviewColumnInput[]",
+        "localOnly": "boolean | undefined"
+      },
+      "result": "ReviewTableView",
+      "_order": 208
+    },
+    {
+      "name": "reviewTable.update",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string",
+        "title": "string | undefined",
+        "documentIds": "string[] | undefined",
+        "columns": "ReviewColumnInput[] | undefined",
+        "localOnly": "boolean | undefined"
+      },
+      "result": "ReviewTableView",
+      "_order": 209
+    },
+    {
+      "name": "reviewTable.remove",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string"
+      },
+      "result": "ReviewTableRemoveResult",
+      "_order": 210
+    },
+    {
+      "name": "reviewTable.run",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined"
+      },
+      "result": "ReviewTableView",
+      "_order": 211
+    },
+    {
+      "name": "reviewTable.stop",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string"
+      },
+      "result": "ReviewTableView",
+      "_order": 212
+    },
+    {
+      "name": "reviewTable.export",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string",
+        "format": "string"
+      },
+      "result": "ReviewTableExport",
+      "_order": 213
+    },
+    {
+      "name": "reviewTable.prepareChanges",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string",
+        "documentIds": "string[] | undefined"
+      },
+      "result": "PlaybookChangesResult",
+      "_order": 214
+    },
+    {
+      "name": "reviewTable.stopChanges",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "tableId": "string"
+      },
+      "result": "PlaybookChangesStopResult",
+      "_order": 224
+    },
+    {
+      "name": "playbook.list",
+      "policy": "worker",
+      "params": {},
+      "result": "PlaybookListResult",
+      "_order": 215
+    },
+    {
+      "name": "playbook.get",
+      "policy": "worker",
+      "params": {
+        "playbookId": "string",
+        "version": "integer | undefined"
+      },
+      "result": "Playbook",
+      "_order": 216
+    },
+    {
+      "name": "playbook.save",
+      "policy": "worker",
+      "params": {
+        "playbook": "Playbook"
+      },
+      "result": "Playbook",
+      "_order": 217
+    },
+    {
+      "name": "playbook.remove",
+      "policy": "worker",
+      "params": {
+        "playbookId": "string"
+      },
+      "result": "PlaybookRemoveResult",
+      "_order": 218
+    },
+    {
+      "name": "playbook.import",
+      "policy": "worker",
+      "params": {
+        "text": "string"
+      },
+      "result": "Playbook",
+      "_order": 219
+    },
+    {
+      "name": "playbook.export",
+      "policy": "worker",
+      "params": {
+        "playbookId": "string",
+        "version": "integer | undefined"
+      },
+      "result": "PlaybookExport",
+      "_order": 220
+    },
+    {
+      "name": "playbook.reviewTable",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "playbookId": "string",
+        "documentIds": "string[]",
+        "title": "string | undefined",
+        "localOnly": "boolean | undefined"
+      },
+      "result": "ReviewTableView",
+      "_order": 221
+    }
+  ]
+}

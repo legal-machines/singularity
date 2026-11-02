@@ -1,0 +1,542 @@
+/* Singularity's pane in Word, Excel and Outlook: a narrow column beside the
+   file. Sections stand one under another, parted by a hairline, never boxed;
+   the accent marks only what waits for the person. */
+
+.pane {
+	display: flex;
+	flex-direction: column;
+	min-height: 100%;
+	background: var(--sheet);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-4);
+	border-top: 1px solid var(--line);
+}
+
+.section_title {
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.quiet {
+	padding: var(--space-4);
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.problem {
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+.notice {
+	font: var(--type-small);
+	color: var(--settled-ink);
+}
+
+/* ---- The head: the Matter, the document, where its work stands ---- */
+
+.head {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+}
+
+.head_row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.head_text {
+	flex: 1;
+	min-width: 0;
+}
+
+.mark {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	color: #ffffff;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+}
+
+.matter {
+	font: var(--type-heading);
+	color: var(--ink);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.document {
+	font: var(--type-small);
+	color: var(--ink-3);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.state_text {
+	min-width: 0;
+}
+
+.state_title {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.state_line {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.tone_yours {
+	color: var(--accent-ink);
+}
+
+.tone_underway {
+	color: var(--underway);
+}
+
+.tone_settled {
+	color: var(--settled-ink);
+}
+
+.faces {
+	display: flex;
+	flex: none;
+	gap: 4px;
+}
+
+.face {
+	display: inline-flex;
+}
+
+/* ---- Actions ---- */
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.primary,
+.plain {
+	height: var(--control);
+	padding: 0 var(--space-3);
+	border-radius: 8px;
+	font: var(--type-small-strong);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.primary {
+	border: 1px solid var(--accent);
+	background: var(--accent);
+	color: #ffffff;
+}
+
+.primary:hover:not(:disabled) {
+	background: var(--accent-strong);
+	border-color: var(--accent-strong);
+}
+
+.plain {
+	border: 1px solid var(--line-strong);
+	background: var(--sheet);
+	color: var(--ink);
+}
+
+.plain:hover:not(:disabled) {
+	background: var(--sheet-hover);
+}
+
+/* Not yet usable: quiet grey, never a faded accent. */
+.primary:disabled,
+.plain:disabled {
+	border-color: var(--line-strong);
+	background: var(--sheet-quiet);
+	color: var(--ink-4);
+	cursor: default;
+}
+
+.link {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: var(--type-small);
+	color: var(--underway);
+	cursor: pointer;
+}
+
+.returning {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.check {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-2);
+	font: var(--type-small);
+	color: var(--ink-2);
+}
+
+.check input {
+	margin: 3px 0 0;
+	accent-color: var(--accent);
+}
+
+/* ---- The clause at the cursor ---- */
+
+.clause {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.clause_text {
+	font: var(--type-small);
+	color: var(--ink-3);
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.clause_quiet {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.reason {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: var(--space-2) var(--space-3);
+	border-radius: 8px;
+	background: var(--sheet-quiet);
+}
+
+.reason_who {
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.reason_text {
+	font: var(--type-small);
+	color: var(--ink);
+}
+
+.composer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.composer_foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+.to {
+	display: flex;
+	gap: 6px;
+	min-width: 0;
+}
+
+.to_face {
+	display: inline-flex;
+	padding: 2px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	background: none;
+	cursor: pointer;
+	opacity: 0.55;
+}
+
+.to_face_on {
+	border-color: var(--line-strong);
+	opacity: 1;
+}
+
+.field {
+	width: 100%;
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--line-strong);
+	border-radius: 8px;
+	font: var(--type-small);
+	color: var(--ink);
+	resize: vertical;
+	background: var(--sheet);
+}
+
+.field:focus {
+	outline: 2px solid var(--selection);
+	outline-offset: 0;
+	border-color: var(--underway);
+}
+
+/* ---- The thread ---- */
+
+.messages {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.message {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.message_face {
+	flex: none;
+	padding-top: 2px;
+}
+
+.message_body {
+	min-width: 0;
+}
+
+.message_head {
+	display: flex;
+	gap: var(--space-2);
+	align-items: baseline;
+}
+
+.message_author {
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+.message_time {
+	font: var(--type-meta);
+	color: var(--ink-4);
+}
+
+.message_place {
+	display: block;
+	max-width: 100%;
+	margin: 1px 0 2px;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: var(--type-meta);
+	color: var(--underway);
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+.message_place:hover:not(:disabled) {
+	text-decoration: underline;
+}
+.message_place:disabled {
+	color: var(--ink-4);
+	cursor: default;
+}
+.message_text {
+	font: var(--type-small);
+	color: var(--ink-2);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-line-clamp: 6;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* ---- The version's changes ---- */
+
+.fold {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+	cursor: pointer;
+	text-align: left;
+}
+
+.fold_mark {
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.changes {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.change {
+	display: grid;
+	grid-template-columns: 40px 1fr;
+	gap: var(--space-2);
+	width: 100%;
+	padding: var(--space-2) 0;
+	border: 0;
+	border-bottom: 1px solid var(--line);
+	background: none;
+	text-align: left;
+	cursor: pointer;
+}
+
+.change:hover {
+	background: var(--sheet-hover);
+}
+
+.change_clause {
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+.change_text {
+	font: var(--type-small);
+	color: var(--ink-2);
+}
+
+/* ---- Pairing ---- */
+
+.pairing {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: var(--space-6) var(--space-4);
+}
+
+.pairing_icon {
+	border-radius: 10px;
+}
+
+.pairing_title {
+	font: var(--type-heading);
+	color: var(--ink);
+}
+
+.pairing_text {
+	font: var(--type-small);
+	color: var(--ink-2);
+}
+
+.code {
+	font: 500 28px/34px var(--font-sans);
+	letter-spacing: 0.06em;
+	color: var(--ink);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+	}
+}
+
+/* Outlook: where a letter belongs, and the evidence for it. */
+.filed {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.evidence_list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.evidence {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+.warn {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+.choice {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2);
+	padding-top: var(--space-2);
+}
+.matter_choice {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 2px;
+}
+.matter_row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: 6px 8px;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	font: var(--type-small-strong);
+	color: var(--ink);
+	text-align: left;
+	cursor: pointer;
+}
+.matter_row:hover:not(:disabled) {
+	background: var(--sheet-quiet);
+}
+.attachments {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.attachment {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.attachment_name {
+	overflow-wrap: anywhere;
+}
+.version_row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+.version_words {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--ink);
+}
+/* A draft's subject, and under it whether it is ready to send. */
+.version_text {
+	flex: 1;
+	min-width: 0;
+}

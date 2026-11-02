@@ -1,0 +1,142 @@
+/* The box a member writes in (ComposerBox.jsx), as Twist draws its own (the
+   owner, 2026-11-02): a white box in a fine frame with modest corners, no
+   shadow and no ring when it is written in; the words on top, two lines at
+   the least, and under them a row of quiet tools at the left and, at the
+   right, the square that sends. */
+
+.box {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	max-width: calc(var(--column) - 32px);
+	margin: 0 auto;
+	background: var(--sheet);
+	border: 1px solid var(--line-strong);
+	border-radius: 12px;
+	cursor: text;
+}
+
+/* The words: 15px on 24px, 20px in from the frame. */
+.field,
+.field:hover:not(:disabled),
+.field:focus,
+.field:focus-visible {
+	padding: 14px 20px 2px;
+	font: 400 15px/24px var(--font-sans);
+	color: var(--ink);
+	background: transparent;
+	border: 0;
+	outline: none;
+	box-shadow: none;
+	resize: none;
+}
+
+.field::placeholder {
+	color: var(--ink-4);
+}
+
+/* The tools: quiet 32px buttons at the left, 12px from the frame; at the
+   right, put away and send, the send a 36px square. */
+.tools {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 12px 12px;
+	cursor: default;
+}
+
+.tools_start,
+.tools_end {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+}
+
+.tools_end {
+	gap: 8px;
+}
+
+.tool {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	color: var(--ink-3);
+	border-radius: 8px;
+	transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.tool:hover,
+.tool[aria-pressed="true"] {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+.send {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	color: var(--ink-inverse);
+	background: var(--ink);
+	border-radius: 8px;
+	transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.send:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--ink) 84%, var(--sheet));
+}
+
+.send:active:not(:disabled),
+.action:active:not(:disabled) {
+	transform: scale(0.95);
+}
+
+.send:disabled,
+.action:disabled {
+	color: var(--ink-4);
+	background: var(--sheet-press);
+	cursor: default;
+}
+
+/* The emoji, six to a row. */
+.emoji {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 2px;
+	padding: 8px;
+}
+
+.emoji_pick {
+	display: grid;
+	place-items: center;
+	height: 34px;
+	font-size: 20px;
+	border-radius: 8px;
+}
+
+.emoji_pick:hover {
+	background: var(--sheet-hover);
+}
+
+/* An act named in words in the send's place, as round at its ends. */
+.action {
+	flex: none;
+	height: 36px;
+	padding: 0 16px;
+	font: 500 14px/36px var(--font-sans);
+	color: var(--ink-inverse);
+	background: var(--ink);
+	border-radius: 8px;
+	transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.action:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--ink) 84%, var(--sheet));
+}

@@ -1,0 +1,608 @@
+/* The entry's composition follows the owner's reference (D-125). It signs in
+   to Legal Machines through the bridge's account methods (D-133). */
+@font-face {
+	font-family: "Sora Entry";
+	font-style: normal;
+	font-weight: 100 800;
+	font-display: swap;
+	src: url("../fonts/sora-variable.ttf") format("truetype");
+}
+
+.entry {
+	--entry-ink: #10100d;
+	--entry-page-width: 320px;
+	--entry-control-gap: 24px;
+	--entry-section-gap: 48px;
+	--entry-muted: #737373;
+	--entry-border: #d7d7d4;
+	--entry-brick: #ae493f;
+	/* Same nine-slice G2 geometry as styles/tokens.css; this entry is standalone. */
+	--entry-g2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath fill='%2310100d' d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+	--entry-g2-hover: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath fill='%23333330' d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+	--entry-g2-active: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath fill='%23000000' d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+	--entry-g2-busy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath fill='%23575754' d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+	--entry-g2-unready: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath fill='%23ededeb' d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+	position: relative;
+	container-type: inline-size;
+	container-name: entry;
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	padding: 20px;
+	background: #ffffff;
+	color: var(--entry-ink);
+}
+
+/* The first page, the cover, is centred exactly: the space above it and
+   below it are the same (the owner, 2026-10-29). */
+.group {
+	width: min(320px, 100%);
+}
+
+/* A step is one compact composition, centred as a whole. Its own controls
+   determine its height; the window never stretches the gaps between them.
+   The maximum leaves room for native chrome above and navigation below. */
+.group[data-layout="page"] {
+	width: min(var(--entry-page-width), 100%);
+	display: flex;
+	flex-direction: column;
+	align-self: center;
+	min-height: 0;
+	max-height: calc(100% - 112px);
+}
+
+.pageForm {
+	display: grid;
+	flex: 0 1 auto;
+	grid-template-rows: auto minmax(0, 1fr) auto;
+	min-height: 0;
+}
+
+.pageForm > .codeHeading {
+	margin-bottom: 32px;
+}
+
+.pageForm > .primary {
+	margin-top: 24px;
+}
+
+.content .codeSupport {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.content .keep {
+	margin-bottom: 0;
+}
+
+.contentStage {
+	min-height: 0;
+	/* Only unusually long content scrolls; focus rings keep their room. */
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 4px;
+	margin: -4px;
+}
+
+/* Suggestions float over the next field, like a native selection menu. */
+.pageForm:has([role="combobox"]) .contentStage {
+	overflow: visible;
+}
+
+.content {
+	min-width: 0;
+}
+
+.group[data-layout="page"] > .complete {
+	display: flex;
+	flex: 0 1 auto;
+	flex-direction: column;
+	min-height: 0;
+}
+
+/* Back shares the bottom navigation line with progress. The window controls
+   keep the whole upper corner, on every operating system. */
+.back {
+	position: absolute;
+	bottom: 16px;
+	left: 24px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 44px;
+	padding: 0 12px;
+	border-radius: 10px;
+	border: 0;
+	background: transparent;
+	color: var(--entry-muted);
+	font: inherit;
+	font-size: 13px;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+.back:hover:not(:disabled) {
+	background: #f2f2f2;
+	color: var(--entry-ink);
+}
+
+.back:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+.back:focus-visible {
+	outline: 2px solid var(--entry-brick);
+	outline-offset: 4px;
+}
+
+/* A page without dots has its legal links where the dots would stand. */
+.foot {
+	position: absolute;
+	right: 0;
+	bottom: 27px;
+	left: 0;
+}
+
+.foot .legal {
+	margin-top: 0;
+}
+
+.intro {
+	margin-bottom: var(--entry-control-gap);
+	text-align: center;
+}
+.intro[data-entry-step="email"] { margin-bottom: var(--entry-section-gap); }
+
+.titleStage {
+	position: relative;
+	isolation: isolate;
+}
+
+.title {
+	position: relative;
+	z-index: 1;
+	margin: 0;
+	font-family: "Sora Entry", "Roboto Variable", sans-serif;
+	font-size: 61.4px;
+	font-weight: 500;
+	line-height: 1.08;
+	letter-spacing: -0.03em;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.description {
+	margin: 12px 0 0;
+	color: var(--entry-muted);
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 18px;
+	text-wrap: balance;
+}
+
+.form {
+	margin: 0;
+}
+
+/* A form's button stands a control gap under what is above it, on the cover
+   as on every page: what goes wrong is said at the top (Notice.jsx), never
+   in a line between them. */
+.form > .primary {
+	margin-top: var(--entry-control-gap);
+}
+
+.fields {
+	display: grid;
+	gap: 16px;
+}
+
+/* Country and registration number identify the organisation together, so
+   they share a line. */
+.row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px;
+}
+
+.field label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 16px;
+}
+
+.field input {
+	display: block;
+	width: 100%;
+	height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--entry-border);
+	border-radius: 6px;
+	outline: none;
+	background: #ffffff;
+	color: var(--entry-ink);
+	font: inherit;
+	font-size: 14px;
+	line-height: normal;
+	transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.field input::placeholder {
+	color: #91918d;
+	opacity: 1;
+}
+
+.field input:hover {
+	border-color: #aaa9a5;
+}
+
+.field input:focus {
+	border-color: var(--entry-ink);
+	box-shadow: 0 0 0 3px rgb(16 16 13 / 0.08);
+}
+
+.field input[aria-invalid="true"] {
+	border-color: var(--entry-brick);
+}
+
+.field input[aria-invalid="true"]:focus {
+	box-shadow: 0 0 0 3px rgb(174 73 63 / 0.1);
+}
+
+.primary {
+	--entry-button-fill: var(--entry-g2);
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	isolation: isolate;
+	display: grid;
+	place-items: center;
+	width: 100%;
+	min-height: 44px;
+	padding: 10px 20px;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	color: #ffffff;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+/* Keep each G2 slice opaque: opacity/filter transitions can expose WebKit seams. */
+.primary::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	border: 20px solid transparent;
+	border-image: var(--entry-button-fill) / 20px;
+	pointer-events: none;
+}
+
+.buttonLabel {
+	position: relative;
+	z-index: 1;
+}
+
+.primary:hover:not(:disabled) {
+	--entry-button-fill: var(--entry-g2-hover);
+}
+
+.primary:active:not(:disabled) {
+	--entry-button-fill: var(--entry-g2-active);
+}
+
+/* A step not filled in yet: its button is a quiet grey, plainly not ready
+   (the owner, 2026-10-29). While Legal Machines answers it is a darker one. */
+.primary:disabled {
+	--entry-button-fill: var(--entry-g2-unready);
+	color: #9b9b97;
+	cursor: default;
+}
+
+.primary[data-busy] {
+	--entry-button-fill: var(--entry-g2-busy);
+	color: #ffffff;
+	cursor: wait;
+}
+
+.legal {
+	display: flex;
+	justify-content: center;
+	gap: 20px;
+	margin-top: var(--entry-control-gap);
+	font-size: 12px;
+	line-height: 20px;
+}
+
+.legal a {
+	color: var(--entry-muted);
+}
+
+.legal a {
+	text-decoration: none;
+}
+
+.legal a:hover {
+	color: var(--entry-ink);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.textButton {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	font: inherit;
+	cursor: pointer;
+}
+
+.textButton:hover:not(:disabled) {
+	color: var(--entry-ink);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.primary:focus-visible,
+.textButton:focus-visible,
+.legal a:focus-visible {
+	outline: 2px solid var(--entry-brick);
+	outline-offset: 4px;
+}
+
+/* After the first step the wordmark is gone, and the step's title is the
+   page's heading: Sora, as the wordmark and Singularity's legal pages,
+   centred as the first step is; the fields below keep their left edge. */
+.codeHeading {
+	margin-bottom: 0;
+	text-align: center;
+}
+
+.stepTitle {
+	margin: 0;
+	font-family: "Sora Entry", "Roboto Variable", sans-serif;
+	font-size: 30px;
+	overflow-wrap: anywhere;
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+}
+
+.stepTitle:focus {
+	outline: none;
+}
+
+/* A line under a step's title that says what to do. */
+.line {
+	overflow-wrap: anywhere;
+	margin: 12px 0 0;
+	color: var(--entry-muted);
+	font-size: 14px;
+	line-height: 20px;
+	text-wrap: balance;
+}
+
+.address {
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 16px;
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.address span {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--entry-muted);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.textButton {
+	flex-shrink: 0;
+	color: var(--entry-ink);
+	font-size: 12px;
+	line-height: 20px;
+}
+
+.textButton:disabled {
+	color: var(--entry-muted);
+	cursor: default;
+}
+
+.field input.code {
+	font-size: 18px;
+	letter-spacing: 0.28em;
+}
+
+/* What a code's field offers besides it - another code, the other way to
+   sign in - right under it, above the button. */
+.codeSupport {
+	margin-top: 0;
+}
+
+.message {
+	margin: 0;
+	color: var(--entry-muted);
+	font-size: 12px;
+	line-height: 20px;
+}
+
+/* A registration's statements: each the person's own acceptance, never
+   assumed. They stand one control gap below the fields, as the button stands
+   one below them (the error line between is that gap). */
+.statements {
+	display: grid;
+	gap: 14px;
+	min-width: 0;
+	margin: var(--entry-control-gap) 0 0;
+	padding: 0;
+	border: 0;
+}
+
+/* Statements that are a step's whole question stand right under its title. */
+.statements.first {
+	margin-top: 0;
+}
+
+.statements:focus {
+	outline: none;
+}
+
+.statement {
+	display: grid;
+	grid-template-columns: 16px minmax(0, 1fr);
+	column-gap: 10px;
+	align-items: start;
+	color: var(--entry-muted);
+	font-size: 13px;
+	line-height: 20px;
+	text-wrap: pretty;
+	cursor: default;
+}
+
+.statement input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	margin: 2px 0 0;
+	accent-color: var(--entry-ink);
+	cursor: pointer;
+}
+
+.statement input[type="checkbox"]:disabled {
+	cursor: default;
+}
+
+.statement a {
+	color: var(--entry-ink);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+.statements[aria-invalid="true"] .statement input:not(:checked) {
+	outline: 1px solid var(--entry-brick);
+	outline-offset: 1px;
+}
+
+/* Two-factor setup: the code to scan, held at its size while it comes, and
+   the key to type instead. */
+.qr {
+	display: grid;
+	place-items: center;
+	height: 168px;
+	margin: 0 0 16px;
+}
+
+.qr svg {
+	display: block;
+	width: 168px;
+	height: 168px;
+}
+
+.key {
+	display: grid;
+	justify-items: center;
+	gap: 2px;
+	margin-bottom: 0;
+	color: var(--entry-muted);
+	font-size: 12px;
+	line-height: 18px;
+	text-align: center;
+}
+
+/* The key itself is the control that copies it, on the grey of the hand
+   under the pointer. */
+.keyValue {
+	display: grid;
+	padding: 4px 10px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--entry-ink);
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 13px;
+	line-height: 18px;
+	letter-spacing: 0.04em;
+	transition: background-color 120ms ease-out;
+}
+
+.keyValue:hover {
+	background: #f2f2f2;
+}
+
+.keyValue:active {
+	background: #e9e9e7;
+}
+
+.keyValue:focus-visible {
+	outline: 2px solid var(--entry-brick);
+	outline-offset: 2px;
+}
+
+/* The recovery codes, two columns of five, to be read and copied by hand. */
+.recoveryCodes {
+	display: grid;
+	grid-template-columns: repeat(2, max-content);
+	justify-content: center;
+	gap: 8px 40px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 15px;
+	line-height: 20px;
+	letter-spacing: 0.06em;
+	font-variant-numeric: tabular-nums;
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+.keep {
+	display: flex;
+	justify-content: center;
+	gap: 24px;
+	margin: 20px 0 8px;
+}
+
+.hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.complete {
+	text-align: center;
+}
+
+.complete .message {
+	margin: 12px 0 24px;
+	font-size: 14px;
+}
+
+.complete .stepTitle:focus {
+	outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.field input,
+	.keyValue {
+		transition: none;
+	}
+}

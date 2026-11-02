@@ -1,0 +1,163 @@
+.page {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-width: 0;
+}
+
+/* The layer over the page that its head's title travels in (MovingHead). */
+.head_host {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+/* The title's room in the head: the title itself travels over it. */
+.title_room {
+	visibility: hidden;
+}
+
+.scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+/* The page's title rests on the baseline of the sidebar's "Inbox" (UI-23,
+   --sidebar-label-baseline, below a head as tall as the page's band); a
+   24/30 Roboto title's baseline lies 23.2 into its line. On macOS the firm's
+   row under the traffic lights lowers "Inbox", and every title with it
+   (--firm-row). */
+.content {
+	max-width: 1180px;
+	padding: calc(var(--sidebar-label-baseline) - 23.2px + var(--firm-row)) 40px var(--foot);
+}
+
+.content_wide {
+	max-width: none;
+}
+
+/* A page set as Inbox is (the owner, 2026-11-02: "take Team's distances,
+   and the tokens' sizes, from Inbox"): its width, its margins and its
+   title's place - a 30/36 title whose baseline, 28.3 into its line, rests on
+   the sidebar's "Inbox" - with the line under it in body type, 12 below
+   (the head's own 6 and 6 more), as Inbox's own. */
+/* Its left margin from the page's whole width (stableGutter.js), so a
+   scrollbar never moves it (the owner, 2026-11-02). */
+.content_inbox {
+	max-width: 1200px;
+	margin-left: max(0px, calc((var(--page-width, 100%) - 1200px) / 2));
+	margin-right: auto;
+	padding: calc(var(--sidebar-label-baseline) - 28.3px + var(--firm-row)) clamp(24px, 3.5vw, 64px) var(--foot);
+}
+
+/* Under 1300 wide Inbox keeps 32 at its sides (InboxPage.module.css), and so
+   does a page set as it is (the owner, 2026-11-02). */
+@media (max-width: 1300px) {
+	.content_inbox {
+		padding-inline: 32px;
+	}
+}
+
+.head_inbox {
+	margin-bottom: 0;
+}
+
+.head_inbox .title {
+	font: 500 30px/36px var(--font-sans);
+	letter-spacing: -0.02em;
+}
+
+.head_inbox .line {
+	margin-top: 6px;
+	font: var(--type-body);
+}
+
+/* A head whose face stands beside its words: the name and the line under it
+   one block, close together and centred on the face, so the line's first
+   words stand within the face's height (the owner, 2026-11-02). */
+.head_compact {
+	align-items: center;
+}
+
+.head_compact .head_text {
+	gap: 0;
+}
+
+.head_compact .line {
+	margin-top: 0;
+}
+
+/* Its name in a page's title size, not Inbox's larger one (the owner,
+   2026-11-02: "the name's font in the profile is too big"). */
+.head_compact .title {
+	font: var(--type-page-title);
+	letter-spacing: var(--track-display);
+}
+
+/* A carried head's line, travelling with its title: quieter than the name,
+   beside it once docked in the band (the owner, 2026-11-02). */
+.line_travelling {
+	display: block;
+	max-width: 50vw;
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The tour already owns its common window margins. */
+.page[data-demonstration] .scroll { flex: none; overflow: visible; }
+.page[data-demonstration] .content { padding: 0; }
+
+.head {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	margin-bottom: 28px;
+}
+
+.head_lead {
+	display: inline-flex;
+	flex: none;
+}
+
+.head_text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+	font: var(--type-page-title);
+	letter-spacing: var(--track-display);
+}
+
+.line {
+	font: 400 15px/22px var(--font-sans);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+.actions {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	padding-top: 2px;
+}
+
+@media print {
+	.content {
+		max-width: none;
+		padding: 0;
+	}
+}

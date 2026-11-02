@@ -1,0 +1,30 @@
+/* Brick squares (Badges.jsx, D-202): white figures on Legal Machines' accent,
+   18 points tall, their corners a small square's, side by side. */
+.badges {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	font: 600 11px/18px var(--font-sans);
+	font-variant-numeric: tabular-nums;
+	color: #ffffff;
+	background: var(--accent);
+	border-radius: 6px;
+}
+
+/* The "@" stands in a square of its own, its glyph centred by its drawing. */
+.at {
+	padding: 0;
+	width: 18px;
+	font-weight: 600;
+	line-height: 17px;
+}

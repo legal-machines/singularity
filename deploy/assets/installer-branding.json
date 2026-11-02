@@ -1,0 +1,29 @@
+{
+  "icon": {
+    "backgroundTop": "#6745BD",
+    "backgroundBottom": "#482A99"
+  },
+  "dmg": {
+    "title": "Install Singularity",
+    "subtitle": "Drag the app to Applications",
+    "backgroundTop": "#F4F2EC",
+    "backgroundBottom": "#EAE7DE",
+    "glow": "#BEEC4C33",
+    "panel": "#FCFBF8F7",
+    "panelOutline": "#DAD6C9",
+    "arrow": "#AE493F",
+    "titleColor": "#171717",
+    "subtitleColor": "#5B584D"
+  },
+  "windows": {
+    "eyebrow": "Singularity",
+    "title": "SETUP",
+    "gradientTop": "#171717",
+    "gradientBottom": "#AE493F",
+    "glow": "#BEEC4C4D",
+    "primaryText": "#F2F0EC",
+    "secondaryText": "#B7B2A4",
+    "bannerTop": "#F4F2EC",
+    "bannerBottom": "#EAE7DE"
+  }
+}

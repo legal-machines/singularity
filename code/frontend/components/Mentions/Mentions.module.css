@@ -1,0 +1,40 @@
+/* An @mention (Mentioned): the text's own colour in medium weight; the
+   member at this computer in the accent's ink. */
+
+.mention {
+	font-weight: 500;
+}
+
+/* Emphasis a message's author wrote: medium weight, the text's own ink. */
+.strong {
+	font-weight: 600;
+}
+
+.mention_you {
+	color: var(--accent-ink);
+}
+
+/* A mention is pressed like a link: the text's own run, underlined under the
+   pointer. */
+.mention_button {
+	display: inline;
+	padding: 0;
+	font: inherit;
+	font-weight: 500;
+	color: inherit;
+	text-align: inherit;
+	background: none;
+	border: 0;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.mention_button.mention_you {
+	color: var(--accent-ink);
+}
+
+.mention_button:hover {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}

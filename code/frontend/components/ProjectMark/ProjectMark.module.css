@@ -1,0 +1,142 @@
+/* A project's mark (ProjectMark.jsx): a circle, its initials or icon in
+   white. */
+
+.mark {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	color: #ffffff;
+	border-radius: 50%;
+}
+
+/* The letters' box is trimmed to their capitals, so they stand in the very
+   middle of the circle, not by the font's ascender and descender. */
+.initials {
+	font-weight: 500;
+	line-height: 1;
+	text-box: trim-both cap alphabetic;
+}
+
+.icon {
+	display: block;
+	flex: none;
+}
+
+/* The band: the mark and the name in the project's colour, with no ground of
+   its own (the owner, 2026-10-24); the project's part of the feed carries the
+   colour. A pointer over it lays a tint under it, its corners G2 (tokens.css,
+   --g2), on a layer so a focus ring around it stays whole. */
+.band {
+	position: relative;
+	isolation: isolate;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 100%;
+	height: 30px;
+	/* The mark stands 12px in, as a face stands in its card, so a band's mark
+	   and the faces under it share one left edge. */
+	padding: 0 12px;
+	font: 500 13.5px/20px var(--font-sans);
+	color: color-mix(in srgb, var(--project) 70%, var(--ink));
+	border-radius: 8px;
+}
+
+.band::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: transparent;
+	-webkit-mask-box-image: var(--g2) / 13.333px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+button.band:hover::before {
+	background: color-mix(in srgb, var(--project) 12%, var(--sheet));
+}
+
+.band_name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The picker: the colours in one row, then the initials and the icons. */
+
+.picker {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 14px;
+}
+
+.colors {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	justify-items: center;
+}
+
+.color {
+	width: 26px;
+	height: 26px;
+	background: var(--swatch);
+	border-radius: 50%;
+	box-shadow: 0 0 0 0 var(--sheet), 0 0 0 0 var(--swatch);
+	transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.color[aria-checked="true"] {
+	box-shadow: 0 0 0 2px var(--sheet), 0 0 0 4px var(--swatch);
+}
+
+.choices {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 4px;
+	max-height: 264px;
+	overflow-y: auto;
+}
+
+.choice {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 40px;
+	border-radius: 10px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.choice:hover {
+	background: var(--sheet-hover);
+}
+
+.choice[aria-checked="true"] {
+	background: var(--sheet-selected);
+}
+
+/* A new Matter's mark beside its name, pressed to choose it. */
+.chooser {
+	display: inline-flex;
+	flex: none;
+	border-radius: 50%;
+	transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.chooser:hover {
+	transform: scale(1.04);
+}
+
+.chooser:active {
+	transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chooser,
+	.chooser:hover,
+	.chooser:active {
+		transform: none;
+		transition: none;
+	}
+}

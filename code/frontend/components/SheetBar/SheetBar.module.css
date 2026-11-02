@@ -1,0 +1,36 @@
+.bar {
+	position: relative;
+	z-index: var(--layer-sticky);
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 12px;
+	height: var(--titlebar-height);
+	padding: 0 calc(20px + var(--caption-reserve)) 0 24px;
+	user-select: none;
+	app-region: drag;
+	-webkit-app-region: drag;
+}
+
+.bar_inner {
+	padding-right: 16px;
+}
+
+.space {
+	flex: 1;
+	min-width: 12px;
+}
+
+.middle {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+	min-width: 0;
+}
+
+.actions {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 6px;
+}

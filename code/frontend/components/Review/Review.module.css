@@ -1,0 +1,494 @@
+/* A colleague's document review under the message that hands it in
+   (Review.jsx): the draft as a file, two quiet links that open its changes
+   and how it was done, and the lawyer's two answers. Nothing here is a card:
+   it is part of the message, in its column. */
+
+.review {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 12px;
+}
+
+/* The two links, in the ink of the time line, one beside the other. */
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 18px;
+	margin-top: 2px;
+}
+
+.link {
+	padding: 0;
+	font: 500 13.5px/20px var(--font-sans);
+	color: var(--ink-3);
+	background: none;
+	border: 0;
+	cursor: pointer;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.link:hover {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.link:focus-visible {
+	color: var(--ink);
+	outline: 2px solid var(--selection);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+.answers {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-top: 6px;
+}
+
+.after {
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-4);
+}
+
+.decided {
+	margin-top: 2px;
+}
+
+/* The changes, clause by clause: the place and its topic, the redline, and
+   why. Each stands apart by air and a hairline, never a box. */
+.changes {
+	display: flex;
+	flex-direction: column;
+	margin: 4px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.change {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 14px 0;
+	border-top: 1px solid var(--line);
+}
+
+.change:last-child {
+	border-bottom: 1px solid var(--line);
+}
+
+.change_head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.place {
+	font: 500 14px/20px var(--font-sans);
+	color: var(--ink);
+}
+
+.topic {
+	font: 400 13.5px/20px var(--font-sans);
+	color: var(--ink-3);
+}
+
+.redline {
+	font: 400 14.5px/24px var(--font-sans);
+	color: var(--ink);
+	text-wrap: pretty;
+}
+
+.deleted {
+	color: var(--ink-3);
+	text-decoration: line-through;
+	text-decoration-color: var(--accent);
+	text-decoration-thickness: 1px;
+}
+
+/* A rewritten clause: its kept words a step back, so its changes stand out. */
+.kept {
+	color: var(--ink-2);
+}
+
+.inserted {
+	text-decoration: underline;
+	text-decoration-color: var(--ink-3);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.anchor {
+	color: var(--ink-3);
+}
+
+.why {
+	font: 400 13.5px/21px var(--font-sans);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}
+
+.unwritten {
+	font: 400 13.5px/20px var(--font-sans);
+	color: var(--accent-ink);
+}
+
+/* How the work was done: terms on the left, their words beside them. */
+.details {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	column-gap: 20px;
+	row-gap: 6px;
+	margin: 4px 0 0;
+	padding: 12px 0;
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+}
+
+.detail {
+	display: contents;
+}
+
+.detail dt {
+	font: 400 13.5px/20px var(--font-sans);
+	color: var(--ink-3);
+}
+
+.detail dd {
+	margin: 0;
+	font: 400 13.5px/20px var(--font-sans);
+	color: var(--ink);
+	text-wrap: pretty;
+}
+
+/* The colleague at work: its face and the step it is at, where its next
+   message will stand. */
+.underway {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr);
+	column-gap: 16px;
+	align-items: center;
+	padding-top: 28px;
+}
+
+.underway_face {
+	display: flex;
+	opacity: 0.85;
+}
+
+.underway_body {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.underway_since {
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-4);
+}
+
+@media (max-width: 560px) {
+	.details {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 2px;
+	}
+
+	.detail dd {
+		margin-bottom: 6px;
+	}
+}
+
+/* The files a message hands over, one under another, as anyone's are. */
+/* The files a message hands over, close under its words: 8 below them, so a
+   file reads as its message's (the owner, 2026-11-02). */
+.files {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+/* An assignment under the colleague's last word on it (D-119): each result a
+   row of the message's column - its file's kind, its name, where it stands -
+   pressed to open where it is decided on. No card, and no line between rows
+   (UI-22): air and the row's own hover hold them apart. */
+.assignment {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+/* Its files stand 8 under the message's words, as any message's do. */
+.assignment > .files {
+	margin-top: 0;
+}
+
+.results {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.result {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	column-gap: 12px;
+	align-items: start;
+	width: 100%;
+	padding: 8px 0;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	background: none;
+	border: 0;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+.result:focus-visible {
+	outline: 2px solid var(--selection);
+	outline-offset: 2px;
+}
+
+.result:disabled {
+	cursor: default;
+}
+
+.result_text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.result_name {
+	font: 500 14px/20px var(--font-sans);
+	color: var(--ink);
+	overflow-wrap: anywhere;
+}
+
+.result_left {
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-3);
+}
+
+/* A result's row: the result, and while it waits for the lawyer their two
+   answers at the row's right edge, one rail down the card. The whole row takes
+   the hover, bleeding 10px past the column as a pressed row does. */
+.result_row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: 16px;
+	align-items: center;
+	margin: 0 -10px;
+	padding: 0 10px;
+	border-radius: 10px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.result_row:hover {
+	background: var(--sheet-hover);
+}
+
+.result_row:has(> .result:disabled):hover {
+	background: none;
+}
+
+.result_answers {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* In a narrow window the answers go under the result's words, on the line
+   its name begins (26px icon, 12px gap). */
+@media (max-width: 640px) {
+	.result_row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.result_answers {
+		flex-wrap: wrap;
+		padding: 0 0 8px 38px;
+	}
+}
+
+/* The decisions under a colleague's message (D-120): each question in the
+   message's own column, held apart by air - no card, no line (UI-22). */
+.decisions {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	margin: 14px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.decision {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+}
+
+.decision_question {
+	margin: 0;
+	font: 500 14.5px/22px var(--font-sans);
+	color: var(--ink);
+	text-wrap: pretty;
+}
+
+.decision_why {
+	margin: 0;
+	font: 400 13.5px/20px var(--font-sans);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}
+
+.decision_note {
+	margin: 0;
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-3);
+}
+
+/* A decision's choices (D-174): rows the member takes at a glance, every row
+   alike until one is taken - the recommendation is marked in words on its own
+   row, never filled as if already chosen. An instrument, so grey belongs to
+   it; the rows wrap their words and never run past the column. */
+.choices {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	width: 100%;
+	max-width: 560px;
+	margin-top: 4px;
+}
+
+.choice {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: 12px;
+	row-gap: 2px;
+	align-items: baseline;
+	width: 100%;
+	padding: 8px 12px;
+	font: inherit;
+	text-align: left;
+	color: var(--ink);
+	background: var(--sheet-hover);
+	border: 0;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.choice:hover {
+	background: var(--sheet-press);
+}
+
+.choice:focus-visible {
+	outline: 2px solid var(--selection);
+	outline-offset: 2px;
+}
+
+.choice:disabled {
+	cursor: default;
+}
+
+.choice[aria-busy="true"] {
+	background: var(--sheet-selected);
+}
+
+.choice_words {
+	font: 500 14px/20px var(--font-sans);
+	text-wrap: pretty;
+	overflow-wrap: anywhere;
+}
+
+.choice_mark {
+	font: 500 12.5px/20px var(--font-sans);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.choice_reason {
+	grid-column: 1 / -1;
+	font: 400 13px/19px var(--font-sans);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}
+
+/* Under the choices: the member's own instruction, and what follows an answer. */
+.decision_after {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 16px;
+	row-gap: 2px;
+	margin: 2px 0 0;
+}
+
+.decision_next {
+	font: 400 13px/20px var(--font-sans);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+/* Where it applies: the source, small and left, after the decision. */
+.decision_source {
+	padding: 0;
+	font: 400 12.5px/18px var(--font-sans);
+	color: var(--ink-3);
+	text-align: left;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	overflow-wrap: anywhere;
+}
+
+.decision_source:hover {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.decision_source:focus-visible {
+	outline: 2px solid var(--selection);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+.decision_own {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	max-width: 520px;
+}
+
+.decision_input {
+	flex: 1;
+	min-width: 0;
+	height: 32px;
+	padding: 0 10px;
+	font: 400 14px/20px var(--font-sans);
+	color: var(--ink);
+	background: var(--sheet);
+	border: 1px solid var(--line-strong, var(--line));
+	border-radius: 8px;
+}
+
+.decision_input:focus-visible {
+	outline: 2px solid var(--selection);
+	outline-offset: 0;
+}

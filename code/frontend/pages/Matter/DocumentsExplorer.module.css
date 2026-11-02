@@ -1,0 +1,224 @@
+/* A Matter's documents as a file browser's list (DocumentsExplorer.jsx): where
+   one is over the list, a quiet line of column names, then folders and files,
+   each row a press that opens it, its ground showing under the pointer; no
+   frame and no lines between rows. */
+.explorer {
+	display: flex;
+	flex-direction: column;
+	margin-top: 36px;
+}
+
+.bar {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-height: 32px;
+	margin-bottom: 16px;
+}
+
+/* Where one is: the Matter's folder, then each folder in it; a folder one has
+   passed opens again with a press. */
+.path {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	min-width: 0;
+	font: var(--type-body);
+}
+
+.step {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.slash {
+	padding: 0 6px;
+	color: var(--ink-4);
+}
+
+.here,
+.up {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	padding: 4px 6px;
+	margin: 0 -2px;
+	border-radius: 7px;
+}
+
+.here {
+	font-weight: 500;
+	color: var(--ink);
+}
+
+.up {
+	color: var(--ink-3);
+	transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.up:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+.here svg,
+.up svg {
+	flex: none;
+	color: var(--ink-3);
+}
+
+.table {
+	display: flex;
+	flex-direction: column;
+	margin: 0 -12px;
+}
+
+/* Name, when it came and its size, as a file browser's list sets them. */
+.head,
+.open {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 180px 170px 96px;
+	align-items: center;
+	column-gap: 16px;
+}
+
+.head {
+	padding: 0 12px 8px;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.size_head {
+	text-align: right;
+}
+
+.row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover,
+.row:focus-within {
+	background: var(--sheet-hover);
+}
+
+.open {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 12px;
+	text-align: left;
+}
+
+.name {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.label {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Who added it: a small face and their name. */
+.by {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.by_name {
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-2);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.when,
+.size {
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-variant-numeric: tabular-nums;
+}
+
+.size {
+	text-align: right;
+}
+
+.folder {
+	flex: none;
+	width: 26px;
+	height: 22px;
+	margin: 5px 0;
+	overflow: visible;
+}
+
+.folder path:first-child {
+	fill: var(--sheet-quiet);
+	stroke: var(--line-strong);
+	stroke-width: 1.5;
+}
+
+.folder path:last-child {
+	fill: none;
+	stroke: var(--line-strong);
+	stroke-width: 1.5;
+}
+
+/* Its place in Finder or File Explorer, under the pointer only, over the
+   end of the row. */
+.actions {
+	position: absolute;
+	top: 50%;
+	right: 118px;
+	display: flex;
+	transform: translateY(-50%);
+}
+
+.actions button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	color: var(--ink-3);
+	opacity: 0;
+	transition: opacity var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover .actions button,
+.row:focus-within .actions button {
+	opacity: 1;
+}
+
+.actions button:hover {
+	color: var(--ink);
+	background: var(--sheet-selected);
+}
+
+@media (hover: none) {
+	.actions button {
+		opacity: 1;
+	}
+}
+
+.empty {
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}

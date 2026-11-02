@@ -1,0 +1,437 @@
+{
+  "domain": "Matter",
+  "methods": [
+    {
+      "name": "matter.list",
+      "policy": "worker",
+      "result": "MatterListResult",
+      "_order": 25
+    },
+    {
+      "name": "matter.listSummaries",
+      "policy": "worker",
+      "result": "MatterSummaryListResult",
+      "_order": 225
+    },
+    {
+      "name": "matter.create",
+      "policy": "worker",
+      "params": {
+        "name": "string",
+        "description": "string | undefined",
+        "instructions": "string | undefined"
+      },
+      "result": "Matter",
+      "_order": 27
+    },
+    {
+      "name": "matter.createFromFolder",
+      "policy": "ui",
+      "result": {
+        "oneOf": [
+          {
+            "$ref": "#/schemas/Project"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "_order": 147
+    },
+    {
+      "name": "matter.update",
+      "policy": "worker",
+      "params": {
+        "id": "string",
+        "name": "string | undefined",
+        "description": "string | null | undefined",
+        "instructions": "string | null | undefined",
+        "appearance": "ProjectAppearance | undefined",
+        "archived": "boolean | undefined",
+        "correspondenceIntake": "IntakeRule[] | undefined"
+      },
+      "result": "Matter",
+      "_order": 28
+    },
+    {
+      "name": "matter.delete",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": "MatterListResult",
+      "_order": 29
+    },
+    {
+      "name": "matter.chooseFolder",
+      "policy": "ui",
+      "params": {
+        "matterId": "string"
+      },
+      "result": "Matter",
+      "_order": 34
+    },
+    {
+      "name": "matter.openFolder",
+      "policy": "ui",
+      "params": {
+        "matterId": "string"
+      },
+      "result": "boolean",
+      "_order": 35
+    },
+    {
+      "name": "project.getDataStatus",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ProjectDataStatus",
+      "_order": 56
+    },
+    {
+      "name": "project.setUpData",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "startEmpty": "boolean | undefined"
+      },
+      "result": "ProjectDataStatus",
+      "_order": 57
+    },
+    {
+      "name": "project.revealData",
+      "policy": "ui",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "boolean",
+      "_order": 58
+    },
+    {
+      "name": "project.prepareCleanCopy",
+      "policy": "ui",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "string",
+      "_order": 59
+    },
+    {
+      "name": "project.removeData",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "boolean",
+      "_order": 60
+    },
+    {
+      "name": "project.discover",
+      "policy": "worker",
+      "result": "ProjectDiscoveryResult",
+      "_order": 61
+    },
+    {
+      "name": "project.saveAiSetup",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "overrides": "AiSetupRoleOverride[]"
+      },
+      "result": "Matter",
+      "_order": 67
+    },
+    {
+      "name": "project.listConflicts",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ProjectConflicts",
+      "_order": 152
+    },
+    {
+      "name": "project.resolveConflict",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "conflictId": "string",
+        "resolution": "string"
+      },
+      "result": "boolean",
+      "_order": 153
+    },
+    {
+      "name": "project.createSample",
+      "policy": "worker",
+      "result": "Project",
+      "_order": 175
+    },
+    {
+      "name": "project.create",
+      "policy": "worker",
+      "params": {
+        "name": "string",
+        "folderToken": "string | undefined"
+      },
+      "result": "Project",
+      "_order": 176
+    },
+    {
+      "name": "project.sharedActivity",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "SharedActivity",
+      "_order": 198
+    },
+    {
+      "name": "project.resolveOverwrittenChange",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "changeId": "string",
+        "choice": "string"
+      },
+      "result": "SharedActivity",
+      "_order": 199
+    },
+    {
+      "name": "project.firmTeam",
+      "policy": "worker",
+      "params": {},
+      "result": "FirmTeam",
+      "_order": 200
+    },
+    {
+      "name": "project.confirmComputer",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "actorId": "string",
+        "deviceId": "string"
+      },
+      "result": "SharedActivity",
+      "_order": 204
+    },
+    {
+      "name": "project.revokeComputer",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "actorId": "string",
+        "deviceId": "string"
+      },
+      "result": "SharedActivity",
+      "_order": 205
+    },
+    {
+      "name": "matter.openDiscovered",
+      "policy": "worker",
+      "params": {
+        "path": "string"
+      },
+      "result": "Project",
+      "_order": 239
+    },
+    {
+      "name": "coordination.useFirmFolder",
+      "policy": "worker",
+      "params": {
+        "folder": "string"
+      },
+      "result": "CoordinationStatus",
+      "_order": 240
+    },
+    {
+      "name": "coordination.status",
+      "policy": "worker",
+      "params": {},
+      "result": "CoordinationStatus",
+      "_order": 241
+    },
+    {
+      "name": "coordination.shareMatter",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "CoordinationStatus",
+      "_order": 242
+    },
+    {
+      "name": "coordination.invitation",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "CoordinationInvitation",
+      "_order": 243
+    },
+    {
+      "name": "coordination.join",
+      "policy": "worker",
+      "params": {
+        "invitation": "string"
+      },
+      "result": "CoordinationStatus",
+      "_order": 265
+    },
+    {
+      "name": "coordination.acceptKey",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "deviceId": "string"
+      },
+      "result": "CoordinationStatus",
+      "_order": 266
+    },
+    {
+      "name": "project.recordTime",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "date": "string",
+        "start": "string | undefined",
+        "minutes": "integer",
+        "text": "string",
+        "billable": "boolean | undefined"
+      },
+      "result": "TimeEntry",
+      "_order": 289
+    },
+    {
+      "name": "project.updateTime",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entryId": "string",
+        "date": "string | undefined",
+        "start": "string | undefined",
+        "minutes": "integer | undefined",
+        "text": "string | undefined",
+        "billable": "boolean | undefined"
+      },
+      "result": "TimeEntry",
+      "_order": 290
+    },
+    {
+      "name": "project.removeTime",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "entryId": "string"
+      },
+      "result": "TimeRemoved",
+      "_order": 291
+    },
+    {
+      "name": "project.listTime",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ProjectTime",
+      "_order": 292
+    },
+    {
+      "name": "coordination.firmComputers",
+      "policy": "worker",
+      "params": {},
+      "result": "FirmComputerList",
+      "_order": 304
+    },
+    {
+      "name": "coordination.checkComputer",
+      "policy": "worker",
+      "params": {
+        "deviceId": "string"
+      },
+      "result": "ComputerCheck",
+      "_order": 305
+    },
+    {
+      "name": "coordination.computerCheck",
+      "policy": "worker",
+      "params": {
+        "deviceId": "string"
+      },
+      "result": "ComputerCheck",
+      "_order": 306
+    },
+    {
+      "name": "coordination.keepComputer",
+      "policy": "worker",
+      "params": {
+        "deviceId": "string"
+      },
+      "result": "FirmComputerList",
+      "_order": 307
+    },
+    {
+      "name": "coordination.refuseComputer",
+      "policy": "worker",
+      "params": {
+        "deviceId": "string"
+      },
+      "result": "FirmComputerList",
+      "_order": 308
+    },
+    {
+      "name": "coordination.endComputerCheck",
+      "policy": "worker",
+      "params": {
+        "deviceId": "string"
+      },
+      "result": "FirmComputerList",
+      "_order": 309
+    },
+    {
+      "name": "coordination.giveMatter",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "actorId": "string"
+      },
+      "result": "MatterGiven",
+      "_order": 310
+    },
+    {
+      "name": "coordination.offers",
+      "policy": "worker",
+      "params": {},
+      "result": "MatterOfferList",
+      "_order": 311
+    },
+    {
+      "name": "coordination.acceptOffer",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "fromDeviceId": "string"
+      },
+      "result": "CoordinationStatus",
+      "_order": 312
+    },
+    {
+      "name": "coordination.declineOffer",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "fromDeviceId": "string"
+      },
+      "result": "MatterOfferList",
+      "_order": 313
+    },
+    {
+      "name": "matter.chooseNewFolder",
+      "policy": "ui",
+      "result": "ChosenFolder | null",
+      "_order": 315
+    }
+  ]
+}

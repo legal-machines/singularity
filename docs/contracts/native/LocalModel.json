@@ -1,0 +1,84 @@
+{
+  "domain": "LocalModel",
+  "methods": [
+    {
+      "name": "papinian.getModelStatus",
+      "policy": "worker",
+      "result": "PapinianModelStatus",
+      "_order": 22
+    },
+    {
+      "name": "localModels.list",
+      "policy": "worker",
+      "result": "LocalModelStatus[]",
+      "_order": 23
+    },
+    {
+      "name": "localModels.getRuntimeState",
+      "policy": "worker",
+      "result": "LocalInferenceState",
+      "_order": 105
+    },
+    {
+      "name": "localModels.authorize",
+      "policy": "worker",
+      "params": {
+        "password": "string"
+      },
+      "result": "PapinianModelStatus",
+      "_order": 49
+    },
+    {
+      "name": "localModels.sync",
+      "policy": "worker",
+      "params": {
+        "modelId": "string",
+        "existingArtifactPath": "string | undefined"
+      },
+      "result": "PapinianModelStatus | LocalModelStatus[]",
+      "_order": 50
+    },
+    {
+      "name": "localModels.load",
+      "policy": "worker",
+      "params": {
+        "modelId": "string"
+      },
+      "result": "LocalModelStatus[]",
+      "_order": 51
+    },
+    {
+      "name": "localModels.unload",
+      "policy": "worker",
+      "params": {
+        "modelId": "string"
+      },
+      "result": "LocalModelStatus[]",
+      "_order": 52
+    },
+    {
+      "name": "localModels.remove",
+      "policy": "worker",
+      "params": {
+        "modelId": "string"
+      },
+      "result": "LocalModelStatus[]",
+      "_order": 69
+    },
+    {
+      "name": "localModels.useExistingFile",
+      "policy": "ui",
+      "result": "LocalModelStatus[]",
+      "_order": 148
+    },
+    {
+      "name": "localModels.forgetExistingFile",
+      "policy": "worker",
+      "params": {
+        "modelId": "string"
+      },
+      "result": "LocalModelStatus[]",
+      "_order": 149
+    }
+  ]
+}

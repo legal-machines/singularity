@@ -1,0 +1,1091 @@
+/* Messages (MessagesPage.jsx): a messenger. Every conversation in a column on
+   the left, the one open beside it, and who the other is on the right when
+   asked for. The columns meet at a vertical edge; nothing is ruled across
+   (UI-22). */
+
+.page {
+	position: relative;
+	display: grid;
+	grid-template-columns: 320px minmax(0, 1fr);
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	background: var(--sheet);
+}
+
+.page_about {
+	grid-template-columns: 320px minmax(0, 1fr) 300px;
+}
+
+/* The list of conversations. */
+
+.list {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	box-shadow: inset -1px 0 0 var(--line);
+}
+
+/* Every inset of the list is the traffic lights' own, an --edge from the
+   window's top and from the column's sides (the owner, 2026-11-02: "make
+   these distances one to one the red one"), measured to what is seen: the
+   title's letters stand an --edge below the top (its 20px line holds them
+   10.5px down: 6 in the 32px row, 4.5 above the capitals) and in from the
+   left (its "M" starts 1px into its box); the menu's dots end 10px inside their button,
+   and the column's own 1px line is its right edge. The head drags the window
+   round its buttons. */
+.list_head {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	gap: 10px;
+	app-region: drag;
+	-webkit-app-region: drag;
+	padding: calc(var(--edge) - 10.5px) calc(var(--edge) - 9px) 12px calc(var(--edge) - 1px);
+}
+
+/* With the sidebar put away the list stands at the window's left, under the
+   traffic lights: its title goes below their band. */
+:global([data-sidebar="hidden"]) .list_head {
+	padding-top: calc(var(--titlebar-height) - 10.5px);
+}
+
+/* The title with its tools at its right, on its line (the owner, 2026-11-02,
+   after Twist). */
+/* As tall as the conversation's head, so the title and the name stand on
+   one line. */
+.list_title_row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	min-width: 0;
+	min-height: 32px;
+}
+
+/* The title in the sidebar's own size, as "Inbox" (the owner, 2026-11-02). */
+/* In the firm's name's own type (the owner, 2026-11-02: "make the font of
+   Messages here the same as the firm's name - use exactly its font token"). */
+.list_title {
+	font: var(--type-sidebar-name);
+	color: var(--ink);
+}
+
+.rows {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-height: 0;
+	padding: 2px 9px var(--foot) 8px;
+	overflow-y: auto;
+}
+
+.rows_empty {
+	padding: 16px 12px;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr);
+	align-items: center;
+	column-gap: 12px;
+	width: 100%;
+	/* With the list's 8px, a face and a time stand an --edge from its sides. */
+	padding: 10px calc(var(--edge) - 8px);
+	text-align: left;
+	border-radius: var(--radius-lg);
+}
+
+.row {
+	--row-ground: var(--sheet);
+}
+
+.row:hover {
+	--row-ground: var(--sheet-hover);
+	background: var(--sheet-hover);
+}
+
+.row:active {
+	--row-ground: var(--sheet-press);
+	background: var(--sheet-press);
+}
+
+.row_open,
+.row_open:hover {
+	--row-ground: var(--sheet-selected);
+	background: var(--sheet-selected);
+}
+
+.row_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.row_top,
+.row_bottom {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.row_name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font: var(--type-body-strong);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_time {
+	flex: none;
+	font: var(--type-meta);
+	color: var(--ink-4);
+}
+
+.row_name_new ~ .row_time {
+	color: var(--accent-ink);
+}
+
+.row_bottom {
+	color: var(--ink-3);
+}
+
+/* The mark of a letter's conversation on its face's corner, set off from
+   the face by a ring of the row's own ground. */
+.row_face {
+	position: relative;
+	display: block;
+	width: 40px;
+	height: 40px;
+}
+
+.row_mail {
+	position: absolute;
+	right: -5px;
+	bottom: -5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	color: var(--ink-2);
+	background: var(--sheet);
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px var(--row-ground), inset 0 0 0 1px var(--line-strong);
+}
+
+.row_preview {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_name_new {
+	color: var(--ink);
+}
+
+.row_text:has(.row_name_new) .row_preview {
+	color: var(--ink-2);
+}
+
+/* The conversation. */
+
+.chat,
+.chat_none {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.chat_none {
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 24px 48px 64px;
+	text-align: center;
+}
+
+.chat_none_title {
+	font: var(--type-heading);
+	color: var(--ink);
+}
+
+.chat_none_line {
+	max-width: 440px;
+	font: var(--type-body);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+/* Who the conversation is with, in the window's band: it drags the window
+   between its controls, and on Windows leaves the corner to the window's
+   buttons unless the column beside it has the corner. */
+/* Who the conversation is with: as far from the window's top as the traffic
+   lights, an --edge, and its menu as far from the right edge (the owner,
+   2026-11-02). It drags the window round its controls. */
+.chat_head {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 10px;
+	/* The menu's dots end 10 inside its button: they stand an --edge in. */
+	padding: var(--edge) calc(var(--edge) - 10px + var(--caption-reserve)) 12px var(--edge);
+	/* As tall with its menu alone as with the face, so the first message
+	   moves nothing. */
+	min-height: calc(var(--edge) + 48px);
+	user-select: none;
+	app-region: drag;
+	-webkit-app-region: drag;
+}
+
+.page_about .chat_head {
+	padding-right: calc(var(--edge) - 10px);
+}
+
+.chat_who {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.chat_name,
+.chat_line {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The face, the name and the office as the member's own stand at the
+   sidebar's foot (AccountMenu): 36, the name's type and the detail's (the
+   owner, 2026-11-02: "take the font sizes and the avatar one to one"). */
+.chat_name {
+	font: var(--type-sidebar-name);
+	color: var(--ink);
+}
+
+.chat_line {
+	font: var(--type-sidebar-detail);
+	color: var(--ink-sidebar-detail);
+}
+
+.scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-gutter: stable both-edges;
+}
+
+.items {
+	display: flex;
+	flex-direction: column;
+	min-height: 100%;
+	max-width: var(--column);
+	margin: 0 auto;
+	padding: 8px 16px calc(20px + var(--reply-room, 0px));
+}
+
+/* An empty conversation says who it is with, in the middle of its room. */
+.opening {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 24px 48px;
+	text-align: center;
+}
+
+.opening_name {
+	margin-top: 14px;
+	font: var(--type-title);
+	letter-spacing: var(--track-title);
+	color: var(--ink);
+}
+
+.opening_line {
+	max-width: 380px;
+	margin-top: 6px;
+	font: var(--type-body);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+/* The first words stand at the conversation's foot, as in any messenger. */
+.items > :first-child:not(.opening) {
+	margin-top: auto;
+}
+
+/* The day stands in the middle of the conversation over the first of it
+   (the owner, 2026-11-02: "the division by days - in the chat's centre"). */
+.day {
+	padding: 20px 0 6px;
+	font: var(--type-meta);
+	color: var(--ink-4);
+	text-align: center;
+}
+
+.filing {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 8px 0 2px;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.filing_link {
+	color: var(--ink-2);
+}
+
+.filing_link:hover {
+	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.message {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr);
+	column-gap: 10px;
+	margin-top: 12px;
+}
+
+.message_more {
+	margin-top: 3px;
+}
+
+.message_own,
+.message_letter {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.message_own {
+	justify-items: end;
+}
+
+.message_face {
+	align-self: end;
+	display: flex;
+}
+
+/* The message and, beside it while it is pointed at, what may be done with
+   it: at its right for another's, at its left for the member's own. */
+.message_line {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.message_own .message_line {
+	flex-direction: row-reverse;
+}
+
+.message_body {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	max-width: 78%;
+	min-width: 0;
+}
+
+.message_actions {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 2px;
+	opacity: 0;
+	transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.message:hover .message_actions,
+.message:focus-within .message_actions,
+.message_menu .message_actions {
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.message_actions {
+		transition: none;
+	}
+}
+
+.message_own .message_body {
+	align-items: flex-end;
+}
+
+.message_letter .message_body {
+	max-width: 88%;
+}
+
+/* A bubble: the other's on the tray's grey, the member's own in ink. Its
+   time sits in its last line's corner. */
+.bubble {
+	max-width: 100%;
+	padding: 8px 12px 6px 14px;
+	font: 400 14.5px/21px var(--font-sans);
+	color: var(--ink);
+	overflow-wrap: anywhere;
+	background: var(--tray);
+	border-radius: 14px;
+	text-wrap: pretty;
+}
+
+
+
+.message_own .bubble {
+	color: var(--ink-inverse);
+	background: var(--ink);
+}
+
+/* A letter's time sits in its last line's corner; a message has none on it
+   (D-212): its menu says when it was sent and when it reached the other. */
+.bubble_time {
+	float: right;
+	margin: 6px 0 -2px 12px;
+	font: var(--type-meta);
+	color: var(--ink-4);
+	white-space: nowrap;
+}
+
+.message_own .bubble_time {
+	color: var(--ink-inverse-2);
+}
+
+/* A message whose menu is open stands out from the rest by a quiet ring, so
+   the menu reads as its own. */
+.message_menu .bubble,
+.message_menu .photo {
+	box-shadow: 0 0 0 3px var(--sheet-press);
+}
+
+/* The message a reply answers: one quiet line over the reply - the sign of a
+   reply, who wrote it, its first words -, with no box and no stripe, as a
+   thread's (the owner, 2026-10-24); a press goes to it. */
+.quote {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 100%;
+	padding: 0 6px;
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-3);
+	text-align: left;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.quote > svg {
+	flex: none;
+	color: var(--ink-4);
+}
+
+.quote:hover {
+	color: var(--ink-2);
+}
+
+.quote_who {
+	flex: none;
+	font-weight: 500;
+	color: var(--ink-2);
+}
+
+.quote_text {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Photos as a messenger shows them: one alone at its own shape, as wide as a
+   bubble may be and never taller than a phone's photo on a screen; several
+   in a grid of squares. Rounded as the bubbles are. */
+.photos {
+	display: flex;
+	max-width: 100%;
+}
+
+.photos_grid {
+	display: grid;
+	grid-template-columns: repeat(2, 140px);
+	gap: 4px;
+}
+
+.photo {
+	display: block;
+	overflow: hidden;
+	max-width: min(100%, 320px);
+	background: var(--tray);
+	border-radius: 18px;
+	transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.photo img {
+	display: block;
+	/* A width of its own: WebKit can fold a picture with only a maximum width
+	   to nothing inside a button that takes its content's size. */
+	width: min(320px, 100%);
+	height: auto;
+	max-height: 360px;
+	object-fit: cover;
+}
+
+.photo_square {
+	width: 140px;
+	height: 140px;
+}
+
+.photo_square img {
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	object-fit: cover;
+}
+
+.photo_wait {
+	display: block;
+	width: 240px;
+	height: 160px;
+}
+
+.photo_square .photo_wait {
+	width: 100%;
+	height: 100%;
+}
+
+/* The other files a message hands over, one under another, as files. */
+.tiles {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	width: min(100%, 340px);
+}
+
+/* A message on its way: one quiet word under it, until it is kept. */
+.sending {
+	padding: 0 6px;
+	font: var(--type-meta);
+	color: var(--ink-4);
+}
+
+/* A message's reactions, just under it on the side it is read from: the
+   bubble stays whole (the owner, 2026-11-02). */
+.message_body .message_reactions {
+	margin-top: -2px;
+}
+
+/* The face stays level with the bubble, not with the reactions under it. */
+.message:has(> .message_body > .message_reactions) > .message_face {
+	padding-bottom: 34px;
+}
+
+/* The reactions a message takes in one press. */
+.picker {
+	display: flex;
+	gap: 2px;
+	padding: 6px;
+}
+
+.pick {
+	width: 36px;
+	height: 36px;
+	font-size: 20px;
+	line-height: 1;
+	border-radius: 8px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.pick:hover {
+	background: var(--sheet-hover);
+}
+
+/* Files dragged over the conversation: it says it takes them, over all of it
+   and moving nothing, and is gone once they are let go. */
+.drop {
+	position: absolute;
+	inset: 8px;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	font: var(--type-body-strong);
+	color: var(--ink-2);
+	background: color-mix(in srgb, var(--sheet) 94%, transparent);
+	border-radius: var(--radius-lg);
+	box-shadow: inset 0 0 0 1.5px var(--ink-4);
+	pointer-events: none;
+	animation: drop-in var(--duration-fast) var(--ease-out);
+}
+
+.drop > svg {
+	color: var(--ink-3);
+}
+
+@keyframes drop-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.drop {
+		animation: none;
+	}
+}
+
+
+.bubble_gone {
+	font-style: normal;
+	color: var(--ink-3);
+	background: none;
+	box-shadow: inset 0 0 0 1px var(--tray-line);
+}
+
+/* A letter keeps its subject over its words and its own paragraphs. */
+.bubble_letter {
+	padding: 12px 16px 8px;
+	border-radius: 18px 18px 18px 6px;
+}
+
+.letter_subject {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.message_own .letter_subject {
+	color: var(--ink-inverse);
+}
+
+.files {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.file {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 100%;
+	height: var(--control);
+	padding: 0 12px 0 10px;
+	font: var(--type-small);
+	color: var(--ink-2);
+	border-radius: var(--radius-md);
+	box-shadow: inset 0 0 0 1px var(--tray-line);
+}
+
+.file > svg {
+	flex: none;
+	color: var(--ink-3);
+}
+
+.file_name {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The reply stands over the conversation's foot with no ground of its own:
+   what scrolls under it is covered by its box alone (the owner, 2026-11-02:
+   "remove the white panel, let the chat itself be covered"). The
+   conversation keeps that much room at its end (--reply-room), so its last
+   message scrolls clear of the box. */
+.reply {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 1;
+	width: 100%;
+	max-width: var(--column);
+	margin: 0 auto;
+	padding: 4px 16px var(--foot);
+	pointer-events: none;
+}
+
+.reply > * {
+	pointer-events: auto;
+}
+
+/* Under the box, down to the window's foot, the page's own white covers what
+   scrolls there (the owner, 2026-11-02: "in this state let them be covered
+   with white"); it reaches behind the box's rounded corners too. */
+.reply::after {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: -1;
+	height: calc(var(--foot) + 12px);
+	content: "";
+	background: var(--sheet);
+}
+
+.reply_none {
+	flex: none;
+	width: 100%;
+	max-width: var(--column);
+	margin: 0 auto;
+	padding: 4px 16px var(--foot);
+}
+
+.reply_none {
+	padding-top: 12px;
+	font: var(--type-small);
+	color: var(--ink-3);
+	text-align: center;
+}
+
+/* A personal chat whose other computer is not connected yet says so above the
+   reply, as a fact in plain words (D-183). */
+/* One line, never wrapped (the owner, 2026-11-02). */
+.reply_wait {
+	width: fit-content;
+	max-width: 100%;
+	margin: 0 auto 8px;
+	padding: 2px 10px;
+	overflow: hidden;
+	background: var(--sheet);
+	border-radius: 8px;
+	font: var(--type-small);
+	color: var(--ink-3);
+	text-align: center;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* Over the reply, the message it answers: who wrote it and its first words,
+   and the way to leave it unanswered (D-212). */
+.replying {
+	display: grid;
+	grid-template-columns: 16px minmax(0, 1fr) 28px;
+	align-items: center;
+	column-gap: 10px;
+	margin: 0 0 8px;
+	padding: 6px 4px 6px 14px;
+	color: var(--ink-3);
+	background: var(--sheet);
+	border-radius: 12px;
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.replying_text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.replying_who {
+	font: var(--type-small);
+	font-weight: 500;
+	color: var(--ink-2);
+}
+
+.replying_words {
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.replying_drop {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: var(--ink-3);
+	border-radius: 50%;
+	transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.replying_drop:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+/* The files the next message hands over, each with the way to take it off. */
+/* The files a reply hands over, inside its box over the words, as Codex has
+   them (the owner, 2026-11-02): a picture as itself, a document as its first
+   page in small over its kind and name, each taken off by its own cross. */
+.attached_list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 16px 0;
+}
+
+.attached_wait {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.attached {
+	position: relative;
+	flex: none;
+	width: 164px;
+	height: 120px;
+	cursor: default;
+}
+
+.attached_is_picture {
+	width: auto;
+}
+
+.attached_open {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	text-align: left;
+	background: var(--sheet);
+	border-radius: 10px;
+	box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.attached_picture {
+	display: block;
+	width: auto;
+	min-width: 90px;
+	max-width: 220px;
+	height: 120px;
+	object-fit: cover;
+	border-radius: 10px;
+}
+
+.attached_preview {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	border-bottom: 1px solid var(--line);
+}
+
+/* The first page: the document's own lines, drawn at twice the size and
+   halved, so the smallest type stays sharp. */
+.attached_page {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	width: 200%;
+	padding: 18px 26px;
+	font: 400 10px/13px var(--font-sans);
+	color: var(--ink-2);
+	transform: scale(0.5);
+	transform-origin: top left;
+}
+
+.attached_line[data-strong] {
+	font-weight: 600;
+	color: var(--ink);
+}
+
+.attached_line[data-centered] {
+	text-align: center;
+}
+
+.attached_kind {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+}
+
+.attached_foot {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 8px;
+	height: 38px;
+	padding: 0 10px;
+}
+
+.attached_foot > span:first-child {
+	transform: scale(0.62);
+	margin: 0 -5px;
+}
+
+.attached_name {
+	min-width: 0;
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* While it is read, or where it cannot be: in words over the page. */
+.attached_state {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	padding: 2px 7px;
+	font: var(--type-meta);
+	color: var(--ink-2);
+	background: var(--sheet);
+	border-radius: 6px;
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.attached[data-state="failed"] .attached_state,
+.attached[data-state="gone"] .attached_state {
+	color: var(--accent-ink);
+}
+
+.attached_remove {
+	position: absolute;
+	top: -7px;
+	right: -7px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	color: var(--ink-2);
+	background: var(--sheet);
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.attached_remove:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+/* The paperclip: a round tool of the reply box, as its "+" elsewhere. */
+.attach {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	color: var(--ink-3);
+	border-radius: 8px;
+	transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.attach:hover:not(:disabled) {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+.attach:disabled {
+	color: var(--ink-4);
+	cursor: default;
+}
+
+/* Who the other is. */
+
+.about {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+	box-shadow: inset 1px 0 0 var(--line);
+}
+
+.about_head {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: flex-end;
+	height: var(--titlebar-height);
+	padding: 0 calc(20px + var(--caption-reserve)) 0 16px;
+	app-region: drag;
+	-webkit-app-region: drag;
+}
+
+.about_body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	min-height: 0;
+	padding: 12px 24px var(--foot);
+	overflow-y: auto;
+	text-align: center;
+}
+
+.about_name {
+	margin-top: 14px;
+	font: var(--type-title);
+	letter-spacing: var(--track-title);
+	color: var(--ink);
+}
+
+.about_line {
+	margin-top: 4px;
+	font: var(--type-small);
+	color: var(--ink-3);
+	overflow-wrap: anywhere;
+}
+
+.about_text {
+	margin-top: 16px;
+	font: var(--type-body);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}
+
+.about_matters {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	margin: 20px 0 4px;
+}
+
+.about_body > :global(button):last-child {
+	margin-top: 20px;
+}
+
+/* A narrow window keeps the conversation readable: who the other is lies
+   over its right side instead of taking a column. */
+@media (max-width: 1240px) {
+	.page,
+	.page_about {
+		grid-template-columns: 288px minmax(0, 1fr);
+	}
+
+	.page_about .chat_head {
+		padding-right: calc(20px + var(--caption-reserve));
+	}
+
+	.about {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		z-index: var(--layer-sticky);
+		width: 300px;
+		background: var(--sheet);
+		box-shadow: inset 1px 0 0 var(--line), -12px 0 32px rgba(25, 28, 39, 0.08);
+	}
+}

@@ -1,0 +1,371 @@
+{
+  "domain": "Account",
+  "methods": [
+    {
+      "name": "onboarding.getStatus",
+      "policy": "worker",
+      "result": "OnboardingStatus",
+      "_order": 3
+    },
+    {
+      "name": "onboarding.complete",
+      "policy": "ui",
+      "result": "OnboardingStatus",
+      "_order": 4
+    },
+    {
+      "name": "onboarding.saveAccountResume",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string",
+        "seatId": "string",
+        "contactEmailMasked": "string | null | undefined",
+        "contactEmailVerified": "boolean | undefined",
+        "displayName": "string | null | undefined",
+        "organisationName": "string | null | undefined"
+      },
+      "result": "AccountResume",
+      "_order": 5
+    },
+    {
+      "name": "onboarding.saveLocalSetup",
+      "policy": "worker",
+      "params": "Partial<LocalNodeSetupInput>",
+      "result": "LocalNodeSetup",
+      "_order": 6
+    },
+    {
+      "name": "settings.getLegalInstructions",
+      "policy": "worker",
+      "result": "LegalInstructionSettings",
+      "_order": 7
+    },
+    {
+      "name": "settings.saveLegalInstructions",
+      "policy": "worker",
+      "params": {
+        "userDefaultLegalInstructions": "string | null"
+      },
+      "result": "LegalInstructionSettings",
+      "_order": 8
+    },
+    {
+      "name": "notices.getDismissedIds",
+      "policy": "worker",
+      "result": "DismissedNoticeIds",
+      "_order": 9
+    },
+    {
+      "name": "notices.dismiss",
+      "policy": "worker",
+      "params": {
+        "noticeId": "string"
+      },
+      "result": "DismissedNoticeIds",
+      "_order": 10
+    },
+    {
+      "name": "settings.savePerson",
+      "policy": "worker",
+      "params": {
+        "displayName": "string | null",
+        "organisationName": "string | null | undefined"
+      },
+      "result": "SavedPerson",
+      "_order": 165
+    },
+    {
+      "name": "account.signIn",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string",
+        "seatId": "string",
+        "password": "string"
+      },
+      "result": "AccountSignInResult",
+      "_order": 169
+    },
+    {
+      "name": "account.verifyTwoFactor",
+      "policy": "worker",
+      "params": {
+        "challengeId": "string",
+        "code": "string",
+        "organisationId": "string",
+        "seatId": "string",
+        "password": "string",
+        "email": "string | undefined"
+      },
+      "result": "AccountSignInResult",
+      "_order": 170
+    },
+    {
+      "name": "account.getState",
+      "policy": "worker",
+      "result": "AccountState",
+      "_order": 171
+    },
+    {
+      "name": "account.lookup",
+      "policy": "worker",
+      "params": {
+        "email": "string"
+      },
+      "result": "AccountLookup",
+      "_order": 269
+    },
+    {
+      "name": "account.signInWithEmail",
+      "policy": "worker",
+      "params": {
+        "email": "string",
+        "seat": "string | undefined",
+        "password": "string"
+      },
+      "result": "AccountSignInResult",
+      "_order": 270
+    },
+    {
+      "name": "account.register",
+      "policy": "worker",
+      "params": {
+        "legalEntityName": "string",
+        "country": "string",
+        "registrationNumber": "string",
+        "email": "string",
+        "password": "string",
+        "agreements": "AccountAgreements",
+        "productUpdates": "boolean | undefined"
+      },
+      "result": "AccountRegistration",
+      "_order": 271
+    },
+    {
+      "name": "account.confirmEmail",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string",
+        "code": "string"
+      },
+      "result": "AccountEmailConfirmation",
+      "_order": 272
+    },
+    {
+      "name": "account.resendEmailCode",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string"
+      },
+      "result": "AccountCodeSent",
+      "_order": 273
+    },
+    {
+      "name": "account.signOut",
+      "policy": "worker",
+      "result": "AccountState",
+      "_order": 172
+    },
+    {
+      "name": "account.approvalState",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string"
+      },
+      "result": "AccountApprovalState",
+      "_order": 274
+    },
+    {
+      "name": "account.listSeats",
+      "policy": "worker",
+      "params": {},
+      "result": "FirmSeatList",
+      "_order": 275
+    },
+    {
+      "name": "account.createSeat",
+      "policy": "worker",
+      "params": {
+        "seatId": "string | undefined",
+        "password": "string"
+      },
+      "result": "FirmSeatMade",
+      "_order": 276
+    },
+    {
+      "name": "account.create",
+      "policy": "worker",
+      "params": {
+        "legalEntityName": "string",
+        "country": "string",
+        "registrationNumber": "string",
+        "email": "string",
+        "agreements": "AccountAgreements",
+        "productUpdates": "boolean | undefined"
+      },
+      "result": "AccountRegistration",
+      "_order": 278
+    },
+    {
+      "name": "account.setPassword",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string",
+        "password": "string"
+      },
+      "result": "AccountSetupStep",
+      "_order": 279
+    },
+    {
+      "name": "account.startTwoFactor",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string"
+      },
+      "result": "AccountTwoFactorKey",
+      "_order": 280
+    },
+    {
+      "name": "account.confirmTwoFactor",
+      "policy": "worker",
+      "params": {
+        "organisationId": "string",
+        "code": "string",
+        "seatId": "string | undefined",
+        "password": "string | undefined",
+        "email": "string | undefined"
+      },
+      "result": "AccountTwoFactorOn",
+      "_order": 281
+    },
+    {
+      "name": "account.saveRecoveryCodes",
+      "policy": "ui",
+      "params": {
+        "organisationId": "string"
+      },
+      "result": "AccountRecoveryCodesSaved",
+      "_order": 282
+    },
+    {
+      "name": "account.printRecoveryCodes",
+      "policy": "ui",
+      "params": {
+        "organisationId": "string"
+      },
+      "result": "AccountRecoveryCodesPrinted",
+      "_order": 283
+    },
+    {
+      "name": "account.setSeatPassword",
+      "policy": "worker",
+      "params": {
+        "seatId": "string",
+        "password": "string"
+      },
+      "result": "FirmSeatChanged",
+      "_order": 300
+    },
+    {
+      "name": "account.removeSeat",
+      "policy": "worker",
+      "params": {
+        "seatId": "string"
+      },
+      "result": "FirmSeatRemoved",
+      "_order": 301
+    },
+    {
+      "name": "account.ownSeat",
+      "policy": "worker",
+      "params": {},
+      "result": "OwnSeat",
+      "_order": 322
+    },
+    {
+      "name": "account.startOwnTwoFactor",
+      "policy": "worker",
+      "params": {},
+      "result": "OwnTwoFactorKey",
+      "_order": 323
+    },
+    {
+      "name": "account.confirmOwnTwoFactor",
+      "policy": "worker",
+      "params": {
+        "code": "string"
+      },
+      "result": "OwnTwoFactorOn",
+      "_order": 324
+    },
+    {
+      "name": "account.replaceOwnTwoFactor",
+      "policy": "worker",
+      "params": {
+        "password": "string",
+        "code": "string"
+      },
+      "result": "OwnTwoFactorKey",
+      "_order": 334
+    },
+    {
+      "name": "account.confirmReplacedTwoFactor",
+      "policy": "worker",
+      "params": {
+        "code": "string"
+      },
+      "result": "OwnTwoFactorOn",
+      "_order": 335
+    },
+    {
+      "name": "account.renewOwnRecoveryCodes",
+      "policy": "worker",
+      "params": {
+        "password": "string",
+        "code": "string"
+      },
+      "result": "OwnTwoFactorOn",
+      "_order": 336
+    },
+    {
+      "name": "account.changeOwnPassword",
+      "policy": "worker",
+      "params": {
+        "currentPassword": "string",
+        "newPassword": "string",
+        "code": "string | undefined"
+      },
+      "result": "PasswordChanged",
+      "_order": 325
+    },
+    {
+      "name": "account.resetSeatTwoFactor",
+      "policy": "worker",
+      "params": {
+        "seatId": "string"
+      },
+      "result": "SeatTwoFactorReset",
+      "_order": 326
+    },
+    {
+      "name": "account.requestRecovery",
+      "policy": "worker",
+      "params": {
+        "email": "string"
+      },
+      "result": "RecoveryRequested",
+      "_order": 327
+    },
+    {
+      "name": "account.resetPassword",
+      "policy": "worker",
+      "params": {
+        "email": "string",
+        "code": "string",
+        "twoStepCode": "string | undefined",
+        "newPassword": "string"
+      },
+      "result": "PasswordChanged",
+      "_order": 328
+    }
+  ]
+}

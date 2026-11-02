@@ -1,0 +1,32 @@
+{
+  "domain": "Provider",
+  "methods": [
+    {
+      "name": "providers.list",
+      "policy": "worker",
+      "result": "ConnectedProvider[]",
+      "_order": 16
+    },
+    {
+      "name": "providers.configure",
+      "policy": "worker",
+      "params": {
+        "providerId": "string",
+        "secret": "string",
+        "baseUrl": "string | undefined",
+        "displayName": "string | undefined"
+      },
+      "result": "ConnectedProvider[]",
+      "_order": 17
+    },
+    {
+      "name": "providers.disconnect",
+      "policy": "worker",
+      "params": {
+        "providerId": "string"
+      },
+      "result": "ConnectedProvider[]",
+      "_order": 18
+    }
+  ]
+}

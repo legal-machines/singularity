@@ -1,0 +1,1555 @@
+#include "PapinianGuard/RestorationGrammar/RestorationGrammar.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+namespace singularity::protected_api::papinian::restoration_grammar {
+namespace {
+
+namespace names = context::russian_names;
+using names::Case;
+using names::Gender;
+
+std::string lowered(const std::string &text) { return names::detail::lowered(text); }
+
+bool ends_with(const std::string &text, const std::string &suffix) {
+	return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool starts_with(const std::string &text, const std::string &prefix) { return text.compare(0, prefix.size(), prefix) == 0; }
+
+bool known(Gender gender) { return gender == Gender::Masculine || gender == Gender::Feminine; }
+
+std::size_t case_index(Case form) { return static_cast<std::size_t>(form); }
+
+Case case_at(std::size_t index) { return static_cast<Case>(index); }
+
+// ---------------------------------------------------------------------------
+// The text as words, spaces, line breaks and marks.
+
+std::size_t codepoint_length(const std::string &text, std::size_t at) {
+	const unsigned char lead = static_cast<unsigned char>(text[at]);
+	const std::size_t length = lead < 0x80 ? 1 : lead < 0xE0 ? 2 : lead < 0xF0 ? 3 : 4;
+	return std::min(length, text.size() - at);
+}
+
+bool letter_at(const std::string &text, std::size_t at) {
+	const unsigned char lead = static_cast<unsigned char>(text[at]);
+	if (lead < 0x80) return std::isalnum(lead) != 0;
+	return lead >= 0xD0 && lead <= 0xD4 && at + 1 < text.size();  // Cyrillic
+}
+
+// A space, a no-break space or a thin one.
+std::size_t space_length(const std::string &text, std::size_t at) {
+	if (text[at] == ' ' || text[at] == '\t') return 1;
+	if (text.compare(at, 2, "\xC2\xA0") == 0) return 2;
+	for (const char *space : {"\xE2\x80\xAF", "\xE2\x80\x89", "\xE2\x80\x8A", "\xE2\x80\x87"})
+		if (text.compare(at, 3, space) == 0) return 3;
+	return 0;
+}
+
+bool has_cyrillic(const std::string &text) {
+	for (const char byte : text)
+		if (static_cast<unsigned char>(byte) == 0xD0 || static_cast<unsigned char>(byte) == 0xD1) return true;
+	return false;
+}
+
+enum class TokenKind { Word, Space, Newline, Mark };
+
+struct Token {
+	TokenKind kind = TokenKind::Mark;
+	std::size_t begin = 0;
+	std::size_t end = 0;
+};
+
+// Tokens never cross a restored name's edge (`edge`), so a name is whole tokens.
+std::vector<Token> tokens_of(const std::string &text, const std::vector<bool> &edge) {
+	std::vector<Token> tokens;
+	std::size_t at = 0;
+	while (at < text.size()) {
+		const std::size_t begin = at;
+		if (text[at] == '\n' || text[at] == '\r') {
+			tokens.push_back({TokenKind::Newline, at, at + 1});
+			++at;
+			continue;
+		}
+		if (space_length(text, at) > 0) {
+			while (at < text.size() && space_length(text, at) > 0 && (at == begin || !edge[at])) at += space_length(text, at);
+			tokens.push_back({TokenKind::Space, begin, at});
+			continue;
+		}
+		if (letter_at(text, at)) {
+			while (at < text.size() && (at == begin || !edge[at])) {
+				if (letter_at(text, at)) { at += codepoint_length(text, at); continue; }
+				// A hyphen inside a word: «Монолит-Сервис».
+				if (text[at] == '-' && at + 1 < text.size() && !edge[at + 1] && letter_at(text, at + 1)) { ++at; continue; }
+				// An alternative ending written onto the word: «Уважаемый(ая)», «подготовил(а)»,
+				// «ознакомлен(-а)», and a template's «Уважаемый (ая)».
+				const bool spaced = text[at] == ' ' && at + 1 < text.size() && text[at + 1] == '(' && !edge[at + 1];
+				if (text[at] == '(' || spaced) {
+					std::size_t close = at + (spaced ? 2 : 1);
+					if (close < text.size() && !edge[close] && text[close] == '-') ++close;
+					else if (text.compare(close, 3, "\xE2\x80\x93") == 0) close += 3;  // –
+					const std::size_t from = close;
+					std::size_t letters = 0;
+					while (close < text.size() && !edge[close] && letters <= 4 && letter_at(text, close)) {
+						close += codepoint_length(text, close);
+						++letters;
+					}
+					const std::string alternative = lowered(text.substr(from, close - from));
+					// Spaced, only a gender's own ending: «пункт (а)» is an item, not a gender.
+					const bool gendered = !spaced || alternative == "ая" || alternative == "яя" || alternative == "ый"
+						|| alternative == "ий" || alternative == "ой" || alternative == "ей" || alternative == "на" || alternative == "ла";
+					if (letters >= 1 && letters <= 4 && gendered && close < text.size() && text[close] == ')' && !edge[close])
+						at = close + 1;
+				}
+				break;
+			}
+			tokens.push_back({TokenKind::Word, begin, at});
+			continue;
+		}
+		at += codepoint_length(text, at);
+		tokens.push_back({TokenKind::Mark, begin, at});
+	}
+	return tokens;
+}
+
+// ---------------------------------------------------------------------------
+// What governs a name: prepositions, fixed phrases, nouns, verbs, role nouns.
+
+// A word that puts the name after it in a case: «в лице», «от имени», «к», «с»,
+// «между», «о», «подпись …», «подписан …», «направить …».
+const std::unordered_map<std::string, Case> &governing_words() {
+	static const std::unordered_map<std::string, Case> table = [] {
+		std::unordered_map<std::string, Case> words;
+		const auto add = [&](Case form, std::initializer_list<const char *> list) {
+			for (const char *word : list) words.emplace(word, form);
+		};
+		add(Case::Genitive, {"от", "для", "у", "без", "до", "после", "против", "кроме", "вместо", "из", "около", "среди",
+			// «в лице», «от имени», «за подписью», «на имя», «в адрес», «в отношении», «со стороны», «от лица» …
+			"лице", "имени", "подписью", "имя", "адрес", "отношении", "стороны", "лица", "пользу", "интересах", "поручению",
+			"просьбе", "руководством", "ходатайству", "заявлению"});
+		add(Case::Dative, {"к", "ко", "по", "благодаря", "согласно", "вопреки", "уважаемому",
+			"направить", "направлено", "направлена", "направлен", "направлены", "направляем", "направляется", "передать",
+			"передано", "передана", "передан", "переданы", "передаём", "передаем", "предоставить", "предоставлено",
+			"предоставлена", "предоставлен", "предоставлены", "сообщить", "сообщаем", "сообщено", "адресовано", "адресован",
+			"адресована", "адресованы", "поручить", "поручено", "поручена", "выдать", "выдан", "выдана", "выдано", "выданы",
+			"выплатить", "выплачен", "выплачена", "выплачено", "выплачены", "перечислить", "перечисляем", "перечислен",
+			"перечислена", "перечислено", "перечислены", "уплатить", "возместить", "возвратить", "вернуть", "возвращён",
+			"возвращен", "возвращена", "возвращено", "возвращены", "принадлежит", "принадлежат"});
+		add(Case::Accusative, {"через", "про", "уведомить", "уведомляем", "известить", "извещаем", "просим", "прошу",
+			"обязать", "уполномочить", "уполномочиваем", "назначить", "назначаем", "назначает", "избрать", "избираем",
+			"утвердить", "утверждаем", "признать", "привлечь", "благодарим", "поздравляем", "уволить", "освободить",
+			"отстранить", "пригласить", "вызвать", "допросить"});
+		add(Case::Instrumental, {"с", "со", "между", "перед", "над",
+			// The one who acted: «подписан Лебедевым».
+			"подписан", "подписана", "подписано", "подписаны", "утверждён", "утвержден", "утверждена", "утверждено",
+			"составлен", "составлена", "составлено", "подготовлен", "подготовлена", "подготовлено"});
+		add(Case::Prepositional, {"о", "об", "обо", "при"});
+		// «договора, подписанного Смирновой», «составленным Лебедевым»: by whom.
+		for (const char *stem : {"подписанн", "составленн", "подготовленн", "утверждённ", "утвержденн", "выданн", "оформленн"})
+			for (const char *ending : {"ый", "ого", "ому", "ым", "ом", "ая", "ой", "ую", "ое", "ые", "ых", "ым", "ыми"})
+				words.emplace(std::string(stem) + ending, Case::Instrumental);
+		return words;
+	}();
+	return table;
+}
+
+// Nouns a name after them belongs to: «претензию Смирновой», «подпись
+// Лебедева», «Устав Общества», «супруга Лебедева» - every singular form, and
+// the plurals a document writes. Not a governor of its own: the name may be
+// the subject that follows the noun («В ответ на претензию Лебедев сообщил»).
+const std::unordered_set<std::string> &possessing_nouns() {
+	static const std::unordered_set<std::string> table = [] {
+		std::unordered_set<std::string> forms;
+		using Endings = std::array<const char *, 6>;
+		const auto add = [&](const Endings &endings, std::initializer_list<const char *> stems) {
+			for (const char *stem : stems)
+				for (const char *ending : endings) forms.insert(std::string(stem) + ending);
+		};
+		add({"а", "ы", "е", "у", "ой", "е"}, {"жалоб", "телеграмм", "супруг", "вин"});
+		add({"а", "и", "е", "у", "ой", "е"}, {"расписк", "справк", "характеристик", "книжк"});
+		add({"я", "и", "и", "ю", "ей", "и"}, {"претензи", "копи", "позици", "квитанци", "ликвидаци", "аннотаци", "акци"});
+		add({"ь", "и", "и", "ь", "ью", "и"}, {"подпис", "доверенност", "задолженност", "собственност",
+			"деятельност"});
+		add({"я", "и", "е", "ю", "ей", "е"}, {"дол"});
+		add({"о", "а", "у", "о", "ом", "е"}, {"письм", "имуществ", "ходатайств", "свидетельств", "обязательств", "банкротств",
+			"руководств"});
+		add({"е", "я", "ю", "е", "ем", "и"}, {"заявлени", "обращени", "уведомлени", "требовани", "согласи", "решени", "мнени",
+			"извещени", "возражени", "объяснени", "заключени", "распоряжени", "предложени", "бездействи", "местонахождени",
+			"поведени", "показани"});
+		add({"", "а", "у", "", "ом", "е"}, {"иск", "отзыв", "ответ", "запрос", "паспорт", "счёт", "счет", "устав", "долг",
+			"приказ", "протест", "договор", "вклад", "доход", "статус"});
+		add({"", "а", "у", "а", "ом", "е"}, {"супруг", "сын"});
+		for (const char *plural : {"требования", "обязательства", "действия", "действий", "интересы", "интересов", "реквизиты",
+				"реквизитов", "акции", "акций", "доли", "долей", "показания", "объяснения", "возражения", "дети", "детей",
+				"представители", "представителей", "участники", "участников", "учредители", "учредителей", "акционеры",
+				"акционеров", "работники", "работников", "сотрудники", "сотрудников", "органы", "органов", "наследники",
+				"наследников", "кредиторы", "кредиторов"})
+			forms.insert(plural);
+		return forms;
+	}();
+	return table;
+}
+
+// Role nouns a name stands with in apposition («генерального директора
+// Лебедева», «Займодавцу Кузнецову»), every singular form with the cases it
+// can be, a bit per case («директора» is the genitive and the accusative).
+const std::unordered_map<std::string, unsigned> &role_nouns() {
+	static const std::unordered_map<std::string, unsigned> table = [] {
+		std::unordered_map<std::string, unsigned> forms;
+		using Endings = std::array<const char *, 6>;
+		const Endings hard{"", "а", "у", "а", "ом", "е"};
+		const Endings soft{"ь", "я", "ю", "я", "ем", "е"};
+		const Endings fleeting{"ец", "ца", "цу", "ца", "цом", "це"};
+		const Endings adjective{"ий", "его", "ему", "его", "им", "ем"};
+		const Endings hardAdjective{"ый", "ого", "ому", "ого", "ым", "ом"};
+		const Endings feminine{"а", "и", "е", "у", "ой", "е"};
+		const Endings feminineSoft{"я", "и", "е", "ю", "ей", "е"};
+		const auto add = [&](const Endings &endings, std::initializer_list<const char *> stems) {
+			for (const char *stem : stems)
+				for (std::size_t index = 0; index < 6; ++index) forms[std::string(stem) + endings[index]] |= 1u << index;
+		};
+		add(hard, {"директор", "президент", "бухгалтер", "юрист", "адвокат", "партнёр", "партнер", "нотариус", "заёмщик",
+			"заемщик", "кредитор", "должник", "арендатор", "поставщик", "заказчик", "подрядчик", "участник", "акционер",
+			"ответчик", "сотрудник", "работник", "специалист", "менеджер", "начальник", "гражданин", "господин", "эксперт",
+			"аудитор", "оценщик", "консультант", "агент", "гарант", "собственник", "наследник", "плательщик", "ликвидатор",
+			"советник", "помощник", "инспектор", "прокурор", "бенефициар", "принципал", "комиссионер", "цедент",
+			"лицензиар", "лицензиат", "контрагент"});
+		add(soft, {"руководител", "представител", "председател", "заместител", "поручител", "арендодател", "исполнител",
+			"учредител", "работодател", "доверител", "получател", "отправител", "залогодател", "залогодержател",
+			"заявител", "нанимател", "наймодател", "приобретател", "покупател", "секретар", "следовател"});
+		add(fleeting, {"продав", "займодав", "ист"});
+		add(adjective, {"управляющ"});
+		add(hardAdjective, {"поверенн"});
+		add(feminine, {"гражданк", "госпож"});
+		add(feminineSoft, {"судь"});
+		// «г-ну», «г-же»: господину, госпоже.
+		add({"г-н", "г-на", "г-ну", "г-на", "г-ном", "г-не"}, {""});
+		add({"г-жа", "г-жи", "г-же", "г-жу", "г-жой", "г-же"}, {""});
+		return forms;
+	}();
+	return table;
+}
+
+// A party a contract or a claim names («Займодавцу», «Покупателем»): an
+// organisation after it is the party itself, in the same case («Займодавцу
+// Обществу …»), where after a post («директор Общества») it is whose.
+bool party_role(const std::string &lowerWord) {
+	static const std::array<const char *, 34> stems{"заёмщик", "заемщик", "кредитор", "должник", "арендатор", "поставщик",
+		"заказчик", "подрядчик", "ответчик", "гарант", "принципал", "комиссионер", "цедент", "цессионари", "лицензиар",
+		"лицензиат", "контрагент", "бенефициар", "плательщик", "агент", "поручител", "арендодател", "исполнител", "получател",
+		"отправител", "залогодател", "залогодержател", "заявител", "приобретател", "покупател", "продав", "займодав", "истц",
+		"ист"};
+	for (const char *stem : stems)
+		if (starts_with(lowerWord, stem)) return true;
+	return false;
+}
+
+unsigned role_cases(const std::string &lowerWord) {
+	const auto found = role_nouns().find(lowerWord);
+	return found == role_nouns().end() ? 0 : found->second;
+}
+
+// The first case a role noun's form can be.
+std::optional<Case> role_case(const std::string &lowerWord) {
+	const unsigned cases = role_cases(lowerWord);
+	for (std::size_t index = 0; index < 6; ++index)
+		if ((cases & (1u << index)) != 0) return case_at(index);
+	return std::nullopt;
+}
+
+using TitleForms = std::array<const char *, 6>;
+const TitleForms kMister{"господин", "господина", "господину", "господина", "господином", "господине"};
+const TitleForms kMadam{"госпожа", "госпожи", "госпоже", "госпожу", "госпожой", "госпоже"};
+const TitleForms kMisterShort{"г-н", "г-на", "г-ну", "г-на", "г-ном", "г-не"};
+const TitleForms kMadamShort{"г-жа", "г-жи", "г-же", "г-жу", "г-жой", "г-же"};
+
+struct Title {
+	Gender gender = Gender::Masculine;
+	std::size_t form = 0;
+	bool abbreviated = false;   // «г-н», «г-жа»
+};
+
+// «господин» / «госпожа» (or «г-н» / «г-жа») in a case.
+std::optional<Title> title_of(const std::string &lowerWord) {
+	for (std::size_t index = 0; index < 6; ++index) {
+		if (lowerWord == kMister[index]) return Title{Gender::Masculine, index, false};
+		if (lowerWord == kMadam[index]) return Title{Gender::Feminine, index, false};
+		if (lowerWord == kMisterShort[index]) return Title{Gender::Masculine, index, true};
+		if (lowerWord == kMadamShort[index]) return Title{Gender::Feminine, index, true};
+	}
+	return std::nullopt;
+}
+
+std::string title_form(Gender gender, std::size_t index, bool abbreviated = false) {
+	if (abbreviated) return gender == Gender::Feminine ? kMadamShort[index] : kMisterShort[index];
+	return gender == Gender::Feminine ? kMadam[index] : kMister[index];
+}
+
+// Legal-form abbreviations an organisation is written with: «ООО «…»», «ИП …».
+bool legal_abbreviation(const std::string &lowerWord) {
+	static const std::unordered_set<std::string> abbreviations{"ооо", "ао", "пао", "зао", "нао", "оао", "ано", "тоо", "ип",
+		"гуп", "муп", "фгуп", "нко", "фгбу", "фгау", "фгку", "фгбоу", "гбу", "гау", "гку", "мбу", "мау", "мку", "гбуз"};
+	return abbreviations.count(lowerWord) > 0;
+}
+
+bool conjunction(const std::string &lowerWord) { return lowerWord == "и" || lowerWord == "или" || lowerWord == "либо"; }
+
+// ---------------------------------------------------------------------------
+// Participles that agree with a name: «действующего», «именуемое».
+
+struct Participle {
+	std::size_t stem = 0;       // bytes of the stem
+	bool soft = false;          // «действующий», not «именуемый»
+	std::string ending;
+	bool reflexive = false;     // «являющийся»
+};
+
+using AdjectiveTable = std::array<std::array<const char *, 6>, 3>;  // masculine, feminine, neuter
+
+const AdjectiveTable &adjective_table(bool soft) {
+	static const AdjectiveTable hard{{{"ый", "ого", "ому", "ого", "ым", "ом"}, {"ая", "ой", "ой", "ую", "ой", "ой"},
+		{"ое", "ого", "ому", "ое", "ым", "ом"}}};
+	static const AdjectiveTable softTable{{{"ий", "его", "ему", "его", "им", "ем"}, {"ая", "ей", "ей", "ую", "ей", "ей"},
+		{"ее", "его", "ему", "ее", "им", "ем"}}};
+	return soft ? softTable : hard;
+}
+
+std::optional<Participle> participle_of(const std::string &lowerWord) {
+	static const std::array<std::pair<const char *, bool>, 7> stems{{{"действующ", true}, {"проживающ", true},
+		{"выступающ", true}, {"являющ", true}, {"именуем", false}, {"зарегистрированн", false}, {"уполномоченн", false}}};
+	std::string word = lowerWord;
+	bool reflexive = false;
+	if (ends_with(word, "ся")) {
+		word.resize(word.size() - std::string("ся").size());
+		reflexive = true;
+	}
+	for (const auto &[stem, soft] : stems) {
+		if (!starts_with(word, stem)) continue;
+		const std::string ending = word.substr(std::string(stem).size());
+		for (const auto &row : adjective_table(soft))
+			for (const char *form : row)
+				if (ending == form) return Participle{std::string(stem).size(), soft, ending, reflexive};
+	}
+	return std::nullopt;
+}
+
+// The cases a participle's ending can be, in order.
+std::vector<Case> participle_cases(const Participle &participle) {
+	std::vector<Case> cases;
+	for (std::size_t index = 0; index < 6; ++index)
+		for (const auto &row : adjective_table(participle.soft))
+			if (participle.ending == row[index]) { cases.push_back(case_at(index)); break; }
+	return cases;
+}
+
+std::string participle_ending(const Participle &participle, Gender gender, Case form, bool animate) {
+	const AdjectiveTable &table = adjective_table(participle.soft);
+	const std::size_t row = gender == Gender::Feminine ? 1 : gender == Gender::Neuter ? 2 : 0;
+	std::size_t index = case_index(form);
+	if (form == Case::Accusative && row == 0 && !animate) index = 0;  // «банк, именуемый»
+	return table[row][index];
+}
+
+// ---------------------------------------------------------------------------
+// Alternatives written for either gender: «Уважаемый(ая)», «подготовил(а)».
+
+// A word token and the alternative written onto it: «Уважаемый (-ая)» is
+// «Уважаемый» and «ая». No alternative: the word and "".
+std::pair<std::string, std::string> split_alternative(const std::string &word) {
+	const std::size_t open = word.find('(');
+	if (open == std::string::npos || word.back() != ')') return {word, ""};
+	std::string base = word.substr(0, open);
+	while (!base.empty() && base.back() == ' ') base.pop_back();
+	std::string alternative = word.substr(open + 1, word.size() - open - 2);
+	if (!alternative.empty() && alternative[0] == '-') alternative.erase(0, 1);
+	else if (alternative.compare(0, 3, "\xE2\x80\x93") == 0) alternative.erase(0, 3);
+	return {base, alternative};
+}
+
+std::optional<std::string> resolved_alternative(const std::string &base, const std::string &alternative, Gender gender) {
+	const std::string lower = lowered(base);
+	const std::string alt = lowered(alternative);
+	// Only a Russian word has a gender's ending: «3(а)» is an item.
+	if (!names::detail::is_cyrillic_word(lower)) return std::nullopt;
+	// «господин(жа)».
+	if (lower == "господин" && alt == "жа") {
+		if (gender == Gender::Masculine) return base;
+		if (gender == Gender::Feminine) return names::detail::shaped_like(base, "госпожа");
+		return std::nullopt;
+	}
+	const auto cut = [&](std::size_t letters) { return base.substr(0, base.size() - 2 * letters); };
+	const auto endsIn = [&](std::initializer_list<const char *> endings) {
+		for (const char *ending : endings)
+			if (ends_with(lower, ending)) return true;
+		return false;
+	};
+	// A feminine word with the masculine alternative: «Уважаемая(ый)».
+	if (endsIn({"ая"}) && (alt == "ый" || alt == "ий")) {
+		if (gender == Gender::Feminine) return base;
+		if (gender == Gender::Masculine) return cut(2) + alternative;
+		if (gender == Gender::Neuter) return cut(2) + (alt == "ий" ? "ее" : "ое");
+		return std::nullopt;
+	}
+	static const std::unordered_set<std::string> fleeting{"согласен", "должен", "способен", "свободен", "болен"};
+	static const std::unordered_set<std::string> pronouns{"он", "его", "него", "ему", "нему", "им", "ним"};
+	std::optional<std::string> feminine;
+	std::optional<std::string> neuter;
+	if ((alt == "ая" || alt == "яя") && endsIn({"ый", "ий", "ой"})) {
+		feminine = cut(2) + alternative;
+		neuter = cut(2) + (ends_with(lower, "ий") ? "ее" : "ое");
+	} else if (pronouns.count(lower) > 0 && (alt == "её" || alt == "ее" || alt == "ей" || alt == "ней" || alt == "неё"
+			|| alt == "нее" || alt == "она")) {
+		feminine = alternative;
+		neuter = lower == "он" ? base + "о" : base;
+	} else if ((alt == "ой" || alt == "ей") && endsIn({"ому", "ему", "ого", "его"})) {
+		feminine = cut(3) + alternative;
+		neuter = base;
+	} else if ((alt == "ой" || alt == "ей") && endsIn({"ым", "им"})) {
+		feminine = cut(2) + alternative;
+		neuter = base;
+	} else if ((alt == "ую" || alt == "юю") && endsIn({"ого", "его"})) {
+		feminine = cut(3) + alternative;
+	} else if (alt == "на" && fleeting.count(lower) > 0) {
+		// «согласен(на)»: the vowel drops.
+		feminine = cut(2) + alternative;
+		neuter = cut(2) + "но";
+	} else if (alt == "на" && endsIn({"ен", "ан", "ян"})) {
+		// «ознакомлен(на)», «обязан(на)»: a short participle only adds its ending.
+		feminine = base + "а";
+		neuter = base + "о";
+	} else if (alt == "а" && fleeting.count(lower) > 0) {
+		feminine = cut(2) + "на";
+		neuter = cut(2) + "но";
+	} else if (alt == "а" && !endsIn({"а", "я", "о", "е", "и", "ы", "у", "ю", "э", "ё", "й", "ь"})) {
+		feminine = base + alternative;
+		neuter = base + "о";
+	} else if (alt == "ла" && endsIn({"ёл", "ел"})) {
+		feminine = cut(2) + alternative;
+		neuter = cut(2) + "ло";
+	} else if (alt == "ка" && endsIn({"ин"})) {
+		feminine = cut(2) + alternative;
+	}
+	if (!feminine) return std::nullopt;  // not an alternative of gender: «документ(ы)»
+	if (gender == Gender::Masculine) return base;
+	if (gender == Gender::Feminine) return feminine;
+	if (gender == Gender::Neuter) return neuter;
+	return std::nullopt;
+}
+
+// ---------------------------------------------------------------------------
+// Names.
+
+std::string trimmed(const std::string &text) {
+	std::size_t begin = 0;
+	std::size_t end = text.size();
+	while (begin < end && (space_length(text, begin) > 0 || text[begin] == '\n' || text[begin] == '\r')) begin += std::max<std::size_t>(space_length(text, begin), 1);
+	while (end > begin && (text[end - 1] == ' ' || text[end - 1] == '\t' || text[end - 1] == '\n' || text[end - 1] == '\r')) --end;
+	while (end >= begin + 2 && text.compare(end - 2, 2, "\xC2\xA0") == 0) end -= 2;
+	return text.substr(begin, end - begin);
+}
+
+// A writing of a name with ordinary single spaces.
+std::string normalised(const std::string &name) {
+	std::string result;
+	for (std::size_t at = 0; at < name.size();) {
+		const std::size_t space = space_length(name, at);
+		if (space > 0 || name[at] == '\n' || name[at] == '\r') {
+			if (!result.empty() && result.back() != ' ') result += ' ';
+			at += std::max<std::size_t>(space, 1);
+			continue;
+		}
+		result += name[at++];
+	}
+	while (!result.empty() && result.back() == ' ') result.pop_back();
+	return result;
+}
+
+// The capital letter a word begins with.
+std::string capital_initial(const std::string &word) {
+	if (word.empty()) return word;
+	std::string letter = word.substr(0, codepoint_length(word, 0));
+	if (letter.size() == 2) {
+		const unsigned char first = static_cast<unsigned char>(letter[0]);
+		const unsigned char second = static_cast<unsigned char>(letter[1]);
+		if (first == 0xD0 && second >= 0xB0 && second <= 0xBF) letter[1] = static_cast<char>(second - 0x20);
+		else if (first == 0xD1 && second >= 0x80 && second <= 0x8F) { letter[0] = '\xD0'; letter[1] = static_cast<char>(second + 0x20); }
+		else if (first == 0xD1 && second == 0x91) letter = "\xD0\x81";
+	} else if (letter.size() == 1) {
+		letter[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(letter[0])));
+	}
+	return letter;
+}
+
+// «А. И.»: the initials as the name wrote them, or made from its first name and patronymic.
+std::string initials_of(const names::NameParts &parts) {
+	std::string result;
+	if (!parts.initials.empty()) {
+		for (const std::string &initial : parts.initials) result += (result.empty() ? "" : " ") + initial;
+		return result;
+	}
+	for (const std::string *word : {&parts.first, &parts.patronymic})
+		if (!word->empty()) result += (result.empty() ? "" : " ") + capital_initial(*word) + ".";
+	return result;
+}
+
+// ---------------------------------------------------------------------------
+// One restored name in its text.
+
+struct Unit {
+	std::size_t begin = 0;        // with an organisation's form and quotes around the span
+	std::size_t end = 0;
+	std::size_t spanBegin = 0;
+	std::size_t spanEnd = 0;
+	SpanKind kind = SpanKind::Person;
+	std::string canonical;
+	Gender gender = Gender::Unknown;
+	long first = 0;               // its tokens
+	long last = 0;
+	std::optional<Case> form;     // the case it was written in
+	bool agreed = false;          // its gender is known, so words may agree with it
+};
+
+struct Edit {
+	std::size_t begin = 0;
+	std::size_t end = 0;
+	std::string text;
+};
+
+struct Governance {
+	std::optional<Case> form;
+	long head = -1;               // a role noun the name stands with
+	long word = -1;               // the preposition or word that governs it
+};
+
+class Agreement {
+public:
+	Agreement(const std::string &text, std::vector<Unit> units) : text_(text), units_(std::move(units)) { lex(); }
+
+	std::string written();
+
+private:
+	const std::string &text_;
+	std::vector<Unit> units_;
+	std::vector<Token> tokens_;
+	std::vector<long> unitOf_;    // per token: the unit it belongs to, or -1
+	std::vector<Edit> edits_;
+
+	void lex();
+	std::string token_text(long index) const { return text_.substr(tokens_[index].begin, tokens_[index].end - tokens_[index].begin); }
+	bool is_word(long index) const { return index >= 0 && tokens_[index].kind == TokenKind::Word; }
+	bool is_mark(long index, const char *mark) const {
+		return index >= 0 && tokens_[index].kind == TokenKind::Mark && token_text(index) == mark;
+	}
+	// The word without an alternative written onto it, lower case.
+	std::string base_of(long index) const { return lowered(split_alternative(token_text(index)).first); }
+	long previous(long index, bool crossLines) const;
+	long next(long index, bool crossLines) const;
+	long matching_open(long close) const;
+	long organisation_form_start(long openQuote) const;
+	void extend_organisations();
+	bool closing_quote(long index) const;
+	Governance governed(const Unit &unit, Gender gender, bool crossLines) const;
+	bool line_starts_at(long index) const;
+	long dative_head_across(long from, bool crossLines) const;
+	bool accusative_before(long role, bool crossLines) const;
+	long party_before_insertion(long mark, bool crossLines) const;
+	bool recovery_before(long with) const;
+	bool subject_follows(const Unit &unit, Gender gender) const;
+	bool address_block(const Unit &unit, long head) const;
+	std::optional<std::pair<long, long>> salutation(const Unit &unit) const;
+	bool signature(const Unit &unit) const;
+	bool role_line(const std::string &line) const;
+	std::optional<std::pair<long, Participle>> participle_after(const Unit &unit) const;
+	bool sentence_ends_at(std::size_t at) const;
+	bool sentence_before(const Unit &unit) const;
+	bool add(std::size_t begin, std::size_t end, const std::string &text);
+	void agree_unit(Unit &unit);
+	void agree_alternatives();
+};
+
+void Agreement::lex() {
+	std::vector<bool> edge(text_.size() + 1, false);
+	for (const Unit &unit : units_) {
+		edge[unit.begin] = true;
+		edge[unit.end] = true;
+	}
+	tokens_ = tokens_of(text_, edge);
+	unitOf_.assign(tokens_.size(), -1);
+	for (std::size_t index = 0; index < units_.size(); ++index) {
+		Unit &unit = units_[index];
+		unit.first = -1;
+		for (std::size_t token = 0; token < tokens_.size(); ++token) {
+			if (tokens_[token].begin < unit.begin || tokens_[token].end > unit.end) continue;
+			if (unit.first < 0) unit.first = static_cast<long>(token);
+			unit.last = static_cast<long>(token);
+			unitOf_[token] = static_cast<long>(index);
+		}
+	}
+}
+
+// The token before `index` that is not a space: -1 at the start of the text,
+// and at a line break unless `crossLines`.
+long Agreement::previous(long index, bool crossLines) const {
+	for (--index; index >= 0; --index) {
+		if (tokens_[index].kind == TokenKind::Space) continue;
+		if (tokens_[index].kind == TokenKind::Newline) {
+			if (crossLines) continue;
+			return -1;
+		}
+		return index;
+	}
+	return -1;
+}
+
+long Agreement::next(long index, bool crossLines) const {
+	for (++index; index < static_cast<long>(tokens_.size()); ++index) {
+		if (tokens_[index].kind == TokenKind::Space) continue;
+		if (tokens_[index].kind == TokenKind::Newline) {
+			if (crossLines) continue;
+			return -1;
+		}
+		return index;
+	}
+	return -1;
+}
+
+// The opening quote of the quotation `close` ends, on the same line.
+long Agreement::matching_open(long close) const {
+	const std::string mark = token_text(close);
+	if (mark == "\xC2\xBB") {  // »
+		int depth = 0;
+		for (long index = close; index >= 0; --index) {
+			if (tokens_[index].kind == TokenKind::Newline) return -1;
+			if (is_mark(index, "\xC2\xBB")) ++depth;
+			if (is_mark(index, "\xC2\xAB") && --depth == 0) return index;  // «
+		}
+		return -1;
+	}
+	const char *open = mark == "\"" ? "\"" : mark == "\xE2\x80\x9D" ? "\xE2\x80\x9C" : mark == "\xE2\x80\x9C" ? "\xE2\x80\x9E" : nullptr;
+	if (open == nullptr) return -1;
+	for (long index = close - 1; index >= 0; --index) {
+		if (tokens_[index].kind == TokenKind::Newline) return -1;
+		if (is_mark(index, open)) return index;
+	}
+	return -1;
+}
+
+// Where the legal form written before an organisation's quoted name begins:
+// «ООО «…»», «Общество с ограниченной ответственностью «…»», «Акционерного
+// общества «…»». `openQuote` itself when there is none.
+long Agreement::organisation_form_start(long openQuote) const {
+	const long word = previous(openQuote, false);
+	if (!is_word(word)) return openQuote;
+	const std::string lower = base_of(word);
+	if (legal_abbreviation(lower)) return word;
+	long noun = -1;
+	if (lower == "ответственностью") {
+		const long limited = previous(word, false);
+		const long with = previous(limited, false);
+		const long head = previous(with, false);
+		if (is_word(limited) && is_word(with) && is_word(head) && base_of(limited) == "ограниченной" && base_of(with) == "с"
+				&& names::detail::organisation_noun(base_of(head)))
+			noun = head;
+	} else if (names::detail::organisation_noun(lower)) {
+		noun = word;
+	}
+	if (noun < 0) return openQuote;
+	const auto head = *names::detail::organisation_noun(base_of(noun));
+	const unsigned cases = names::detail::organisation_noun_cases(base_of(noun), head);
+	long start = noun;
+	for (int adjectives = 0; adjectives < 4; ++adjectives) {
+		const long before = previous(start, false);
+		if (!is_word(before) || (names::detail::organisation_adjective_cases(base_of(before), head.gender) & cases) == 0) break;
+		start = before;
+	}
+	return start;
+}
+
+// An organisation restored as its quoted name alone is read with the form and
+// the quotes around it: «между Общество с ограниченной ответственностью «[X]»».
+void Agreement::extend_organisations() {
+	bool changed = false;
+	for (std::size_t index = 0; index < units_.size(); ++index) {
+		Unit &unit = units_[index];
+		if (unit.kind != SpanKind::Organisation || unit.first < 0) continue;
+		const long open = unit.first - 1;
+		const long close = unit.last + 1;
+		if (open < 0 || close >= static_cast<long>(tokens_.size()) || tokens_[open].kind != TokenKind::Mark) continue;
+		if (matching_open(close) != open) continue;
+		const long start = organisation_form_start(open);
+		const std::size_t begin = tokens_[start].begin;
+		const std::size_t end = tokens_[close].end;
+		// Never into another restored name.
+		bool clear = true;
+		for (std::size_t other = 0; other < units_.size(); ++other)
+			if (other != index && units_[other].begin < end && begin < units_[other].end) clear = false;
+		if (!clear) continue;
+		unit.begin = begin;
+		unit.end = end;
+		changed = true;
+	}
+	if (changed) lex();
+}
+
+bool Agreement::closing_quote(long index) const {
+	if (index < 0 || tokens_[index].kind != TokenKind::Mark) return false;
+	const std::string mark = token_text(index);
+	return mark == "\xC2\xBB" || mark == "\"" || mark == "\xE2\x80\x9D" || mark == "\xE2\x80\x9C";
+}
+
+// A word in the instrumental that stands before a role noun: «генеральным», «исполнительным».
+bool instrumental_adjective(const std::string &lowerWord) {
+	return lowerWord.size() >= 8 && (ends_with(lowerWord, "ым") || ends_with(lowerWord, "им") || ends_with(lowerWord, "ой")
+		|| ends_with(lowerWord, "ей"));
+}
+
+// The case the words before a name put it in, and the role noun it stands with.
+Governance Agreement::governed(const Unit &unit, Gender gender, bool crossLines) const {
+	long at = unit.first;
+	bool coordinated = false;
+	// The name follows an organisation («От ООО «Вектор» Лебедев получил»): a
+	// preposition before them governs the organisation, and only a role noun
+	// («директору ООО «Вектор» Лебедеву») governs the name as well.
+	bool afterOrganisation = false;
+	for (int steps = 0; steps < 24; ++steps) {
+		const long index = previous(at, crossLines);
+		if (index < 0) return {};
+		// Another restored name before this one.
+		if (unitOf_[index] >= 0) {
+			const Unit &before = units_[unitOf_[index]];
+			if (coordinated) return {before.form};                  // «X и Y»: the same case
+			if (before.kind != SpanKind::Organisation) return {};
+			at = before.first;                                       // «директору ООО «X» Лебедеву»
+			afterOrganisation = true;
+			continue;
+		}
+		const Token &token = tokens_[index];
+		if (token.kind == TokenKind::Mark) {
+			const std::string mark = token_text(index);
+			// An address line «Кому: Кузнецову Д. О.»: the name is its addressee.
+			if (mark == ":") {
+				const long before = previous(index, false);
+				if (is_word(before) && unitOf_[before] < 0 && base_of(before) == "кому") return {Case::Dative, before, before};
+				return {};
+			}
+			if (closing_quote(index)) {
+				// An organisation written in quotes, with its form. Joined to the name
+				// («между ООО «X» и Лебедевым») it shares the name's governor.
+				const long open = matching_open(index);
+				if (open < 0) return {};
+				at = organisation_form_start(open);
+				afterOrganisation = !coordinated;
+				coordinated = false;
+				continue;
+			}
+			if (coordinated && (mark == "," || mark == ")")) {
+				// «между Лебедевым А. И., именуемым …, и Кузнецовой», «между ООО «X»
+				// (далее - Покупатель) и Лебедевым»: the party before the insertion.
+				const long right = previous(index, crossLines);
+				if (right >= 0 && unitOf_[right] >= 0) return {units_[unitOf_[right]].form};
+				const long party = party_before_insertion(index, crossLines);
+				if (party < 0) return {};
+				if (unitOf_[party] >= 0) return {units_[unitOf_[party]].form};
+				at = organisation_form_start(matching_open(party));
+				coordinated = false;
+				continue;
+			}
+			if (mark == ",") {
+				const long before = previous(index, crossLines);
+				if (before >= 0 && unitOf_[before] >= 0) {
+					coordinated = true;
+					at = index;
+					continue;
+				}
+			}
+			return {};
+		}
+		if (token.kind != TokenKind::Word) return {};
+		const std::string word = base_of(index);
+		if (conjunction(word) || (word == "также" && is_word(previous(index, false)) && base_of(previous(index, false)) == "а")) {
+			coordinated = true;
+			at = word == "также" ? previous(index, false) : index;
+			continue;
+		}
+		if (legal_abbreviation(word)) {
+			at = index;
+			continue;
+		}
+		if (coordinated) return {};
+		// An organisation named by its noun alone: «директором Общества Лебедева»,
+		// «представителю Акционерного общества Лебедеву».
+		if (unit.kind == SpanKind::Person) {
+			if (const auto noun = names::detail::organisation_noun(word)) {
+				const unsigned cases = names::detail::organisation_noun_cases(word, *noun);
+				at = index;
+				for (int adjectives = 0; adjectives < 4; ++adjectives) {
+					const long before = previous(at, crossLines);
+					if (!is_word(before) || (names::detail::organisation_adjective_cases(base_of(before), noun->gender) & cases) == 0) break;
+					at = before;
+				}
+				afterOrganisation = true;
+				continue;
+			}
+		}
+		// «Представитель по доверенности Лебедев»: the phrase stands with the role noun.
+		if (word == "доверенности") {
+			const long by = previous(index, crossLines);
+			const long role = previous(by, crossLines);
+			if (is_word(by) && base_of(by) == "по" && is_word(role) && role_case(base_of(role))) {
+				at = by;
+				continue;
+			}
+		}
+		const auto role = role_case(word);
+		if (role) {
+			// An organisation after a post is whose («директор Общества»), after a
+			// party it is the party («Займодавцу Обществу»).
+			if (unit.kind == SpanKind::Organisation) return {party_role(word) ? *role : Case::Genitive, index};
+			if (*role == Case::Instrumental) {
+				// A role in the instrumental is the name's own after «с», «между»,
+				// «подписан»; after another verb it is what the name is made, and the
+				// verb governs the name: «Назначить генеральным директором Лебедева».
+				long before = previous(index, crossLines);
+				while (is_word(before) && instrumental_adjective(base_of(before))) before = previous(before, crossLines);
+				if (before < 0) return {};                               // «Директором назначен Лебедев»
+				if (is_word(before)) {
+					const auto found = governing_words().find(base_of(before));
+					if (found != governing_words().end() && found->second != Case::Instrumental) return {found->second, -1, before};
+				}
+			}
+			// «Уведомить директора Смирнову», «уволить главного бухгалтера Кузнецову»:
+			// a role written alike in the genitive and the accusative is the
+			// accusative after a verb that takes one.
+			if (*role == Case::Genitive && (role_cases(word) & (1u << case_index(Case::Accusative))) != 0
+					&& accusative_before(index, crossLines))
+				return {Case::Accusative, index};
+			return {*role, index};
+		}
+		// A preposition before an organisation governs the organisation alone; a
+		// role in the dative before the words that say whose post it is governs
+		// the name («Руководителю отдела продаж ООО «Вектор» Лебедеву»).
+		if (afterOrganisation) {
+			if (unit.kind != SpanKind::Person || subject_follows(unit, gender)) return {};
+			const long head = dative_head_across(index, crossLines);
+			if (head >= 0) return {Case::Dative, head};
+			return {};
+		}
+		// «взыскать с Лебедева», «взыскать солидарно с …»: from whom - the genitive.
+		if ((word == "с" || word == "со") && recovery_before(index)) return {Case::Genitive, -1, index};
+		const auto found = governing_words().find(word);
+		if (found != governing_words().end()) return {found->second, -1, index};
+		// «претензию Смирновой», «Устав Общества»: whose, unless the name is the
+		// subject that follows the noun («претензию Лебедев А. И. отклонил»), or
+		// the one a thing is sent to («направил претензию Шевчуку»).
+		if (index == previous(unit.first, crossLines) && possessing_nouns().count(word) > 0 && !subject_follows(unit, gender)) {
+			const long verb = previous(index, crossLines);
+			if (is_word(verb) && unitOf_[verb] < 0) {
+				const std::string sent = base_of(verb);
+				const auto governs = governing_words().find(sent);
+				// A verb, not a participle: «направленную претензию Смирновой» is hers.
+				bool participle = false;
+				for (const char *ending : {"ый", "ий", "ой", "ая", "яя", "ое", "ее", "ую", "юю", "ого", "его", "ому", "ему", "ым", "им",
+						"ых", "их", "ые", "ие"})
+					if (ends_with(sent, ending)) participle = true;
+				for (const char *stem : {"направ", "переда", "вруч", "предъяв", "выслал", "отправ", "адресова"})
+					if (!participle && starts_with(sent, stem)) return {Case::Dative};
+				// A preposition that takes the dative governs the noun, not the name
+				// after it: «согласно письму Лебедева» is his letter, never one to him.
+				static const std::unordered_set<std::string> prepositions{"согласно", "благодаря", "вопреки", "навстречу",
+					"подобно", "соответственно"};
+				if (governs != governing_words().end() && governs->second == Case::Dative && sent.size() > 6
+						&& prepositions.count(sent) == 0)
+					return {Case::Dative};
+			}
+			return {Case::Genitive};
+		}
+		if (unit.kind == SpanKind::Person && !subject_follows(unit, gender)) {
+			const long head = dative_head_across(index, crossLines);
+			if (head >= 0) return {Case::Dative, head};
+		}
+		return {};
+	}
+	return {};
+}
+
+// Whether `index` is the first thing on its line.
+bool Agreement::line_starts_at(long index) const {
+	for (--index; index >= 0; --index) {
+		if (tokens_[index].kind == TokenKind::Space) continue;
+		return tokens_[index].kind == TokenKind::Newline;
+	}
+	return true;
+}
+
+// «Начальнику юридического отдела АО «Банк Ростра» Смирновой», «Заместителю
+// генерального директора по правовым вопросам Смирновой», «Председателю
+// Арбитражного суда города Москвы Лебедеву»: a role in the dative, with the
+// words that say whose post it is between it and the name, from the word
+// `from` back. The role heads its line (after its adjectives) or follows a word
+// that takes the dative. -1 when there is none.
+long Agreement::dative_head_across(long from, bool crossLines) const {
+	static const std::unordered_set<std::string> stops{"в", "во", "на", "за", "под", "из", "что", "как", "который", "которая",
+		"которое", "которые", "а", "но", "не", "это", "также"};
+	long index = from;
+	for (int words = 0; index >= 0 && words < 10;) {
+		if (unitOf_[index] >= 0) {
+			const Unit &before = units_[unitOf_[index]];
+			if (before.kind != SpanKind::Organisation) return -1;
+			index = previous(before.first, crossLines);
+			continue;
+		}
+		if (tokens_[index].kind == TokenKind::Mark) {
+			if (!closing_quote(index)) return -1;
+			const long open = matching_open(index);
+			if (open < 0) return -1;
+			index = previous(organisation_form_start(open), crossLines);
+			continue;
+		}
+		if (tokens_[index].kind != TokenKind::Word) return -1;
+		const std::string word = base_of(index);
+		if ((role_cases(word) & (1u << case_index(Case::Dative))) != 0) {
+			long start = index;
+			for (long before = previous(start, false); is_word(before) && unitOf_[before] < 0
+					&& (ends_with(base_of(before), "ому") || ends_with(base_of(before), "ему")); before = previous(before, false))
+				start = before;
+			if (line_starts_at(start)) return index;
+			const long governor = previous(start, false);
+			if (is_word(governor) && unitOf_[governor] < 0) {
+				const auto found = governing_words().find(base_of(governor));
+				if (found != governing_words().end() && found->second == Case::Dative && base_of(governor) != "по") return index;
+			}
+			return -1;
+		}
+		if (word != "по" && (governing_words().count(word) > 0 || stops.count(word) > 0 || conjunction(word))) return -1;
+		++words;
+		index = previous(index, crossLines);
+	}
+	return -1;
+}
+
+// A verb that takes the accusative before a role («Уведомить директора»,
+// «Прошу уволить главного бухгалтера»): one the table knows, or an infinitive.
+bool Agreement::accusative_before(long role, bool crossLines) const {
+	long before = previous(role, crossLines);
+	while (is_word(before) && unitOf_[before] < 0 && (ends_with(base_of(before), "ого") || ends_with(base_of(before), "его")))
+		before = previous(before, crossLines);
+	if (!is_word(before) || unitOf_[before] >= 0) return false;
+	const std::string word = base_of(before);
+	const auto found = governing_words().find(word);
+	if (found != governing_words().end()) return found->second == Case::Accusative;
+	// Nouns that end like an infinitive: «печать директора» is whose.
+	static const std::unordered_set<std::string> nouns{"печать", "часть", "власть", "область", "благодать", "степень", "память",
+		"мать", "сеть", "путь", "суть", "нить"};
+	if (nouns.count(word) > 0 || ends_with(word, "ость") || word.size() < 10) return false;
+	for (const char *ending : {"ить", "ать", "ять", "еть", "уть", "ыть", "оть", "чь", "сти", "зти"})
+		if (ends_with(word, ending)) return true;
+	return false;
+}
+
+// The party an insertion after it describes: the restored name, or the quoted
+// organisation, before the «,» or «(» that opens it. -1 when there is none in
+// the sentence.
+long Agreement::party_before_insertion(long mark, bool crossLines) const {
+	long index = mark;
+	for (int steps = 0; steps < 48; ++steps) {
+		index = previous(index, crossLines);
+		if (index < 0) return -1;
+		if (unitOf_[index] >= 0) {
+			index = units_[unitOf_[index]].first;
+			continue;
+		}
+		if (tokens_[index].kind != TokenKind::Mark) continue;
+		const std::string text = token_text(index);
+		if (text == "." || text == "!" || text == "?" || text == ";") return -1;
+		if (text != "," && text != "(") continue;
+		const long party = previous(index, crossLines);
+		if (party < 0) return -1;
+		if (unitOf_[party] >= 0) return party;
+		if (closing_quote(party)) {
+			const long open = matching_open(party);
+			if (open >= 0 && organisation_form_start(open) != open) return party;
+		}
+	}
+	return -1;
+}
+
+// «с» after a recovery verb in the same clause is from whom: «взыскать
+// солидарно с», «взыскать в пользу Кузнецовой А. П. с».
+bool Agreement::recovery_before(long with) const {
+	long at = with;
+	for (int words = 0; words < 8;) {
+		at = previous(at, false);
+		if (at < 0) return false;
+		if (unitOf_[at] >= 0) {
+			at = units_[unitOf_[at]].first;
+			continue;
+		}
+		if (tokens_[at].kind == TokenKind::Mark) {
+			const std::string mark = token_text(at);
+			if (mark == "." || mark == "!" || mark == "?" || mark == ";" || mark == ":") return false;
+			continue;
+		}
+		const std::string word = base_of(at);
+		if (starts_with(word, "взыск") || starts_with(word, "удерж")) return true;
+		// Another verb governs the clause: «… и заключить соглашение с».
+		if (word.size() > 8 && ends_with(word, "ть")) {
+			const std::string vowel = word.substr(word.size() - 6, 2);
+			if (vowel == "а" || vowel == "я" || vowel == "и" || vowel == "е" || vowel == "у" || vowel == "ы" || vowel == "о") return false;
+		}
+		++words;
+	}
+	return false;
+}
+
+// A verb right after the name that agrees with it: the name is its subject
+// («претензию Лебедев А. И. отклонил»). A verb written for either gender
+// («направил(а)») says nothing.
+bool Agreement::subject_follows(const Unit &unit, Gender gender) const {
+	const long verb = next(unit.last, false);
+	if (!is_word(verb) || unitOf_[verb] >= 0) return false;
+	if (!split_alternative(token_text(verb)).second.empty()) return false;
+	const std::string word = lowered(token_text(verb));
+	for (const char *present : {"ет", "ёт", "ит", "ется", "ётся", "ится"})
+		if (ends_with(word, present)) return true;
+	const bool masculine = ends_with(word, "л") || ends_with(word, "лся");
+	const bool feminine = ends_with(word, "ла") || ends_with(word, "лась");
+	const bool neuter = ends_with(word, "ло") || ends_with(word, "лось");
+	if (gender == Gender::Masculine) return masculine;
+	if (gender == Gender::Feminine) return feminine;
+	if (gender == Gender::Neuter) return neuter;
+	return masculine || feminine;
+}
+
+// «Генеральному директору ООО «X» Лебедеву А. И.» heading a letter: the role
+// noun begins its line (after its adjectives) and the name ends its line.
+bool Agreement::address_block(const Unit &unit, long head) const {
+	if (head < 0 || next(unit.last, false) >= 0) return false;
+	int adjectives = 0;
+	for (long index = previous(head, false); index >= 0; index = previous(index, false)) {
+		if (!is_word(index)) return false;
+		const std::string word = base_of(index);
+		if (!(ends_with(word, "ому") || ends_with(word, "ему")) || ++adjectives > 3) return false;
+	}
+	return true;
+}
+
+// «Уважаемый(ая) [господин] X»: the adjective's token and the title's (or -1).
+// A name joined to a greeted one is greeted by the same adjective: «Уважаемые
+// Анна Викторовна и Андрей Игоревич».
+std::optional<std::pair<long, long>> Agreement::salutation(const Unit &unit) const {
+	long at = previous(unit.first, false);
+	long title = -1;
+	if (is_word(at) && unitOf_[at] < 0 && title_of(base_of(at))) {
+		title = at;
+		at = previous(at, false);
+	}
+	if ((is_word(at) && unitOf_[at] < 0 && base_of(at) == "и") || is_mark(at, ",")) {
+		const long before = previous(at, false);
+		if (before < 0 || unitOf_[before] < 0 || units_[unitOf_[before]].kind != SpanKind::Person) return std::nullopt;
+		const auto greeting = salutation(units_[unitOf_[before]]);
+		if (!greeting) return std::nullopt;
+		return std::make_pair(greeting->first, title);
+	}
+	if (!is_word(at) || unitOf_[at] >= 0) return std::nullopt;
+	const std::string adjective = base_of(at);
+	if (adjective != "уважаемый" && adjective != "уважаемая" && adjective != "уважаемые") return std::nullopt;
+	return std::make_pair(at, title);
+}
+
+std::vector<std::string> words_on(const std::string &line) {
+	std::vector<std::string> words;
+	std::string current;
+	for (const char character : line + " ") {
+		if (character == ' ' || character == '\t') {
+			if (!current.empty()) words.push_back(current);
+			current.clear();
+			continue;
+		}
+		current += character;
+	}
+	return words;
+}
+
+std::string without_trailing_marks(std::string word) {
+	while (!word.empty() && (word.back() == ':' || word.back() == ',' || word.back() == ';')) word.pop_back();
+	return word;
+}
+
+// The words after a role that say where it is held: «ООО «Вектор»», «Общества с
+// ограниченной ответственностью «…»», «АО Банк Ростра», «по доверенности». A
+// verb or a preposition («обратился к») means the line is a sentence.
+bool organisation_words(const std::vector<std::string> &words, std::size_t from) {
+	int guillemets = 0;
+	bool straight = false;
+	for (std::size_t index = from; index < words.size(); ++index) {
+		const std::string &written = words[index];
+		bool quoted = guillemets > 0 || straight;
+		for (std::size_t at = 0; at < written.size(); ++at) {
+			if (written.compare(at, 2, "\xC2\xAB") == 0 || written.compare(at, 3, "\xE2\x80\x9C") == 0) { ++guillemets; quoted = true; }
+			else if (written.compare(at, 2, "\xC2\xBB") == 0 || written.compare(at, 3, "\xE2\x80\x9D") == 0) guillemets = std::max(0, guillemets - 1);
+			else if (written[at] == '"') { straight = !straight; quoted = true; }
+		}
+		if (quoted) continue;
+		const std::string word = without_trailing_marks(lowered(written));
+		// «Управляющий партнёр», «Директор по правовым вопросам»: the post itself.
+		if (const auto role = role_case(word); role && *role == Case::Nominative) continue;
+		if (word == "по") return true;
+		if (word.empty() || legal_abbreviation(word) || names::detail::organisation_noun(word) || word == "с" || word == "ограниченной"
+				|| word == "ответственностью")
+			continue;
+		if (names::detail::organisation_adjective_cases(word, Gender::Neuter) != 0
+				|| names::detail::organisation_adjective_cases(word, Gender::Feminine) != 0
+				|| names::detail::organisation_adjective_cases(word, Gender::Masculine) != 0)
+			continue;
+		// A capitalised word names the organisation: «АО Банк Ростра».
+		const std::size_t letter = codepoint_length(written, 0);
+		if (lowered(written.substr(0, letter)) != written.substr(0, letter)) continue;
+		return false;
+	}
+	return true;
+}
+
+// «ООО «Вектор»», «Акционерное общество «Банк Ростра»»: an organisation alone on its line.
+bool organisation_line(const std::string &line) {
+	const std::vector<std::string> words = words_on(line);
+	if (words.empty() || line.size() > 160) return false;
+	const std::string first = without_trailing_marks(lowered(words.front()));
+	const bool opens = legal_abbreviation(first) || names::detail::organisation_noun(first)
+		|| names::detail::organisation_adjective_cases(first, Gender::Neuter) != 0
+		|| names::detail::organisation_adjective_cases(first, Gender::Feminine) != 0
+		|| names::detail::organisation_adjective_cases(first, Gender::Masculine) != 0 || starts_with(first, "\xC2\xAB");
+	return opens && organisation_words(words, 0);
+}
+
+// «Генеральный директор ООО «X»», «Управляющий партнёр», «Адвокат»,
+// «Представитель по доверенности»: a role in the nominative heading a line,
+// and nothing after it but where it is held.
+bool Agreement::role_line(const std::string &line) const {
+	if (line.empty() || line.size() > 160) return false;
+	const std::vector<std::string> words = words_on(line);
+	int adjectives = 0;
+	for (std::size_t index = 0; index < words.size(); ++index) {
+		const std::string word = without_trailing_marks(lowered(words[index]));
+		const auto role = role_case(word);
+		if (role && *role == Case::Nominative) return organisation_words(words, index + 1);
+		if (++adjectives > 2 || !(ends_with(word, "ый") || ends_with(word, "ий") || ends_with(word, "ой") || ends_with(word, "ая")))
+			return false;
+	}
+	return false;
+}
+
+// The name signs the letter: after «С уважением,», or ending a role line
+// («Генеральный директор ООО «X» Лебедев А. И.») at the end of the text.
+bool Agreement::signature(const Unit &unit) const {
+	// The name ends its line, or only the slash of «/А. И. Лебедев/» follows it.
+	const long after = next(unit.last, false);
+	if (after >= 0 && !(is_mark(after, "/") && next(after, false) < 0)) return false;
+	const std::size_t newline = unit.begin == 0 ? std::string::npos : text_.rfind('\n', unit.begin - 1);
+	const std::size_t lineBegin = newline == std::string::npos ? 0 : newline + 1;
+	std::string before = trimmed(text_.substr(lineBegin, unit.begin - lineBegin));
+	// A blank to sign on before the name: «Генеральный директор ________ Лебедев
+	// А. И.», «Продавец: ________ /Смирнова А. В./».
+	int underscores = 0;
+	while (!before.empty() && (before.back() == '_' || before.back() == '/' || before.back() == ' ' || before.back() == '\t')) {
+		if (before.back() == '_') ++underscores;
+		before.pop_back();
+	}
+	if (underscores >= 3) return true;
+	if (starts_with(lowered(before), "с уважением")) return true;
+	const bool roleBefore = role_line(before);
+	if (!before.empty() && !roleBefore) return false;
+	// The lines above, nearest first.
+	std::vector<std::string> above;
+	for (std::size_t end = lineBegin; end > 0 && above.size() < 3;) {
+		const std::size_t lineEnd = end - 1;  // its '\n'
+		const std::size_t start = lineEnd == 0 ? std::string::npos : text_.rfind('\n', lineEnd - 1);
+		const std::size_t from = start == std::string::npos ? 0 : start + 1;
+		const std::string line = trimmed(text_.substr(from, lineEnd - from));
+		if (!line.empty()) above.push_back(line);
+		end = from;
+	}
+	for (const std::string &line : above)
+		if (starts_with(lowered(line), "с уважением")) return true;
+	std::size_t following = 0;
+	const std::size_t lineEnd = text_.find('\n', unit.end);
+	for (std::size_t at = lineEnd; at != std::string::npos && at < text_.size();) {
+		const std::size_t stop = text_.find('\n', at + 1);
+		if (!trimmed(text_.substr(at + 1, (stop == std::string::npos ? text_.size() : stop) - at - 1)).empty()) ++following;
+		at = stop;
+	}
+	if (following > 3) return false;
+	if (roleBefore) return true;
+	if (!before.empty() || above.empty()) return false;
+	// «Генеральный директор / ООО «Вектор» / Лебедев А. И.»: a role over its organisation's line.
+	return role_line(above.front()) || (above.size() >= 2 && organisation_line(above[0]) && role_line(above[1]));
+}
+
+// A participle agreeing with the name right after it: «…, действующего», «… (паспорт …), проживающий».
+std::optional<std::pair<long, Participle>> Agreement::participle_after(const Unit &unit) const {
+	long at = next(unit.last, false);
+	if (is_mark(at, "(")) {
+		int depth = 0;
+		for (long index = at; index < static_cast<long>(tokens_.size()) && index < at + 80; ++index) {
+			if (tokens_[index].kind == TokenKind::Newline) return std::nullopt;
+			if (is_mark(index, "(")) ++depth;
+			if (is_mark(index, ")") && --depth == 0) { at = next(index, false); break; }
+		}
+	}
+	if (is_mark(at, ",")) at = next(at, false);
+	if (!is_word(at) || unitOf_[at] >= 0) return std::nullopt;
+	const auto participle = participle_of(base_of(at));
+	if (!participle) return std::nullopt;
+	return std::make_pair(at, *participle);
+}
+
+// Whether a period at `at` would end the sentence: the line ends there, or a
+// capital letter follows.
+bool Agreement::sentence_ends_at(std::size_t at) const {
+	while (at < text_.size() && space_length(text_, at) > 0) at += space_length(text_, at);
+	if (at >= text_.size() || text_[at] == '\n' || text_[at] == '\r') return true;
+	const unsigned char first = static_cast<unsigned char>(text_[at]);
+	if (first >= 'A' && first <= 'Z') return true;
+	if (first == 0xD0 && at + 1 < text_.size()) {
+		const unsigned char second = static_cast<unsigned char>(text_[at + 1]);
+		return (second >= 0x90 && second <= 0xAF) || second == 0x81;  // А-Я, Ё
+	}
+	return false;
+}
+
+// Whether the name ends a sentence of running text rather than a label, a
+// list item or a cell: a word stands before it in its sentence, and after a
+// colon only when the colon is not the label's («Подготовил(а): Смирнова А. В.»).
+bool Agreement::sentence_before(const Unit &unit) const {
+	int words = 0;
+	for (long index = unit.first - 1; index >= 0; --index) {
+		if (unitOf_[index] >= 0) {
+			index = units_[unitOf_[index]].first;
+			continue;
+		}
+		const TokenKind kind = tokens_[index].kind;
+		if (kind == TokenKind::Newline) break;
+		if (kind == TokenKind::Word) {
+			++words;
+			continue;
+		}
+		if (kind != TokenKind::Mark) continue;
+		const std::string mark = token_text(index);
+		if (mark == "." || mark == "!" || mark == "?" || mark == ":") break;
+		if (mark == "|" || mark == "_") return false;
+	}
+	return words > 0;
+}
+
+bool Agreement::add(std::size_t begin, std::size_t end, const std::string &text) {
+	for (const Edit &edit : edits_)
+		if (begin < edit.end && edit.begin < end) return false;
+	if (text_.compare(begin, end - begin, text) == 0) return true;
+	edits_.push_back({begin, end, text});
+	return true;
+}
+
+// Capital letters for a whole writing, Cyrillic and Latin.
+std::string uppercased(const std::string &text) {
+	std::string result;
+	result.reserve(text.size());
+	for (std::size_t at = 0; at < text.size(); ++at) {
+		const unsigned char byte = static_cast<unsigned char>(text[at]);
+		const unsigned char second = at + 1 < text.size() ? static_cast<unsigned char>(text[at + 1]) : 0;
+		if (byte == 0xD0 && second >= 0xB0 && second <= 0xBF) { result += '\xD0'; result += static_cast<char>(second - 0x20); ++at; continue; }
+		if (byte == 0xD1 && second >= 0x80 && second <= 0x8F) { result += '\xD0'; result += static_cast<char>(second + 0x20); ++at; continue; }
+		if (byte == 0xD1 && second == 0x91) { result += "\xD0\x81"; ++at; continue; }
+		result += byte < 0x80 ? static_cast<char>(std::toupper(byte)) : static_cast<char>(byte);
+	}
+	return result;
+}
+
+// A name the text writes in capitals («ЛЕБЕДЕВ А. И.» in a heading): no small
+// letter, and a word of more than one letter.
+bool written_in_capitals(const std::string &text) {
+	if (uppercased(text) != text) return false;
+	for (const std::string &word : names::detail::words_of(normalised(text)))
+		if (!names::detail::is_initial(word) && lowered(word) != word && word.size() > 2) return true;
+	return false;
+}
+
+// «об» before а, о, у, э, и, ы; «о» before anything else.
+bool begins_with_vowel(const std::string &text) {
+	const std::string first = lowered(text.substr(0, codepoint_length(text, 0)));
+	for (const char *vowel : {"а", "о", "у", "э", "и", "ы"})
+		if (first == vowel) return true;
+	return false;
+}
+
+// «со» before с, з, ш, ж and a consonant, and before щ: «со Смирновой», «со Шмидтом».
+bool takes_so(const std::string &text) {
+	const std::size_t first = codepoint_length(text, 0);
+	const std::string letter = lowered(text.substr(0, first));
+	if (letter == "щ") return true;
+	if (letter != "с" && letter != "з" && letter != "ш" && letter != "ж") return false;
+	if (first >= text.size()) return false;
+	const std::string second = lowered(text.substr(first, codepoint_length(text, first)));
+	if (!names::detail::is_cyrillic_word(second + second)) return false;
+	for (const char *other : {"а", "е", "ё", "и", "о", "у", "ы", "э", "ю", "я", "ь", "ъ", "й"})
+		if (second == other) return false;
+	return true;
+}
+
+void Agreement::agree_unit(Unit &unit) {
+	if (unit.first < 0) return;
+	const std::string written = text_.substr(unit.begin, unit.end - unit.begin);
+	const std::string canonical = normalised(unit.canonical.empty() ? text_.substr(unit.spanBegin, unit.spanEnd - unit.spanBegin)
+		: unit.canonical);
+	Gender gender = unit.gender;
+	if (unit.kind == SpanKind::Person) {
+		if (!known(gender)) gender = names::gender_of(canonical);
+		if (!known(gender)) gender = names::gender_of(normalised(written));
+	} else if (gender == Gender::Unknown) {
+		gender = names::gender_of(normalised(written));
+	}
+	// A name whose gender cannot be told is left as it is; the case its place
+	// asks for still passes to a name joined to it («между Kim Lee и Лебедевым»).
+	const bool decided = unit.kind != SpanKind::Person || known(gender);
+	unit.gender = gender;
+	unit.agreed = decided && gender != Gender::Unknown;
+	const bool cyrillic = has_cyrillic(canonical) || has_cyrillic(written);
+
+	enum class Position { Running, Salutation, Signature, Address } position = Position::Running;
+	std::optional<std::pair<long, long>> greeting;
+	Governance governance;
+	if (unit.kind == SpanKind::Person && (greeting = salutation(unit))) {
+		position = Position::Salutation;
+		governance.form = Case::Nominative;
+	} else if (unit.kind == SpanKind::Person && signature(unit)) {
+		position = Position::Signature;
+		governance.form = Case::Nominative;
+	} else {
+		governance = governed(unit, gender, false);
+		// An address block over several lines: «Генеральному директору / ООО «X» / Лебедеву А. И.».
+		if (!governance.form && unit.kind == SpanKind::Person && previous(unit.first, false) < 0 && next(unit.last, false) < 0) {
+			const Governance above = governed(unit, gender, true);
+			if (above.form == Case::Dative && address_block(unit, above.head)) governance = above;
+		}
+		if (unit.kind == SpanKind::Person && governance.form == Case::Dative && address_block(unit, governance.head))
+			position = Position::Address;
+	}
+	const auto participle = participle_after(unit);
+	// Nothing before the name tells its case: the participle after it may.
+	if (!governance.form && participle) governance.form = participle_cases(participle->second).front();
+	const Case form = governance.form.value_or(Case::Nominative);
+	unit.form = form;
+	if (!decided) return;
+
+	// The name.
+	std::string now = normalised(written);
+	if (cyrillic) {
+		std::string replacement;
+		if (unit.kind == SpanKind::Organisation) {
+			replacement = names::declined(normalised(written), form);
+		} else {
+			const auto parts = names::name_parts(canonical);
+			switch (position) {
+				case Position::Salutation:
+					if (parts && !parts->first.empty() && !parts->patronymic.empty() && greeting->second < 0) {
+						replacement = names::declined(parts->first + " " + parts->patronymic, Case::Nominative, gender);
+					} else if (parts && !parts->surname.empty()) {
+						replacement = names::declined(parts->surname, Case::Nominative, gender);
+						if (greeting->second < 0) replacement = title_form(gender, 0) + " " + replacement;
+					} else {
+						replacement = names::declined(canonical, Case::Nominative, gender);
+					}
+					break;
+				case Position::Signature:
+				case Position::Address: {
+					const Case target = position == Position::Signature ? Case::Nominative : Case::Dative;
+					if (parts && !parts->surname.empty()) {
+						const std::string initials = initials_of(*parts);
+						const std::string ordered = initials.empty() ? parts->surname
+							: position == Position::Signature ? initials + " " + parts->surname : parts->surname + " " + initials;
+						replacement = names::declined(ordered, target, gender);
+					} else {
+						replacement = names::declined(canonical, target, gender);
+					}
+					break;
+				}
+				case Position::Running:
+					replacement = names::declined(canonical, form, gender);
+					break;
+			}
+			// The writing the text chose: a heading in capitals, «индивидуальный
+			// предприниматель» in the middle of a sentence.
+			if (written_in_capitals(written)) {
+				replacement = uppercased(replacement);
+			} else if (starts_with(lowered(replacement), "индивидуальн") && !written.empty()) {
+				const std::size_t letter = codepoint_length(written, 0);
+				if (lowered(written.substr(0, letter)) == written.substr(0, letter))
+					replacement = lowered(replacement.substr(0, letter)) + replacement.substr(letter);
+			}
+		}
+		// In running text, the period of a last initial that also ended the
+		// sentence stays; one the text writes after the name is not doubled («А. П..»).
+		std::size_t end = unit.end;
+		if (ends_with(replacement, ".") && end < text_.size() && text_[end] == '.' && !ends_with(written, ".")) {
+			++end;
+		} else if (position == Position::Running && ends_with(written, ".") && !ends_with(replacement, ".")
+				&& sentence_ends_at(unit.end)) {
+			// Where the line ends there, only a sentence needs its period back.
+			std::size_t at = unit.end;
+			while (at < text_.size() && space_length(text_, at) > 0) at += space_length(text_, at);
+			const bool lineEnds = at >= text_.size() || text_[at] == '\n' || text_[at] == '\r';
+			if (!lineEnds || sentence_before(unit)) replacement += ".";
+		}
+		if (replacement != normalised(written) || end != unit.end) add(unit.begin, end, replacement);
+		now = replacement;
+	}
+
+	// «о» or «об» before the name as it now begins: «об Иванове», «о Лебедеве»,
+	// «об Обществе …». The model wrote the preposition without seeing the name.
+	if (form == Case::Prepositional && governance.word >= 0 && governance.word == previous(unit.first, false) && has_cyrillic(now)) {
+		const std::string preposition = token_text(governance.word);
+		const std::string lower = lowered(preposition);
+		const bool capital = lower != preposition;
+		if (lower == "о" && begins_with_vowel(now))
+			add(tokens_[governance.word].begin, tokens_[governance.word].end, capital ? "Об" : "об");
+		else if (lower == "об" && !begins_with_vowel(now))
+			add(tokens_[governance.word].begin, tokens_[governance.word].end, capital ? "О" : "о");
+	}
+
+	// «с» or «со» before the name as it now begins: «со Смирновой», «с Лебедевым».
+	if (governance.word >= 0 && governance.word == previous(unit.first, false) && has_cyrillic(now)) {
+		const std::string preposition = token_text(governance.word);
+		const std::string lower = lowered(preposition);
+		const bool capital = lower != preposition;
+		if (lower == "с" && takes_so(now))
+			add(tokens_[governance.word].begin, tokens_[governance.word].end, capital ? "Со" : "со");
+		else if (lower == "со" && !takes_so(now))
+			add(tokens_[governance.word].begin, tokens_[governance.word].end, capital ? "С" : "с");
+	}
+
+	// «Уважаемый» and «господин» in the person's gender; «Уважаемые» for several.
+	if (greeting) {
+		const long adjective = greeting->first;
+		bool several = false;
+		for (const Unit &other : units_)
+			if (&other != &unit && other.kind == SpanKind::Person && other.first >= 0)
+				if (const auto shared = salutation(other); shared && shared->first == adjective) several = true;
+		add(tokens_[adjective].begin, tokens_[adjective].end, names::detail::shaped_like(split_alternative(token_text(adjective)).first,
+			several ? "уважаемые" : gender == Gender::Feminine ? "уважаемая" : "уважаемый"));
+	}
+	const long before = previous(unit.first, false);
+	if (unit.kind == SpanKind::Person && is_word(before)) {
+		if (const auto title = title_of(base_of(before)); title && title->gender != gender)
+			add(tokens_[before].begin, tokens_[before].end,
+				names::detail::shaped_like(split_alternative(token_text(before)).first, title_form(gender, title->form, title->abbreviated)));
+	}
+
+	// The participle after it takes its gender and its case. One in another
+	// case after an organisation that is whose post («директор Общества,
+	// действующий») belongs to that post, and is left as it is.
+	if (participle && gender != Gender::Unknown) {
+		const auto &[at, reading] = *participle;
+		const std::vector<Case> cases = participle_cases(reading);
+		const bool sameCase = std::find(cases.begin(), cases.end(), form) != cases.end();
+		if (!sameCase && unit.kind == SpanKind::Organisation && governance.head >= 0 && !party_role(base_of(governance.head))) return;
+		const std::string word = split_alternative(token_text(at)).first;
+		const std::string agreed = word.substr(0, reading.stem)
+			+ participle_ending(reading, gender, form, unit.kind == SpanKind::Person) + (reading.reflexive ? "ся" : "");
+		add(tokens_[at].begin, tokens_[at].end, agreed);
+	}
+}
+
+// «подготовил(а)», «согласен(на)»: resolved by the name they stand with - the
+// one before them in the sentence, or the one right after them («Подготовил(а):
+// Смирнова А. В.»). Of two, the one that is a subject in the nominative.
+void Agreement::agree_alternatives() {
+	for (long index = 0; index < static_cast<long>(tokens_.size()); ++index) {
+		if (!is_word(index) || unitOf_[index] >= 0) continue;
+		const auto [base, alternative] = split_alternative(token_text(index));
+		if (alternative.empty()) continue;
+		long left = -1;
+		int leftWords = 0;
+		for (long at = index - 1; at >= 0; --at) {
+			if (unitOf_[at] >= 0) { left = unitOf_[at]; break; }
+			const TokenKind kind = tokens_[at].kind;
+			if (kind == TokenKind::Newline) break;
+			if (kind == TokenKind::Mark) {
+				const std::string mark = token_text(at);
+				if (mark == "." || mark == "!" || mark == "?" || mark == ";" || mark == ":") break;
+			}
+			if (kind == TokenKind::Word && ++leftWords > 6) break;
+		}
+		long right = -1;
+		int rightWords = 0;
+		bool colon = false;
+		for (long at = index + 1; at < static_cast<long>(tokens_.size()); ++at) {
+			if (unitOf_[at] >= 0) { right = unitOf_[at]; break; }
+			const TokenKind kind = tokens_[at].kind;
+			if (kind == TokenKind::Newline) break;
+			if (kind == TokenKind::Mark) {
+				if (!colon && rightWords == 0 && token_text(at) == ":") { colon = true; continue; }
+				break;
+			}
+			if (kind == TokenKind::Word && ++rightWords > 2) break;
+		}
+		const bool leftSubject = left >= 0 && units_[left].form == Case::Nominative;
+		const bool rightSubject = right >= 0 && units_[right].form == Case::Nominative;
+		long chosen = left >= 0 && (right < 0 || leftWords <= rightWords) ? left : right;
+		if (leftSubject != rightSubject) chosen = leftSubject ? left : right;
+		if (chosen < 0 || !units_[chosen].agreed) continue;
+		if (const auto resolved = resolved_alternative(base, alternative, units_[chosen].gender))
+			add(tokens_[index].begin, tokens_[index].end, *resolved);
+	}
+}
+
+std::string Agreement::written() {
+	extend_organisations();
+	for (Unit &unit : units_) agree_unit(unit);
+	agree_alternatives();
+	std::sort(edits_.begin(), edits_.end(), [](const Edit &a, const Edit &b) { return a.begin < b.begin; });
+	std::string result;
+	std::size_t at = 0;
+	for (const Edit &edit : edits_) {
+		result.append(text_, at, edit.begin - at);
+		result += edit.text;
+		at = edit.end;
+	}
+	result.append(text_, at, std::string::npos);
+	return result;
+}
+
+} // namespace
+
+std::string agree(const std::string &text, const std::vector<RestoredSpan> &spans) {
+	if (spans.empty() || !has_cyrillic(text)) return text;
+	std::vector<Unit> units;
+	for (const RestoredSpan &span : spans) {
+		if (span.length == 0 || span.offset > text.size() || span.length > text.size() - span.offset) continue;
+		Unit unit;
+		unit.begin = unit.spanBegin = span.offset;
+		unit.end = unit.spanEnd = span.offset + span.length;
+		unit.kind = span.kind;
+		unit.canonical = span.canonical;
+		unit.gender = span.gender;
+		units.push_back(std::move(unit));
+	}
+	std::sort(units.begin(), units.end(), [](const Unit &a, const Unit &b) { return a.begin < b.begin; });
+	// Spans that overlap one another are left as they are.
+	std::vector<Unit> separate;
+	for (std::size_t index = 0; index < units.size(); ++index) {
+		const bool overlaps = (index > 0 && units[index - 1].end > units[index].begin)
+			|| (index + 1 < units.size() && units[index].end > units[index + 1].begin);
+		if (!overlaps) separate.push_back(units[index]);
+	}
+	if (separate.empty()) return text;
+	return Agreement(text, std::move(separate)).written();
+}
+
+} // namespace singularity::protected_api::papinian::restoration_grammar

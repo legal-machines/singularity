@@ -1,0 +1,653 @@
+/* The guide over the whole window (OfficeGuide.jsx): its stages on the left,
+   the stage at hand on the right, each with a sketch of the application's own
+   screen and the places to press marked on it. */
+
+.guide {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+	background: var(--sheet);
+	color: var(--ink);
+}
+
+.top {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	height: 56px;
+	padding: 0 var(--space-6);
+	border-bottom: 1px solid var(--line);
+}
+
+/* On macOS the guide's head is the window's top strip, where the window's
+   buttons stand (MacOSChrome: from 24 to 82 in, centred on the strip's line):
+   the head takes the strip's height and begins after them. */
+:root[data-native-platform="darwin"] .top {
+	height: var(--titlebar-height);
+	padding-left: 100px;
+}
+
+.top_icon {
+	border-radius: 7px;
+}
+
+.top_title {
+	flex: 1;
+	font: var(--type-heading);
+}
+
+.body {
+	display: grid;
+	grid-template-columns: 264px minmax(0, 1fr);
+	min-height: 0;
+}
+
+.stages {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	padding: var(--space-6) var(--space-4);
+	border-right: 1px solid var(--line);
+}
+
+.stage_button {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: 10px var(--space-3);
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+	transition: background var(--duration-fast) var(--ease-out);
+}
+
+.stage_button:hover {
+	background: var(--sheet-quiet);
+}
+
+.stage_on,
+.stage_on:hover {
+	background: var(--sheet-quiet);
+}
+
+.marker {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border: 1px solid var(--line);
+	border-radius: 50%;
+	background: var(--sheet);
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.marker_done {
+	border-color: transparent;
+	background: var(--settled);
+	color: #ffffff;
+}
+
+.stage_text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding-top: 2px;
+}
+
+.stage_label {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.stage_line {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.stage {
+	overflow: auto;
+	padding: var(--space-8) var(--space-10);
+}
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	max-width: 960px;
+}
+
+.title {
+	margin: 0;
+	font: var(--type-page-title);
+	color: var(--ink);
+}
+
+.lead {
+	max-width: 700px;
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+.line {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.problem {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+/* The sketch beside the steps it marks. */
+.sheet {
+	display: grid;
+	grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+	gap: var(--space-8);
+	align-items: start;
+}
+
+/* The steps alone, where no sketch of the system's own screen is shown: as
+   wide as a line is read. */
+.sheet_plain {
+	grid-template-columns: minmax(0, 1fr);
+	max-width: var(--measure);
+}
+
+.steps {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.steps li {
+	display: flex;
+	gap: var(--space-3);
+	font: var(--type-body);
+	color: var(--ink);
+	text-wrap: pretty;
+}
+
+.steps b {
+	font-weight: 500;
+}
+
+.step_number {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--accent);
+	font: 500 12px/1 var(--font-sans);
+	color: #ffffff;
+}
+
+.step_body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.copy_row {
+	display: flex;
+}
+
+/* What the guide sees now. */
+.check {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: 700px;
+	margin: 0;
+	padding: var(--space-3) 14px;
+	border-radius: 10px;
+	background: var(--sheet-quiet);
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+.check_done {
+	background: var(--settled-tint);
+	color: var(--settled-ink);
+}
+
+.check_icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+}
+
+.watching {
+	width: 14px;
+	height: 14px;
+	border: 2px solid var(--line);
+	border-top-color: var(--ink-3);
+	border-radius: 50%;
+	animation: watching 1.1s linear infinite;
+}
+
+@keyframes watching {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.watching {
+		animation: none;
+	}
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+/* A pane asking to connect, answered here. */
+.request {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: var(--space-5);
+	max-width: 960px;
+	margin-bottom: var(--space-6);
+	padding: var(--space-4) var(--space-5);
+	border: 1px solid var(--accent-line);
+	border-radius: var(--radius-lg);
+	background: var(--accent-tint);
+}
+
+.request_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.request_title {
+	margin: 0;
+	font: var(--type-heading);
+	color: var(--ink);
+}
+
+.request_actions {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.code {
+	margin: 0;
+	font: 500 28px/34px var(--font-sans);
+	letter-spacing: 0.06em;
+	color: var(--ink);
+}
+
+.clients {
+	display: flex;
+	flex-direction: column;
+	max-width: 700px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.client {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-3) 0;
+	border-bottom: 1px solid var(--line);
+}
+
+.client_text {
+	display: flex;
+	flex-direction: column;
+}
+
+.client_name {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+/* ---- The sketches -------------------------------------------------------------------- */
+
+.sketch {
+	margin: 0;
+}
+
+/* A place to press, and its number in the steps. */
+.target {
+	position: relative;
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.mark {
+	position: absolute;
+	top: -11px;
+	right: -11px;
+	display: grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: var(--accent);
+	font: 500 11px/1 var(--font-sans);
+	color: #ffffff;
+}
+
+.app {
+	overflow: visible;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	background: var(--sheet);
+	box-shadow: 0 1px 2px rgba(25, 28, 39, 0.05);
+}
+
+.app_bar {
+	display: flex;
+	align-items: center;
+	height: 26px;
+	padding: 0 var(--space-3);
+	border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+	font: var(--type-meta);
+}
+
+.word_bar {
+	background: #e8eef8;
+	color: #1f3d7a;
+}
+
+.outlook_bar {
+	background: #e6f0f8;
+	color: #0f4c81;
+}
+
+.ribbon_tabs {
+	display: flex;
+	gap: 14px;
+	padding: 6px var(--space-3) 0;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.ribbon_tabs span {
+	padding-bottom: 5px;
+}
+
+.tab_on {
+	border-bottom: 2px solid var(--ink-2);
+	color: var(--ink);
+}
+
+.ribbon {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: 10px var(--space-3);
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+}
+
+.ribbon_group {
+	width: 56px;
+	height: 22px;
+	border-radius: 4px;
+	background: var(--sheet-quiet);
+}
+
+.ribbon_button {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 6px;
+	font: var(--type-meta);
+	color: var(--ink);
+}
+
+.ribbon_button img,
+.menu_tile img {
+	border-radius: 4px;
+}
+
+.app_page {
+	display: grid;
+	grid-template-columns: 132px minmax(0, 1fr) 108px;
+	gap: 10px;
+	min-height: 156px;
+	padding: 14px 12px 12px;
+	border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+	background: var(--sheet-quiet);
+}
+
+.menu {
+	display: flex;
+	flex-direction: column;
+	align-self: start;
+	gap: 8px;
+	padding: 8px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--sheet);
+}
+
+.menu_heading {
+	margin: 0;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.menu_tile {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: fit-content;
+	padding: 6px 8px;
+	border-radius: 8px;
+	font: var(--type-meta);
+	color: var(--ink);
+}
+
+.paper {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px;
+	border: 1px solid var(--line);
+	background: var(--sheet);
+}
+
+.paper span {
+	height: 6px;
+	border-radius: 3px;
+	background: var(--line);
+}
+
+.paper .paper_short {
+	width: 60%;
+}
+
+.side_pane {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 8px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--sheet);
+}
+
+.pane_head {
+	margin: 0;
+	font: 500 12px/16px var(--font-sans);
+	color: var(--ink);
+}
+
+.pane_button {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 10px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: var(--sheet);
+	font: var(--type-meta);
+	color: var(--ink);
+}
+
+.store_page {
+	padding: 14px 12px 12px;
+	border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+	background: var(--sheet-quiet);
+}
+
+.store_card {
+	padding: 10px 12px 14px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--sheet);
+}
+
+.store_title {
+	margin: 0;
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+.store_body {
+	display: grid;
+	grid-template-columns: 108px minmax(0, 1fr);
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.store_nav {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.store_nav span {
+	width: fit-content;
+	padding: 2px 6px;
+	border-radius: 4px;
+}
+
+.store_nav_on {
+	color: var(--ink);
+	font-weight: 500;
+}
+
+.store_main {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 14px;
+}
+
+.file_row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.file_field {
+	padding: 3px 8px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--sheet);
+	font: 400 11px/16px var(--font-sans);
+	color: var(--ink-2);
+}
+
+.win_dialog {
+	max-width: 400px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--sheet);
+	box-shadow: 0 4px 16px rgba(25, 28, 39, 0.08);
+}
+
+.win_title {
+	margin: 0;
+	padding: 8px var(--space-3);
+	border-bottom: 1px solid var(--line);
+	font: var(--type-meta);
+	color: var(--ink-2);
+}
+
+.win_body {
+	display: flex;
+	gap: var(--space-3);
+	padding: 14px;
+}
+
+.win_shield {
+	flex: none;
+	color: #a26b12;
+}
+
+.win_text {
+	font: var(--type-small);
+	color: var(--ink-2);
+}
+
+.win_buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	padding: 0 14px 14px;
+}
+
+.win_button {
+	padding: 4px 18px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	font: var(--type-meta);
+	color: var(--ink);
+}
+
+@media (max-width: 1100px) {
+	.sheet {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 860px) {
+	.body {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+
+	.stages {
+		flex-direction: row;
+		overflow-x: auto;
+		border-right: 0;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.request {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

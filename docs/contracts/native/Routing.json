@@ -1,0 +1,21 @@
+{
+  "domain": "Routing",
+  "methods": [
+    {
+      "name": "routing.getAiSetupCapabilities",
+      "policy": "worker",
+      "result": "AiSetupCapabilities",
+      "_order": 65
+    },
+    {
+      "name": "routing.getEffectiveAiSetup",
+      "policy": "worker",
+      "params": {
+        "projectId": "string | undefined",
+        "chatId": "string | undefined"
+      },
+      "result": "EffectiveAiSetup",
+      "_order": 66
+    }
+  ]
+}

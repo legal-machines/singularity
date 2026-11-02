@@ -1,0 +1,255 @@
+--- a/ggml/include/ggml-metal.h
++++ b/ggml/include/ggml-metal.h
+@@ -68,6 +68,7 @@
+ const size_t MOE_OFF_REQ      = 0;                                   // atomic_uint: request seq
+ const size_t MOE_OFF_PHASE    = 4;                                   // int32: 1 prefill, 0 decode
+ const size_t MOE_OFF_N        = 8;                                   // int32:       id count
++const size_t MOE_OFF_TOP_K    = 12;                                  // int32:       selected experts/token
+ const size_t MOE_OFF_SELECTED = 16;                                  // int32[n]:    expert ids (GPU writes)
+ const size_t MOE_OFF_REMAPPED = MOE_OFF_SELECTED + MOE_MAX_IDS * 4;  // int32[n]:    slot ids (CPU writes)
+ const size_t MOE_MSG_NBYTES   = MOE_OFF_REMAPPED + MOE_MAX_IDS * 4;
+--- a/src/llama-moe-offloader.h
++++ b/src/llama-moe-offloader.h
+@@ -5,6 +5,7 @@
+ 
+ #include <atomic>
+ #include <cstdint>
++#include <fstream>
+ #include <memory>
+ #include <mutex>
+ #include <string>
+@@ -75,6 +76,9 @@
+     uint64_t decode_bytes_loaded = 0;
+     uint64_t decode_load_time_ns = 0;
+     std::vector<uint8_t> decode_experts_touched;
++    std::atomic<uint64_t> logical_bytes_requested{ 0 };
++    std::atomic<uint64_t> api_read_bytes{ 0 };
++    uint64_t peak_transient_in_flight_bytes = 0;
+ 
+     ~moe_layer();
+ };
+@@ -111,6 +115,12 @@
+     void poll_control();
+     void resize_active_slots(int64_t requested);
+     void write_telemetry() const;
++    void write_route_trace(const moe_layer & layer, const int32_t * ids,
++                           const std::vector<uint8_t> & hard_resident_before,
++                           int n, int top_k, uint32_t sequence,
++                           uint64_t decision_timestamp_nanoseconds,
++                           uint64_t state_ready_timestamp_nanoseconds,
++                           uint64_t execution_timestamp_nanoseconds);
+ 
+     ggml_backend_t backend;
+ 
+@@ -124,6 +134,10 @@
+     std::atomic<bool> sidecar_run{ false };
+     std::string control_path;
+     std::string telemetry_path;
++    std::string route_trace_path;
++    std::ofstream route_trace_output;
++    uint64_t route_trace_records = 0;
++    bool route_trace_overflow_written = false;
+     int64_t requested_slots = -1;
+     std::atomic<bool> current_prefill{ false };
+ };
+--- a/src/llama-moe-offloader.cpp
++++ b/src/llama-moe-offloader.cpp
+@@ -19,6 +19,13 @@
+ #include <sstream>
+ #include <thread>
+ 
++namespace {
++uint64_t monotonic_nanoseconds() {
++    return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(
++            std::chrono::steady_clock::now().time_since_epoch()).count();
++}
++}
++
+ moe_layer::~moe_layer() {
+     for (auto & p : pools) {
+         ggml_backend_buffer_free(p.own_buf);
+@@ -38,6 +45,9 @@
+     if (const char * path = getenv("LOCAL_INFERENCE_MOE_TELEMETRY_FILE")) {
+         telemetry_path = path;
+     }
++    if (const char * path = getenv("LOCAL_INFERENCE_MOE_ROUTE_TRACE_FILE")) {
++        route_trace_path = path;
++    }
+ }
+ 
+ llama_moe_offloader::~llama_moe_offloader() {
+@@ -181,6 +191,7 @@
+         layer.last_src2_uses                    = 1;
+         out->seq                                = seq;
+         *(int32_t *) (layer.mapped + MOE_OFF_N) = n;
++        *(int32_t *) (layer.mapped + MOE_OFF_TOP_K) = (int32_t) src2->ne[0];
+         *(int32_t *) (layer.mapped + MOE_OFF_PHASE) =
+                 me->current_prefill.load(std::memory_order_relaxed) ? 1 : 0;
+     }
+@@ -208,6 +219,9 @@
+     uint8_t * d   = (uint8_t *) dst;
+     size_t    got = 0;
+     while (got < p.stride) {
++        if (got == 0) {
++            layer.logical_bytes_requested.fetch_add(p.stride, std::memory_order_relaxed);
++        }
+         ssize_t r = pread(p.fd, d + got, p.stride - got, (off_t) (off + got));
+         if (r < 0 && errno == EINTR) {
+             continue;
+@@ -215,6 +229,7 @@
+         if (r <= 0) {
+             return false;
+         }
++        layer.api_read_bytes.fetch_add((uint64_t) r, std::memory_order_relaxed);
+         got += (size_t) r;
+     }
+     return true;
+@@ -276,6 +291,13 @@
+         return;
+     }
+ 
++    uint64_t transient_bytes = 0;
++    for (const auto & task : tasks) {
++        transient_bytes += task.layer->pools[task.pool_idx].stride;
++    }
++    layer.peak_transient_in_flight_bytes = std::max(
++            layer.peak_transient_in_flight_bytes, transient_bytes);
++
+     if (tasks.size() == 1) {
+         if (!pread_pool(*tasks[0].layer, tasks[0].pool_idx, tasks[0].expert_id, tasks[0].dst_slot)) {
+             GGML_ABORT("moe_offloader: pread failed");
+@@ -379,6 +401,9 @@
+     uint64_t decode_loaded = 0;
+     uint64_t decode_load_ns = 0;
+     uint64_t decode_distinct_layer_experts = 0;
++    uint64_t logical_bytes_requested = 0;
++    uint64_t api_read_bytes = 0;
++    uint64_t peak_transient_in_flight_bytes = 0;
+     int64_t capacity = 0;
+     std::lock_guard<std::mutex> guard(build_mtx);
+     for (const auto & layer_ptr : layers) {
+@@ -403,6 +428,10 @@
+         decode_load_ns += layer.decode_load_time_ns;
+         decode_distinct_layer_experts += (uint64_t) std::count(
+                 layer.decode_experts_touched.begin(), layer.decode_experts_touched.end(), (uint8_t) 1);
++        logical_bytes_requested += layer.logical_bytes_requested.load(std::memory_order_relaxed);
++        api_read_bytes += layer.api_read_bytes.load(std::memory_order_relaxed);
++        peak_transient_in_flight_bytes = std::max(
++                peak_transient_in_flight_bytes, layer.peak_transient_in_flight_bytes);
+         capacity = std::max(capacity, layer.active_slots);
+         for (const moe_pool & pool : layer.pools) {
+             resident += (uint64_t) layer.active_slots * pool.stride;
+@@ -421,6 +450,9 @@
+            << ",\"expert_evictions\":" << evictions
+            << ",\"bytes_loaded\":" << loaded
+            << ",\"storage_load_ns\":" << load_ns
++           << ",\"logical_bytes_requested\":" << logical_bytes_requested
++           << ",\"api_read_bytes\":" << api_read_bytes
++           << ",\"peak_transient_in_flight_bytes\":" << peak_transient_in_flight_bytes
+            << ",\"prefill_cache_hits\":" << prefill_hits
+            << ",\"prefill_cache_misses\":" << prefill_misses
+            << ",\"prefill_bytes_loaded\":" << prefill_loaded
+@@ -434,7 +466,50 @@
+     output.close();
+     if (output) {
+         (void) std::rename(temporary_path.c_str(), telemetry_path.c_str());
++    }
++}
++
++void llama_moe_offloader::write_route_trace(
++        const moe_layer & layer, const int32_t * ids,
++        const std::vector<uint8_t> & hard_resident_before,
++        int n, int top_k, uint32_t sequence,
++        uint64_t decision_timestamp_nanoseconds,
++        uint64_t state_ready_timestamp_nanoseconds,
++        uint64_t execution_timestamp_nanoseconds) {
++    constexpr uint64_t maximum_route_trace_records = 100000;
++    if (!route_trace_output || top_k <= 0 || n <= 0 || n % top_k != 0) return;
++    const int token_count = n / top_k;
++    for (int token = 0; token < token_count; ++token) {
++        if (route_trace_records >= maximum_route_trace_records) {
++            if (!route_trace_overflow_written) {
++                route_trace_output << "{\"type\":\"overflow\"}\n";
++                route_trace_overflow_written = true;
++                route_trace_output.flush();
++            }
++            return;
++        }
++        route_trace_output << "{\"decision_sequence\":" << sequence
++                << ",\"token\":" << token
++                << ",\"layer\":" << layer.layer_idx
++                << ",\"top_k\":" << top_k
++                << ",\"router_weights\":null"
++                << ",\"decision_timestamp_nanoseconds\":" << decision_timestamp_nanoseconds
++                << ",\"state_ready_timestamp_nanoseconds\":" << state_ready_timestamp_nanoseconds
++                << ",\"execution_timestamp_nanoseconds\":" << execution_timestamp_nanoseconds
++                << ",\"exact_routed_ids\":[";
++        for (int rank = 0; rank < top_k; ++rank) {
++            if (rank) route_trace_output << ',';
++            route_trace_output << ids[token * top_k + rank];
++        }
++        route_trace_output << "],\"hard_resident_before\":[";
++        for (int rank = 0; rank < top_k; ++rank) {
++            if (rank) route_trace_output << ',';
++            route_trace_output << (hard_resident_before[(size_t) token * top_k + rank] ? "true" : "false");
++        }
++        route_trace_output << "],\"soft_resident_estimate_before\":null}\n";
++        route_trace_records++;
+     }
++    route_trace_output.flush();
+ }
+ 
+ void llama_moe_offloader::sidecar_loop() {
+@@ -473,8 +548,16 @@
+             int n_ids = *(int32_t *) (layer.mapped + MOE_OFF_N);
+             GGML_ASSERT(n_ids > 0 && n_ids <= MOE_MAX_IDS);
+             const int32_t * ids = (const int32_t *) (layer.mapped + MOE_OFF_SELECTED);
++            const int top_k = *(int32_t *) (layer.mapped + MOE_OFF_TOP_K);
+ 
+             const bool prefill = *(int32_t *) (layer.mapped + MOE_OFF_PHASE) != 0;
++            const uint64_t decision_timestamp_nanoseconds = monotonic_nanoseconds();
++            std::vector<uint8_t> hard_resident_before((size_t) n_ids, 0);
++            for (int index = 0; index < n_ids; ++index) {
++                const int32_t expert = ids[index];
++                hard_resident_before[(size_t) index] = expert >= 0 && expert < layer.n_expert &&
++                        layer.expert_to_slot[(size_t) expert] >= 0 ? 1 : 0;
++            }
+             const uint64_t hits_before = layer.total_hits;
+             const uint64_t misses_before = layer.total_misses;
+             const uint64_t bytes_before = layer.bytes_loaded;
+@@ -498,8 +581,13 @@
+ 
+             memcpy(layer.mapped + MOE_OFF_REMAPPED, remap_buf.data(), (size_t) n_ids * sizeof(int32_t));
+ 
++            const uint64_t state_ready_timestamp_nanoseconds = monotonic_nanoseconds();
+             layer.last_processed.store(req, std::memory_order_relaxed);
++            const uint64_t execution_timestamp_nanoseconds = monotonic_nanoseconds();
+             ggml_backend_metal_event_signal(layer.shared_event, (uint64_t) req);
++            write_route_trace(layer, ids, hard_resident_before, n_ids, top_k, req,
++                    decision_timestamp_nanoseconds, state_ready_timestamp_nanoseconds,
++                    execution_timestamp_nanoseconds);
+ 
+             any = true;
+         }
+@@ -515,6 +603,10 @@
+         return;
+     }
+ 
++    if (!route_trace_path.empty()) {
++        route_trace_output.open(route_trace_path, std::ios::trunc);
++    }
++
+     sidecar_thread = std::thread([this] { sidecar_loop(); });
+ }
+ 
+@@ -525,6 +617,10 @@
+     if (sidecar_thread.joinable()) {
+         sidecar_thread.join();
+     }
++    if (route_trace_output) {
++        route_trace_output.flush();
++        route_trace_output.close();
++    }
+     write_telemetry();
+ }
+ 

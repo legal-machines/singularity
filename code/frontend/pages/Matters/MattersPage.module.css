@@ -1,0 +1,188 @@
+/* As Team's (TeamPage.module.css): which Matters over the list, 28 under the
+   head's line and 30 over the list; each client's Matters under the client's
+   name in plain words with their count; no frame, no capitals, no lines
+   between rows, a row's ground under the pointer only; marks and names on
+   the head's edge (the owner, 2026-11-02). */
+.toolbar {
+	display: flex;
+	align-items: center;
+	margin: 28px 0 30px;
+}
+
+.groups {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.group_title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0 0 4px;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.group_count {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 -12px;
+	padding: 0;
+	list-style: none;
+}
+
+.row {
+	--row-ground: var(--sheet);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover {
+	--row-ground: var(--sheet-hover);
+	background: var(--sheet-hover);
+}
+
+.row_open {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+	padding: 10px 12px;
+	text-align: left;
+}
+
+.row_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+/* The name, and beside it what the Matter holds and what its work came to,
+   each a small sign and its figure, quiet; the name gives way first. */
+.row_head {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+}
+
+.row_mark {
+	display: inline-flex;
+	flex: none;
+}
+
+.row_name,
+.row_line {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_name {
+	min-width: 0;
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.row_line {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.row_aside {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 16px;
+	padding-right: 12px;
+}
+
+/* What can be done with the Matter, under the pointer only, as an Inbox
+   row's buttons (InboxPage.module.css). */
+.actions {
+	display: inline-flex;
+	gap: 2px;
+}
+
+.actions button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	color: var(--ink-3);
+	opacity: 0;
+	transition: opacity var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover .actions button,
+.row:focus-within .actions button {
+	opacity: 1;
+}
+
+.actions button:hover {
+	color: var(--ink);
+	background: var(--sheet-selected);
+}
+
+@media (hover: none) {
+	.actions button {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.actions button {
+		transition: none;
+	}
+}
+
+/* Who works on it, their faces overlapping. */
+.faces {
+	display: inline-flex;
+	padding-left: 5px;
+}
+
+/* Each face set off from the next by a ring of the row's own ground, white
+   at rest and the pointer's grey under it (the owner, 2026-11-02: "a bug
+   with the outline"). */
+.face {
+	display: inline-flex;
+	margin-left: -5px;
+	border-radius: 7px;
+	box-shadow: 0 0 0 2px var(--row-ground);
+}
+
+/* Whether something in it waits for the member, as a word in its colour. */
+.word {
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.word[data-tone="yours"] {
+	color: var(--accent-ink);
+}
+
+/* What the page says while there is nothing to list. */
+.empty {
+	margin: 0;
+	color: var(--ink-3);
+	font: var(--type-body);
+}
+
+/* The New Matter dialog's fields, apart enough that a hint is read with its
+   own field. */

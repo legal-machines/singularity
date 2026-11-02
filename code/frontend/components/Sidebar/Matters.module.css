@@ -1,0 +1,128 @@
+/* The firm's Matters in the sidebar (Matters.jsx, D-200): all the room
+   between the places and the member, under a heading as Recent's. Its
+   heading's letters stand an --edge below what is drawn above them: the
+   places' last icon - 18 points centred in its row, ending 2.9 inside it -
+   or Recent's last face, 22 centred in its row; the letters stand 7.5 into
+   the heading (Recent.module.css). New matter's plus ends an --edge above
+   the member's face (AccountMenu), which stands 24 below this block's own
+   foot: the block reaches as far below it as the plus ends above its row's
+   foot - its 18-point icon centred in the row, the drawing ending 3.4
+   inside it. */
+.matters {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	margin-top: calc(var(--edge) - (var(--sidebar-row) - 18px) / 2 - 10.4px);
+	margin-bottom: calc(-1 * var(--new-matter-foot));
+	--new-matter-foot: calc((var(--sidebar-row) - 18px) / 2 + 3.4px);
+}
+
+nav + .matters {
+	margin-top: calc(var(--edge) - (var(--sidebar-row) - 22px) / 2 - 7.5px);
+}
+
+/* From the heading to the first mark as from Recent's heading to its first
+   face: a Matter's row reaches 7 above its mark, a face's row 4 above it. */
+.matters .heading {
+	flex: none;
+}
+
+.heading + .list {
+	margin-top: -3px;
+}
+
+/* The Matters scroll under one another once they fill the room, on a thin
+   scrollbar, and New matter stays pinned at their foot (the owner,
+   2026-11-02: "what happens when more Matters do not fit? It must behave
+   beautifully"). */
+.list {
+	display: flex;
+	flex: 0 1 auto;
+	flex-direction: column;
+	gap: var(--sidebar-row-gap);
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(in srgb, var(--ink) 18%, transparent) transparent;
+}
+
+/* A Matter's row is the member's own at the foot (AccountMenu): a mark of 36
+   on the sidebar's line of marks, its name, and one line under it. */
+.row {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr) auto;
+	align-items: center;
+	column-gap: 10px;
+	width: 100%;
+	padding: 6px 8px 6px calc(var(--edge) - var(--sidebar-inset));
+	color: var(--ink);
+	text-align: left;
+	border-radius: var(--radius-md);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover {
+	background: var(--hover-ground, var(--desk-hover));
+}
+
+.row_here,
+.row_here:hover {
+	background: var(--sidebar-selected);
+}
+
+.mark {
+	display: inline-flex;
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.name {
+	overflow: hidden;
+	font: var(--type-sidebar-name);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* What the Matter said last, under its name as the member's office is under
+   theirs: a step down the scale, lighter. */
+.said {
+	overflow: hidden;
+	font: var(--type-sidebar-detail);
+	color: var(--ink-sidebar-detail);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.said_none {
+	color: var(--ink-4);
+}
+
+.author {
+	color: var(--ink-2);
+}
+
+/* New matter: a place's row (Sidebar.module.css, .tab) with no outline,
+   pinned to the foot of the Matters (the owner, 2026-11-02: "remove the
+   border here after all", "rebuild it so that it fits the sidebar's
+   design"). */
+.new {
+	flex: none;
+	margin-top: auto;
+}
+
+/* After the Matters, at least a step of air before it. */
+.list:not(:empty) {
+	margin-bottom: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.row {
+		transition: none;
+	}
+}

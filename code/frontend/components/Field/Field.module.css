@@ -1,0 +1,142 @@
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+
+.label {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+.optional {
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.hint,
+.error {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.error {
+	color: var(--accent-ink);
+}
+
+/* Controls: a white field framed in a hairline; its frame turns to ink
+   when it has the focus, and to brick when what it holds is wrong. */
+
+.control {
+	width: 100%;
+	height: var(--control);
+	padding: 0 10px;
+	font: var(--type-body);
+	color: var(--ink);
+	background: var(--sheet);
+	border: none;
+	border-radius: var(--radius-md);
+	box-shadow: inset 0 0 0 1px var(--line-strong);
+	transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.control::placeholder {
+	color: var(--ink-4);
+}
+
+.control:hover:not(:disabled) {
+	box-shadow: inset 0 0 0 1px var(--ink-4);
+}
+
+.control:focus,
+.control:focus-visible {
+	outline: none;
+	box-shadow: inset 0 0 0 1.5px var(--ink), 0 0 0 3px rgba(26, 25, 21, 0.08);
+}
+
+.control[aria-invalid="true"] {
+	box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.control:disabled {
+	color: var(--ink-3);
+	background: var(--sheet-quiet);
+}
+
+.control_small {
+	height: var(--control-small);
+	padding: 0 8px;
+	font-size: 13px;
+	border-radius: var(--radius-sm);
+}
+
+.area {
+	height: auto;
+	padding: 6px 10px;
+	line-height: 21px;
+	resize: none;
+}
+
+.select {
+	padding-right: 30px;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%236a665e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8L10 12L14 8'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+	cursor: pointer;
+}
+
+/* Check box */
+
+.check {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 4px 0;
+	font: var(--type-body);
+	cursor: pointer;
+}
+
+.check_disabled {
+	color: var(--ink-4);
+	cursor: default;
+}
+
+.check_box {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	margin: 2.5px 0 0;
+	appearance: none;
+	background: var(--sheet);
+	border-radius: var(--radius-xs);
+	box-shadow: inset 0 0 0 1.5px var(--ink-4);
+	cursor: inherit;
+	transition: background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.check_box:checked {
+	background: var(--check-tone, var(--ink)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5L8.5 14L15 6.5'/%3E%3C/svg%3E") center / 14px no-repeat;
+	box-shadow: none;
+}
+
+.check_box:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+
+.check_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.check_description {
+	font: var(--type-small);
+	color: var(--ink-3);
+}

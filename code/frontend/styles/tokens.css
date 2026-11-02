@@ -1,0 +1,269 @@
+/* Folio, Singularity's design system: its tokens. Every colour, size, radius,
+   shadow and motion of the interface comes from here; a component names the
+   token for what it means, never a raw value (DESIGN.md).
+
+   White everywhere, and air: the structure is made by space and a few fine
+   lines, the hierarchy by size and the tone of the ink, rarely by weight.
+   One typeface, Roboto.
+
+   The colours are pigments of the documents law was written in: the text in
+   iron-gall ink, blue-black; vermilion, the colour of seals and rubrics, for
+   what waits for the member; ultramarine for a colleague at work; verdigris
+   for what is done; ochre for what is due. Madder and umber join them in the
+   calendar. The colleagues' faces bring the rest. */
+
+:root {
+	/* Grounds: one white, and the cool greys of a pointer and a choice. */
+	--sheet: #ffffff;
+	--sheet-quiet: #f6f7fa;
+	--sheet-hover: #f4f5f8;
+	--sheet-press: #eceef3;
+	--sheet-selected: #eef0f5;
+	--line: #eceef3;
+	--line-strong: #dfe2ea;
+	--scrim: rgba(25, 28, 39, 0.3);
+
+	/* The desk is the same white: the places and the page are one paper,
+	   kept apart by a line. */
+	--desk: var(--sheet);
+	--desk-hover: var(--sheet-hover);
+	--desk-press: var(--sheet-press);
+
+	/* The sidebar's ground, on trial (the owner, 2026-11-02: "make the
+	   sidebar this kind of colour, I want to see it"): Twist's, sampled, a
+	   cool off-white beside the white page, with a pointer's and a choice's
+	   greys one step deeper on it. */
+	--sidebar-ground: #f8fafb;
+	--sidebar-hover: #eff2f5;
+	--sidebar-press: #e8ebf0;
+	--desk-line: var(--line);
+	--desk-field: var(--sheet-hover);
+	--on-desk: var(--ink);
+	--on-desk-2: var(--ink-2);
+	--on-desk-3: var(--ink-3);
+
+	/* Iron-gall ink */
+	--ink: #191c27;
+	--ink-2: #4a4f61;
+	--ink-3: #676c7e;
+	--ink-4: #a3a8b7;
+	--ink-inverse: #ffffff;
+	--ink-inverse-2: rgba(255, 255, 255, 0.72);
+	--ink-surface: #1d2030;
+
+	/* Vermilion: what waits for the member. */
+	--accent: #c43a24;
+	--accent-strong: #a8301c;
+	--accent-ink: #b23420;
+	--accent-tint: #fcebe6;
+	--accent-line: #f3cbc1;
+
+	/* Verdigris: done, sent, closed with a conclusion. */
+	--settled: #2f8a6e;
+	/* Online: a colleague there now (components/Avatar/online.js). */
+	--online: #2fb26a;
+	--settled-ink: #22735c;
+	--settled-tint: #e4f3ed;
+	--settled-line: #bfe0d3;
+
+	/* Ochre: a deadline near, or a point not checked. */
+	--time: #c2851a;
+	--time-ink: #8a5b0b;
+	--time-tint: #fbf1df;
+	--time-line: #efd9ad;
+
+	/* Ultramarine: a colleague at work. */
+	--underway: #2f56b0;
+	--underway-tint: #eaf0fc;
+
+	/* Madder and umber, for the calendar. */
+	--madder: #7a4b97;
+	--umber: #8b6a4b;
+
+	/* A file's kind, in the colour lawyers know it by (FileKind.jsx): Word's
+	   blue, Excel's green, PowerPoint's orange, a PDF's red, Outlook's blue
+	   for mail; plain text in grey. Each carries white type at 4.5:1. */
+	--kind-word: #2b579a;
+	--kind-sheet: #1e6e42;
+	--kind-slides: #b5500f;
+	--kind-pdf: #b3160b;
+	--kind-mail: #0f62a8;
+	--kind-image: #6e4796;
+	--kind-data: #4f5a8a;
+	--kind-text: #596072;
+
+	/* Text selected on the page. */
+	--selection: #dce6fb;
+
+	/* Small fills: a file's tile, a bubble, a version's number. */
+	--tray: #f3f4f8;
+	--tray-line: #e4e7ee;
+	--card-shadow: 0 0 0 1px var(--tray-line), 0 1px 2px rgba(25, 28, 39, 0.04);
+
+	/* Type: Roboto alone. Its figures are of one width, so times and amounts
+	   stand in columns without another face. */
+	--font-sans: "Roboto Variable", Roboto, system-ui, sans-serif;
+	--font-mono: var(--font-sans);
+	/* Codes a member reads out or compares (UI-27). */
+	--font-code: "IBM Plex Mono", ui-monospace, monospace;
+	--font-serif: var(--font-sans);
+
+	--type-page-title: 500 24px/30px var(--font-sans);
+	--type-display: 400 28px/34px var(--font-sans);
+	--type-title: 400 20px/27px var(--font-sans);
+	--type-heading: 500 15px/22px var(--font-sans);
+	--type-body: 400 14px/21px var(--font-sans);
+	--type-body-strong: 500 14px/21px var(--font-sans);
+	--type-reading: 400 15px/25px var(--font-sans);
+	--type-small: 400 13px/18px var(--font-sans);
+	--type-small-strong: 500 13px/18px var(--font-sans);
+	/* The two names that head and close the sidebar, the firm's and the
+	   member's, in one size (the owner, 2026-11-02). */
+	--type-sidebar-name: 500 14px/20px var(--font-sans);
+	/* What follows such a name, a member's office: one step down the scale,
+	   a lighter weight, and the name's ink at 60% (the owner, 2026-11-02:
+	   hierarchy by size, weight and transparency); 60% keeps 4.9 to 1 on
+	   the sidebar. */
+	--type-sidebar-detail: 400 13px/18px var(--font-sans);
+	--ink-sidebar-detail: color-mix(in srgb, var(--ink) 60%, transparent);
+	--type-meta: 400 12px/16px var(--font-sans);
+	--type-figure: 400 12px/16px var(--font-sans);
+	--type-figure-large: 400 13px/18px var(--font-sans);
+	--type-instrument: 400 15px/25px var(--font-sans);
+	--type-instrument-small: 400 14px/22px var(--font-sans);
+	--type-caps: 500 11.5px/16px var(--font-sans);
+	--type-hero: 400 23px/30px var(--font-sans);
+
+	--track-display: -0.018em;
+	--track-title: -0.01em;
+	--track-meta: 0.005em;
+	--track-caps: 0.08em;
+
+	/* Space, on a four-pixel grid; air is the first material. */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-10: 40px;
+	--space-12: 48px;
+	--space-16: 64px;
+
+	/* Size */
+	--control-small: 28px;
+	--control: 32px;
+	--control-large: 40px;
+	--row: 34px;
+	--icon: 20px;
+	--icon-small: 16px;
+
+	/* Corners keep their curvature continuous (G2), as Apple's do (the owner,
+	   2026-10-24): a 9-slice mask whose corner eases out of the edge, runs an
+	   arc of 12 and eases back. `-webkit-mask-box-image: var(--g2) / 20px`
+	   draws it at 12; a smaller width scales the corner down with it. */
+	--g2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cpath d='M28.8 0c6.721 0 10.081 0 12.648 1.308a12 12 0 0 1 5.244 5.244c1.308 2.567 1.308 5.927 1.308 12.648L48 28.8c0 6.721 0 10.081 -1.308 12.648a12 12 0 0 1 -5.244 5.244c-2.567 1.308 -5.927 1.308 -12.648 1.308L19.2 48c-6.721 0 -10.081 0 -12.648 -1.308a12 12 0 0 1 -5.244 -5.244c-1.308 -2.567 -1.308 -5.927 -1.308 -12.648L0 19.2c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z'/%3E%3C/svg%3E") 20 fill;
+
+	/* Corners: a card's and a control's. A face is a circle. */
+	--radius-xs: 4px;
+	--radius-sm: 6px;
+	--radius-md: 8px;
+	--radius-lg: 12px;
+	--radius-card: 16px;
+	--radius-round: 999px;
+
+	/* Elevation: only what floats above the page casts a shadow. */
+	--shadow-paper: 0 0 0 1px var(--line-strong);
+	--shadow-raised: 0 0 0 1px rgba(25, 28, 39, 0.05), 0 1px 2px rgba(25, 28, 39, 0.05);
+	--shadow-pop: 0 0 0 1px rgba(25, 28, 39, 0.07), 0 12px 32px -10px rgba(25, 28, 39, 0.22), 0 2px 6px rgba(25, 28, 39, 0.05);
+	--shadow-dialog: 0 0 0 1px rgba(25, 28, 39, 0.07), 0 28px 72px -16px rgba(25, 28, 39, 0.32), 0 4px 12px rgba(25, 28, 39, 0.06);
+
+	/* Motion: it explains a change of state, and only then. */
+	--ease-out: cubic-bezier(0.2, 0, 0, 1);
+	--ease-in: cubic-bezier(0.4, 0, 1, 1);
+	--ease-in-out: cubic-bezier(0.5, 0, 0.2, 1);
+	--duration-fast: 120ms;
+	--duration: 180ms;
+	--duration-slow: 260ms;
+
+	/* Layers */
+	--layer-sticky: 10;
+	--layer-tab: 20;
+	--layer-popover: 40;
+	--layer-dialog: 60;
+	--layer-toast: 70;
+	--layer-caption: 80;
+
+	/* The window. The title band is the native strip that drags the window
+	   (AppWindow, MacOSChrome); its height is the native one. */
+	--titlebar-height: 60px;
+	--sidebar-width: 280px;
+	/* The window's measure (UI-29; the owner, 2026-11-02: "a multiple of 4"):
+	   on macOS the traffic lights stand an --edge in and an --edge down, every
+	   mark of the sidebar begins on the --edge line, and its gaps - from the
+	   lights to the firm's mark, the mark to the places, the places to a
+	   section's heading, the last face to the window's foot - are an --edge
+	   each, measured between what is drawn. */
+	--edge: 24px;
+	/* The sidebar's rows stand 12 in from its edges, their grounds' inset. */
+	--sidebar-inset: 12px;
+	/* Every name of the sidebar - the firm's, the places', a recent one's -
+	   begins on one line, 32 past the marks (UI-23). */
+	--sidebar-text: calc(var(--edge) + 32px);
+	/* A place's row and the air between two: a 32-point pitch (the owner,
+	   2026-11-02: "closer"). */
+	--sidebar-row: 30px;
+	--sidebar-row-gap: 2px;
+	/* Where "Inbox" stands its words, below the window's band and the firm's
+	   row: the places' 8 above it, the row's air over its 20-point line, and
+	   Roboto 14's baseline 14.8 into that line. Every page's title rests on
+	   this line (UI-23). */
+	--sidebar-label-baseline: calc(8px + (var(--sidebar-row) - 20px) / 2 + 14.8px);
+	/* The window's foot: the line, above its bottom edge, on which the
+	   sidebar's last row ends and every page's content ends once scrolled
+	   to its end (the owner, 2026-10-24: "they must stand on one line"). */
+	--foot: var(--edge);
+	/* The reading column: the header's search, the inbox and a thread stand in
+	   it, edge to edge, 16px in (the owner, 2026-10-24: "too wide, make it
+	   narrower"). 640px keeps a post's lines near 85 characters. */
+	--column: 640px;
+	/* What scrolls under the window's band dissolves into it: a scrolled
+	   area is gone at its top edge, right under the band, and back to full ink
+	   64px down (the owner, 2026-10-24: "let it hide softly, dissolve"; "less
+	   opacity here"; "the line where it is gone must be higher"). */
+	--scroll-fade: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.35) 28px, #000 64px);
+	--page-gutter: 48px;
+	--measure: 720px;
+	--list-width: 400px;
+
+	/* The room Windows' buttons take in the window's top-right corner; none
+	   elsewhere. On macOS the firm takes a row of its own under the traffic
+	   lights. */
+	--caption-reserve: 0px;
+	--firm-row: 0px;
+	/* Where the sidebar's button stands while the sidebar is hidden (App). */
+	--sidebar-toggle-hidden: 12px;
+}
+
+/* The window's own buttons (WindowControls): three of 32px, 4px apart, 12px
+   from the edge. */
+:root[data-native-window-frame="page"] {
+	--caption-reserve: 116px;
+}
+
+:root[data-native-platform="darwin"] {
+	/* The strip the traffic lights stand in: an --edge above them, an --edge
+	   below them and their own 14 points (MacOSChrome's window_strip_height
+	   and AppWindow's drag region, 62). */
+	--titlebar-height: calc(var(--edge) * 2 + 14px);
+	/* The firm's row under the strip: its 24-point mark and an --edge below
+	   it, less the 8 the places keep above "Inbox" (Sidebar.module.css). */
+	--firm-row: calc(var(--edge) + 16px);
+	/* Past the traffic lights with an --edge of air, as much as stands before
+	   the close button (the owner, 2026-11-02): the green button ends 60
+	   points after the close button begins (measured: 14 each, 23 apart,
+	   MacOSChrome), and the sidebar button's icon begins 7 inside the button
+	   (6 of padding, 1 inside its drawing). */
+	--sidebar-toggle-hidden: calc(var(--edge) * 2 + 53px);
+}

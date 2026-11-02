@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "marlowe-finch-human-team-scenarios",
+  "mock": true,
+  "fictional": true,
+  "scenarios": [
+    {
+      "id": "sidebar-mixed-attention",
+      "title": "Mixed sidebar attention states",
+      "purpose": "Tests bold names, teal waiting states, numeric counts, neutral progress and dated absence in one roster.",
+      "profileStates": {
+        "lena-ortiz": {
+          "state": "waits-for-you",
+          "statusLine": "Signature authority waits for you",
+          "attentionCount": 1,
+          "isNew": true
+        },
+        "noah-kim": {
+          "state": "under-way",
+          "statusLine": "Reviewing the Copperline agreement",
+          "attentionCount": 0,
+          "isNew": false
+        },
+        "evelyn-hart": {
+          "state": "delivered",
+          "statusLine": "Findings memorandum is ready",
+          "attentionCount": 1,
+          "isNew": true
+        },
+        "amina-okafor": {
+          "state": "waiting-for-someone",
+          "statusLine": "Waiting for the incident timeline",
+          "attentionCount": 0,
+          "isNew": false
+        },
+        "thomas-bennett": {
+          "state": "away",
+          "statusLine": "Away until Oct 27",
+          "attentionCount": 0,
+          "isNew": false
+        }
+      },
+      "expectedChecks": [
+        "Only names with new information are bold",
+        "Only rows that wait for the member use teal",
+        "A number counts waiting objects only",
+        "Away state remains neutral and readable",
+        "Long status text truncates without horizontal scrolling"
+      ]
+    },
+    {
+      "id": "career-range-profile-pages",
+      "title": "Career range and profile density",
+      "purpose": "Compares an early-career paralegal, a mid-career counsel and senior of-counsel profiles without changing the component model.",
+      "profileIds": ["lena-ortiz", "amina-okafor", "raymond-brooks"],
+      "expectedChecks": [
+        "Every person uses the same profile structure",
+        "A person without a jurisdiction does not show an empty placeholder",
+        "Long practice lists wrap without changing avatar alignment",
+        "Experience and age remain fixture data and are not shown unless the surface explicitly requests them",
+        "Role, area, record and availability remain distinct"
+      ]
+    },
+    {
+      "id": "commercial-contract-handoff",
+      "title": "Paralegal-to-associate contract handoff",
+      "purpose": "Tests visible handoff of work between people without turning the conversation into a duplicate assignment.",
+      "matter": "Copperline software renewal",
+      "thread": "Authority and non-standard liability terms",
+      "assignment": {
+        "id": "assignment-copperline-01",
+        "ownerId": "noah-kim",
+        "contributorIds": ["lena-ortiz"],
+        "outcome": "Deliver a playbook-based mark-up and an authority-complete signature packet.",
+        "bounds": [
+          "Do not accept unlimited liability",
+          "Use the approved privacy addendum",
+          "Escalate conflicting signing authority"
+        ],
+        "state": "waiting",
+        "waitingForId": "gabriel-moore"
+      },
+      "expectedChecks": [
+        "The assignment has one owner",
+        "The thread and assignment have separate states",
+        "Lena's administrative decision scope is not presented as legal authority",
+        "The waiting state names the person and the missing decision"
+      ]
+    },
+    {
+      "id": "investigation-confidentiality",
+      "title": "Sensitive investigation with limited visibility",
+      "purpose": "Tests long role text, restricted matter membership, a sourced chronology and a work product returned once.",
+      "matter": "Kestrel workplace review",
+      "memberIds": ["evelyn-hart", "margaret-chen"],
+      "assignment": {
+        "id": "assignment-kestrel-02",
+        "ownerId": "evelyn-hart",
+        "outcome": "Deliver a findings memorandum that separates allegation, evidence, credibility and conclusion.",
+        "state": "under-way",
+        "basis": "Request from the General Counsel"
+      },
+      "workProduct": {
+        "title": "Findings memorandum",
+        "version": 2,
+        "state": "delivered",
+        "priorVersionState": "returned",
+        "returnReason": "Two credibility conclusions lacked direct links to interview evidence."
+      },
+      "expectedChecks": [
+        "Restricted membership is visible without a warning-style badge",
+        "The returned prior version remains in history",
+        "Version 2 is the only current card",
+        "Evidence is one step away from the result"
+      ]
+    },
+    {
+      "id": "incident-second-key",
+      "title": "Privacy incident with a real second-key decision",
+      "purpose": "Tests a decision card for an irreversible external notification without approval theatre on earlier work.",
+      "matter": "Northwind security incident",
+      "assignment": {
+        "id": "assignment-northwind-03",
+        "ownerId": "amina-okafor",
+        "contributorIds": ["omar-haddad"],
+        "outcome": "Determine whether notice is required and prepare the supported notification package.",
+        "state": "delivered"
+      },
+      "decision": {
+        "id": "decision-northwind-01",
+        "firstKeyId": "amina-okafor",
+        "secondKeyId": "margaret-chen",
+        "question": "Send the supported notification package before the shortest applicable deadline?",
+        "evidenceAvailable": true,
+        "state": "waits-for-you"
+      },
+      "expectedChecks": [
+        "Only the irreversible notification asks for the second key",
+        "The evidence and exact external change are visible",
+        "Earlier evidence gathering is not presented as a chain of approvals",
+        "The holder of each key is named"
+      ]
+    },
+    {
+      "id": "litigation-record-conflict",
+      "title": "Argument conflicts with the evidentiary record",
+      "purpose": "Tests a senior reviewer returning work with a precise reason and a junior owner continuing the same assignment.",
+      "matter": "Orbis freight dispute",
+      "assignment": {
+        "id": "assignment-orbis-04",
+        "ownerId": "noah-kim",
+        "reviewerId": "priya-raman",
+        "outcome": "Deliver a motion outline supported by admissible evidence and controlling authority.",
+        "state": "returned"
+      },
+      "return": {
+        "reason": "The proposed causation argument relies on a fact that appears only in an unsworn interview note.",
+        "nextState": "under-way",
+        "requiredChange": "Replace the unsupported proposition or obtain record evidence."
+      },
+      "expectedChecks": [
+        "Returned is a work state, not a personal rating",
+        "The reason and next action are plain",
+        "Ownership stays with Noah",
+        "Priya appears as reviewer, not automatic assignee"
+      ]
+    },
+    {
+      "id": "unknown-and-empty-values",
+      "title": "Unknown and intentionally empty profile values",
+      "purpose": "Tests honest language for backend values that have not been established.",
+      "overrides": {
+        "lena-ortiz": {
+          "recordFixture": null,
+          "availability": {
+            "state": "unknown",
+            "label": "Not reported"
+          }
+        },
+        "omar-haddad": {
+          "currentAssignmentCount": null,
+          "currentAssignmentLabel": "Counting..."
+        }
+      },
+      "expectedChecks": [
+        "Unknown numbers never render as zero",
+        "No dash is used as a substitute for missing data",
+        "A missing record is not presented as poor performance",
+        "The recovery or refresh path is available where relevant"
+      ]
+    },
+    {
+      "id": "long-copy-and-small-window",
+      "title": "Long copy at the minimum supported window",
+      "purpose": "Stresses wrapping and truncation at 1200 by 720 with realistic legal role names and statuses.",
+      "window": {
+        "width": 1200,
+        "height": 720
+      },
+      "profileIds": ["margaret-chen", "thomas-bennett", "raymond-brooks"],
+      "statusLines": [
+        "Independent second-key review of the proposed appellate filing waits for you",
+        "Waiting for the client to confirm the transaction tax assumption",
+        "Government response strategy is ready for the Matter team"
+      ],
+      "expectedChecks": [
+        "No accidental horizontal scrolling",
+        "Names and avatars remain aligned",
+        "Role lines wrap or truncate predictably",
+        "The primary action stays visible",
+        "No layout shift occurs when a status line appears"
+      ]
+    },
+    {
+      "id": "cross-practice-matter",
+      "title": "Cross-practice acquisition matter",
+      "purpose": "Tests several specialists working in one Matter while each keeps a distinct role, area and assignment.",
+      "matter": "Sablewood acquisition",
+      "memberIds": ["gabriel-moore", "lena-ortiz", "noah-kim", "amina-okafor", "thomas-bennett"],
+      "assignments": [
+        {
+          "ownerId": "gabriel-moore",
+          "outcome": "Set the transaction structure and resolve issues that affect value or closing certainty.",
+          "state": "under-way"
+        },
+        {
+          "ownerId": "amina-okafor",
+          "outcome": "Deliver the privacy diligence findings with evidence and proposed protections.",
+          "state": "delivered"
+        },
+        {
+          "ownerId": "thomas-bennett",
+          "outcome": "Confirm the tax assumptions embedded in the proposed structure.",
+          "state": "waiting"
+        },
+        {
+          "ownerId": "lena-ortiz",
+          "outcome": "Maintain the closing checklist and authority-complete signature packet.",
+          "state": "under-way"
+        }
+      ],
+      "expectedChecks": [
+        "People appear together without ranking by seniority in the roster",
+        "Each assignment has one owner and can have contributors",
+        "The Matter header can show several members without becoming an avatar wall",
+        "No person is asked to coordinate the whole team through a board"
+      ]
+    },
+    {
+      "id": "profile-photo-crop-check",
+      "title": "Avatar crop and fallback check",
+      "purpose": "Verifies all generated portraits at sidebar, thread and profile sizes.",
+      "sizes": [24, 32, 40, 72, 128],
+      "profileIds": [
+        "lena-ortiz",
+        "noah-kim",
+        "evelyn-hart",
+        "amina-okafor",
+        "gabriel-moore",
+        "priya-raman",
+        "omar-haddad",
+        "thomas-bennett",
+        "margaret-chen",
+        "raymond-brooks"
+      ],
+      "expectedChecks": [
+        "Eyes and face remain inside a circular crop",
+        "The solid background contains no office or object detail",
+        "Hair and shoulders do not touch the circle unpredictably",
+        "The image does not stretch or shift while loading",
+        "Initials provide a stable fallback if an image fails"
+      ]
+    }
+  ]
+}

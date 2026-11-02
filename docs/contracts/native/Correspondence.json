@@ -1,0 +1,81 @@
+{
+  "domain": "Correspondence",
+  "methods": [
+    {
+      "name": "correspondence.suggest",
+      "policy": "worker",
+      "params": {
+        "message": "CorrespondenceMessage"
+      },
+      "result": "CorrespondenceSuggestion",
+      "_order": 255
+    },
+    {
+      "name": "correspondence.file",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "message": "CorrespondenceMessage",
+        "evidence": "string[] | undefined",
+        "from": "string | undefined",
+        "by": "'person' | 'rule' | undefined"
+      },
+      "result": "Letter",
+      "_order": 256
+    },
+    {
+      "name": "correspondence.move",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "letterId": "string",
+        "toMatterId": "string"
+      },
+      "result": "Letter",
+      "_order": 257
+    },
+    {
+      "name": "correspondence.unfile",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "letterId": "string"
+      },
+      "result": "LetterUnfiled",
+      "_order": 258
+    },
+    {
+      "name": "correspondence.list",
+      "policy": "worker",
+      "params": {
+        "matterId": "string"
+      },
+      "result": "CorrespondenceLetters",
+      "_order": 259
+    },
+    {
+      "name": "correspondence.saveAttachment",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "letterId": "string",
+        "providerId": "string",
+        "base64": "string"
+      },
+      "result": "LetterAttachment",
+      "_order": 260
+    },
+    {
+      "name": "correspondence.draftReply",
+      "policy": "ui",
+      "params": {
+        "matterId": "string",
+        "letterId": "string",
+        "text": "string",
+        "attachmentDocumentIds": "string[] | undefined"
+      },
+      "result": "LetterReplyOpened",
+      "_order": 329
+    }
+  ]
+}

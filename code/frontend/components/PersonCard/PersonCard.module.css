@@ -1,0 +1,72 @@
+/* A member's card (PersonCard.jsx): the face and the name on one line with
+   the position under it, then what the member handles and what it is doing
+   now, and the two ways on, side by side, as wide as the card. */
+
+.card {
+	padding: 20px;
+}
+
+.who {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.names {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.name {
+	font: 500 16px/22px var(--font-sans);
+	color: var(--ink);
+}
+
+/* The position a shade darker than its practice, as D-058 sets them. */
+.role {
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-2);
+}
+
+.practice {
+	color: var(--ink-3);
+}
+
+.area {
+	margin-top: 16px;
+	font: 400 14px/20px var(--font-sans);
+	color: var(--ink-2);
+}
+
+.status {
+	margin-top: 6px;
+	font: 400 13.5px/19px var(--font-sans);
+	color: var(--ink-3);
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 18px;
+}
+
+.actions > * {
+	flex: 1;
+}
+
+/* What opens a card: a face or a name, which keep their own look; a name
+   underlines under the pointer. */
+.opener {
+	display: inline-flex;
+	align-items: center;
+	padding: 0;
+	font: inherit;
+	color: inherit;
+	text-align: inherit;
+	background: none;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}

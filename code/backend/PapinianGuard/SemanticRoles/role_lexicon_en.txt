@@ -1,0 +1,22 @@
+# role_lexicon_en.txt (DESIGN4 §5.2): the closed universal role classes and the words that name them, English.
+# "CLASS: phrase | phrase". Legal-general words only; no party, product or place names. Earlier classes win a tie;
+# a longer phrase wins over a shorter one. VOCAB lists plain words of table and clause labels that name no class.
+PUBLIC: key rate | statutory | official rate | published rate | central bank | consumer price index | cpi | federal funds | prime rate | sofr | libor | minimum wage | legal rate
+PENALTY: penalty | penalties | late charge | late fee | late payment | liquidated damages | default interest | fine | fines
+INTEREST: interest
+LIMIT: cap | liability cap | limit | limitation | maximum | not exceed | not exceeding | ceiling | at most
+THRESHOLD: threshold | minimum | de minimis | basket | deductible | floor | at least | not less than | hurdle
+BALANCE: balance | outstanding | owed | owing | arrears | unpaid | shortfall | underpayment | overdue | underbilled | deficit
+PAID: paid | received | payment made | payments made | remitted | collected | settled
+BILLED: billed | invoiced | invoice amount | charged | scheduled | amount due | due amount | accrued | assessed
+TOTAL: total | sum | subtotal | grand total | aggregate | in aggregate
+ADJUSTMENT: escalation | escalator | increase | indexation | index adjustment | discount | credit | offset | adjustment | rebate | reduction | bonus | premium | markup | allowance
+PRICE: price | purchase price | fee | fees | rent | base rent | consideration | royalty | royalties | salary | compensation | cost | costs | tariff | rate | charge | value | amount
+DEADLINE: deadline | due date | due by | no later than | within | cure period | payment date | respond by | on or before
+NOTICE: notice | notified | notification | claim | claims | demand | request
+START: effective | effective date | commencement | commencement date | start | start date | inception | beginning | from
+END: expiry | expiration | expiration date | termination | termination date | end | end date | maturity | until
+SIGNED: signed | dated | executed | execution | signature | date of agreement
+PERIOD: term | period | duration | contract year | lease year | fiscal year | royalty quarter | quarter | month | year
+COUNT: days | business days | months | years | weeks | number of | count | quantity | units | shares | invoices | instalments | installments
+VOCAB: net | gross | sales | revenue | revenues | income | expense | expenses | profit | margin | date | description | item | items | line | month | monthly | annual | annually | quarterly | contract | agreement | lease | ledger | schedule | account | statement | summary | reconciliation | column | row | sheet | table | tier | band | step | stage | phase | exhibit | appendix | annex | section | clause | article | notes | note | status | type | category | per | of | and | the | to | for | on | in | by | with | at | a | an | no | ytd | mtd | vat | gst | hst | tax | taxes | withholding | payment | payments | invoice | billing | billed | cumulative | running | opening | closing | adjusted | calculated | expected | actual | budget | forecast | variance | difference | change | percent | percentage | ratio | share | portion | volume | quota | target | goal | threshold | bonus | commission | royalty | royalties | license | licence | services | goods | deliveries | delivery | shipment | shipments | orders | order | purchase | purchases | returns | credits | debits | debit | credit

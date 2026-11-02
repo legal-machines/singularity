@@ -1,0 +1,89 @@
+{
+  "domain": "Consilium",
+  "methods": [
+    {
+      "name": "consilium.list",
+      "policy": "worker",
+      "_order": 117,
+      "params": {
+        "projectId": "string"
+      },
+      "result": {
+        "$ref": "#/schemas/ConsiliumConfigurationListResult"
+      }
+    },
+    {
+      "name": "consilium.create",
+      "policy": "worker",
+      "_order": 118,
+      "params": {
+        "projectId": "string",
+        "name": "string",
+        "objective": "string"
+      },
+      "result": {
+        "$ref": "#/schemas/ConsiliumConfiguration"
+      }
+    },
+    {
+      "name": "consilium.update",
+      "policy": "worker",
+      "_order": 119,
+      "params": {
+        "projectId": "string",
+        "configurationId": "string",
+        "expectedRevision": "integer",
+        "name": "string",
+        "objective": "string",
+        "participants": "array",
+        "stages": "array",
+        "sourcePolicy": "object"
+      },
+      "result": {
+        "$ref": "#/schemas/ConsiliumConfiguration"
+      }
+    },
+    {
+      "name": "consilium.duplicate",
+      "policy": "worker",
+      "_order": 120,
+      "params": {
+        "projectId": "string",
+        "configurationId": "string"
+      },
+      "result": {
+        "$ref": "#/schemas/ConsiliumConfiguration"
+      }
+    },
+    {
+      "name": "consilium.import",
+      "policy": "ui",
+      "_order": 121,
+      "params": {
+        "projectId": "string"
+      },
+      "result": {
+        "oneOf": [
+          {
+            "$ref": "#/schemas/ConsiliumConfiguration"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    {
+      "name": "consilium.export",
+      "policy": "ui",
+      "_order": 122,
+      "params": {
+        "projectId": "string",
+        "configurationId": "string"
+      },
+      "result": {
+        "type": "boolean"
+      }
+    }
+  ]
+}

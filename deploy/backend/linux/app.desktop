@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Singularity
+Comment=The shared workplace of a firm's lawyers and AI colleagues
+Exec=singularity
+Icon=singularity
+Terminal=false
+Categories=Office;Utility;
+StartupNotify=true
+Keywords=AI;legal;workspace;

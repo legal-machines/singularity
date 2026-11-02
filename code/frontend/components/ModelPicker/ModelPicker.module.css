@@ -1,0 +1,127 @@
+/* A model chosen by its name or its maker (ModelPicker.jsx): the search,
+   the makers as quiet choices, and the models under their makers' names in
+   a list that scrolls, the chosen one ticked - no frames, no capitals. */
+.picker {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+
+.search {
+	position: relative;
+	display: block;
+}
+
+.search > svg {
+	position: absolute;
+	top: 50%;
+	left: 12px;
+	color: var(--ink-3);
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.search input {
+	width: 100%;
+	padding-left: 36px;
+}
+
+.makers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.makers button {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 5px 10px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+	border-radius: 8px;
+}
+
+.makers button span {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+.makers button:hover {
+	color: var(--ink);
+}
+
+.makers button[aria-pressed="true"] {
+	color: var(--ink);
+	background: var(--tray);
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	max-height: 340px;
+	margin: 0 -8px;
+	padding: 4px 0;
+	overflow-y: auto;
+	background: var(--sheet-quiet);
+	border-radius: 12px;
+}
+
+.group_title {
+	position: sticky;
+	top: -4px;
+	z-index: 1;
+	margin: 0;
+	padding: 10px 16px 4px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+	background: var(--sheet-quiet);
+}
+
+.choice {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	width: 100%;
+	min-height: 36px;
+	padding: 6px 16px;
+	font: var(--type-body);
+	color: var(--ink);
+	text-align: left;
+}
+
+.choice:hover {
+	background: color-mix(in srgb, var(--ink) 4%, var(--sheet-quiet));
+}
+
+.choice[aria-selected="true"] {
+	font-weight: 500;
+}
+
+.choice_end {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 10px;
+	color: var(--ink);
+}
+
+.choice_maker {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+.choice_name {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.none {
+	padding: 12px 16px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}

@@ -1,0 +1,5 @@
+Sora variable font, unmodified. Downloaded 2026-10-28.
+Source: https://github.com/google/fonts/tree/main/ofl/sora
+Project: https://github.com/sora-xor/sora-font
+License: SIL Open Font License 1.1; see Sora-LICENSE.txt.
+Used for the Singularity title in the onboarding design study.

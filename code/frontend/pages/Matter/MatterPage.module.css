@@ -1,0 +1,120 @@
+/* The Matter's sections (components/Views): as far under its mark as the
+   Inbox's switch stands under the letters of its title - 61 under the
+   title's line, whose baseline stands 7.7 above its foot, so 69 (the owner,
+   2026-11-02: "make the red distance as the green", "the blue as the red");
+   the desk keeps its own room under it. */
+.toolbar {
+	display: flex;
+	align-items: center;
+	margin: 69px 0 -6px;
+}
+
+/* What the Matter is, under its head: 20 under its mark, in the page's
+   reading size; its sections 28 under it, as Team's under its line. */
+.about {
+	max-width: 760px;
+	margin: 20px 0 0;
+	font: 400 15px/24px var(--font-sans);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}
+
+.toolbar_after {
+	margin-top: 28px;
+}
+
+/* The project's mark: a press changes it (ProjectMark's picker). */
+.mark_button {
+	display: inline-flex;
+	transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.mark_button:hover {
+	transform: scale(1.04);
+}
+
+.mark_button:active {
+	transform: scale(0.98);
+}
+
+.banner {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-bottom: 0;
+	padding: 14px 14px 14px 18px;
+	background: var(--time-tint);
+	border-radius: 14px;
+}
+
+.banner_icon {
+	display: inline-flex;
+	flex: none;
+	color: var(--time);
+}
+
+.banner_text {
+	flex: 1;
+	min-width: 0;
+}
+
+.banner_title {
+	font: 500 14px/20px var(--font-sans);
+	color: var(--time-ink);
+}
+
+.banner_line {
+	margin-top: 2px;
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+/* What asks the member to decide, in the accent "Asks you" stands in. */
+
+.banner_ask {
+	background: var(--accent-tint);
+}
+
+.banner_ask .banner_icon {
+	color: var(--accent);
+}
+
+.banner_ask .banner_title {
+	color: var(--accent-ink);
+}
+
+/* A computer's code, read aloud between two lawyers: its figures of one
+   width, so its groups line up as they are read. */
+
+.code {
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+/* A work product's version where a face stands in a row: a 32px square on
+   the panel's ground. */
+.version {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-2);
+	background: var(--sheet);
+	border-radius: 9px;
+}
+
+/* What asks the member to decide over the overview, before the desk. */
+.notices {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 36px;
+}
+
+.notices + * {
+	margin-top: 28px;
+}

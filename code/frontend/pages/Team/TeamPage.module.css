@@ -1,0 +1,216 @@
+/* Which members the list shows (components/Views), as Inbox's toolbar: 28
+   under the head's line, 30 over the list. */
+.toolbar {
+	display: flex;
+	align-items: center;
+	margin: 28px 0 30px;
+}
+
+/* The firm's members on the page itself, in groups by position, each named
+   in plain words with its count, with no frame, no labels in capitals and no
+   lines between the rows (the owner, 2026-11-02: "kickers and borders are AI
+   slop"). A row's ground shows only under the pointer; faces and group names
+   stand on the page head's left edge. */
+.group + .group {
+	margin-top: 20px;
+}
+
+.group_title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0 0 4px;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.group_count {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 -12px;
+	padding: 0;
+	list-style: none;
+}
+
+.none {
+	margin: 24px 0 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.member_open {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	column-gap: 14px;
+	width: 100%;
+	padding: 10px 12px;
+	text-align: left;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.member_open:hover {
+	background: var(--sheet-hover);
+}
+
+.member_open:active {
+	background: var(--sheet-press);
+}
+
+.member_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.member_name,
+.member_line {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.member_name {
+	font: var(--type-body-strong);
+	color: var(--ink);
+}
+
+.member_line {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+/* At the right, what an AI colleague does now, or when a person is back: in
+   words, in its own colour - what waits for the member in the brick, work
+   under way in its blue, an absence in its amber - with no frame. */
+.member_now {
+	max-width: 360px;
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.member_now[data-tone="yours"] { color: var(--accent-ink); }
+.member_now[data-tone="work"] { color: var(--underway); }
+.member_now[data-tone="time"] { color: var(--time-ink); }
+
+/* One archived stands back, at the list's foot. */
+.member[data-archived] .member_name {
+	color: var(--ink-3);
+}
+
+/* Onboarding's demonstration: the member introducing themselves joins the
+   team as they type their name, and again in their place once they choose a
+   position (D-162). */
+.list > li[data-joining] {
+	animation: joining 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes joining {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.list > li[data-joining] { animation: none; }
+}
+
+/* The invitation dialog's fields. */
+.fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* What a colleague signs in with (D-204), on a roomy page: each thing,
+   small, over the thing itself, from the left edge, with room between them;
+   no line and no frame. The login and password are in the letters of one
+   width codes are written in (UI-27), and copy at a press, on the grey of
+   the hand under the pointer. */
+.signIn {
+	display: grid;
+	gap: 20px;
+	margin: 0;
+}
+
+.signInLine {
+	display: grid;
+	justify-items: start;
+	gap: 2px;
+	min-width: 0;
+}
+
+.signInLine dt {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+/* The value, whole, and just after it the button that draws another. Its
+   grey under the pointer reaches past the text without moving it off the
+   left edge. */
+.signInLine dd {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 100%;
+	margin: 0 0 0 -10px;
+}
+
+.signInSlot {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.signInLine .again {
+	flex: none;
+	color: var(--ink-3);
+}
+
+.signInValue {
+	display: block;
+	max-width: 100%;
+	padding: 4px 10px;
+	overflow-wrap: anywhere;
+	font: 500 17px/24px var(--font-sans);
+	color: var(--ink);
+	text-align: left;
+	border-radius: 8px;
+	transition: background-color 120ms ease-out;
+}
+
+.signInValue[data-code] {
+	font-family: var(--font-code);
+	letter-spacing: 0.03em;
+	white-space: nowrap;
+}
+
+button.signInValue:hover {
+	background: var(--tray);
+}
+
+button.signInValue:active {
+	background: var(--tray-line);
+}
+
+.signInHint {
+	display: block;
+	padding: 4px 10px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.signInError {
+	margin: 18px 0 0;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}

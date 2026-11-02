@@ -1,0 +1,21 @@
+/* A Matter's figures (Figures.jsx): quiet, each a sign and its number. */
+.figures {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 12px;
+}
+
+.figure {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font: var(--type-small);
+	font-variant-numeric: tabular-nums;
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.figure svg {
+	color: var(--ink-4);
+}

@@ -1,0 +1,90 @@
+/* The Country field's suggestions: a white sheet under the field, lifted by
+   its shadow rather than framed, wide enough for long names; the suggestion
+   under the keys or the pointer on the grey of the hand. */
+.combo {
+	position: relative;
+}
+
+.list {
+	position: absolute;
+	z-index: 5;
+	top: calc(100% + 6px);
+	left: 0;
+	width: max(100%, 280px);
+	/* Four 36px rows and the 6px inset at each end. */
+	max-height: 156px;
+	margin: 0;
+	padding: 6px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	overflow-anchor: none;
+	scroll-behavior: auto;
+	list-style: none;
+	background: #ffffff;
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba(16, 16, 13, 0.14), 0 2px 6px rgba(16, 16, 13, 0.08);
+	animation: appear 120ms ease-out;
+	scrollbar-width: thin;
+	scrollbar-color: #d4d4d1 transparent;
+}
+
+.list::-webkit-scrollbar {
+	width: 6px;
+	height: 0;
+}
+
+.list::-webkit-scrollbar-thumb {
+	border-radius: 3px;
+	background: #d4d4d1;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+	background: #aaa9a5;
+}
+
+.list::-webkit-scrollbar-button {
+	display: none;
+}
+
+.option {
+	display: flex;
+	align-items: center;
+	min-height: 36px;
+	padding: 0 10px;
+	border-radius: 8px;
+	color: var(--entry-ink);
+	font-size: 14px;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+.option[aria-selected="true"] {
+	background: #f2f2f2;
+}
+
+.name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.none {
+	padding: 8px 10px;
+	color: var(--entry-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+@keyframes appear {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.list {
+		animation: none;
+	}
+}

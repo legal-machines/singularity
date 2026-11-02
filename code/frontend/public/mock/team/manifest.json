@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "marlowe-finch-human-team",
+  "mock": true,
+  "fictional": true,
+  "updated": "2026-10-23",
+  "organisation": {
+    "name": "Marlowe Finch LLP",
+    "jurisdiction": "United States",
+    "description": "A fictional mid-sized US law firm used only for Singularity interface tests."
+  },
+  "files": {
+    "profiles": "mock/team/profiles.json",
+    "scenarios": "mock/team/scenarios.json",
+    "photos": "mock/team/people/"
+  },
+  "usage": {
+    "photoPathBase": "mock/team/people/",
+    "recommendedAvatarCrop": "circle",
+    "sourceImageSize": "1254x1254",
+    "notes": "All names, biographies, matters, records and photos are synthetic test data. Do not mix them with real client or personnel data."
+  }
+}

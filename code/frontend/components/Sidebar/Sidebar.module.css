@@ -1,0 +1,101 @@
+/* Navigation, rather than a second inbox. The firm and account anchor the
+   column; only the folders, visited places or calendar controls scroll.
+   Every row's first mark - the firm's mark, an icon, a face, a heading's
+   first letter - begins an --edge in, on the line of the traffic lights'
+   close button, and every name on --sidebar-text (UI-23, UI-29). A row's
+   padding is that line less the row's inset and the mark's own margin
+   inside its drawing. */
+.sidebar {
+	--hover-ground: var(--sidebar-hover);
+	--press-ground: var(--sidebar-press);
+	--sidebar-selected: var(--sidebar-press);
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	/* The member's face ends on the window's foot, as far above the bottom
+	   edge as the traffic lights stand below the top - the face itself, not
+	   its row's ground (the owner, 2026-11-02): the row keeps 7 below the
+	   face, its 6 of padding and 1 as the face stands centred by its lines
+	   of 20 and 18. */
+	padding: 0 var(--sidebar-inset) calc(var(--foot) - 7px);
+	color: var(--ink);
+	background: var(--sidebar-ground);
+}
+.head {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+	height: var(--titlebar-height);
+	app-region: drag;
+	-webkit-app-region: drag;
+}
+/* Where the firm shares its row with the sidebar's button (App), the name
+   stops short of it; on macOS the button stands in the strip above. */
+:root:not([data-native-platform="darwin"]) .head {
+	padding-right: calc(var(--control) + 4px);
+}
+:root[data-native-platform="darwin"] .head {
+	height: calc(var(--titlebar-height) + var(--firm-row));
+	/* The firm's mark begins where the strip ends, an --edge below the
+	   traffic lights; its 36-point row reaches 6 above the mark. */
+	padding-top: calc(var(--titlebar-height) - 6px);
+	align-items: flex-start;
+}
+.firm {
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr);
+	align-items: center;
+	gap: calc(var(--sidebar-text) - var(--edge) - 24px);
+	flex: 1;
+	min-width: 0;
+	height: 36px;
+	padding: 0 7px 0 calc(var(--edge) - var(--sidebar-inset));
+	color: var(--ink);
+	text-align: left;
+	border-radius: 8px;
+}
+.firm:hover, .firm[aria-expanded="true"] { background: var(--sheet-hover); }
+/* The firm's mark keeps the faces' shape, corners of continuous curvature
+   (G2, Avatar.module.css), never a plain radius (the owner, 2026-11-02). */
+.firm_logo {
+	width: 24px;
+	height: 24px;
+	-webkit-mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+	mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+}
+.firm_initial { display: grid; place-items: center; color: #fff; background: var(--accent); font: 600 13px/1 var(--font-sans); }
+.firm_name { overflow: hidden; font: var(--type-sidebar-name); white-space: nowrap; text-overflow: ellipsis; }
+.nav { display: flex; flex: none; flex-direction: column; gap: var(--sidebar-row-gap); margin-top: 8px; }
+.tab {
+	display: grid;
+	grid-template-columns: 18px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: calc(var(--sidebar-text) - var(--edge) - 16px);
+	width: 100%;
+	min-height: var(--sidebar-row);
+	/* An 18-point icon's drawing begins about 2 points inside it. */
+	padding: 0 12px 0 calc(var(--edge) - var(--sidebar-inset) - 2px);
+	color: var(--ink-2);
+	text-align: left;
+	border-radius: 8px;
+}
+.tab:hover { background: var(--sheet-hover); }
+.tab_open, .tab_open:hover { color: var(--ink); background: var(--sidebar-selected); }
+.tab_lead { display: inline-flex; align-items: center; justify-content: center; color: var(--ink-3); }
+.tab_open .tab_lead { color: var(--ink); }
+.tab_text { display: flex; flex-direction: column; min-width: 0; padding: calc((var(--sidebar-row) - 20px) / 2) 0; }
+.tab_label { overflow: hidden; font: 400 14px/20px var(--font-sans); white-space: nowrap; text-overflow: ellipsis; }
+.tab_open .tab_label, .tab_label_new { font-weight: 500; }
+.tab_detail { overflow: hidden; font: var(--type-meta); color: var(--ink-3); white-space: nowrap; text-overflow: ellipsis; }
+.tab_end { display: inline-flex; align-items: center; }
+.count { min-width: 20px; text-align: right; font: 500 12px/18px var(--font-sans); color: var(--ink-3); }
+.scroll { display: flex; flex: 1; flex-direction: column; min-height: 0; margin: 0 -12px; padding: 0 12px 12px; overflow-y: auto; }
+.work { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.work[hidden] { display: none; }
+.context { display: flex; flex-direction: column; margin-top: 20px; }
+.context:empty { display: none; }
+.desk_heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; margin: 0 0 6px; padding: 0 12px; }
+.desk_heading_text { overflow: hidden; font: var(--type-small); color: var(--ink-3); white-space: nowrap; text-overflow: ellipsis; }

@@ -1,0 +1,139 @@
+/* The New Matter dialog (D-211), in two steps (the owner, 2026-11-02): its
+   fields one under another and the folder it stands in, a group with a quiet
+   label over it; then the lawyers it goes to. No frames and no rules: the
+   space between groups says where one ends. */
+
+/* The steps' dots at the dialog's foot, before its buttons, as onboarding's. */
+nav.steps {
+	position: static;
+	margin-right: auto;
+	align-self: center;
+	pointer-events: auto;
+}
+
+.fields {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.group {
+	display: grid;
+	gap: 8px;
+	min-width: 0;
+}
+
+.label {
+	font: var(--type-small-strong);
+	color: var(--ink);
+}
+
+/* The folder: its name, and its path whole under it, never cut short. */
+.folder {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	min-width: 0;
+}
+
+.folderText {
+	display: grid;
+	flex: 1;
+	gap: 2px;
+	min-width: 0;
+}
+
+.folderName {
+	font: var(--type-body);
+	color: var(--ink);
+	overflow-wrap: anywhere;
+}
+
+.folderPath {
+	font: var(--type-small);
+	color: var(--ink-3);
+	overflow-wrap: anywhere;
+}
+
+/* The firm's lawyers, each a row pressed to choose: a face, the name and the
+   position, and a quiet mark at the end once chosen. */
+.people {
+	display: grid;
+	align-content: start;
+	gap: 2px;
+	margin: 0 -10px;
+	padding: 0;
+	list-style: none;
+}
+
+.person {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 8px 10px;
+	text-align: left;
+	border-radius: 10px;
+	transition: background-color 120ms ease-out;
+}
+
+.person:hover {
+	background: var(--tray);
+}
+
+.person[aria-pressed="true"] {
+	background: var(--tray);
+}
+
+.personText {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+}
+
+.personName {
+	font: var(--type-body);
+	color: var(--ink);
+}
+
+.personLine {
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+.check {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 22px;
+	height: 22px;
+	border-radius: 11px;
+	color: var(--ink-inverse);
+	background: transparent;
+	transition: background-color 120ms ease-out;
+}
+
+.check[data-on] {
+	background: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.person,
+	.check {
+		transition: none;
+	}
+}
+
+/* The Matter's mark beside its name, the two on one line. */
+.named {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.named > input,
+.named > :last-child {
+	flex: 1;
+	min-width: 0;
+}

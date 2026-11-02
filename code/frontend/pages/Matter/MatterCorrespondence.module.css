@@ -1,0 +1,286 @@
+/* A Matter's correspondence (MatterCorrespondence.jsx): its letters as the
+   Inbox lists its mail, then what counts as its correspondence, each a sign,
+   what it is and a line; on the page itself, no panels and no frames. */
+.page {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+	margin-top: 36px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0 0 8px;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.count {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+.none {
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+/* The letters, as the Inbox's mail: a face with its "@", the subject and
+   when, and under them with whom and how it came. */
+.rows {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 -12px;
+	padding: 0;
+	list-style: none;
+}
+
+.row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-lg);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover,
+.row:focus-within {
+	background: var(--sheet-hover);
+}
+
+.line {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+	grid-template-columns: 40px minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+	padding: 12px;
+	text-align: left;
+}
+
+.face {
+	position: relative;
+	display: inline-flex;
+	width: 40px;
+	height: 40px;
+}
+
+.mail {
+	position: absolute;
+	right: -5px;
+	bottom: -5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	font: 600 11px/1 var(--font-sans);
+	color: var(--ink-2);
+	background: var(--sheet);
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px var(--sheet), inset 0 0 0 1px var(--line-strong);
+}
+
+.row:hover .mail {
+	box-shadow: 0 0 0 2px var(--sheet-hover), inset 0 0 0 1px var(--line-strong);
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	min-width: 0;
+}
+
+.subject {
+	overflow: hidden;
+	font: 500 15px/21px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.time {
+	flex: none;
+	font: var(--type-meta);
+	color: var(--ink-3);
+}
+
+.said {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The letters' name with the intake's settings on its right, and under it
+   what the intake files, in a line. */
+.title_row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 8px;
+}
+
+.title_row .title {
+	margin: 0;
+}
+
+.intake_line {
+	margin: 0 0 8px;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+/* The intake's settings (IntakeDialog): whether Outlook is connected, each
+   rule an account and a mailbox with its removal, and two fields to add one. */
+.intake {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.outlook {
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+.outlook[data-state="on"] {
+	color: var(--settled-ink);
+}
+
+.outlook[data-state="off"],
+.outlook[data-state="unsupported"] {
+	color: var(--time-ink);
+}
+
+.link {
+	padding: 0;
+	white-space: nowrap;
+	font: inherit;
+	color: var(--ink);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+.intake_rules {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.intake_rule {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 10px;
+	background: var(--sheet-quiet);
+	border-radius: 10px;
+}
+
+.intake_words {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+	overflow-wrap: anywhere;
+}
+
+.intake_words strong {
+	font-weight: 500;
+	color: var(--ink);
+}
+
+.remove {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: var(--ink-3);
+	border-radius: 8px;
+}
+
+.remove:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+.intake_add {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+	align-items: end;
+	gap: 10px;
+}
+
+.problem {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+/* What can be done with a letter, under the pointer only, as an Inbox row's. */
+.actions {
+	display: flex;
+	padding-right: 12px;
+}
+
+.actions button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	color: var(--ink-3);
+	opacity: 0;
+	transition: opacity var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:hover .actions button,
+.row:focus-within .actions button {
+	opacity: 1;
+}
+
+.actions button:hover {
+	color: var(--ink);
+	background: var(--sheet-selected);
+}
+
+@media (hover: none) {
+	.actions button {
+		opacity: 1;
+	}
+}

@@ -1,0 +1,41 @@
+.DS_Store
+*.bak
+*.before-*
+*.old
+*.backup
+__pycache__/
+*.py[cod]
+
+code/backend/LocalModel/Models/PapinianNER/NativeRuntime/target/
+code/backend/LocalModel/Models/PapinianNER/NativeRuntime/vendor/gliner2_inference/target/
+
+deploy/frontend/node_modules/
+deploy/frontend/dist/
+deploy/frontend/coverage/
+deploy/frontend/.env
+deploy/frontend/.env.local
+deploy/frontend/.env.*.local
+
+deploy/backend/build/
+deploy/backend/out/
+
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+deploy/frontend/dist-prototype/
+deploy/frontend/dist-desktop/
+
+# Debug-only developer model source (LocalModel/DeveloperModelSource): local
+# copies of pinned model packages a Debug build installs from without a Legal
+# Machines account. Never committed, never bundled into an installer.
+deploy/.dev-models/
+
+# Dependency installs and their tool caches at any depth
+# (Vitest writes node_modules/.vite under code/frontend and once under the root).
+node_modules/
+
+# Local environment files anywhere (deploy/frontend already has its own lines).
+.env
+.env.*

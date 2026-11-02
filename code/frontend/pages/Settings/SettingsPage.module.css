@@ -1,0 +1,299 @@
+/* Settings, laid out as the Inbox is (InboxPage.module.css): one reading
+   surface, its title on Inbox's baseline, its rows grouped by space - no
+   panel around them and no line between them. */
+.sheet {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-width: 0;
+	background: var(--sheet);
+}
+
+.scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding-bottom: var(--foot);
+}
+
+/* Its left margin from the page's whole width, as every page's
+   (components/Page/stableGutter.js): a scrollbar never moves it. */
+.feed {
+	max-width: 1200px;
+	margin-left: max(0px, calc((var(--page-width, 100%) - 1200px) / 2));
+	margin-right: auto;
+	padding: 0 clamp(24px, 3.5vw, 64px);
+}
+
+/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s (UI-23). */
+.head {
+	padding-top: calc(var(--sidebar-label-baseline) - 28.3px + var(--firm-row));
+}
+
+/* Which settings show (components/Views), as Team's toolbar: 24 under the
+   head, 30 over the rows. */
+.toolbar {
+	display: flex;
+	align-items: center;
+	margin: 24px 0 30px;
+}
+
+.title {
+	font: 500 30px/36px var(--font-sans);
+	letter-spacing: -0.02em;
+}
+
+.title_room {
+	visibility: hidden;
+}
+
+.summary {
+	margin-top: 6px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.group + .group {
+	margin-top: 28px;
+}
+
+.divider {
+	margin-bottom: 10px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+}
+
+/* What a group's rows are, in a sentence under its name. */
+.group_line {
+	max-width: 760px;
+	margin: -4px 0 12px;
+	font: var(--type-body);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+.rows {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* A setting is an Inbox row: a sign of 40, what it is and its state, and
+   its action at the right. */
+.row {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 16px;
+	margin: 0 -12px;
+	padding: 12px;
+	border-radius: 13px;
+}
+
+.sign {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	color: var(--ink-2);
+	background: var(--tray);
+	border-radius: 11px;
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.row_title {
+	font: 500 15px/21px var(--font-sans);
+	color: var(--ink);
+}
+
+.line {
+	font: var(--type-body);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+/* A code in letters of one width (UI-27). */
+.code {
+	font-family: var(--font-code);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: var(--ink-2);
+}
+
+.action {
+	display: inline-flex;
+	flex: none;
+}
+
+.empty {
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+/* The seat's password and two-step sign-in (D-215): their dialogs' fields one
+   under another, the authenticator's QR code centred, the recovery codes in two
+   columns in the type codes are read in. */
+.dialog_fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.dialog_error {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--accent);
+}
+
+/* Two-step sign-in turned on as onboarding turns it on (the owner, 2026-11-02):
+   each step's one thing in the middle of the dialog - the QR code and its key,
+   the six cells of the code, the recovery codes and the ways to keep them -
+   with onboarding's own code cells in this window's colours, and the dots of
+   the steps at the dialog's foot, before its buttons. */
+.two_step {
+	--entry-ink: var(--ink);
+	--entry-muted: var(--ink-3);
+	--entry-border: var(--line-strong);
+	--entry-brick: var(--accent);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	min-height: 236px;
+	justify-content: center;
+}
+
+/* Confirming it's you (D-218) is a form: its fields and what went wrong run
+   the dialog's width, on the title's edge, as the password dialog's do. */
+.two_step_form {
+	align-items: stretch;
+}
+
+.qr {
+	display: grid;
+	place-items: center;
+	width: 168px;
+	height: 168px;
+}
+
+.qr svg {
+	display: block;
+	width: 168px;
+	height: 168px;
+}
+
+.key {
+	display: grid;
+	justify-items: center;
+	gap: 2px;
+	font: var(--type-small);
+	color: var(--ink-3);
+	text-align: center;
+}
+
+.key_value {
+	display: grid;
+	padding: 4px 10px;
+	font-family: var(--font-code);
+	font-size: 13px;
+	line-height: 18px;
+	letter-spacing: 0.04em;
+	color: var(--ink);
+	border-radius: var(--radius-md);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.key_value:hover {
+	background: var(--sheet-hover);
+}
+
+.key_value:active {
+	background: var(--sheet-press);
+}
+
+.code_cells {
+	width: 300px;
+	max-width: 100%;
+}
+
+.keep {
+	display: flex;
+	justify-content: center;
+	gap: 24px;
+}
+
+.text_button {
+	font: var(--type-small);
+	color: var(--ink);
+}
+
+.text_button:hover:not(:disabled) {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.kept {
+	min-height: 20px;
+	margin: -8px 0 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+}
+
+/* The dots of the steps, at the start of the dialog's foot rather than at a
+   page's foot as in onboarding. */
+nav.steps {
+	position: static;
+	margin-right: auto;
+	align-self: center;
+	pointer-events: auto;
+}
+
+.recovery_codes {
+	display: grid;
+	grid-template-columns: repeat(2, max-content);
+	justify-content: center;
+	gap: 8px 40px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-family: var(--font-code);
+	font-size: 15px;
+	line-height: 20px;
+	letter-spacing: 0.06em;
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+	user-select: text;
+}
+
+/* A row with no sign: its words on the group's edge. */
+.row_bare {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* A connected account says so in the settled green word, in the place of
+   its action. */
+.connected {
+	font: 500 14px/20px var(--font-sans);
+	color: var(--settled-ink);
+}
+
+/* What went wrong, under the state it explains. */
+.line_more {
+	display: block;
+	margin-top: 4px;
+}
+
+/* Where no account is connected, for a colleague who joined (D-184). */
+.none {
+	font: var(--type-body);
+	color: var(--ink-2);
+	text-wrap: pretty;
+}

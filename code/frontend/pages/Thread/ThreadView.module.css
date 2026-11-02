@@ -1,0 +1,486 @@
+/* A thread (ThreadView.jsx): one column of reading width, white, with air
+   between the posts and nothing but the posts. */
+
+.view {
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* The scrollbar's room is kept on both sides, so the thread stays under the
+   header's search whether a scrollbar shows or not. */
+.scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	scrollbar-gutter: stable both-edges;
+}
+
+/* The thread stands in the header search's column, the inbox's (tokens.css,
+   --column), 16px in (the owner, 2026-10-24: "fit it into this rectangle"). */
+.thread {
+	max-width: var(--column);
+	margin: 0 auto;
+	padding: 28px 16px calc(24px + var(--reply-room, 0px));
+}
+
+/* Onboarding presents one complete exchange, not a scrolling chat window.
+   Its outer stage already owns the gutters; keep the full line width and
+   omit the scrolling/fading behavior of an ordinary thread. */
+.view[data-demonstration] { justify-content: center; }
+.view[data-demonstration] .scroll { flex: none; overflow: visible; scrollbar-gutter: auto; }
+.view[data-demonstration] .thread { padding: 0; }
+.view[data-demonstration] .post:first-child { padding-top: 0; }
+.post[data-demo-hidden] { visibility: hidden; pointer-events: none; }
+.demonstrationReaction { display: flow-root; height: 40px; }
+
+.head {
+	padding-bottom: 8px;
+}
+
+.title {
+	overflow: hidden;
+	font: 400 26px/33px var(--font-sans);
+	letter-spacing: var(--track-display);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The head's room in the page: the parts themselves travel over it
+   (MovingHead), so it holds their place unseen. */
+.head_room {
+	visibility: hidden;
+}
+
+/* The project's band and who takes part, the band's mark under the title's
+   first letter. */
+.where {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 10px 0 0 -12px;
+}
+
+/* Posts */
+
+.posts {
+	display: flex;
+	flex-direction: column;
+}
+
+/* A colleague writing its answer, under the latest post, in the column of the
+   posts' words (components/Typing draws the words and the dots). */
+.typing {
+	margin: 14px 0 0;
+	padding-left: 52px;
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.post {
+	--post-top: 16px;
+	position: relative;
+	isolation: isolate;
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr);
+	column-gap: 16px;
+	padding-top: 28px;
+}
+
+/* A further message of the same person: apart enough to read as a message
+   of its own, its files close under its words (the owner, 2026-11-02). */
+.post_more {
+	--post-top: 8px;
+	padding-top: 20px;
+}
+
+/* Under the pointer a message lightens, its corners G2, so it reads as the
+   one its tools act on. */
+.post::before {
+	content: "";
+	position: absolute;
+	top: var(--post-top);
+	right: -12px;
+	bottom: -12px;
+	left: -12px;
+	z-index: -1;
+	background: var(--post-ground, transparent);
+	-webkit-mask-box-image: var(--g2) / 16.667px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.post:hover,
+.post_active {
+	--post-ground: var(--sheet-quiet);
+}
+
+/* Its tools, at its top right, while it is under the pointer or has the
+   focus. */
+.tools {
+	position: absolute;
+	top: calc(var(--post-top) - 17px);
+	right: 0;
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	background: var(--sheet);
+	border-radius: 10px;
+	box-shadow: 0 0 0 1px var(--line-strong);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.post:hover .tools,
+.post:focus-within .tools,
+.post_active .tools {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.tool {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 28px;
+	color: var(--ink-3);
+	border-radius: 7px;
+	transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.tool:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+.edited {
+	font: 400 12px/18px var(--font-sans);
+	color: var(--ink-4);
+}
+
+
+.picker {
+	display: flex;
+	gap: 2px;
+	padding: 6px;
+}
+
+.pick {
+	width: 36px;
+	height: 36px;
+	font-size: 20px;
+	line-height: 1;
+	border-radius: 8px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.pick:hover {
+	background: var(--sheet-hover);
+}
+
+/* The message a reply answers: one quiet line over its words, the sign of a
+   reply, who wrote it and its first words; a press goes to it. No box and no
+   stripe (the owner, 2026-10-24: "a complete ban on such things, it is AI
+   slop"). */
+.quote {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	max-width: 100%;
+	margin-bottom: 4px;
+	font: 400 13.5px/19px var(--font-sans);
+	color: var(--ink-3);
+	text-align: left;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.quote:hover {
+	color: var(--ink-2);
+}
+
+.place {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	column-gap: 6px;
+	max-width: 100%;
+	margin-bottom: 4px;
+	font: 400 13.5px/19px var(--font-sans);
+	color: var(--ink-3);
+	text-align: left;
+	transition: color var(--duration-fast) var(--ease-out);
+}
+
+.place:hover {
+	color: var(--ink-2);
+}
+
+.place_head {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.place_where {
+	font-weight: 500;
+	color: var(--ink-2);
+}
+
+.place_text {
+	grid-column: 2;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.quote_sign {
+	display: inline-flex;
+	flex: none;
+	align-self: center;
+	color: var(--ink-4);
+}
+
+.quote_who {
+	flex: none;
+	font-weight: 500;
+	color: var(--ink-2);
+}
+
+.quote_text {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.editor {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.editor_actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.post_head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	margin: 1px 0 4px;
+}
+
+.name {
+	font: 500 15px/21px var(--font-sans);
+}
+
+/* The author's name opens its card; under the pointer it underlines. */
+.name_button:hover .name {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.time {
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-4);
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font: 400 15px/25px var(--font-sans);
+	color: var(--ink);
+	text-wrap: pretty;
+	--message-gap: 10px;
+}
+
+/* A message its author deleted keeps its place, without its words. */
+.deleted_note {
+	font: 400 14px/22px var(--font-sans);
+	color: var(--ink-4);
+}
+
+/* What stopped, said in words of the brick that marks a real problem: no dot
+   before them (UI-17). */
+.stopped {
+	margin-top: 12px;
+	font: 400 14px/21px var(--font-sans);
+	color: var(--accent-ink);
+}
+
+/* A file on a post */
+
+/* What a colleague asks */
+
+.answers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+/* A thread's close */
+
+.closed {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr) auto;
+	align-items: start;
+	column-gap: 16px;
+	margin-top: 28px;
+	padding-top: 22px;
+	box-shadow: inset 0 1px 0 var(--line);
+}
+
+.closed_mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	margin: 2px 6px 0;
+	color: var(--ink-inverse);
+	background: var(--settled);
+	border-radius: 50%;
+}
+
+.closed_head {
+	font: 400 14px/20px var(--font-sans);
+	color: var(--ink-3);
+}
+
+.closed_text {
+	margin-top: 6px;
+	font: 400 15px/25px var(--font-sans);
+}
+
+.reopened {
+	padding: 20px 0 0 52px;
+	font: 400 14px/20px var(--font-sans);
+	color: var(--ink-3);
+}
+
+/* The reply */
+
+/* The reply box over the thread's foot, as a personal chat's
+   (MessagesPage.module.css .reply): what scrolls goes under it, and the
+   page's white covers only what passes beneath the box, down to the window's
+   foot, reaching behind its rounded corners. */
+.composer {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 1;
+	padding: 4px 16px 20px;
+	pointer-events: none;
+}
+
+.composer > * {
+	pointer-events: auto;
+}
+
+.composer::after {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: -1;
+	height: 32px;
+	content: "";
+	background: var(--sheet);
+}
+
+/* A new thread's name, over its first message: a line of the page, not a field
+   in a frame. */
+/* The message a reply answers, over the reply box, until it is sent or let go. */
+.composer_quote {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: calc(var(--column) - 32px);
+	margin: 0 auto 8px;
+	padding: 6px 6px 6px 12px;
+	background: var(--sheet-quiet);
+	border-radius: 10px;
+}
+
+.composer_quote_text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.composer_quote_who {
+	font-weight: 500;
+	color: var(--ink-2);
+}
+
+.composer_quote_close {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	color: var(--ink-3);
+	border-radius: 7px;
+}
+
+.composer_quote_close:hover {
+	color: var(--ink);
+	background: var(--sheet-hover);
+}
+
+
+/* A message a colleague running here waits to take up (HeldNote): the
+   sentence and the one action that ends the wait, on one line where they fit. */
+.held {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+	margin-top: 12px;
+	font: 400 14px/21px var(--font-sans);
+	color: var(--ink-2);
+}
+
+.held p {
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.codes {
+	display: grid;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.code_row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.code {
+	font: 500 20px/28px var(--font-sans);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	color: var(--ink);
+	white-space: nowrap;
+}

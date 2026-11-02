@@ -1,0 +1,50 @@
+.label { margin: 0 0 12px; color: #10100d; font-size: 13px; font-weight: 500; }
+.family { min-width: 0; margin: 0 0 24px; padding: 0; border: 0; }
+.faces { display: flex; justify-content: space-between; gap: 8px; }
+.face { position: relative; display: grid; place-items: center; width: 46px; height: 46px; flex: none; border: 1px solid transparent; border-radius: 13px; cursor: pointer; }
+.face[data-selected] { border-color: #10100d; box-shadow: 0 0 0 3px rgb(16 16 13 / 0.06); }
+.face input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.face:has(input:focus-visible) { outline: 2px solid #10100d; outline-offset: 3px; }
+.formHeading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 20px; color: #737373; font-size: 13px; }
+.formHeading > span { max-width: 140px; }
+.steps { display: flex; flex-direction: column; gap: 24px; margin: 0; padding: 0; list-style: none; }
+.steps li { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; gap: 12px; }
+.number { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid #dededb; border-radius: 50%; color: #737373; font-size: 12px; }
+.steps strong { display: block; padding-top: 2px; color: #10100d; font-size: 13px; font-weight: 500; line-height: 20px; }
+.steps p { margin: 4px 0 0; color: #737373; font-size: 13px; line-height: 20px; }
+.pairing { text-align: center; }
+.pairTitle { margin: 0; font-size: 14px; line-height: 22px; }
+.code { display: flex; justify-content: center; gap: 12px; margin: 20px 0; color: #10100d; font-size: 32px; line-height: 48px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: 0.14em; }
+.code span { padding: 8px 12px 8px 16px; border: 1px solid #e7e7e4; border-radius: 10px; }
+/* Four independent applications, with status beside their identity. */
+.apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.app { display: flex; align-items: center; gap: 10px; min-height: 94px; padding: 14px 12px; border: 1px solid #e7e7e4; border-radius: 12px; background: white; text-align: left; font: inherit; cursor: pointer; transition: border-color 140ms ease-out, background 140ms ease-out; }
+.app:hover { border-color: #b8b8b2; background: #fafaf9; }
+.app:focus-visible { outline: 2px solid #10100d; outline-offset: 3px; }
+.appIcon { display: grid; place-items: center; width: 28px; height: 32px; flex: none; color: #737373; }
+.appIcon > svg { max-width: 28px; }
+.appText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.app strong { color: #10100d; font-size: 13px; line-height: 16px; font-weight: 500; }
+.appStatus { display: flex; align-items: center; gap: 4px; color: #737373; font-size: 11px; line-height: 14px; white-space: nowrap; }
+.app { position: relative; overflow: hidden; }
+.app[data-connected] { border-color: var(--app-color); }
+.app[data-connected]:hover { filter: brightness(0.95); }
+.appFilled { --outlook-ink: white; position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 14px 12px; background: var(--app-color); pointer-events: none; }
+.appFilled :is(strong, .appStatus, .appIcon) { color: white; }
+.app[data-celebrate] .appFilled { animation: appFills 620ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.app[data-celebrate] > .appText .tick { visibility: hidden; }
+.app[data-celebrate] .appFilled .tick path { stroke-dasharray: 1; animation: drawTick 380ms ease-out 240ms both; }
+@keyframes appFills { from { clip-path: circle(0% at 24px 50%); } to { clip-path: circle(150% at 24px 50%); } }
+@keyframes drawTick { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .app { transition: none; } .app[data-celebrate] .appFilled, .app[data-celebrate] .appFilled .tick path { animation: none; } }
+/* Outlook's add-in file is copied, not read out: a quiet action under its step. */
+.copy { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+/* A step's line never leaves one word alone on its last line. Four steps, as
+   when the system is asked first, stand closer, so the page needs no scroll
+   (the owner, 2026-11-01: "no scrolling here when connecting Outlook"). */
+.steps p { text-wrap: pretty; }
+.steps:has(> li:nth-child(4)) { gap: 16px; }
+@media (max-height: 700px) { .steps:has(> li:nth-child(4)) { gap: 12px; } }
+/* Where a larger text size still makes the page too short, the button stays
+   in view at the column's foot, as a form's does (Tour.module.css). */
+.held { position: sticky; bottom: 0; z-index: 1; }

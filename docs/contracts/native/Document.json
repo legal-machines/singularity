@@ -1,0 +1,166 @@
+{
+  "domain": "Document",
+  "methods": [
+    {
+      "name": "matter.addDocument",
+      "policy": "ui",
+      "params": {
+        "matterId": "string"
+      },
+      "result": "Matter",
+      "_order": 30
+    },
+    {
+      "name": "matter.removeDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "Matter",
+      "_order": 31
+    },
+    {
+      "name": "matter.revealDocument",
+      "policy": "ui",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "boolean",
+      "_order": 32
+    },
+    {
+      "name": "matter.listDocuments",
+      "policy": "worker",
+      "params": {
+        "matterId": "string"
+      },
+      "result": "Matter",
+      "_order": 70
+    },
+    {
+      "name": "matter.openDocument",
+      "policy": "ui",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "boolean",
+      "_order": 71
+    },
+    {
+      "name": "matter.renameDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string",
+        "expectedVersion": "number",
+        "newName": "string"
+      },
+      "result": "Matter",
+      "_order": 72
+    },
+    {
+      "name": "matter.moveDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string",
+        "expectedVersion": "number",
+        "destinationFolderRelativePath": "string"
+      },
+      "result": "Matter",
+      "_order": 73
+    },
+    {
+      "name": "matter.deleteDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string",
+        "expectedVersion": "number"
+      },
+      "result": "Matter",
+      "_order": 74
+    },
+    {
+      "name": "matter.createFolder",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "parentFolderRelativePath": "string",
+        "folderName": "string"
+      },
+      "result": "Matter",
+      "_order": 75
+    },
+    {
+      "name": "matter.addExternalFile",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "destinationFolderRelativePath": "string",
+        "sourceAbsolutePath": "string",
+        "move": "boolean | undefined",
+        "keepBoth": "boolean | undefined"
+      },
+      "result": "Matter",
+      "_order": 76
+    },
+    {
+      "name": "matter.reprocessDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "Matter",
+      "_order": 77
+    },
+    {
+      "name": "matter.resolveDocumentSource",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string",
+        "chunkId": "string | undefined",
+        "extractorVersion": "string | null | undefined"
+      },
+      "result": "ResolvedDocumentSource",
+      "_order": 79
+    },
+    {
+      "name": "matter.readDocumentView",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "DocumentView",
+      "_order": 162
+    },
+    {
+      "name": "document.listVersions",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "documentId": "string"
+      },
+      "result": "DocumentVersionList",
+      "_order": 167
+    },
+    {
+      "name": "document.restoreVersion",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "documentId": "string",
+        "version": "number",
+        "expectedFingerprint": "string"
+      },
+      "result": "DocumentVersionRestore",
+      "_order": 168
+    }
+  ]
+}

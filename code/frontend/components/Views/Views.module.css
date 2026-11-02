@@ -1,0 +1,40 @@
+/* Inbox's own choice of views (InboxPage.module.css, .tabs): a quiet track,
+   the chosen one raised in white, no frame. */
+.track {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	background: var(--tray);
+	border-radius: 11px;
+}
+
+.track button {
+	min-width: 72px;
+	padding: 6px 15px;
+	font: var(--type-small-strong);
+	color: var(--ink-3);
+	white-space: nowrap;
+	border-radius: 8px;
+}
+
+.track button[aria-selected="true"] {
+	color: var(--ink);
+	background: var(--sheet);
+	box-shadow: 0 1px 3px #1d203016, 0 0 0 0.5px #1d20300a;
+}
+
+.track button:hover {
+	color: var(--ink);
+}
+
+/* Over a narrow column: the whole width, its choices sharing it. */
+.stretch {
+	display: flex;
+	width: 100%;
+}
+
+.stretch button {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding-inline: 8px;
+}

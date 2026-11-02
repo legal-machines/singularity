@@ -1,0 +1,33 @@
+/* The profile's own pieces; its parts are components/Parts. */
+/* What they do now, under their office, in its own colour. */
+.state {
+	display: block;
+	margin-top: 2px;
+}
+
+.link {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-color: var(--line-strong);
+	text-underline-offset: 3px;
+}
+
+.link:hover {
+	text-decoration-color: var(--ink);
+}
+
+/* What went wrong saving a profile, under its fields. */
+.editError {
+	margin: 16px 0 0;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+/* An AI colleague's profile in two steps (as onboarding's): the dots of the
+   steps at the start of the dialog's foot, before its buttons. */
+nav.steps {
+	position: static;
+	margin-right: auto;
+	align-self: center;
+	pointer-events: auto;
+}

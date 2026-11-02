@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>@NATIVE_APP_IDENTIFIER@</id>
+  <name>@NATIVE_APP_DISPLAY_NAME@</name>
+  <summary>@NATIVE_APP_DESCRIPTION@</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <developer_name>Legal Machines</developer_name>
+  <description>
+    <p>@NATIVE_APP_DESCRIPTION@</p>
+  </description>
+  <launchable type="desktop-id">@NATIVE_APP_SLUG@.desktop</launchable>
+  <provides>
+    <binary>@NATIVE_APP_SLUG@</binary>
+  </provides>
+</component>

@@ -1,0 +1,168 @@
+/* The window's notices (Toaster.jsx), as onboarding's (onboarding/entry/
+   Notice.module.css): centred over the sheet, an --edge below the window's
+   top as the traffic lights stand (the owner, 2026-11-02: "the notification
+   must keep the common margin"), the newest on top. They stand over the
+   page and never move it; only an Undo in one takes a press. */
+.stack {
+	position: fixed;
+	top: var(--edge);
+	left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2);
+	z-index: var(--layer-toast);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	width: max-content;
+	max-width: min(560px, calc(100vw - var(--sidebar-width) - 96px));
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+/* Soft colours, each 4.5:1 and more against its white words: sage when it
+   went as asked, the brick of Legal Machines when it went wrong. Its ground
+   has corners of continuous curvature (G2, tokens.css --g2), on a layer of
+   its own. */
+.toast {
+	--toast-ground: #3a8060;
+	position: relative;
+	/* It stands in the window's strip, which drags the window elsewhere than
+	   macOS by its marks (app-region): never this notice. */
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+	isolation: isolate;
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 40px;
+	padding: 11px 18px;
+	color: #ffffff;
+	font: 500 13px/18px var(--font-sans);
+	letter-spacing: -0.003em;
+	text-align: center;
+	text-wrap: balance;
+	filter: drop-shadow(0 6px 14px rgb(16 16 13 / 0.1)) drop-shadow(0 1px 2px rgb(16 16 13 / 0.08));
+	will-change: transform, opacity;
+	/* It comes down into place on a critically damped spring (0.38 s
+	   response, no overshoot) and shows quickly, as onboarding's notice. */
+	animation: toast-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) both, toast-show 180ms ease-out both;
+	animation-timing-function: linear(0, 0.044, 0.1425, 0.2613, 0.3812, 0.4922, 0.5897, 0.6726, 0.7413, 0.7973, 0.8422, 0.878, 0.9061, 0.928, 0.9451, 0.9582, 0.9683, 0.976, 0.9819, 0.9864, 0.9898, 0.9923, 0.9943, 0.9957, 0.9968, 0.9976, 0.9982, 0.9987, 1), ease-out;
+}
+
+.toast::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--toast-ground);
+	-webkit-mask-box-image: var(--g2) / 20px;
+	transition: background-color 240ms var(--ease-out);
+}
+
+.toast[data-tone="problem"] {
+	--toast-ground: #ae493f;
+}
+
+/* A notice of what is still going on (D-207): graphite while a Matter comes
+   or goes, or this computer waits for another's answer. As a transfer goes
+   on, the sage of what went as asked fills it from the left, as onboarding's
+   download button fills (D-198): filled whole, it is the toast of what came. */
+.toast[data-tone="working"] {
+	--toast-ground: var(--ink-2);
+}
+
+.fill {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: #3a8060;
+	-webkit-mask-box-image: var(--g2) / 20px;
+	clip-path: inset(0 calc((1 - var(--progress, 0)) * 100%) 0 0);
+	transition: clip-path 360ms var(--ease-out);
+}
+
+/* It goes back up the way it came, quicker than it came: 220ms, as
+   LEAVE_MS in Toaster.jsx. */
+.toast[data-leaving] {
+	animation: toast-depart 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.text {
+	position: relative;
+	/* A notice's figures change in place without moving its words. */
+	font-variant-numeric: tabular-nums;
+}
+
+/* An Undo: white words on a lighter ground under the pointer. */
+.action {
+	flex: none;
+	height: 28px;
+	margin: -6px -10px -6px 0;
+	padding: 0 10px;
+	font: 600 13px/18px var(--font-sans);
+	color: #ffffff;
+	border-radius: 14px;
+	pointer-events: auto;
+}
+
+.action:hover {
+	background: rgba(255, 255, 255, 0.16);
+}
+
+.action:focus-visible {
+	outline: 1.5px solid #ffffff;
+	outline-offset: 1px;
+}
+
+@keyframes toast-arrive {
+	from {
+		transform: translateY(-10px) scale(0.96);
+	}
+	to {
+		transform: none;
+	}
+}
+
+@keyframes toast-show {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes toast-depart {
+	from {
+		opacity: 1;
+		transform: none;
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-6px) scale(0.98);
+	}
+}
+
+@keyframes toast-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+/* With less motion asked for, it only fades in and out. */
+@media (prefers-reduced-motion: reduce) {
+	.toast {
+		animation: toast-show 160ms ease-out both;
+	}
+
+	.toast[data-leaving] {
+		animation: toast-fade-out 160ms ease-in both;
+	}
+
+	.fill,
+	.toast::before {
+		transition: none;
+	}
+}

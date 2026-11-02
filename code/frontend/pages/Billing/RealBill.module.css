@@ -1,0 +1,134 @@
+/* A real Matter's billing (D-181): the month and its one action on a line,
+   what the month came to in a sentence, the form where time is recorded, and
+   the time and the AI work side by side. */
+
+.bill {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.month {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.month_name {
+	min-width: 136px;
+	font: var(--type-title);
+	color: var(--ink);
+	text-align: center;
+}
+
+.step,
+.icon {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	color: var(--ink-3);
+	background: transparent;
+	border: none;
+	border-radius: var(--radius-md, 8px);
+	cursor: pointer;
+}
+
+.step:hover:not(:disabled),
+.icon:hover {
+	color: var(--ink);
+	background: var(--sheet-press);
+}
+
+.step:disabled {
+	color: var(--ink-4);
+	cursor: default;
+}
+
+.flip svg {
+	transform: scaleX(-1);
+}
+
+.summary {
+	max-width: 780px;
+	font: var(--type-reading);
+	color: var(--ink-2);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	max-width: 780px;
+	padding: 20px 24px;
+	background: var(--sheet);
+	border-radius: var(--radius-card);
+	box-shadow: var(--card-shadow);
+}
+
+.form_fields {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr);
+	gap: 14px;
+}
+
+@media (max-width: 720px) {
+	.form_fields {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.form_foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.spacer {
+	flex: 1;
+}
+
+.columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+	gap: 20px;
+	align-items: start;
+}
+
+@media (max-width: 1180px) {
+	.columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.entry_aside {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.amount {
+	min-width: 48px;
+	font: 400 15px/21px var(--font-sans);
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+	text-align: right;
+	white-space: nowrap;
+}
+
+.empty {
+	padding: 12px 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}

@@ -1,0 +1,133 @@
+.bill {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.top {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+	gap: 32px;
+	align-items: end;
+	padding: 24px 24px 22px;
+	background: var(--sheet);
+	border-radius: var(--radius-card);
+	box-shadow: var(--card-shadow);
+}
+
+@media (max-width: 1180px) {
+	.top {
+		grid-template-columns: minmax(0, 1fr);
+		align-items: start;
+	}
+}
+
+.total_label {
+	font: var(--type-caps);
+	letter-spacing: var(--track-caps);
+	color: var(--ink-3);
+	text-transform: uppercase;
+}
+
+.total_amount {
+	margin-top: 8px;
+	font: 400 34px/40px var(--font-sans);
+	letter-spacing: -0.02em;
+}
+
+.total_line {
+	margin-top: 6px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.budget_amount {
+	margin-top: 8px;
+	font: 400 20px/27px var(--font-sans);
+}
+
+.budget_amount span {
+	color: var(--ink-3);
+}
+
+.meter {
+	height: 6px;
+	margin-top: 12px;
+	overflow: hidden;
+	background: var(--sheet-press);
+	border-radius: 3px;
+}
+
+.meter span {
+	display: block;
+	height: 100%;
+	background: var(--ink);
+	border-radius: 3px;
+}
+
+.meter .meter_near {
+	background: var(--time);
+}
+
+.meter .meter_over {
+	background: var(--accent);
+}
+
+.invoice {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 10px;
+}
+
+@media (max-width: 1180px) {
+	.invoice {
+		align-items: flex-start;
+	}
+}
+
+.columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+	gap: 20px;
+	align-items: start;
+}
+
+.columns > :nth-child(3) {
+	grid-column: 2;
+}
+
+.columns > :first-child {
+	grid-row: span 2;
+}
+
+@media (max-width: 1180px) {
+	.columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.columns > :nth-child(3) {
+		grid-column: auto;
+	}
+
+	.columns > :first-child {
+		grid-row: auto;
+	}
+}
+
+.amount {
+	font: 400 15px/21px var(--font-sans);
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.empty,
+.note {
+	padding: 12px 0;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.note {
+	padding-top: 4px;
+}

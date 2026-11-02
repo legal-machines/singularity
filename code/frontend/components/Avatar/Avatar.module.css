@@ -1,0 +1,66 @@
+/* Every face, a person's or an AI colleague's, is a square whose corners
+   keep their curvature continuous (G2), as Apple draws its icons (the owner,
+   2026-10-24); a project's mark is a circle (ProjectMark), so a member and a
+   project never read as one. */
+
+.avatar {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	-webkit-mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+	mask: url("../../styles/g2-square.svg") center / 100% 100% no-repeat;
+}
+
+.person {
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	color: #ffffff;
+	user-select: none;
+}
+
+.photo {
+	object-fit: cover;
+	background: var(--line);
+}
+
+/* The base face (D-188): a head and shoulders in paper white on the person's
+   colour, for a person without a photo. */
+
+.base svg {
+	display: block;
+	fill: rgb(255 255 255 / 0.9);
+}
+
+/* An AI colleague's face (D-063): its creature on its species' ground. */
+
+.character {
+	overflow: hidden;
+	background: var(--line);
+	user-select: none;
+}
+
+/* Its frame, drawn on a canvas, or its still under reduced motion. */
+.character img,
+.character canvas {
+	transform: var(--avatar-image-transform, none);
+	transform-origin: 50% 50%;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* A face with the dot of its state (D-067): the dot, ringed in the page's
+   white, stands on the face's lower right edge. */
+
+.frame {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+}
+
+.state {
+	position: absolute;
+	border: 2px solid var(--ring, var(--sheet));
+	border-radius: 50%;
+}

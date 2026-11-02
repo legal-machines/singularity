@@ -1,0 +1,27 @@
+/* TEMPORARY: the names the pages used before Folio, pointed at its tokens
+   while each page moves over. Deleted when no page names them. */
+
+:root {
+	--background: var(--sheet);
+	--background-side: var(--sheet-quiet);
+	--text: var(--ink);
+	--text-secondary: var(--ink-3);
+	--text-tertiary: var(--ink-4);
+	--divider: var(--line);
+	--divider-strong: var(--line-strong);
+	--brand: var(--ink);
+	--brand-hover: var(--ink-2);
+	--link: var(--ink);
+	--selected: var(--sheet-selected);
+	--hover: var(--sheet-hover);
+	--pill-selected: var(--sheet-selected);
+	--button-secondary: var(--sheet-quiet);
+	--bubble-other: var(--sheet-quiet);
+	--bubble-own: var(--desk);
+	--closed: var(--settled-ink);
+	--page-inset: var(--page-gutter);
+	--state-working: var(--underway);
+	--state-waiting: var(--ink-4);
+	--state-ready: var(--settled-ink);
+	--state-decision: var(--accent);
+}

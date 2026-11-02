@@ -1,0 +1,190 @@
+{
+  "domain": "PapinianGuard",
+  "methods": [
+    {
+      "name": "protectedApi.getPolicy",
+      "policy": "worker",
+      "result": "ProtectedApiPolicy",
+      "_order": 19
+    },
+    {
+      "name": "protectedApi.savePolicy",
+      "policy": "worker",
+      "params": "ProtectedApiPolicyInput",
+      "result": "ProtectedApiPolicy",
+      "_order": 20
+    },
+    {
+      "name": "protectedApi.preview",
+      "policy": "worker",
+      "params": {
+        "text": "string | undefined"
+      },
+      "result": "ProtectedApiPreviewResult",
+      "_order": 21
+    },
+    {
+      "name": "protectedApi.previewPassage",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "text": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "protectionMode",
+          "replacements"
+        ],
+        "properties": {
+          "protectionMode": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ]
+          },
+          "replacements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "forms",
+                "category"
+              ],
+              "properties": {
+                "forms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "category": {
+                  "type": "string"
+                },
+                "placeholder": {
+                  "type": "string",
+                  "description": "The symbol that stands for these words in protectedText."
+                }
+              }
+            }
+          },
+          "protectedText": {
+            "type": "string",
+            "description": "The passage as it would go out: each symbol where its words stood; the passage itself when protection is off."
+          }
+        }
+      },
+      "_order": 156
+    },
+    {
+      "name": "protectedApi.previewDocument",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "documentId": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "protectionMode",
+          "isRead",
+          "name",
+          "protectedName",
+          "passages",
+          "passageCount",
+          "replacements"
+        ],
+        "properties": {
+          "protectionMode": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ]
+          },
+          "isRead": {
+            "type": "boolean",
+            "description": "False until Singularity has read the document; it then has no passages."
+          },
+          "name": {
+            "type": "string"
+          },
+          "protectedName": {
+            "type": "string",
+            "description": "The document's name as the line above its passages carries it."
+          },
+          "passages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "protectedText",
+                "page",
+                "heading",
+                "withheld"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "protectedText": {
+                  "type": "string",
+                  "description": "Empty when withheld."
+                },
+                "page": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "heading": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "withheld": {
+                  "type": "boolean",
+                  "description": "Papinian Guard could not mask it, so no request would send it."
+                }
+              }
+            }
+          },
+          "passageCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Every passage the document has; more than passages holds when it is long."
+          },
+          "replacements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "placeholder",
+                "category",
+                "forms"
+              ],
+              "properties": {
+                "placeholder": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "forms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "_order": 338
+    }
+  ]
+}

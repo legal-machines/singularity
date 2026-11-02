@@ -1,0 +1,7 @@
+# A PDF's cross-reference table counts bytes, and its entries end in spaces:
+# never normalise its line endings or check it as text.
+*.pdf binary
+
+# llama.cpp's patches are applied byte for byte: their context lines keep
+# llama.cpp's own whitespace, so they are never normalised or checked as text.
+dependencies/llama.cpp/*.patch -text -whitespace

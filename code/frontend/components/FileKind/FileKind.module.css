@@ -1,0 +1,97 @@
+/* A file's kind (FileKind.jsx): a white page with a fine frame, its corner
+   folded, and its type on a label in the colour of its kind. */
+
+.icon {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	--kind: var(--kind-text);
+}
+
+.tile {
+	width: 32px;
+	height: 40px;
+}
+
+.row {
+	width: 26px;
+	height: 32px;
+}
+
+.drawing {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.page {
+	fill: var(--sheet);
+	stroke: var(--line-strong);
+	stroke-width: 1.5;
+}
+
+.fold {
+	fill: none;
+	stroke: var(--line-strong);
+	stroke-width: 1.5;
+}
+
+.label {
+	position: absolute;
+	left: -4px;
+	padding: 1px 4px;
+	font-family: var(--font-sans);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--ink-inverse);
+	background: var(--kind);
+	border-radius: 3px;
+	white-space: nowrap;
+}
+
+.tile .label {
+	bottom: 6px;
+	font-size: 8.5px;
+	line-height: 11px;
+}
+
+.row .label {
+	bottom: 5px;
+	left: -3px;
+	padding: 0 3px;
+	font-size: 7.5px;
+	line-height: 10px;
+}
+
+.icon[data-family="word"] {
+	--kind: var(--kind-word);
+}
+
+.icon[data-family="sheet"] {
+	--kind: var(--kind-sheet);
+}
+
+.icon[data-family="slides"] {
+	--kind: var(--kind-slides);
+}
+
+.icon[data-family="pdf"] {
+	--kind: var(--kind-pdf);
+}
+
+.icon[data-family="mail"] {
+	--kind: var(--kind-mail);
+}
+
+.icon[data-family="image"] {
+	--kind: var(--kind-image);
+}
+
+.icon[data-family="data"] {
+	--kind: var(--kind-data);
+}
+
+/* A file no longer in the folder stands back. */
+.dim {
+	opacity: 0.45;
+}

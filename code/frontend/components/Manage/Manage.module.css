@@ -1,0 +1,15 @@
+/* Archive, delete and change (D-214): the forms in their dialogs, one field
+   under another. An AI colleague's profile is edited as a lawyer's is
+   (ProfileFields' ColleagueFields). */
+
+.fields {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.error {
+	margin: 0;
+	font: var(--type-small);
+	color: var(--accent);
+}

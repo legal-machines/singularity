@@ -1,0 +1,125 @@
+/* Whether a Matter travels (MatterTravel, D-137): one quiet line under its
+   name, before its sections. */
+.travel {
+	margin: -12px 0 20px;
+	font: var(--type-small);
+	color: var(--ink-3);
+	text-wrap: balance;
+}
+
+/* What a dialog about the firm's computers says beneath its field. */
+
+.note {
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+* + .note {
+	margin-top: 12px;
+}
+
+/* The firm's folder offered as a second way: its words, and the button under them. */
+
+.second_way {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.second_way .note {
+	margin-top: 0;
+	color: var(--ink-3);
+}
+
+.error {
+	margin-top: 12px;
+	font: var(--type-small);
+	color: var(--accent-ink);
+}
+
+/* A computer's code, read aloud between two lawyers: in the text's own face,
+   its figures of one width, so the groups line up as they are read. */
+
+.code {
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.row_icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	color: var(--ink-2);
+	background: var(--tray);
+	border-radius: 10px;
+}
+
+/* The check of one of the firm's computers (D-205): the eight digits both
+   computers show, large, in figures of one width so the two groups line up
+   as they are read side by side; the line under them asks the one question.
+   While the other computer is awaited the same place holds quiet dots, so
+   nothing moves when the number comes. */
+
+.check {
+	display: grid;
+	justify-items: start;
+	gap: 10px;
+}
+
+.number {
+	margin: 0;
+	font: 400 44px/52px var(--font-sans);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.06em;
+	color: var(--ink);
+	white-space: nowrap;
+	animation: number-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.number[data-waiting] {
+	color: var(--ink-4);
+	animation: none;
+}
+
+@keyframes number-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.number {
+		animation: none;
+	}
+}
+
+.problem {
+	font: var(--type-body);
+	color: var(--accent-ink);
+}
+
+/* How much of a given Matter comes, under its title. */
+.size {
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+/* The other way in, quiet at the dialog's foot: an invitation to copy. */
+.other_way {
+	margin-top: 16px;
+	padding: 0;
+	font: var(--type-small);
+	color: var(--ink-3);
+	text-align: left;
+}
+
+.other_way:hover {
+	color: var(--ink);
+}

@@ -1,0 +1,95 @@
+.stage { position: absolute; inset: 0; display: grid; place-items: center; background: white; pointer-events: none; }
+.profile, .office { width: min(640px, 100%); min-width: 0; animation: appear 260ms ease-out both; }
+.identity { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+.identity > div { min-width: 0; }
+.identity h2 { margin: 0; color: var(--ink); font-size: 28px; font-weight: 500; line-height: 34px; overflow-wrap: anywhere; }
+.identity p { margin: 6px 0 2px; font-size: 15px; line-height: 22px; color: var(--ink-2); overflow-wrap: anywhere; }
+.identity span { color: var(--ink-3); font-size: 13px; }
+.about { padding: 12px 0; }
+.about p { margin: 0; color: var(--ink); font-size: 15px; line-height: 24px; overflow-wrap: anywhere; text-wrap: pretty; }
+.about > span { display: block; margin-top: 16px; color: var(--ink-3); font-size: 13px; line-height: 20px; }
+.office { border: 1px solid #e7e7eb; border-radius: 16px; overflow: hidden; }
+.appName { display: flex; align-items: center; gap: 8px; padding: 14px 20px; color: var(--ink-3); font-size: 13px; }
+.work { padding: 20px 28px 28px; }
+.work h2 { margin: 0; color: var(--ink); font-size: 23px; line-height: 29px; font-weight: 500; text-wrap: balance; }
+.work > p { margin: 18px 0 0; color: var(--ink-2); font-size: 14px; line-height: 22px; }
+.work .byline { margin-top: 8px; color: var(--ink-3); font-size: 13px; }
+.work .documentLabel { margin: 0 0 16px; color: var(--ink-3); font-size: 10px; letter-spacing: 0.06em; }
+.work .clause { margin-top: 24px; font-weight: 500; }
+.pane { padding: 18px; border-top: 1px solid #e7e7eb; }
+.paneHead { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--ink); font-size: 13px; }
+.paneHead img { border-radius: 6px; }
+.matter { margin-left: auto; color: var(--ink-3); }
+.file { display: flex; align-items: center; gap: 10px; margin-top: 20px; font-size: 13px; color: var(--ink); }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .profile, .office { animation: none; } }
+
+.overviewHead { margin-bottom: 24px; }
+.overviewHead h2 { margin: 0; color: var(--ink); font-size: 28px; line-height: 36px; font-weight: 500; }
+.overviewHead p { margin: 8px 0 0; color: var(--ink-3); font-size: 14px; line-height: 22px; }
+.cells { width: 100%; margin-top: 20px; border-collapse: collapse; color: var(--ink-2); font-size: 13px; line-height: 20px; }
+.cells th, .cells td { padding: 9px 12px; border: 1px solid #e7e7eb; text-align: left; }
+.cells th { font-weight: 500; }
+.slide { min-height: 198px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; }
+.slide p, .slide span { margin: 0; color: var(--ink-3); font-size: 11px; line-height: 16px; }
+
+/* The preparation and protection slides (D-195): a clause as the lawyer reads
+   it, with a tracked change in one author's colour as Word draws it, and the
+   same clause with its symbols as it leaves for the model. */
+.clauseNumber { margin: 0 0 8px; color: var(--ink); font-size: 14px; font-weight: 500; line-height: 20px; }
+.passage { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 24px; overflow-wrap: anywhere; }
+.passage b { color: var(--ink); font-weight: 500; }
+.passage mark { padding: 1px 4px; border-radius: 4px; background: #f1f1ef; color: var(--ink); font-size: 13px; }
+.passage del { color: #ae493f; text-decoration-thickness: 1px; }
+.passage ins { color: #ae493f; text-decoration: underline; text-underline-offset: 3px; }
+.legend { margin: 10px 0 0; color: var(--ink-3); font-size: 12px; line-height: 18px; }
+/* Inside the document the clause keeps its own spacing, not a letter's
+   paragraph gap (.work > p): no empty band under the file's name. */
+.work > .clauseNumber { margin: 0 0 8px; }
+.work > .passage { margin: 0; }
+.restored { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; color: var(--ink-3); font-size: 13px; line-height: 20px; }
+
+/* Protection's sentence on its way (D-195): rows on the page itself, no card
+   and no border; the row that leaves the computer stands on its own ground,
+   its symbols white on it, and the client's words are tinted where they stay. */
+.journey { width: min(600px, 100%); display: grid; gap: 6px; animation: appear 260ms ease-out both; }
+.step { display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; align-items: baseline; padding: 18px 20px; border-radius: 14px; }
+/* Protected, what leaves stands on a calm green: safe to send. */
+.step[data-away] { background: #eaf4ed; }
+.stepName { color: var(--ink-3); font-size: 12px; line-height: 18px; }
+.sentence { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 26px; }
+.sentence b, .sentence mark { white-space: nowrap; }
+.sentence b { padding: 1px 3px; border-radius: 4px; background: rgb(174 73 63 / 0.1); color: var(--ink); font-weight: 500; }
+.sentence mark { padding: 2px 5px; border-radius: 5px; background: white; color: var(--ink); font-size: 13px; }
+.step .legend { margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) { .journey { animation: none; } }
+/* With protection off, what leaves stands on a warning ground in the Legal
+   Machines brick, never orange, and the client's words show in full. */
+.step[data-exposed] { background: rgb(174 73 63 / 0.08); }
+.step[data-exposed] .sentence b { background: rgb(174 73 63 / 0.16); }
+.stack { display: grid; }
+.stack > * { grid-area: 1 / 1; visibility: hidden; }
+.stack > [data-shown] { visibility: visible; }
+/* As the slide opens the picture plays once (D-198): a row not reached yet
+   keeps its place unseen, the row that leaves takes its ground as it goes,
+   and a caption comes with the step it names. A row's fullest state stands
+   in it unseen (.sizer), so it never changes height. */
+.step { transition: opacity 600ms ease, background-color 600ms ease; }
+.step[data-waiting] { opacity: 0; }
+.sizer { visibility: hidden; }
+.legend { transition: opacity 600ms ease; }
+.legend[data-hidden] { opacity: 0; }
+/* On this computer's white a symbol stands on light grey, as in the document;
+   on the green of what leaves, on white. */
+.step:not([data-away]) .sentence mark { background: #f1f1ef; }
+/* A word and its symbol share one place (Swap): its width follows the one
+   shown while they cross-fade, so the sentence closes up around the change. */
+.swap { display: inline-grid; align-items: baseline; vertical-align: baseline; clip-path: inset(0); transition: width 700ms cubic-bezier(0.3, 0.6, 0.2, 1); }
+.swap > b, .swap > mark { grid-area: 1 / 1; justify-self: start; width: max-content; transition: opacity 500ms ease, background-color 600ms ease; }
+.swap > b { line-height: 16px; }
+.swap > mark { line-height: 15px; opacity: 0; }
+.swap[data-masked] > b { opacity: 0; }
+.swap[data-masked] > mark { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+	.step, .legend, .swap, .swap > b, .swap > mark { transition: none; }
+}

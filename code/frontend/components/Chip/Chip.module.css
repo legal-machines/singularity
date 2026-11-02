@@ -1,0 +1,47 @@
+.chip {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	height: 26px;
+	padding: 0 10px;
+	font: 400 13px/18px var(--font-sans);
+	white-space: nowrap;
+	border-radius: 8px;
+}
+
+.plain {
+	color: var(--ink);
+	background: var(--sheet);
+	box-shadow: inset 0 0 0 1px var(--tray-line);
+}
+
+/* What waits for the member reads in plain ink, as Status's "yours" does:
+   a decision or a review is ordinary work, never an alarm (D-174). */
+.yours {
+	color: var(--ink);
+	font-weight: 500;
+	background: var(--sheet);
+	box-shadow: inset 0 0 0 1px var(--tray-line);
+}
+
+.accent {
+	color: var(--accent-ink);
+	background: var(--accent-tint);
+}
+
+.time {
+	color: var(--time-ink);
+	background: var(--time-tint);
+}
+
+/* Done, sent, closed: the settled green word, on white with a fine frame. */
+.done {
+	color: var(--settled-ink);
+	background: var(--sheet);
+	box-shadow: inset 0 0 0 1px var(--tray-line);
+}
+
+.work {
+	color: var(--underway);
+	background: var(--underway-tint);
+}

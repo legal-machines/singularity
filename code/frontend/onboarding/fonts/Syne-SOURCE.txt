@@ -1,0 +1,6 @@
+Syne variable font, unmodified. Downloaded 2026-10-27.
+Designers: Bonjour Monde, Lucas Descroix and George Triantafyllakos.
+Source: https://github.com/google/fonts/tree/main/ofl/syne
+Project: https://gitlab.com/bonjour-monde/fonderie/syne-typeface
+License: SIL Open Font License 1.1; see Syne-LICENSE.txt.
+Used only for the Singularity display name in the onboarding typography study.

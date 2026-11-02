@@ -1,0 +1,106 @@
+{
+  "domain": "DocumentReview",
+  "methods": [
+    {
+      "name": "documentReview.list",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string | undefined"
+      },
+      "result": "DocumentReviewList",
+      "_order": 229
+    },
+    {
+      "name": "documentReview.get",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "reviewId": "string"
+      },
+      "result": "DocumentReview",
+      "_order": 230
+    },
+    {
+      "name": "documentReview.decide",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "reviewId": "string",
+        "version": "number",
+        "decision": "string",
+        "comment": "string | undefined"
+      },
+      "result": "DocumentReview",
+      "_order": 231
+    },
+    {
+      "name": "documentReview.retry",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "reviewId": "string"
+      },
+      "result": "DocumentReview",
+      "_order": 232
+    },
+    {
+      "name": "documentReview.saveCopy",
+      "policy": "ui",
+      "params": {
+        "projectId": "string",
+        "reviewId": "string",
+        "version": "number"
+      },
+      "result": "boolean",
+      "_order": 233
+    },
+    {
+      "name": "documentReview.assignments",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string | undefined"
+      },
+      "result": "AssignmentList",
+      "_order": 261
+    },
+    {
+      "name": "documentReview.leaveOut",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "reviewId": "string",
+        "version": "number",
+        "changeIds": "string[]"
+      },
+      "result": "DocumentReview",
+      "_order": 262
+    },
+    {
+      "name": "documentReview.answerDecision",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "assignmentId": "string",
+        "decisionId": "string",
+        "answer": "string"
+      },
+      "result": "AssignmentDecisionAnswer",
+      "_order": 264
+    },
+    {
+      "name": "documentReview.decideWritten",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "assignmentId": "string",
+        "step": "number",
+        "decision": "string",
+        "comment": "string | undefined"
+      },
+      "result": "Assignment",
+      "_order": 277
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+/* The member's face stands an --edge below what ends above it, the Matters'
+   block: the sidebar's scroll keeps 12 under it, the row 6 above the face,
+   and the face stands 1 inside its lines. */
+.account {
+	flex: none;
+	padding-top: calc(var(--edge) - 19px);
+}
+
+.me {
+	display: grid;
+	/* The face and the name alone: no chevrons beside them (the owner,
+	   2026-11-02); the row itself opens the account's menu. The face, 36,
+	   stands centred by its two lines, 20 and 18. */
+	grid-template-columns: 36px minmax(0, 1fr);
+	align-items: center;
+	column-gap: 10px;
+	width: 100%;
+	/* The face begins on the sidebar's line of marks (Sidebar.module.css). */
+	padding: 6px 8px 6px calc(var(--edge) - var(--sidebar-inset));
+	color: var(--on-desk);
+	text-align: left;
+	border-radius: var(--radius-md);
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.me:hover,
+.me[aria-expanded="true"] {
+	background: var(--hover-ground, var(--desk-hover));
+}
+
+.me_text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.me_name {
+	overflow: hidden;
+	font: var(--type-sidebar-name);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The member's office beneath the name by size, weight and transparency
+   (the owner, 2026-11-02). */
+.me_line {
+	overflow: hidden;
+	font: var(--type-sidebar-detail);
+	color: var(--ink-sidebar-detail);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.me > svg { color: var(--ink-3); }

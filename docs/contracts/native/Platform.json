@@ -1,0 +1,191 @@
+{
+  "domain": "Platform",
+  "methods": [
+    {
+      "name": "dialog.chooseFolder",
+      "policy": "ui",
+      "result": "string | null",
+      "_order": 0
+    },
+    {
+      "name": "dialog.chooseFiles",
+      "policy": "ui",
+      "result": "string[]",
+      "_order": 78
+    },
+    {
+      "name": "permissions.getState",
+      "policy": "worker",
+      "result": "PermissionState",
+      "_order": 53
+    },
+    {
+      "name": "permissions.chooseFilesAndProjects",
+      "policy": "ui",
+      "result": "PermissionState",
+      "_order": 54
+    },
+    {
+      "name": "permissions.declineFilesAndProjects",
+      "policy": "worker",
+      "result": "PermissionState",
+      "_order": 55
+    },
+    {
+      "name": "permissions.allowBroaderAccess",
+      "policy": "worker",
+      "result": "PermissionState",
+      "_order": 63
+    },
+    {
+      "name": "permissions.revokeBroaderAccess",
+      "policy": "worker",
+      "result": "PermissionState",
+      "_order": 64
+    },
+    {
+      "name": "runtime.getInfo",
+      "policy": "worker",
+      "result": "RuntimeInfo",
+      "_order": 1
+    },
+    {
+      "name": "runtime.getBuildHash",
+      "policy": "worker",
+      "result": "BuildHash",
+      "_order": 2
+    },
+    {
+      "name": "system.openExternal",
+      "policy": "ui",
+      "params": {
+        "url": "string"
+      },
+      "result": "boolean",
+      "_order": 48
+    },
+    {
+      "name": "window.prepareMain",
+      "policy": "ui",
+      "result": {
+        "type": "object",
+        "required": [
+          "ready"
+        ],
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          }
+        }
+      },
+      "_order": 146
+    },
+    {
+      "name": "window.setTitlebarControls",
+      "policy": "ui",
+      "params": {
+        "controls": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "applied"
+        ],
+        "properties": {
+          "applied": {
+            "type": "integer"
+          }
+        }
+      },
+      "_order": 155
+    },
+    {
+      "name": "dialog.saveGeneratedFile",
+      "policy": "ui",
+      "params": {
+        "name": "string | undefined",
+        "extension": "string",
+        "contentBase64": "string"
+      },
+      "result": "boolean",
+      "_order": 158
+    },
+    {
+      "name": "window.getFrame",
+      "policy": "ui",
+      "result": {
+        "type": "object",
+        "required": [
+          "captionInPage",
+          "maximized"
+        ],
+        "properties": {
+          "captionInPage": {
+            "type": "boolean"
+          },
+          "maximized": {
+            "type": "boolean"
+          }
+        }
+      },
+      "_order": 227
+    },
+    {
+      "name": "window.captionCommand",
+      "policy": "ui",
+      "params": {
+        "command": {
+          "type": "string",
+          "enum": [
+            "minimize",
+            "maximize",
+            "restore",
+            "close"
+          ]
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "applied",
+          "maximized"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "maximized": {
+            "type": "boolean"
+          }
+        }
+      },
+      "_order": 228
+    }
+  ]
+}

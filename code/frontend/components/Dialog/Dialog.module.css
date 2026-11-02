@@ -1,0 +1,188 @@
+/* The dialog stands in the middle of the window, over a white that washes
+   out from the middle as it opens and draws back into it as it closes (the
+   owner, 2026-11-02), never a dimmed page. */
+.scrim {
+	position: fixed;
+	inset: 0;
+	z-index: var(--layer-dialog);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.wash {
+	position: absolute;
+	inset: 0;
+	background: var(--sheet);
+	pointer-events: none;
+	clip-path: circle(80% at 50% 50%);
+	animation: wash-out-from-middle 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes wash-out-from-middle {
+	from {
+		clip-path: circle(0% at 50% 50%);
+	}
+}
+
+/* Leaving: a still copy (Dialog.jsx) draws the white back into the middle
+   while the dialog sinks and fades, and is taken away after. */
+.scrim[data-leaving] {
+	pointer-events: none;
+}
+
+.scrim[data-leaving] .wash {
+	animation: wash-back-to-middle 420ms cubic-bezier(0.55, 0, 0.75, 0.2) both;
+}
+
+.scrim[data-leaving] .dialog {
+	animation: sink 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes wash-back-to-middle {
+	from {
+		clip-path: circle(80% at 50% 50%);
+	}
+	to {
+		clip-path: circle(0% at 50% 50%);
+	}
+}
+
+@keyframes sink {
+	to {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+}
+
+.dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-height: 76vh;
+	overflow: hidden;
+	/* Part of the white, with no frame and no shadow (the owner, 2026-11-02). */
+	background: var(--sheet);
+	/* It comes as the white reaches it. */
+	animation: rise 360ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+}
+
+/* With less motion asked for, the white and the dialog only fade. */
+@media (prefers-reduced-motion: reduce) {
+	.wash {
+		clip-path: none;
+		animation: fade-in 160ms ease-out both;
+	}
+
+	.scrim[data-leaving] .wash {
+		animation: fade-out 160ms ease-in both;
+	}
+
+	.dialog,
+	.scrim[data-leaving] .dialog {
+		animation: none;
+	}
+
+	.scrim[data-leaving] {
+		animation: fade-out 160ms ease-in both;
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+.small {
+	max-width: 420px;
+}
+
+.medium {
+	max-width: 560px;
+}
+
+.large {
+	max-width: 760px;
+}
+
+.head {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 20px 24px 0;
+}
+
+.title {
+	padding-top: 2px;
+	font: var(--type-title);
+	letter-spacing: var(--track-title);
+}
+
+.description {
+	padding: 6px 24px 0;
+	font: var(--type-body);
+	color: var(--ink-2);
+}
+
+.body {
+	min-height: 0;
+	padding: 16px 24px 4px;
+	overflow-y: auto;
+}
+
+.foot {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 20px 24px 24px;
+}
+
+/* A dialog for a key: its title is set beside the seal. */
+
+.seal .title {
+	color: var(--ink);
+}
+
+/* A roomy dialog (layout "spacious") for a short task of its own: a larger
+   title and its line with more room around them, what it holds under them,
+   and its actions at the foot as every dialog's. */
+.dialog[data-layout="spacious"] .head {
+	padding: 32px 36px 0;
+}
+
+.dialog[data-layout="spacious"] .title {
+	padding-top: 0;
+	font: 500 26px/32px var(--font-sans);
+	letter-spacing: -0.02em;
+}
+
+.dialog[data-layout="spacious"] .description {
+	padding: 8px 36px 0;
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+.dialog[data-layout="spacious"] .body {
+	padding: 28px 36px 0;
+}
+
+.dialog[data-layout="spacious"] .foot {
+	padding: 32px 36px 32px;
+}

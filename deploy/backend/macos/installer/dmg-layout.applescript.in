@@ -1,0 +1,41 @@
+on run argv
+  set image_name to item 1 of argv
+
+  tell application "Finder"
+    tell disk image_name
+      set open_attempts to 0
+      repeat while open_attempts < 5
+        try
+          open
+          delay 1
+          set open_attempts to 5
+        on error
+          set open_attempts to open_attempts + 1
+          delay 2
+        end try
+      end repeat
+
+      set current view of container window to icon view
+      set view_options to the icon view options of container window
+      set arrangement of view_options to not arranged
+      set icon size of view_options to 104
+      set text size of view_options to 14
+      set background picture of view_options to file ".background:background.tiff"
+
+      tell container window
+        set sidebar width to 0
+        set statusbar visible to false
+        set toolbar visible to false
+        set pathbar visible to false
+        set the bounds to {180, 120, 900, 560}
+        set position of item "@NATIVE_APP_DISPLAY_NAME@.app" to {200, 233}
+        set position of item "Applications" to {520, 233}
+      end tell
+
+      close
+      open
+      delay 2
+      close
+    end tell
+  end tell
+end run

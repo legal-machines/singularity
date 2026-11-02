@@ -1,0 +1,70 @@
+{
+  "domain": "Organisation",
+  "methods": [
+    {
+      "name": "organisation.get",
+      "policy": "worker",
+      "params": {},
+      "result": "OrganisationView",
+      "_order": 223
+    },
+    {
+      "name": "organisation.setOwnOffice",
+      "policy": "worker",
+      "params": {
+        "position": "string | undefined",
+        "practice": "string | undefined"
+      },
+      "result": "OrganisationViewer",
+      "_order": 268
+    },
+    {
+      "name": "organisation.setOwnPhoto",
+      "policy": "worker",
+      "params": {
+        "photo": "string | null"
+      },
+      "result": "OrganisationViewer",
+      "_order": 287
+    },
+    {
+      "name": "organisation.chooseOwnPhoto",
+      "policy": "ui",
+      "result": "OwnPhotoPicture | null",
+      "_order": 288
+    },
+    {
+      "name": "organisation.seatProfiles",
+      "policy": "worker",
+      "params": {},
+      "result": "SeatProfileList",
+      "_order": 302
+    },
+    {
+      "name": "organisation.saveSeatProfile",
+      "policy": "worker",
+      "params": {
+        "seatId": "string",
+        "name": "string",
+        "rank": "string | undefined",
+        "title": "string | undefined",
+        "practice": "string | undefined",
+        "about": "string | undefined",
+        "photo": "string | null | undefined"
+      },
+      "result": "SeatProfile",
+      "_order": 303
+    },
+    {
+      "name": "organisation.setSeatState",
+      "policy": "worker",
+      "params": {
+        "seatId": "string",
+        "state": "string",
+        "password": "string | undefined"
+      },
+      "result": "SeatProfile",
+      "_order": 321
+    }
+  ]
+}

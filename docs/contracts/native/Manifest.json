@@ -1,0 +1,19 @@
+{
+  "apiVersion": 100,
+  "compatibility": {
+    "window.singularity": [
+      "platform",
+      "chooseFolder"
+    ]
+  },
+  "events": [
+    "backend.ready",
+    "matter.changed",
+    "agent.changed",
+    "operation.changed",
+    "office.pairingRequested",
+    "office.reveal",
+    "firmComputers.changed",
+    "account.twoStepSetupRequired"
+  ]
+}

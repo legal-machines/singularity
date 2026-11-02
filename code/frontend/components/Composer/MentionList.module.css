@@ -1,0 +1,95 @@
+/* Whom a message can name (MentionList.jsx): a menu's paper over the box, its
+   rows a face, a name and the member's place in the firm. The row the keys
+   mark wears the hand's grey, as a menu's focused item does. */
+
+.list {
+	position: fixed;
+	z-index: var(--layer-popover);
+	display: flex;
+	flex-direction: column;
+	width: 300px;
+	max-height: min(336px, calc(100vh - 16px));
+	padding: 4px;
+	overflow-y: auto;
+	background: var(--sheet);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-pop);
+	opacity: 0;
+}
+
+.shown {
+	opacity: 1;
+	animation: open var(--duration) var(--ease-out);
+}
+
+@keyframes open {
+	from {
+		opacity: 0;
+		transform: translateY(3px) scale(0.985);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.shown {
+		animation: none;
+	}
+}
+
+.option {
+	display: grid;
+	grid-template-columns: 28px minmax(0, 1fr);
+	align-items: center;
+	column-gap: 10px;
+	min-height: 44px;
+	padding: 6px 8px;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.option_active {
+	background: var(--sheet-hover);
+}
+
+.face {
+	display: inline-flex;
+	width: 28px;
+	height: 28px;
+}
+
+/* "all" has no face of its own: the sign of people, on the hand's grey. */
+.all {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: var(--ink-2);
+	background: var(--sheet-hover);
+	border-radius: 9px;
+}
+
+.option_active .all {
+	background: var(--sheet);
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.name {
+	overflow: hidden;
+	font: var(--type-body-strong);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.line {
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}

@@ -1,0 +1,404 @@
+{
+  "domain": "Agent",
+  "methods": [
+    {
+      "name": "agent.list",
+      "policy": "worker",
+      "params": {
+        "projectId": "string | undefined"
+      },
+      "result": "AgentListResult",
+      "_order": 177
+    },
+    {
+      "name": "agent.get",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentDetail",
+      "_order": 178
+    },
+    {
+      "name": "agent.getRun",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "runId": "string"
+      },
+      "result": "AgentRunDetail",
+      "_order": 179
+    },
+    {
+      "name": "agent.create",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "name": "string",
+        "goal": "string | undefined",
+        "sourceRoot": "string",
+        "trigger": "string",
+        "dailyTime": "string | undefined",
+        "modelPolicy": "string",
+        "kind": "string | undefined",
+        "mode": "string | undefined",
+        "weeklyDay": "number | undefined",
+        "followsAgentId": "string | undefined",
+        "character": "string | undefined",
+        "playbookId": "string | undefined",
+        "manner": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 180
+    },
+    {
+      "name": "agent.hire",
+      "policy": "worker",
+      "params": {
+        "name": "string",
+        "character": "string | undefined",
+        "title": "string | undefined",
+        "ranksWith": "string | undefined",
+        "practice": "string | undefined",
+        "area": "string | undefined",
+        "answersTo": "string | undefined",
+        "manner": "string | undefined",
+        "goal": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 284
+    },
+    {
+      "name": "agent.approve",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "name": "string",
+        "goal": "string | undefined",
+        "sourceRoot": "string",
+        "trigger": "string",
+        "dailyTime": "string | undefined",
+        "modelPolicy": "string",
+        "agentId": "string",
+        "kind": "string | undefined",
+        "mode": "string | undefined",
+        "weeklyDay": "number | undefined",
+        "followsAgentId": "string | undefined",
+        "character": "string | undefined",
+        "playbookId": "string | undefined",
+        "manner": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 181
+    },
+    {
+      "name": "agent.decline",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 182
+    },
+    {
+      "name": "agent.pause",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 183
+    },
+    {
+      "name": "agent.setModel",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 295
+    },
+    {
+      "name": "agent.resume",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 184
+    },
+    {
+      "name": "agent.stop",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 185
+    },
+    {
+      "name": "agent.update",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "name": "string",
+        "goal": "string | undefined",
+        "sourceRoot": "string",
+        "trigger": "string",
+        "dailyTime": "string | undefined",
+        "modelPolicy": "string",
+        "agentId": "string",
+        "expectedRevision": "number",
+        "kind": "string | undefined",
+        "mode": "string | undefined",
+        "weeklyDay": "number | undefined",
+        "followsAgentId": "string | undefined",
+        "character": "string | undefined",
+        "playbookId": "string | undefined",
+        "manner": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 186
+    },
+    {
+      "name": "agent.setOffice",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "title": "string | undefined",
+        "ranksWith": "string | undefined",
+        "practice": "string | undefined",
+        "area": "string | undefined",
+        "answersTo": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 267
+    },
+    {
+      "name": "agent.run",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 187
+    },
+    {
+      "name": "agent.cancelRun",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 188
+    },
+    {
+      "name": "agent.markReviewed",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "runId": "string"
+      },
+      "result": "AgentSummary",
+      "_order": 189
+    },
+    {
+      "name": "agent.previewSetup",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "modelPolicy": "string"
+      },
+      "result": "AgentSetupPreview",
+      "_order": 190
+    },
+    {
+      "name": "agent.chooseFolder",
+      "policy": "ui",
+      "params": {
+        "projectId": "string",
+        "startPath": "string | undefined"
+      },
+      "result": "AgentFolderChoice | null",
+      "_order": 191
+    },
+    {
+      "name": "agent.openFile",
+      "policy": "ui",
+      "params": {
+        "agentId": "string",
+        "relativePath": "string"
+      },
+      "result": "boolean",
+      "_order": 192
+    },
+    {
+      "name": "agent.revealFile",
+      "policy": "ui",
+      "params": {
+        "agentId": "string",
+        "relativePath": "string"
+      },
+      "result": "boolean",
+      "_order": 193
+    },
+    {
+      "name": "agent.listAiApps",
+      "policy": "worker",
+      "params": {},
+      "result": "AiAppList",
+      "_order": 194
+    },
+    {
+      "name": "agent.connectAiApp",
+      "policy": "worker",
+      "params": {
+        "label": "string",
+        "projectIds": "string[]",
+        "mayPauseAgents": "boolean | undefined"
+      },
+      "result": "AiAppSetup",
+      "_order": 195
+    },
+    {
+      "name": "agent.renewAiAppKey",
+      "policy": "worker",
+      "params": {
+        "aiAppId": "string"
+      },
+      "result": "AiAppSetup",
+      "_order": 196
+    },
+    {
+      "name": "agent.disconnectAiApp",
+      "policy": "worker",
+      "params": {
+        "aiAppId": "string"
+      },
+      "result": "AiAppDisconnected",
+      "_order": 197
+    },
+    {
+      "name": "agent.assign",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "instruction": "string"
+      },
+      "result": "AgentAssignment",
+      "_order": 201
+    },
+    {
+      "name": "agent.withdrawAssignment",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "assignmentId": "string"
+      },
+      "result": "AgentAssignment",
+      "_order": 202
+    },
+    {
+      "name": "agent.roles",
+      "policy": "worker",
+      "params": {},
+      "result": "AgentRoleListResult",
+      "_order": 222
+    },
+    {
+      "name": "agent.memory",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "ColleagueMemory",
+      "_order": 285
+    },
+    {
+      "name": "agent.forgetMemory",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "noteId": "string"
+      },
+      "result": "ColleagueMemory",
+      "_order": 286
+    },
+    {
+      "name": "agent.firmColleagues",
+      "policy": "worker",
+      "params": {},
+      "result": "FirmColleagueList",
+      "_order": 299
+    },
+    {
+      "name": "agent.setMemoryModel",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined",
+        "off": "boolean | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 314
+    },
+    {
+      "name": "agent.edit",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "name": "string",
+        "character": "string | undefined",
+        "title": "string | undefined",
+        "ranksWith": "string | undefined",
+        "practice": "string | undefined",
+        "area": "string | undefined",
+        "answersTo": "string | undefined",
+        "manner": "string | undefined",
+        "goal": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 318
+    },
+    {
+      "name": "agent.requestEdit",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "name": "string",
+        "character": "string | undefined",
+        "title": "string | undefined",
+        "ranksWith": "string | undefined",
+        "practice": "string | undefined",
+        "area": "string | undefined",
+        "answersTo": "string | undefined",
+        "manner": "string | undefined",
+        "goal": "string | undefined"
+      },
+      "result": "AgentSummary",
+      "_order": 337
+    },
+    {
+      "name": "agent.archive",
+      "policy": "worker",
+      "params": {
+        "agentId": "string",
+        "archived": "boolean"
+      },
+      "result": "AgentSummary",
+      "_order": 319
+    },
+    {
+      "name": "agent.delete",
+      "policy": "worker",
+      "params": {
+        "agentId": "string"
+      },
+      "result": "ColleagueDeleted",
+      "_order": 320
+    }
+  ]
+}

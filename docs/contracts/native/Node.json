@@ -1,0 +1,86 @@
+{
+  "domain": "Node",
+  "methods": [
+    {
+      "name": "workspace.list",
+      "policy": "worker",
+      "result": "WorkspaceListResult",
+      "_order": 11
+    },
+    {
+      "name": "workspace.choose",
+      "policy": "ui",
+      "result": "WorkspaceListResult",
+      "_order": 12
+    },
+    {
+      "name": "workspace.remove",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": "WorkspaceListResult",
+      "_order": 13
+    },
+    {
+      "name": "workspace.setActive",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": "WorkspaceListResult",
+      "_order": 14
+    },
+    {
+      "name": "workspace.relocate",
+      "policy": "ui",
+      "params": {
+        "id": "string"
+      },
+      "result": "WorkspaceListResult",
+      "_order": 15
+    },
+    {
+      "name": "node.getSummary",
+      "policy": "worker",
+      "result": "NodeDeviceSummary",
+      "_order": 24
+    },
+    {
+      "name": "node.releaseReclaimableMemory",
+      "policy": "worker",
+      "result": "NodeDeviceSummary",
+      "_order": 62
+    },
+    {
+      "name": "node.checkLegalMachinesConnection",
+      "policy": "worker",
+      "result": "LegalMachinesConnection",
+      "_order": 164
+    },
+    {
+      "name": "update.status",
+      "policy": "worker",
+      "result": "UpdateStatus",
+      "_order": 330
+    },
+    {
+      "name": "update.check",
+      "policy": "worker",
+      "result": "UpdateStatus",
+      "_order": 331
+    },
+    {
+      "name": "update.download",
+      "policy": "worker",
+      "result": "UpdateStatus",
+      "_order": 332
+    },
+    {
+      "name": "update.show",
+      "policy": "ui",
+      "result": "UpdateStatus",
+      "_order": 333
+    }
+  ]
+}

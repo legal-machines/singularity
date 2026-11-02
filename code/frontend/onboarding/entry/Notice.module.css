@@ -1,0 +1,118 @@
+/* A notice stands over the entry, centred under the window's buttons (their
+   strip is 54 points high on macOS), so the page under it never moves. It
+   takes no press: everything under it stays usable. */
+.notices {
+	position: absolute;
+	top: 62px;
+	left: 50%;
+	z-index: 5;
+	width: max-content;
+	max-width: calc(100% - 96px);
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+/* Soft colours, each 4.5:1 and more against its white words (the owner,
+   2026-10-30: "a softer colour"): sage when it went as asked, the brick of
+   Legal Machines when it went wrong, ink for what to mind. */
+.notice {
+	--notice-ground: #3a8060;
+	position: relative;
+	isolation: isolate;
+	min-height: 40px;
+	margin: 0;
+	padding: 11px 18px;
+	color: #ffffff;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 18px;
+	letter-spacing: -0.003em;
+	text-align: center;
+	text-wrap: balance;
+	filter: drop-shadow(0 6px 14px rgb(16 16 13 / 0.1)) drop-shadow(0 1px 2px rgb(16 16 13 / 0.08));
+	will-change: transform, opacity;
+	/* It comes down into place on a critically damped spring (0.38 s
+	   response, no overshoot, as Apple's UI springs) and shows quickly; a
+	   browser without linear() eases it out instead. */
+	animation: notice-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) both, notice-show 180ms ease-out both;
+	animation-timing-function: linear(0, 0.044, 0.1425, 0.2613, 0.3812, 0.4922, 0.5897, 0.6726, 0.7413, 0.7973, 0.8422, 0.878, 0.9061, 0.928, 0.9451, 0.9582, 0.9683, 0.976, 0.9819, 0.9864, 0.9898, 0.9923, 0.9943, 0.9957, 0.9968, 0.9976, 0.9982, 0.9987, 1), ease-out;
+}
+
+.notice[data-tone="problem"] {
+	--notice-ground: #ae493f;
+}
+
+.notice[data-tone="warning"] {
+	--notice-ground: #33332f;
+}
+
+.ground {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: -1;
+	overflow: visible;
+}
+
+.ground path {
+	fill: var(--notice-ground);
+}
+
+.text {
+	position: relative;
+}
+
+/* It goes back up the way it came, quicker than it came: 220ms, as
+   LEAVE_MS in Notice.jsx. */
+.notice[data-leaving] {
+	animation: notice-depart 220ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes notice-arrive {
+	from {
+		transform: translateY(-10px) scale(0.96);
+	}
+	to {
+		transform: none;
+	}
+}
+
+@keyframes notice-show {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes notice-depart {
+	from {
+		opacity: 1;
+		transform: none;
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-6px) scale(0.98);
+	}
+}
+
+@keyframes notice-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+/* With less motion asked for, it only fades in and out. */
+@media (prefers-reduced-motion: reduce) {
+	.notice {
+		animation: notice-show 160ms ease-out both;
+	}
+
+	.notice[data-leaving] {
+		animation: notice-fade-out 160ms ease-in both;
+	}
+}

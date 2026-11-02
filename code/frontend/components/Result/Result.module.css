@@ -1,0 +1,45 @@
+/* A result (Result.jsx): its files one under another, and what was not
+   checked in the ink of what is still due. */
+
+.result {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.files {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.unchecked {
+	font: 400 13.5px/19px var(--font-sans);
+	color: var(--time-ink);
+}
+
+/* A question's answers: buttons for those asked, quiet pills for the one who
+   asked, and the answer once given. */
+.answers {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.offered {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 12px;
+}
+
+.offered_option {
+	padding: 4px 12px;
+	font: 500 13px/18px var(--font-sans);
+	color: var(--ink-2);
+	border-radius: 14px;
+	box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+

@@ -1,0 +1,23 @@
+llama.cpp and Legal Machines Adaptive MoE runtime extension
+
+The packaged local generative runtime is built from the official MIT-licensed
+llama.cpp b10516 source archive (upstream tag commit b95502b).
+
+The initial Metal routed-expert interception and compact shared-buffer pool in
+the Legal Machines patch derive from the MIT-licensed experimental llama.cpp
+fork at https://github.com/kisasexypantera94/llama.cpp.git, commits
+d1607595e47381d889c28cace0386b31a1c3cb89 through
+5e9ddf13f59e3a98e34536df071fde6c5971d431. Legal Machines rebased that work
+onto b10516, fixed correctness and load-boundary defects, and added structural
+inspection, safety planning, deterministic LRU, telemetry, phase accounting,
+elastic cache control, lifecycle handling and product integration.
+
+The later CPU/Metal heterogeneous provider, ggml CPU orchestration hook,
+assignment scheduler integration, internal numerical verifier, exact timing and
+routed-work telemetry are independent Legal Machines implementations. Related
+public papers, repositories, discussions and pull requests were used as research
+input only; no source from them was copied into this extension.
+
+The MIT License in this directory applies to the covered upstream llama.cpp
+and derived runtime-extension material. Legal Machines product code outside
+that covered material retains its own licensing terms.

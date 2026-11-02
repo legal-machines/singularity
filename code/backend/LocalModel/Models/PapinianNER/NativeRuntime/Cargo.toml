@@ -1,0 +1,15 @@
+[package]
+name = "singularity_gliner2_bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+# Vendored from the exact upstream commit below so the shipped macOS runtime
+# can select only providers that are actually present in the pinned bundle.
+# See vendor/gliner2_inference/SINGULARITY_PATCH.md.
+gliner2_inference = { path = "vendor/gliner2_inference" }
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }

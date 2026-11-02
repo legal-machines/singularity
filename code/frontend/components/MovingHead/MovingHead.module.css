@@ -1,0 +1,83 @@
+/* The travelling head (MovingHead.jsx): a layer over the page and its band;
+   each part sits at its top left and is placed by its transform alone. */
+
+.layer {
+	position: absolute;
+	inset: 0;
+	z-index: var(--layer-caption);
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.title,
+.part {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	pointer-events: auto;
+	app-region: no-drag;
+	-webkit-app-region: no-drag;
+}
+
+/* The page's title, on one line, in the type of the title it stands for
+   (MovingHead sets it frame by frame); docked in the band, a press on it
+   brings the page back to its top. */
+.title {
+	max-width: calc(var(--column) - 32px);
+	font: 400 26px/33px var(--font-sans);
+	letter-spacing: var(--track-display);
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.title_button {
+	display: block;
+	overflow: hidden;
+	max-width: 100%;
+	font: inherit;
+	letter-spacing: inherit;
+	color: var(--ink);
+	text-align: left;
+	text-overflow: ellipsis;
+	cursor: default;
+}
+
+.layer[data-docked] .title_button {
+	cursor: pointer;
+}
+
+/* A title that can be renamed reads as text to edit at rest. */
+.layer:not([data-docked]) .title_button[data-renames] {
+	cursor: text;
+}
+
+/* The title as a field, in the title's own type and place: only the caret
+   and the selection say it is being edited. */
+.title_field {
+	display: block;
+	width: calc(var(--column) - 32px);
+	padding: 0;
+	font: inherit;
+	letter-spacing: inherit;
+	color: var(--ink);
+	background: transparent;
+	border: none;
+	outline: none;
+}
+
+.title_field::placeholder {
+	color: var(--ink-4);
+}
+
+/* A text field is always "focus-visible": no ring round the name. */
+.title_field:focus-visible {
+	outline: none;
+}
+
+/* The buttons a member's page carries into the band, in their row. */
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}

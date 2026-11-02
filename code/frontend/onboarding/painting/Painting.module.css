@@ -1,0 +1,121 @@
+/* The living painting of the site (sites/public, Hero/painting), recomposed
+   for this half: its frame, its still poster under the live canvas and its
+   motion settings. */
+
+/* The public site's exact mark and Inter 600 wordmark, reversed over art. */
+@font-face {
+	font-family: "Inter Brand";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("../fonts/inter-600-latin.woff2") format("woff2");
+}
+
+.art {
+	--art-inset: 20px;
+	position: relative;
+	overflow: hidden;
+	height: 100%;
+	margin: 0;
+}
+
+.poster,
+.live {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: right center;
+}
+
+.live {
+	opacity: 0;
+	--painting-fps: 60;
+	--painting-fps-phone: 30;
+	--painting-density: 2;
+	--painting-pixel-cap: 3200;
+	--painting-pointer-response: 180ms;
+	--painting-pointer-return: 450ms;
+}
+
+.live[data-ready] {
+	opacity: 1;
+}
+
+.live:focus-visible {
+	outline: 3px solid #ae493f;
+	outline-offset: -3px;
+}
+
+.brand {
+	position: absolute;
+	top: var(--art-inset);
+	right: var(--art-inset);
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	color: #eae8e4;
+	font-family: "Inter Brand", Arial, sans-serif;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.014em;
+	white-space: nowrap;
+	text-shadow: 0 0 2px #10100d, 0 0 10px rgb(16 16 13 / 0.75), 0 0 24px rgb(16 16 13 / 0.55);
+	pointer-events: none;
+}
+
+/* Where the page carries the window's caption (Windows), its buttons stand at
+   the top right, where macOS has nothing: the mark takes the painting's top
+   left corner instead. The mark, the buttons (Onboarding.module.css) and the
+   credit keep one distance, --art-inset, from the painting's edges (the
+   owner, 2026-10-31). */
+:global([data-caption="page"]) .brand {
+	left: var(--art-inset);
+	right: auto;
+}
+
+/* The credit's last line ends at its letters' baseline, so they stand that
+   same distance above the bottom edge. */
+:global([data-caption="page"]) .piece {
+	text-box: trim-end text alphabetic;
+}
+
+.brand img {
+	display: block;
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+}
+
+
+/* The credit, as on the site: two lines in the corner, in paper over the
+   painting, lifted from it by the mark's own soft shadow: a close 2px edge
+   that keeps the letters sharp at 100% and 110% on Windows, and a glow that
+   keeps them readable where the painting's papers are light behind them (the
+   owner, 2026-11-01; tried over the papers against three lighter ones). */
+.label {
+	position: absolute;
+	right: var(--art-inset);
+	bottom: var(--art-inset);
+	display: grid;
+	gap: 2px;
+	justify-items: end;
+	margin: 0;
+	text-align: right;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1.45;
+	color: #eae8e4;
+	text-shadow: 0 0 2px #10100d, 0 0 10px rgb(16 16 13 / 0.75), 0 0 24px rgb(16 16 13 / 0.55);
+	pointer-events: none;
+}
+
+.artist {
+	font-weight: 600;
+}
+
+.piece {
+	font-style: normal;
+}

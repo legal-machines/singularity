@@ -1,0 +1,124 @@
+{
+  "domain": "Office",
+  "methods": [
+    {
+      "name": "office.getStatus",
+      "policy": "worker",
+      "params": {},
+      "result": "OfficeStatus",
+      "_order": 244
+    },
+    {
+      "name": "office.connect",
+      "policy": "worker",
+      "params": {},
+      "result": "OfficeStatus",
+      "_order": 245
+    },
+    {
+      "name": "office.openApp",
+      "policy": "worker",
+      "params": {
+        "app": "string"
+      },
+      "result": "OfficeAppOpened",
+      "_order": 296
+    },
+    {
+      "name": "office.disconnect",
+      "policy": "worker",
+      "params": {},
+      "result": "OfficeStatus",
+      "_order": 246
+    },
+    {
+      "name": "office.describeFile",
+      "policy": "worker",
+      "params": {
+        "location": "string | undefined"
+      },
+      "result": "OfficeFile",
+      "_order": 247
+    },
+    {
+      "name": "office.fileIntoMatter",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "name": "string",
+        "base64": "string"
+      },
+      "result": "OfficeFiled",
+      "_order": 248
+    },
+    {
+      "name": "office.documentContent",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "OfficeDocumentContent",
+      "_order": 249
+    },
+    {
+      "name": "office.listClients",
+      "policy": "worker",
+      "params": {},
+      "result": "OfficeClients",
+      "_order": 250
+    },
+    {
+      "name": "office.decidePairing",
+      "policy": "worker",
+      "params": {
+        "pairingId": "string",
+        "allow": "boolean"
+      },
+      "result": "OfficePairingDecision",
+      "_order": 251
+    },
+    {
+      "name": "office.removeClient",
+      "policy": "worker",
+      "params": {
+        "clientId": "string"
+      },
+      "result": "OfficeClientRemoval",
+      "_order": 252
+    },
+    {
+      "name": "office.openDocument",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "OfficeOpened",
+      "_order": 253
+    },
+    {
+      "name": "office.reveal",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string",
+        "section": "string | undefined",
+        "heading": "string | undefined",
+        "quote": "string | undefined"
+      },
+      "result": "OfficeReveal",
+      "_order": 254
+    },
+    {
+      "name": "office.emailDraft",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "documentId": "string"
+      },
+      "result": "OfficeEmailDraft",
+      "_order": 263
+    }
+  ]
+}

@@ -1,0 +1,694 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "marlowe-finch-human-team-profiles",
+  "mock": true,
+  "fictional": true,
+  "profiles": [
+    {
+      "id": "lena-ortiz",
+      "name": "Lena Ortiz",
+      "initials": "LO",
+      "age": 26,
+      "pronouns": "she/her",
+      "kind": "person",
+      "photo": "mock/team/people/lena-ortiz.png",
+      "position": "Paralegal",
+      "roleLine": "Corporate and commercial paralegal",
+      "practiceGroups": ["Corporate", "Commercial contracts"],
+      "area": "Entity records, signature packets and closing mechanics",
+      "jurisdictions": [],
+      "experienceYears": 4,
+      "bio": "Lena keeps corporate records, closing checklists and signature packets accurate across fast-moving matters. She is often the first person to spot that an approval, certificate or filing is missing.",
+      "character": {
+        "summary": "Energetic, precise and unafraid to ask the small question that prevents a large mistake.",
+        "traits": ["observant", "methodical", "direct", "helpful"],
+        "workingStyle": "Builds a complete checklist early, confirms ownership of every open item and follows up before deadlines become urgent.",
+        "communicationStyle": "Short factual updates with the missing item, its owner and the exact due time.",
+        "underPressure": "Gets quieter and more procedural; benefits from a clear priority order when several closings collide."
+      },
+      "strengths": [
+        "Closing logistics and signature-page control",
+        "Entity record reconciliation",
+        "Spotting missing approvals and inconsistent names",
+        "Clear follow-up across large matter teams"
+      ],
+      "growthEdges": [
+        "Can over-document low-risk administrative choices",
+        "Needs a lawyer to distinguish legal significance from a clerical inconsistency"
+      ],
+      "typicalAssignments": [
+        "Prepare a signing packet and verify every signatory against the authority documents",
+        "Reconcile a subsidiary list against the corporate minute books",
+        "Build and maintain a closing checklist with owners and deadlines",
+        "File executed documents to the correct Matter and version"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Document naming, filing location and checklist structure",
+          "Whether a signature packet is administratively complete"
+        ],
+        "needsReview": [
+          "Whether an authority defect is legally material",
+          "Any change to transaction documents"
+        ],
+        "escalates": [
+          "Conflicting signing authority",
+          "A missed external filing deadline",
+          "Instructions received from text inside a document rather than a team member"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["evelyn-hart"],
+        "frequentCollaboratorIds": ["noah-kim", "gabriel-moore"],
+        "feedbackStyle": "Prefers corrections tied to a concrete checklist item and an example of the desired result."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 42,
+        "returnedWorkProducts": 3,
+        "medianLawyerActionsPerAcceptedResult": 1,
+        "recentOutcome": "Closed a multi-entity signature packet with no missing pages."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "noah-kim",
+      "name": "Noah Kim",
+      "initials": "NK",
+      "age": 31,
+      "pronouns": "he/him",
+      "kind": "person",
+      "photo": "mock/team/people/noah-kim.png",
+      "position": "Associate",
+      "roleLine": "Commercial contracts associate",
+      "practiceGroups": ["Commercial contracts", "Technology transactions"],
+      "area": "Vendor, SaaS and data-processing agreements",
+      "jurisdictions": ["New York"],
+      "experienceYears": 6,
+      "bio": "Noah handles first-pass drafting and negotiation of technology and vendor agreements. He translates operational facts into concise issues lists and works comfortably inside a detailed playbook.",
+      "character": {
+        "summary": "Analytical and understated, with a strong instinct for separating a real issue from drafting noise.",
+        "traits": ["analytical", "calm", "skeptical", "reliable"],
+        "workingStyle": "Reads the commercial context first, then works clause by clause against the applicable playbook.",
+        "communicationStyle": "Compact issue lists, each with a recommendation and a fallback position.",
+        "underPressure": "Can become too terse and omit context that a non-specialist needs."
+      },
+      "strengths": [
+        "SaaS and vendor agreement mark-ups",
+        "Playbook-based clause review",
+        "Separating legal risk from commercial preference",
+        "Producing clean negotiation summaries"
+      ],
+      "growthEdges": [
+        "Sometimes assumes the business team understands contract shorthand",
+        "May spend too long perfecting language after the position is already clear"
+      ],
+      "typicalAssignments": [
+        "Review an enterprise SaaS agreement against the procurement playbook",
+        "Draft a data-processing addendum from approved positions",
+        "Prepare a one-page deviation report for business owners",
+        "Turn a negotiation thread into a clean revised draft"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Language within approved fallback positions",
+          "Which playbook precedent best fits the transaction"
+        ],
+        "needsReview": [
+          "Unlimited liability or non-standard indemnities",
+          "Material departures from the approved data terms"
+        ],
+        "escalates": [
+          "A counterparty asks for rights inconsistent with the client objective",
+          "The governing facts are incomplete or contradictory"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["amina-okafor"],
+        "frequentCollaboratorIds": ["lena-ortiz", "gabriel-moore"],
+        "feedbackStyle": "Responds best to a reasoned alternative, not a bare instruction to rewrite."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 67,
+        "returnedWorkProducts": 7,
+        "medianLawyerActionsPerAcceptedResult": 2,
+        "recentOutcome": "Delivered a vendor agreement mark-up with three evidence-backed deviations."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "evelyn-hart",
+      "name": "Evelyn Hart",
+      "initials": "EH",
+      "age": 38,
+      "pronouns": "she/her",
+      "kind": "person",
+      "photo": "mock/team/people/evelyn-hart.png",
+      "position": "Senior associate",
+      "roleLine": "Employment and investigations senior associate",
+      "practiceGroups": ["Employment", "Internal investigations"],
+      "area": "Workplace investigations and sensitive personnel matters",
+      "jurisdictions": ["District of Columbia", "Maryland"],
+      "experienceYears": 12,
+      "bio": "Evelyn runs workplace investigations from intake through a supported findings memorandum. She is careful with privilege, witness sequencing and the difference between an allegation and an established fact.",
+      "character": {
+        "summary": "Composed, humane and exacting about the factual record.",
+        "traits": ["empathetic", "disciplined", "probing", "fair-minded"],
+        "workingStyle": "Builds a chronology, identifies factual conflicts and plans interviews around evidence rather than hierarchy.",
+        "communicationStyle": "Uses plain language and makes uncertainty explicit without becoming vague.",
+        "underPressure": "Protects the process well but may carry too much work herself when confidentiality is tight."
+      },
+      "strengths": [
+        "Interview planning and witness sequencing",
+        "Credibility analysis grounded in evidence",
+        "Privilege and need-to-know discipline",
+        "Writing balanced findings memoranda"
+      ],
+      "growthEdges": [
+        "Can delay delegation on highly sensitive matters",
+        "Needs an explicit stopping rule when additional interviews add little value"
+      ],
+      "typicalAssignments": [
+        "Turn an intake report into an investigation plan",
+        "Build a sourced chronology from interviews and documents",
+        "Prepare witness outlines and identify corroborating evidence",
+        "Draft a findings memorandum that separates facts, credibility and legal analysis"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Interview order and evidence collection within an approved plan",
+          "Whether the record supports a factual finding"
+        ],
+        "needsReview": [
+          "Disciplinary recommendations",
+          "Waiver or disclosure of privileged material"
+        ],
+        "escalates": [
+          "Threats to witness safety",
+          "Evidence of ongoing retaliation",
+          "A conflict involving firm leadership"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["priya-raman"],
+        "frequentCollaboratorIds": ["lena-ortiz", "margaret-chen"],
+        "feedbackStyle": "Gives specific edits, then explains how the change improves fairness or evidentiary support."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 81,
+        "returnedWorkProducts": 5,
+        "medianLawyerActionsPerAcceptedResult": 2,
+        "recentOutcome": "Completed a findings memorandum with every material statement linked to evidence."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "amina-okafor",
+      "name": "Amina Okafor",
+      "initials": "AO",
+      "age": 45,
+      "pronouns": "she/her",
+      "kind": "person",
+      "photo": "mock/team/people/amina-okafor.png",
+      "position": "Counsel",
+      "roleLine": "Privacy and cybersecurity counsel",
+      "practiceGroups": ["Privacy", "Cybersecurity", "Technology transactions"],
+      "area": "Incident response, data governance and privacy terms",
+      "jurisdictions": ["New York", "California"],
+      "experienceYears": 19,
+      "bio": "Amina leads privacy reviews and incident-response legal work. She is strongest when technical facts are incomplete and the team needs a defensible next decision rather than false certainty.",
+      "character": {
+        "summary": "Decisive, practical and unusually good at making technical uncertainty legible.",
+        "traits": ["decisive", "pragmatic", "curious", "protective"],
+        "workingStyle": "Frames each problem as facts known, facts missing, legal clocks and reversible next actions.",
+        "communicationStyle": "Direct recommendations with assumptions stated in the first paragraph.",
+        "underPressure": "Moves quickly and may sound abrupt when a reporting deadline is running."
+      },
+      "strengths": [
+        "Breach-response triage and notification analysis",
+        "Translating technical findings for legal decision-makers",
+        "Privacy terms and data-processing addenda",
+        "Designing proportionate fact-gathering plans"
+      ],
+      "growthEdges": [
+        "Can under-explain a rapid decision to colleagues outside the practice",
+        "Needs operational owners to confirm feasibility before promising remediation"
+      ],
+      "typicalAssignments": [
+        "Assess whether an incident triggers contractual or statutory notice",
+        "Prepare a cross-jurisdiction notification matrix",
+        "Review security and privacy provisions in a strategic vendor agreement",
+        "Set the legal workstream and evidence requests for incident response"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "The legal fact set required for a privacy assessment",
+          "Positions within the approved privacy playbook"
+        ],
+        "needsReview": [
+          "External notification where facts remain disputed",
+          "Public statements about an incident"
+        ],
+        "escalates": [
+          "A legal notification clock may expire",
+          "Client instructions conflict across jurisdictions",
+          "A requested disclosure could expose another client's information"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["margaret-chen"],
+        "frequentCollaboratorIds": ["noah-kim", "omar-haddad"],
+        "feedbackStyle": "Prefers a draft recommendation plus a short list of assumptions that would change it."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 104,
+        "returnedWorkProducts": 8,
+        "medianLawyerActionsPerAcceptedResult": 2,
+        "recentOutcome": "Delivered a notification analysis before the shortest applicable deadline."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "gabriel-moore",
+      "name": "Gabriel Moore",
+      "initials": "GM",
+      "age": 52,
+      "pronouns": "he/him",
+      "kind": "person",
+      "photo": "mock/team/people/gabriel-moore.png",
+      "position": "Partner",
+      "roleLine": "Corporate and M&A partner",
+      "practiceGroups": ["Corporate", "Mergers and acquisitions"],
+      "area": "Middle-market acquisitions and strategic investments",
+      "jurisdictions": ["Delaware", "New York"],
+      "experienceYears": 27,
+      "bio": "Gabriel leads acquisitions and strategic investments, keeping the legal structure tied to the client's commercial objective. He expects concise escalation and gives teams broad room inside a clear deal strategy.",
+      "character": {
+        "summary": "Commercial, steady and comfortable making decisions with an incomplete but well-framed record.",
+        "traits": ["strategic", "decisive", "delegating", "even-tempered"],
+        "workingStyle": "Sets the outcome and boundaries early, then asks the team to surface only decisions that change value, risk or timing.",
+        "communicationStyle": "Brief questions, clear decisions and a strong preference for a one-page recommendation.",
+        "underPressure": "May compress discussion too quickly when deal momentum is high."
+      },
+      "strengths": [
+        "Deal structure and negotiation strategy",
+        "Prioritising diligence findings by commercial consequence",
+        "Delegating outcomes rather than steps",
+        "Keeping large teams aligned without excessive meetings"
+      ],
+      "growthEdges": [
+        "Can move past minority concerns before the record is complete",
+        "Needs reminders when a compressed timeline creates team fatigue"
+      ],
+      "typicalAssignments": [
+        "Set the negotiation strategy for a stock purchase agreement",
+        "Decide which diligence findings change price, structure or closing conditions",
+        "Lead a board update on transaction risk",
+        "Resolve a cross-workstream issue between tax, employment and privacy"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Negotiation positions within the client's stated objectives",
+          "Matter staffing and sequencing within the agreed budget"
+        ],
+        "needsReview": [
+          "Irreversible external commitments designated for two keys",
+          "Firm-risk decisions outside the Matter"
+        ],
+        "escalates": [
+          "The client's objectives conflict with law or professional duties",
+          "A decision belongs to the client rather than the firm"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": [],
+        "frequentCollaboratorIds": ["lena-ortiz", "noah-kim", "thomas-bennett"],
+        "feedbackStyle": "Asks for the recommendation first, then tests the facts and downside behind it."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 136,
+        "returnedWorkProducts": 9,
+        "medianLawyerActionsPerAcceptedResult": 1,
+        "recentOutcome": "Closed a strategic acquisition with four open issues resolved before signing."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "priya-raman",
+      "name": "Priya Raman",
+      "initials": "PR",
+      "age": 57,
+      "pronouns": "she/her",
+      "kind": "person",
+      "photo": "mock/team/people/priya-raman.png",
+      "position": "Partner",
+      "roleLine": "Litigation and disputes partner",
+      "practiceGroups": ["Commercial litigation", "Appellate"],
+      "area": "High-stakes commercial disputes and case strategy",
+      "jurisdictions": ["New York", "United States Court of Appeals for the Second Circuit"],
+      "experienceYears": 32,
+      "bio": "Priya leads complex commercial disputes and appellate strategy. She insists that every argument be traceable to the record and that the team distinguish a persuasive story from a provable one.",
+      "character": {
+        "summary": "Incisive, demanding and deeply protective of the quality of the record.",
+        "traits": ["incisive", "disciplined", "competitive", "fair"],
+        "workingStyle": "Starts with burdens, remedies and the decisive factual dispute, then organizes work around what can actually be proved.",
+        "communicationStyle": "Socratic in review; precise and concise when a decision is due.",
+        "underPressure": "Raises the quality bar further and can create a bottleneck if review ownership is not explicit."
+      },
+      "strengths": [
+        "Case theory and dispositive-motion strategy",
+        "Record-based argument",
+        "Cross-examination planning",
+        "Turning a large factual record into a clear decision tree"
+      ],
+      "growthEdges": [
+        "Can over-review mature work instead of accepting a sound version",
+        "Needs to make delegation boundaries explicit for junior team members"
+      ],
+      "typicalAssignments": [
+        "Choose the theory for a motion to dismiss or summary judgment",
+        "Review a draft brief against the record and governing authority",
+        "Prepare a witness strategy and contradiction map",
+        "Advise the client on settlement posture and litigation downside"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Litigation tactics within the client's objectives",
+          "Briefing structure and argument order"
+        ],
+        "needsReview": [
+          "Settlement authority reserved to the client",
+          "Public statements about pending litigation"
+        ],
+        "escalates": [
+          "A filing position lacks evidentiary support",
+          "A client objective changes the relief sought",
+          "A conflict or candor issue arises"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["margaret-chen"],
+        "frequentCollaboratorIds": ["evelyn-hart", "raymond-brooks"],
+        "feedbackStyle": "Tests the governing proposition, the record cite and the consequence if the court disagrees."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 158,
+        "returnedWorkProducts": 14,
+        "medianLawyerActionsPerAcceptedResult": 2,
+        "recentOutcome": "Accepted a dispositive-motion brief after one focused return on the evidentiary record."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "omar-haddad",
+      "name": "Omar Haddad",
+      "initials": "OH",
+      "age": 61,
+      "pronouns": "he/him",
+      "kind": "person",
+      "photo": "mock/team/people/omar-haddad.png",
+      "position": "Counsel",
+      "roleLine": "Regulatory investigations counsel",
+      "practiceGroups": ["Government investigations", "Regulatory"],
+      "area": "Internal investigations and regulator responses",
+      "jurisdictions": ["District of Columbia", "Virginia"],
+      "experienceYears": 35,
+      "bio": "Omar handles internal investigations and responses to regulators. He is patient with incomplete accounts, careful about overstatement and skilled at finding the one missing document that changes the chronology.",
+      "character": {
+        "summary": "Patient, analytical and difficult to rush into a conclusion the evidence does not support.",
+        "traits": ["patient", "skeptical", "measured", "persistent"],
+        "workingStyle": "Builds the chronology first, identifies gaps and tests each inference against an alternative explanation.",
+        "communicationStyle": "Measured prose that distinguishes fact, inference and unresolved question.",
+        "underPressure": "Maintains accuracy but may be slower to commit when the team needs a provisional view."
+      },
+      "strengths": [
+        "Regulatory response strategy",
+        "Document and chronology analysis",
+        "Fact-versus-inference discipline",
+        "Witness preparation for sensitive interviews"
+      ],
+      "growthEdges": [
+        "Can postpone a provisional recommendation while pursuing completeness",
+        "Needs explicit time boxes on broad document reviews"
+      ],
+      "typicalAssignments": [
+        "Prepare a defensible response to a regulator information request",
+        "Map a document record against witness accounts",
+        "Identify factual gaps before an investigative interview",
+        "Draft a chronology with confidence levels and source links"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Investigation sequencing within an approved scope",
+          "What additional evidence is necessary to support a factual statement"
+        ],
+        "needsReview": [
+          "Admissions or representations made to a regulator",
+          "Disclosure of privileged investigation material"
+        ],
+        "escalates": [
+          "Potential obstruction or document preservation failure",
+          "A response deadline cannot be met accurately",
+          "The investigation scope reaches another client or ethical wall"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": ["raymond-brooks"],
+        "frequentCollaboratorIds": ["amina-okafor", "evelyn-hart"],
+        "feedbackStyle": "Asks the author to label each statement as fact, inference or open question."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 122,
+        "returnedWorkProducts": 6,
+        "medianLawyerActionsPerAcceptedResult": 2,
+        "recentOutcome": "Delivered a regulator response with every factual assertion mapped to a source."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "thomas-bennett",
+      "name": "Thomas Bennett",
+      "initials": "TB",
+      "age": 66,
+      "pronouns": "he/him",
+      "kind": "person",
+      "photo": "mock/team/people/thomas-bennett.png",
+      "position": "Of counsel",
+      "roleLine": "Tax and executive compensation counsel",
+      "practiceGroups": ["Tax", "Executive compensation"],
+      "area": "Transaction tax structure and compensation arrangements",
+      "jurisdictions": ["New York"],
+      "experienceYears": 41,
+      "bio": "Thomas advises on transaction tax structure and executive compensation. He is known for finding hidden dependencies between commercial terms, tax treatment and closing mechanics.",
+      "character": {
+        "summary": "Candid, technically exact and generous with colleagues who arrive prepared.",
+        "traits": ["technical", "candid", "independent", "patient"],
+        "workingStyle": "Draws the structure, tests the assumptions and works from consequences back to drafting.",
+        "communicationStyle": "Plain statements of the rule, the assumption and the consequence if the assumption fails.",
+        "underPressure": "Rejects shortcuts and can appear inflexible when the commercial team wants a quick answer."
+      },
+      "strengths": [
+        "Transaction tax structuring",
+        "Executive compensation arrangements",
+        "Finding dependencies across deal documents",
+        "Explaining technical rules without jargon"
+      ],
+      "growthEdges": [
+        "Can treat a practical compromise as a technical defect",
+        "Needs the commercial objective stated before reviewing drafting"
+      ],
+      "typicalAssignments": [
+        "Review a transaction structure for tax consequences and execution risks",
+        "Draft or revise executive compensation terms",
+        "Identify tax assumptions embedded across closing documents",
+        "Prepare a short options memorandum with consequences and open facts"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Technical analysis and drafting within settled commercial terms",
+          "Whether additional tax facts are required"
+        ],
+        "needsReview": [
+          "Selection among structures with different commercial consequences",
+          "Any client tax election"
+        ],
+        "escalates": [
+          "A structure depends on an unsupported factual assumption",
+          "The commercial terms and tax objective cannot both be achieved"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": [],
+        "frequentCollaboratorIds": ["gabriel-moore", "lena-ortiz"],
+        "feedbackStyle": "Prefers a diagram, stated assumptions and a proposed answer before discussion."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 143,
+        "returnedWorkProducts": 4,
+        "medianLawyerActionsPerAcceptedResult": 1,
+        "recentOutcome": "Resolved a closing-condition conflict by changing the sequence rather than the economics."
+      },
+      "defaultAvailability": {
+        "state": "away",
+        "label": "Away until Oct 27"
+      }
+    },
+    {
+      "id": "margaret-chen",
+      "name": "Margaret Chen",
+      "initials": "MC",
+      "age": 70,
+      "pronouns": "she/her",
+      "kind": "person",
+      "photo": "mock/team/people/margaret-chen.png",
+      "position": "Senior counsel",
+      "roleLine": "Appellate and legal ethics senior counsel",
+      "practiceGroups": ["Appellate", "Legal ethics"],
+      "area": "Appellate review, professional responsibility and difficult judgment calls",
+      "jurisdictions": ["California", "United States Court of Appeals for the Ninth Circuit"],
+      "experienceYears": 45,
+      "bio": "Margaret reviews appellate arguments and advises on professional responsibility. She is the colleague teams seek when a technically available position may still be the wrong one for the client, the court or the firm.",
+      "character": {
+        "summary": "Perceptive, calm and willing to name the uncomfortable issue without theatrics.",
+        "traits": ["perceptive", "principled", "calm", "independent"],
+        "workingStyle": "Reads the governing duty first, then the record, then the proposed action and its irreversible consequences.",
+        "communicationStyle": "Quietly direct; explains the rule and the institutional reason behind it.",
+        "underPressure": "Slows the room down deliberately, which is valuable but can frustrate urgent teams."
+      },
+      "strengths": [
+        "Appellate issue selection",
+        "Professional-responsibility analysis",
+        "Independent second-key review",
+        "Testing persuasive arguments against duties to court and client"
+      ],
+      "growthEdges": [
+        "Can ask for more reflection when a bounded provisional decision would suffice",
+        "May assume younger colleagues will volunteer disagreement"
+      ],
+      "typicalAssignments": [
+        "Review a proposed argument for candor and record support",
+        "Advise on a conflict or withdrawal question",
+        "Serve as the independent second key for an irreversible filing",
+        "Reduce a broad appeal into the issues most likely to change the outcome"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Professional-responsibility advice within her assigned scope",
+          "Whether a proposed argument is supportable on the record"
+        ],
+        "needsReview": [
+          "Firm-wide ethics policy changes",
+          "A client decision to waive a conflict where waiver is legally available"
+        ],
+        "escalates": [
+          "A proposed act would breach a duty to a court or client",
+          "The second key is not independent of the first decision-maker"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": [],
+        "frequentCollaboratorIds": ["priya-raman", "evelyn-hart", "raymond-brooks"],
+        "feedbackStyle": "Asks what duty governs, who owns the decision and what cannot be undone."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 176,
+        "returnedWorkProducts": 5,
+        "medianLawyerActionsPerAcceptedResult": 1,
+        "recentOutcome": "Narrowed an appellate argument to two supported issues and removed an unsupported third."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    },
+    {
+      "id": "raymond-brooks",
+      "name": "Raymond Brooks",
+      "initials": "RB",
+      "age": 74,
+      "pronouns": "he/him",
+      "kind": "person",
+      "photo": "mock/team/people/raymond-brooks.png",
+      "position": "Of counsel",
+      "roleLine": "Public law and professional responsibility counsel",
+      "practiceGroups": ["Public law", "Professional responsibility"],
+      "area": "Government-facing matters, institutional risk and mediation",
+      "jurisdictions": ["District of Columbia", "Maryland"],
+      "experienceYears": 49,
+      "bio": "Raymond advises on government-facing disputes, professional responsibility and institutional risk. He is especially effective when the legal answer is clear but the path to a durable resolution is not.",
+      "character": {
+        "summary": "Measured, humane and authoritative without needing to dominate the conversation.",
+        "traits": ["measured", "diplomatic", "principled", "pragmatic"],
+        "workingStyle": "Identifies who owns each decision, what each side must preserve and where a reversible step can replace confrontation.",
+        "communicationStyle": "Uses short questions to expose the real objective, then summarizes the common ground accurately.",
+        "underPressure": "Can spend too long building consensus when a role already holds the decision."
+      },
+      "strengths": [
+        "Mediation and durable resolution design",
+        "Government-facing strategy",
+        "Institutional and professional-responsibility judgment",
+        "Separating relationship risk from legal risk"
+      ],
+      "growthEdges": [
+        "May seek consensus beyond what the decision structure requires",
+        "Needs a firm deadline where further conversation will not change the options"
+      ],
+      "typicalAssignments": [
+        "Design a response strategy for a government-facing dispute",
+        "Mediate a conflict between two practice groups over client obligations",
+        "Review an irreversible external communication as an independent second key",
+        "Advise on withdrawal, disclosure and institutional-risk questions"
+      ],
+      "decisionProfile": {
+        "decidesAlone": [
+          "Mediation process and sequencing within an agreed remit",
+          "Professional-responsibility advice on an assigned issue"
+        ],
+        "needsReview": [
+          "Firm policy and public institutional commitments",
+          "Client objectives and settlement authority"
+        ],
+        "escalates": [
+          "A proposed compromise would impair another client's rights",
+          "An irreversible act lacks an independent second key",
+          "A decision belongs to the client or the firm's owners"
+        ]
+      },
+      "collaboration": {
+        "mentorIds": [],
+        "frequentCollaboratorIds": ["omar-haddad", "priya-raman", "margaret-chen"],
+        "feedbackStyle": "Begins with the objective, the decision-holder and the consequence each side most needs to avoid."
+      },
+      "recordFixture": {
+        "acceptedWorkProducts": 189,
+        "returnedWorkProducts": 3,
+        "medianLawyerActionsPerAcceptedResult": 1,
+        "recentOutcome": "Resolved a regulator-response dispute without changing the supported factual position."
+      },
+      "defaultAvailability": {
+        "state": "available",
+        "label": "Available"
+      }
+    }
+  ]
+}

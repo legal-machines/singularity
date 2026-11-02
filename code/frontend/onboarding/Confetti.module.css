@@ -1,0 +1,9 @@
+/* Paper covers the entire welcome, including its text and moving files, without taking focus. */
+.confetti {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}

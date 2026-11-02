@@ -1,0 +1,297 @@
+/* The page's ground rules: the window is the desk, type is Roboto in its
+   three voices, focus is always visible, and motion yields to the member's
+   wish for less of it. Tokens are in tokens.css. */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font: var(--type-body);
+	color: var(--ink);
+	background: var(--desk);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	font-feature-settings: "kern" 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+	margin: 0;
+}
+
+/* A heading takes its size and weight from its component, never from the
+   browser: no heading ever shows large and bold before its styles arrive. */
+h1,
+h2,
+h3,
+h4 {
+	font: inherit;
+}
+
+ul,
+ol {
+	padding: 0;
+	list-style: none;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+	letter-spacing: inherit;
+}
+
+button {
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: default;
+}
+
+img,
+svg {
+	display: block;
+}
+
+a {
+	color: inherit;
+}
+
+::selection {
+	background: var(--selection);
+	color: var(--ink);
+}
+
+/* An application, not a web page (components/Window/AppBehaviour.jsx): its
+   own words are not selected, dragged or zoomed. What a member reads as
+   content, a post, a chat or a document, and what a member types are. */
+:root {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-tap-highlight-color: transparent;
+	overscroll-behavior: none;
+	touch-action: pan-x pan-y;
+}
+
+body {
+	overscroll-behavior: none;
+}
+
+img,
+svg {
+	-webkit-user-drag: none;
+}
+
+/* A page's scrolling area marked data-fade-edge dissolves what scrolls under
+   the window's band (the owner, 2026-10-24: "not going under the panel: it
+   dissolves"); one marked "both" also dissolves what goes on under the reply
+   box below it, never cut by a hard edge ("here the chat must not be cut
+   off"). Each fade (tokens.css, --scroll-fade, its shape) is drawn by the
+   scroll itself through a registered length: the top's slides in over the
+   first 64px of scrolling, the bottom's, 40px tall, slides away over the
+   last 40px, so the first and the last of the content stand clear at rest.
+   An area too short to scroll has neither. */
+@property --fade-top {
+	syntax: "<length>";
+	inherits: false;
+	initial-value: 0px;
+}
+
+@property --fade-bottom {
+	syntax: "<length>";
+	inherits: false;
+	initial-value: 0px;
+}
+
+@supports (animation-timeline: scroll()) {
+	[data-fade-edge] {
+		-webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--fade-top) - 64px), rgba(0, 0, 0, 0.35) calc(var(--fade-top) - 36px), #000 var(--fade-top));
+		mask-image: linear-gradient(to bottom, transparent calc(var(--fade-top) - 64px), rgba(0, 0, 0, 0.35) calc(var(--fade-top) - 36px), #000 var(--fade-top));
+		animation: fade-top linear both;
+		animation-timeline: scroll(self);
+		animation-range: 0 64px;
+	}
+
+	[data-fade-edge="both"] {
+		-webkit-mask-image:
+			linear-gradient(to bottom, transparent calc(var(--fade-top) - 64px), rgba(0, 0, 0, 0.35) calc(var(--fade-top) - 36px), #000 var(--fade-top)),
+			linear-gradient(to top, transparent calc(var(--fade-bottom) - 40px), rgba(0, 0, 0, 0.35) calc(var(--fade-bottom) - 22px), #000 var(--fade-bottom));
+		mask-image:
+			linear-gradient(to bottom, transparent calc(var(--fade-top) - 64px), rgba(0, 0, 0, 0.35) calc(var(--fade-top) - 36px), #000 var(--fade-top)),
+			linear-gradient(to top, transparent calc(var(--fade-bottom) - 40px), rgba(0, 0, 0, 0.35) calc(var(--fade-bottom) - 22px), #000 var(--fade-bottom));
+		-webkit-mask-composite: source-in;
+		mask-composite: intersect;
+		animation: fade-top linear both, fade-bottom linear both;
+		animation-timeline: scroll(self), scroll(self);
+		animation-range: 0 64px, calc(100% - 40px) 100%;
+	}
+
+	@keyframes fade-top {
+		from {
+			--fade-top: 0px;
+		}
+		to {
+			--fade-top: 64px;
+		}
+	}
+
+	@keyframes fade-bottom {
+		from {
+			--fade-bottom: 40px;
+		}
+		to {
+			--fade-bottom: 0px;
+		}
+	}
+}
+
+@supports not (animation-timeline: scroll()) {
+	[data-fade-edge][data-scrolled] {
+		-webkit-mask-image: var(--scroll-fade);
+		mask-image: var(--scroll-fade);
+	}
+}
+
+input,
+textarea,
+[contenteditable=""],
+[contenteditable="true"],
+[data-selectable] {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+/* Focus is drawn in ink, two pixels off the control, wherever the keyboard
+   lands; a press with the pointer draws none. */
+
+:focus {
+	outline: none;
+}
+
+:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+
+/* Scrollbars are quiet: no arrows, a thin rounded thumb, darker under the
+   pointer and while it is held. */
+
+::-webkit-scrollbar {
+	width: 12px;
+	height: 12px;
+}
+
+::-webkit-scrollbar-button {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: rgba(26, 25, 21, 0.16);
+	background-clip: padding-box;
+	border: 4px solid transparent;
+	border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+	background-color: rgba(26, 25, 21, 0.36);
+}
+
+/* What can be pressed never drags the window, wherever it lies; the empty
+   stretch of the title band does (CSS app-region). */
+
+button,
+input,
+textarea,
+select,
+a,
+label,
+[role="button"],
+[role="tab"],
+[role="menuitem"] {
+	app-region: no-drag;
+	-webkit-app-region: no-drag;
+}
+
+/* Text that only a screen reader reads. */
+
+.visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+/* Printed, a page is a document: the window's chrome is left out, and what
+   scrolls in the window flows across as many sheets as it needs. */
+
+@media print {
+	@page {
+		size: letter;
+		margin: 0.6in 0.65in;
+	}
+
+	html,
+	body,
+	#root {
+		height: auto;
+		background: #ffffff;
+	}
+
+	[data-print="hide"] {
+		display: none !important;
+	}
+
+	[data-print="flow"] {
+		display: block !important;
+		height: auto !important;
+		overflow: visible !important;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 1ms !important;
+		animation-duration: 1ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
+}

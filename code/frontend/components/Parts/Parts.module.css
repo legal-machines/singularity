@@ -1,0 +1,201 @@
+/* A page's parts one under another, each a panel in Apple's grouped manner
+   (the owner, 2026-11-02: "add panels, not two columns, one after another, in
+   Apple's and Twist's style"): a part's name in plain words over a soft
+   ground with round corners, no frame, no capitals, no lines between rows.
+   The profile and the Matter read the same way. */
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	margin-top: 36px;
+}
+
+.part {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+/* A part's name in plain words over its panel, on its words' edge, and on
+   its right what can be done with it. */
+.part_head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 20px;
+	padding: 0 16px;
+}
+
+.part_title {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0;
+	font: var(--type-small-strong);
+	color: var(--ink-2);
+}
+
+.part_aside {
+	display: inline-flex;
+	flex: none;
+	gap: 8px;
+	margin: -6px 0;
+}
+
+.part_count {
+	font: var(--type-small);
+	color: var(--ink-4);
+}
+
+/* The panel: a soft ground with round corners, no frame; what a pointer
+   rests on in it shows within its corners. */
+.panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--sheet-quiet);
+	border-radius: 14px;
+}
+
+/* The panel's pieces - rows, facts, a note and its list - stand apart by
+   room alone, with no lines between them (the owner, 2026-11-02: "without
+   horizontal lines"). */
+.panel {
+	padding: 6px 0;
+}
+
+.paragraph {
+	padding: 10px 16px;
+	font: 400 15px/24px var(--font-sans);
+	color: var(--ink);
+	text-wrap: pretty;
+}
+
+/* A person's own lines keep their line breaks. */
+.paragraph_lines {
+	white-space: pre-line;
+}
+
+.panel > .paragraph_lines + .paragraph_lines {
+	padding-top: 0;
+}
+
+.paragraph_quiet {
+	padding: 10px 16px;
+	font: var(--type-body);
+	color: var(--ink-3);
+}
+
+.panel > .paragraph + .paragraph_quiet {
+	padding-top: 0;
+}
+
+/* A part's rows: its name and the line under it, a control on the right. */
+.rows {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row_opens:hover {
+	background: color-mix(in srgb, var(--ink) 4%, var(--sheet-quiet));
+}
+
+.row_open {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+	padding: 10px 16px;
+	text-align: left;
+}
+
+.row_aside {
+	flex: none;
+	padding-right: 16px;
+}
+
+.row_text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.row_title {
+	overflow: hidden;
+	font: var(--type-body);
+	color: var(--ink);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_line {
+	overflow: hidden;
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.row_title.row_wrap,
+.row_line.row_wrap {
+	white-space: normal;
+}
+
+/* What is on file, as Apple's contact card sets it: the name of each in a
+   column of its own on the left, what it is beside it in a quieter ink,
+   reading from the left however long. A long one reads under its name. */
+.facts {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+}
+
+.fact {
+	display: grid;
+	grid-template-columns: 180px minmax(0, 1fr);
+	gap: 16px;
+	padding: 10px 16px;
+	font: var(--type-body);
+}
+
+.fact dt {
+	color: var(--ink);
+}
+
+.fact dd {
+	min-width: 0;
+	margin: 0;
+	color: var(--ink-3);
+	overflow-wrap: anywhere;
+}
+
+.facts_long .fact {
+	grid-template-columns: minmax(0, 1fr);
+	gap: 2px;
+}
+
+/* A state said as a word in its own colour. */
+.word {
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.word[data-tone="yours"] { color: var(--accent-ink); }
+.word[data-tone="work"] { color: var(--underway); }
+.word[data-tone="time"] { color: var(--time-ink); }
+.word[data-tone="done"] { color: var(--settled-ink); }

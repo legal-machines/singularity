@@ -1,0 +1,264 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "common",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS (Xcode, native architecture)",
+      "inherits": "common",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/macos",
+      "cacheVariables": {
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.4"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "macos-dev",
+      "displayName": "macOS Debug (Xcode, native architecture)",
+      "inherits": "macos",
+      "binaryDir": "${sourceDir}/build/macos-dev"
+    },
+    {
+      "name": "editor-macos",
+      "displayName": "Editor index (macOS)",
+      "inherits": "common",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.4"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "windows",
+      "displayName": "Windows (Visual Studio 2022, x64)",
+      "inherits": "common",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/windows/vcpkg-toolchain.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-dev",
+      "displayName": "Windows Debug (Visual Studio 2022, x64)",
+      "inherits": "windows",
+      "binaryDir": "${sourceDir}/build/windows-dev"
+    },
+    {
+      "name": "editor-windows",
+      "displayName": "Editor index (Windows)",
+      "inherits": "common",
+      "generator": "NMake Makefiles",
+      "binaryDir": "${sourceDir}/build/editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/windows/vcpkg-toolchain.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "windows-cross",
+      "displayName": "Windows x64 (local MinGW cross-build)",
+      "inherits": "common",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/windows-cross",
+      "cacheVariables": {
+        "BUILD_TESTING": "OFF",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/windows/mingw-x64.cmake",
+        "NATIVE_APP_RUST_TARGET": "x86_64-pc-windows-gnu"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux",
+      "displayName": "Linux (Ninja, Release)",
+      "inherits": "common",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "/usr"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-dev",
+      "displayName": "Linux Debug (Ninja)",
+      "inherits": "linux",
+      "binaryDir": "${sourceDir}/build/linux-dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "editor-linux",
+      "displayName": "Editor index (Linux)",
+      "inherits": "common",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "configuration": "Release"
+    },
+    {
+      "name": "macos-dev",
+      "configurePreset": "macos-dev",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-dev",
+      "configurePreset": "windows-dev",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-cross",
+      "configurePreset": "windows-cross"
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux"
+    },
+    {
+      "name": "linux-dev",
+      "configurePreset": "linux-dev"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "macos-dev",
+      "configurePreset": "macos-dev",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "windows-dev",
+      "configurePreset": "windows-dev",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "linux-dev",
+      "configurePreset": "linux-dev",
+      "output": { "outputOnFailure": true }
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "configurations": ["Release"],
+      "packageDirectory": "${sourceDir}/out/macos"
+    },
+    {
+      "name": "macos-dev",
+      "configurePreset": "macos-dev",
+      "configurations": ["Debug"],
+      "packageDirectory": "${sourceDir}/out/macos-dev"
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "configurations": ["Release"],
+      "packageDirectory": "${sourceDir}/out/windows"
+    },
+    {
+      "name": "windows-dev",
+      "configurePreset": "windows-dev",
+      "configurations": ["Debug"],
+      "packageDirectory": "${sourceDir}/out/windows-dev"
+    },
+    {
+      "name": "windows-cross",
+      "configurePreset": "windows-cross",
+      "packageDirectory": "${sourceDir}/out/windows"
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux",
+      "packageDirectory": "${sourceDir}/out/linux"
+    },
+    {
+      "name": "linux-dev",
+      "configurePreset": "linux-dev",
+      "packageDirectory": "${sourceDir}/out/linux-dev"
+    }
+  ]
+}

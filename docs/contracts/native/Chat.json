@@ -1,0 +1,560 @@
+{
+  "domain": "Chat",
+  "methods": [
+    {
+      "name": "chat.list",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ChatListResult",
+      "_order": 123
+    },
+    {
+      "name": "chat.create",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ProjectChat",
+      "_order": 124
+    },
+    {
+      "name": "chat.rename",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "expectedRevision": "integer",
+        "title": "string"
+      },
+      "result": "ProjectChat",
+      "_order": 125
+    },
+    {
+      "name": "matter.createChat",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "title": "string",
+        "selectedDocumentIds": "string[] | undefined"
+      },
+      "result": "Matter",
+      "_order": 33
+    },
+    {
+      "name": "matter.runTask",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "prompt": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined",
+        "chatId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "promptProfileId": "string | undefined",
+        "promptProfileVersion": "integer | undefined",
+        "selectedDocumentIds": "string[] | undefined",
+        "expectedDocumentVersions": "ExpectedDocumentVersion[] | undefined"
+      },
+      "result": "Matter",
+      "_order": 40
+    },
+    {
+      "name": "matter.previewOutboundRequest",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "prompt": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined",
+        "chatId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "promptProfileId": "string | undefined",
+        "promptProfileVersion": "integer | undefined",
+        "selectedDocumentIds": "string[] | undefined",
+        "expectedDocumentVersions": "ExpectedDocumentVersion[] | undefined"
+      },
+      "result": "OutboundRequestPreview",
+      "_order": 41
+    },
+    {
+      "name": "matter.revealProtectedOccurrence",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "occurrenceId": "string",
+        "previewToken": "string"
+      },
+      "result": "RevealedProtectedOccurrence",
+      "_order": 88
+    },
+    {
+      "name": "matter.closeOutboundPreview",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "previewToken": "string"
+      },
+      "result": "boolean",
+      "_order": 89
+    },
+    {
+      "name": "matter.retryTask",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "taskId": "string",
+        "providerId": "string | undefined",
+        "modelId": "string | undefined"
+      },
+      "result": "Matter",
+      "_order": 42
+    },
+    {
+      "name": "matter.runConsilium",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "configurationId": "string | undefined",
+        "prompt": "string | undefined",
+        "targets": "ConsiliumTarget[] | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "promptProfileId": "string | undefined",
+        "promptProfileVersion": "integer | undefined",
+        "selectedDocumentIds": "string[] | undefined",
+        "chatId": "string | undefined"
+      },
+      "result": "Matter",
+      "_order": 43
+    },
+    {
+      "name": "matter.synthesizeConsilium",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "groupId": "string",
+        "providerId": "string",
+        "modelId": "string"
+      },
+      "result": "Matter",
+      "_order": 44
+    },
+    {
+      "name": "matter.saveChatAiSetup",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "chatId": "string",
+        "overrides": "AiSetupRoleOverride[]"
+      },
+      "result": "Matter",
+      "_order": 68
+    },
+    {
+      "name": "chat.resolveSources",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "query": "string",
+        "sourcePolicyMode": "string",
+        "selectedDocumentIds": "string[]"
+      },
+      "result": "ChatSourceResolution",
+      "_order": 126
+    },
+    {
+      "name": "chat.legalTaskOptions",
+      "policy": "worker",
+      "result": "LegalTaskOption[]",
+      "_order": 127
+    },
+    {
+      "name": "chat.resolveOperationSetup",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "oneTimePrimaryModelOverride": "ModelTarget | undefined"
+      },
+      "result": "OperationSetup",
+      "_order": 128
+    },
+    {
+      "name": "chat.resolveProtectionState",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "oneTimePrimaryModelOverride": "ModelTarget | undefined"
+      },
+      "result": "ChatProtectionState",
+      "_order": 129
+    },
+    {
+      "name": "chat.previewOutboundRequest",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string | undefined",
+        "prompt": "string",
+        "sourcePolicyMode": "string",
+        "selectedDocumentIds": "string[]",
+        "targetDocumentId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "oneTimePrimaryModelOverride": "ModelTarget | undefined",
+        "canAskLawyer": "boolean | undefined",
+        "continuesOperationId": "string | undefined"
+      },
+      "result": "ChatOutboundRequestPreview",
+      "_order": 130
+    },
+    {
+      "name": "chat.send",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "operationId": "string",
+        "prompt": "string",
+        "sourcePolicyMode": "string",
+        "selectedDocumentIds": "string[]",
+        "targetDocumentId": "string | undefined",
+        "legalTaskPresetId": "string | undefined",
+        "legalTaskPresetVersion": "integer | undefined",
+        "oneTimePrimaryModelOverride": "ModelTarget | undefined",
+        "canAskLawyer": "boolean | undefined",
+        "continuesOperationId": "string | undefined"
+      },
+      "result": "ChatExecutionOutcome",
+      "_order": 131
+    },
+    {
+      "name": "chat.stopOperation",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string"
+      },
+      "result": "ChatOperationStatus",
+      "_order": 132
+    },
+    {
+      "name": "chat.resumeOperation",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string"
+      },
+      "result": "ChatExecutionOutcome",
+      "_order": 139
+    },
+    {
+      "name": "chat.operationState",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string"
+      },
+      "result": "ChatOperationStatus",
+      "_order": 133
+    },
+    {
+      "name": "chat.actionPermission",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ProjectActionPermissionState",
+      "_order": 136
+    },
+    {
+      "name": "chat.saveActionPermission",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "requestedMode": "ProjectActionMode"
+      },
+      "result": "ProjectActionPermissionState",
+      "_order": 137
+    },
+    {
+      "name": "chat.respondToolApproval",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string",
+        "approvalId": "string",
+        "decision": "ToolApprovalDecision"
+      },
+      "result": "ChatOperationStatus",
+      "_order": 138
+    },
+    {
+      "name": "chat.answerQuestion",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "operationId": "string",
+        "questionId": "string",
+        "answers": "ChatQuestionAnswers | null"
+      },
+      "result": "ChatOperationStatus",
+      "_order": 166
+    },
+    {
+      "name": "chat.conversation",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "ChatConversation",
+      "_order": 134
+    },
+    {
+      "name": "chat.resolveSourceReference",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "taskId": "string",
+        "documentId": "string",
+        "chunkId": "string"
+      },
+      "result": "ChatSourcePeek",
+      "_order": 135
+    },
+    {
+      "name": "matter.reviseTask",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "taskId": "string",
+        "prompt": "string | undefined",
+        "sourcePolicyMode": "string | undefined",
+        "selectedDocumentIds": "string[] | undefined"
+      },
+      "result": "Matter",
+      "_order": 140
+    },
+    {
+      "name": "chat.deletionImpact",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "ChatDeletionImpact",
+      "_order": 141
+    },
+    {
+      "name": "chat.delete",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "expectedRevision": "integer"
+      },
+      "result": "boolean",
+      "_order": 142
+    },
+    {
+      "name": "chat.restore",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "boolean",
+      "_order": 150
+    },
+    {
+      "name": "chat.search",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "query": "string"
+      },
+      "result": "ChatSearchMatch[]",
+      "_order": 143
+    },
+    {
+      "name": "chat.saveDraft",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "draftText": "string"
+      },
+      "result": "ProjectChat",
+      "_order": 144
+    },
+    {
+      "name": "chat.listOperations",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ChatUnfinishedOperations",
+      "_order": 151
+    },
+    {
+      "name": "chat.compact",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "ChatCompaction",
+      "_order": 154
+    },
+    {
+      "name": "chat.setWorkingDocument",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "documentId": "string | undefined"
+      },
+      "result": "ProjectChat",
+      "_order": 163
+    },
+    {
+      "name": "chat.post",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "text": "string",
+        "mentions": "string[] | undefined",
+        "quoteMessageId": "string | undefined",
+        "attachmentDocumentIds": "string[] | undefined",
+        "notChecked": "string | undefined",
+        "askOptions": "string[] | undefined",
+        "answerOption": "string | undefined",
+        "place": "DocumentPlace | undefined"
+      },
+      "result": "ChatPostResult",
+      "_order": 203
+    },
+    {
+      "name": "chat.editMessage",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "messageId": "string",
+        "text": "string"
+      },
+      "result": "ChatMessageEdit",
+      "_order": 234
+    },
+    {
+      "name": "chat.deleteMessage",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "messageId": "string"
+      },
+      "result": "ChatMessageDeletion",
+      "_order": 235
+    },
+    {
+      "name": "chat.react",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "messageId": "string",
+        "emoji": "string"
+      },
+      "result": "ChatMessageReactions",
+      "_order": 236
+    },
+    {
+      "name": "chat.markReceived",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "ChatReceivedMarks",
+      "_order": 316
+    },
+    {
+      "name": "chat.closeThread",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "conclusion": "string"
+      },
+      "result": "ChatThreadRecord",
+      "_order": 237
+    },
+    {
+      "name": "chat.reopenThread",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string"
+      },
+      "result": "ChatThreadRecord",
+      "_order": 238
+    },
+    {
+      "name": "chat.openPersonal",
+      "policy": "worker",
+      "params": {
+        "otherActorId": "string"
+      },
+      "result": "PersonalChat",
+      "_order": 293
+    },
+    {
+      "name": "chat.listPersonal",
+      "policy": "worker",
+      "params": {},
+      "result": "PersonalChatList",
+      "_order": 294
+    },
+    {
+      "name": "chat.readMarks",
+      "policy": "worker",
+      "params": {},
+      "result": "ChatReadMarks",
+      "_order": 297
+    },
+    {
+      "name": "chat.markRead",
+      "policy": "worker",
+      "params": {
+        "conversation": "string",
+        "upTo": "string"
+      },
+      "result": "ChatReadMarks",
+      "_order": 298
+    },
+    {
+      "name": "chat.setArchived",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "chatId": "string",
+        "archived": "boolean"
+      },
+      "result": "ProjectChat",
+      "_order": 317
+    }
+  ]
+}

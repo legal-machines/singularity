@@ -1,0 +1,68 @@
+/* The page control: at the foot of the page whatever a step's height, so it
+   stays still while the steps above it change. */
+.dots {
+	position: absolute;
+	right: 0;
+	bottom: 28px;
+	left: 0;
+	display: flex;
+	justify-content: center;
+	gap: 4px;
+	pointer-events: none;
+}
+
+.dot {
+	position: relative;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	pointer-events: auto;
+	transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dot::after {
+	content: "";
+	position: absolute;
+	inset: 6px;
+	border-radius: 3px;
+	background: #d6d6d2;
+	transition: background-color 160ms ease-out;
+}
+
+/* The current step is a dot drawn out into a horizontal capsule, its
+   neighbours keeping their spacing (the owner, 2026-10-29). */
+.dot[aria-current="step"] {
+	width: 30px;
+}
+
+.dot[data-passed]::after {
+	background: #8f8f8a;
+}
+
+.dot[aria-current="step"]::after {
+	background: #10100d;
+}
+
+.dot:disabled {
+	cursor: default;
+}
+
+.dot:hover:not(:disabled)::after {
+	background: #10100d;
+}
+
+.dot:focus-visible {
+	outline: 2px solid #ae493f;
+	outline-offset: 0;
+	border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dot,
+	.dot::after {
+		transition: none;
+	}
+}

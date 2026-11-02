@@ -1,0 +1,275 @@
+{
+  "domain": "Context",
+  "methods": [
+    {
+      "name": "context.listItems",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ContextItemListResult",
+      "_order": 90
+    },
+    {
+      "name": "context.listSuggestions",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ContextSuggestionListResult",
+      "_order": 91
+    },
+    {
+      "name": "context.acceptSuggestion",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "suggestionId": "string"
+      },
+      "result": "ContextItem",
+      "_order": 92
+    },
+    {
+      "name": "context.dismissSuggestion",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "suggestionId": "string"
+      },
+      "result": "ContextSuggestionDismissal",
+      "_order": 93
+    },
+    {
+      "name": "context.createItem",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "section": "string",
+        "label": "string",
+        "value": "string"
+      },
+      "result": "ContextItem",
+      "_order": 94
+    },
+    {
+      "name": "context.createItemFromChatResult",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "section": "string",
+        "label": "string",
+        "value": "string",
+        "matterTaskId": "string"
+      },
+      "result": "ContextItem",
+      "_order": 145
+    },
+    {
+      "name": "context.updateItem",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "itemId": "string",
+        "value": "string",
+        "baseItem": "ContextItem | undefined"
+      },
+      "result": "ContextItem",
+      "_order": 95
+    },
+    {
+      "name": "context.deleteItem",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "itemId": "string"
+      },
+      "result": "ContextItemDeletion",
+      "_order": 96
+    },
+    {
+      "name": "context.linkItemEntity",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "itemId": "string",
+        "entityId": "string"
+      },
+      "result": "ContextItem",
+      "_order": 97
+    },
+    {
+      "name": "context.unlinkItemEntity",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "itemId": "string"
+      },
+      "result": "ContextItem",
+      "_order": 98
+    },
+    {
+      "name": "context.updateItemControls",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "itemId": "string",
+        "kind": "string",
+        "isPinned": "boolean",
+        "isLocked": "boolean",
+        "isExcludedFromAi": "boolean"
+      },
+      "result": "ContextItem",
+      "_order": 99
+    },
+    {
+      "name": "context.listMergeConflicts",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ContextMergeConflictListResult",
+      "_order": 100
+    },
+    {
+      "name": "context.resolveMergeConflict",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "conflictId": "string",
+        "resolution": "string",
+        "editedValue": "string | undefined"
+      },
+      "result": "ContextMergeConflictResolution",
+      "_order": 101
+    },
+    {
+      "name": "context.searchItems",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "query": "string"
+      },
+      "result": "ContextSearchListResult",
+      "_order": 102
+    },
+    {
+      "name": "context.getPageState",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "ContextPageState",
+      "_order": 103
+    },
+    {
+      "name": "context.runAutomaticUpdate",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": "AutomaticContextUpdateResult",
+      "_order": 104
+    },
+    {
+      "name": "context.memoryChat",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "message": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "reply",
+          "memoryChanged",
+          "modelId",
+          "executionKind"
+        ],
+        "properties": {
+          "reply": {
+            "type": "string"
+          },
+          "memoryChanged": {
+            "type": "boolean"
+          },
+          "modelId": {
+            "type": "string"
+          },
+          "executionKind": {
+            "type": "string"
+          }
+        }
+      },
+      "_order": 157
+    },
+    {
+      "name": "context.memoryStatus",
+      "policy": "worker",
+      "params": {
+        "projectId": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "modelAvailable",
+          "modelId",
+          "executionKind",
+          "isUpdating",
+          "source",
+          "documentsDone",
+          "documentsTotal",
+          "documentsRead",
+          "documentsReadable",
+          "lastError",
+          "ready"
+        ],
+        "properties": {
+          "modelAvailable": {
+            "type": "boolean"
+          },
+          "modelId": {
+            "type": "string"
+          },
+          "executionKind": {
+            "type": "string"
+          },
+          "isUpdating": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "documentsDone": {
+            "type": "integer"
+          },
+          "documentsTotal": {
+            "type": "integer"
+          },
+          "documentsRead": {
+            "type": "integer"
+          },
+          "documentsReadable": {
+            "type": "integer"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        }
+      },
+      "_order": 160
+    },
+    {
+      "name": "context.memoryReadDocuments",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "everything": "boolean | undefined"
+      },
+      "result": "boolean",
+      "_order": 161
+    }
+  ]
+}

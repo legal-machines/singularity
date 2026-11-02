@@ -1,0 +1,134 @@
+/* A menu floats above the sheet: a white paper with a frame and a shadow,
+   its items rows of the sidebar's own (Sidebar.module.css, .tab): an
+   18-point icon, a 14/20 label, 30 points tall, 2 apart, at the places'
+   pitch whatever group they belong to (the owner, 2026-11-02: "redesign the
+   rest in the common style, without horizontal lines"; "the green distance
+   must be the same as the red"). */
+
+.menu {
+	position: fixed;
+	z-index: var(--layer-popover);
+	display: flex;
+	flex-direction: column;
+	max-width: 340px;
+	gap: var(--sidebar-row-gap);
+	max-height: min(480px, calc(100vh - 16px));
+	padding: 6px;
+	overflow-y: auto;
+	background: var(--sheet);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-pop);
+	outline: none;
+	opacity: 0;
+}
+
+.shown {
+	opacity: 1;
+	animation: open var(--duration) var(--ease-out);
+}
+
+@keyframes open {
+	from {
+		opacity: 0;
+		transform: translateY(-3px) scale(0.985);
+	}
+}
+
+.item {
+	display: grid;
+	grid-template-columns: 18px minmax(0, 1fr) auto auto;
+	align-items: center;
+	column-gap: 10px;
+	min-height: var(--sidebar-row);
+	padding: 5px 10px 5px 8px;
+	font: 400 14px/20px var(--font-sans);
+	color: var(--ink);
+	text-align: left;
+	border-radius: var(--radius-md);
+	outline: none;
+}
+
+.item:focus,
+.item_open {
+	background: var(--sheet-hover);
+}
+
+.item:focus-visible {
+	outline: none;
+	box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.item[aria-disabled="true"] {
+	color: var(--ink-4);
+	cursor: default;
+}
+
+/* A fact, read and never chosen: no ground under the pointer, its words a
+   step quieter than an act's, its figure as clear as theirs. */
+.info {
+	color: var(--ink-3);
+	cursor: default;
+	user-select: text;
+}
+
+.info .hint {
+	color: var(--ink-2);
+}
+
+.item_seal {
+	color: var(--accent-ink);
+}
+
+.lead {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--ink-3);
+}
+
+.item_seal .lead {
+	color: var(--accent);
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.label {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* A code in place of a label, in letters of one width (UI-27). */
+.label_code {
+	font-family: var(--font-code);
+	font-weight: 500;
+	letter-spacing: 0.02em;
+}
+
+.description {
+	font: var(--type-small);
+	color: var(--ink-3);
+	white-space: normal;
+}
+
+.hint {
+	font: var(--type-figure);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.more {
+	display: inline-flex;
+	color: var(--ink-3);
+}
+
+.heading {
+	padding: 8px 8px 4px 36px;
+	font: var(--type-meta);
+	letter-spacing: var(--track-meta);
+	color: var(--ink-3);
+}

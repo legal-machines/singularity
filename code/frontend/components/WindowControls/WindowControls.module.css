@@ -1,0 +1,93 @@
+/* The window's buttons, drawn as the app's own (WindowControls.jsx): three
+   32-pixel buttons, 4 pixels apart, in the middle of the title band, a ground
+   with G2 corners under the pointer, and the accent under close. */
+
+.controls {
+	display: flex;
+	gap: 4px;
+	app-region: no-drag;
+	-webkit-app-region: no-drag;
+}
+
+.button {
+	position: relative;
+	isolation: isolate;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	color: var(--ink-2);
+	background: transparent;
+	border: none;
+	border-radius: 8px;
+	cursor: default;
+}
+
+.button::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--ground, transparent);
+	-webkit-mask-box-image: var(--g2) / 13.333px;
+	transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.button:hover {
+	--ground: var(--sheet-hover);
+	color: var(--ink);
+}
+
+.button:active {
+	--ground: var(--sheet-press);
+}
+
+.close:hover {
+	--ground: var(--accent);
+	color: var(--ink-inverse);
+}
+
+.close:active {
+	--ground: var(--accent-strong);
+	color: var(--ink-inverse);
+}
+
+.glyph {
+	display: block;
+}
+
+/* An inactive window's buttons are quieter, as Windows' own. */
+.controls_inactive .button:not(:hover) {
+	color: var(--ink-4);
+}
+
+/* Over a dark ground (onboarding's painting) the buttons are light, with the
+   same soft shadow as the painting's mark, so they read over its bright parts
+   too. */
+.on_dark .button {
+	color: rgb(255 255 255 / 0.96);
+}
+
+.on_dark .glyph {
+	filter: drop-shadow(0 0 1.5px rgb(16 16 13 / 0.9)) drop-shadow(0 0 6px rgb(16 16 13 / 0.6));
+}
+
+.on_dark .button:hover {
+	--ground: rgb(255 255 255 / 0.16);
+	color: #fff;
+}
+
+.on_dark .button:active {
+	--ground: rgb(255 255 255 / 0.24);
+}
+
+.on_dark .close:hover {
+	--ground: var(--accent);
+	color: #fff;
+}
+
+.on_dark.controls_inactive .button:not(:hover) {
+	color: rgb(255 255 255 / 0.6);
+}

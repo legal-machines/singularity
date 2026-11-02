@@ -1,0 +1,193 @@
+.file_icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	color: var(--ink-2);
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 380px;
+	gap: 24px;
+	align-items: start;
+}
+
+@media (max-width: 1240px) {
+	.layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* The page of the document */
+
+.paper {
+	padding: 56px 64px 64px;
+	background: var(--sheet);
+	border-radius: 14px;
+	box-shadow: 0 0 0 1px var(--tray-line), 0 8px 30px -14px rgba(26, 25, 21, 0.16);
+}
+
+.paper_title {
+	font: 500 19px/26px var(--font-sans);
+	text-align: center;
+}
+
+.paper_parties {
+	margin: 6px 0 36px;
+	font: var(--type-body);
+	color: var(--ink-3);
+	text-align: center;
+}
+
+.section + .section {
+	margin-top: 28px;
+}
+
+.section_heading {
+	display: flex;
+	gap: 0;
+	margin-bottom: 10px;
+	font: 500 15px/22px var(--font-sans);
+}
+
+.number {
+	flex: none;
+	width: 44px;
+	color: var(--ink-3);
+	font-weight: 400;
+}
+
+.clause {
+	display: flex;
+	font: 400 15px/26px var(--font-sans);
+	color: var(--ink);
+}
+
+.clause + .clause {
+	margin-top: 10px;
+}
+
+/* The paragraph a place names, where the document was opened at it. */
+.focus {
+	margin-inline: -8px;
+	padding-inline: 8px;
+	border-radius: 6px;
+	background: var(--underway-tint);
+}
+
+.clause_text {
+	min-width: 0;
+	text-wrap: pretty;
+}
+
+.deleted {
+	color: var(--ink-4);
+	text-decoration: line-through;
+	text-decoration-color: var(--accent);
+	text-decoration-thickness: 1.5px;
+}
+
+.inserted {
+	color: var(--ink);
+	text-decoration: none;
+	background: var(--settled-tint);
+	border-radius: 3px;
+	box-shadow: 0 0 0 2px var(--settled-tint);
+}
+
+.cite {
+	color: var(--time-ink);
+	background: var(--time-tint);
+	border-radius: 3px;
+	box-shadow: 0 0 0 2px var(--time-tint);
+}
+
+/* Beside it */
+
+.side {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	min-width: 0;
+}
+
+.side :global(li) span {
+	white-space: normal;
+}
+
+.note_open {
+	color: var(--time-ink);
+}
+
+.version {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	font: 400 13px/18px var(--font-sans);
+	color: var(--ink-2);
+	background: var(--tray);
+	border-radius: 8px;
+}
+
+/* A table of a real document (RealDocumentPage): its cells in the page's
+   type, divided by hairlines, as Word draws a signature block. */
+.table {
+	width: 100%;
+	margin: 18px 0;
+	border-collapse: collapse;
+}
+
+.table td {
+	padding: 10px 12px;
+	vertical-align: top;
+	border: 1px solid var(--line);
+}
+
+.table td .clause + .clause {
+	margin-top: 4px;
+}
+
+/* A real document's title and headings keep the air Word gives them. */
+.real_title {
+	margin-bottom: 22px;
+}
+
+.paper > .section_heading:not(:first-child) {
+	margin-top: 26px;
+}
+
+.paper > .clause + .section_heading {
+	margin-top: 26px;
+}
+
+/* The lawyer's decision on the version waiting (D-119): the one action it
+   leads with, the return beside it, a line of what each does, and the
+   return's comments under them. */
+.decide {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.decide_buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.decide_note {
+	margin: 0;
+	font: 400 13px/19px var(--font-sans);
+	color: var(--ink-3);
+	text-wrap: pretty;
+}
+
+.decide_return {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}

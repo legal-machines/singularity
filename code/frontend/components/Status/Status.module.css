@@ -1,0 +1,91 @@
+.status {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	font: var(--type-small);
+	color: var(--ink-2);
+}
+
+.medium {
+	font: var(--type-body);
+}
+
+.words {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* What waits for the member reads in plain ink: a decision or a review is
+   ordinary work, never an alarm (D-174). Brick is kept for what failed. */
+.status_yours {
+	font-weight: 500;
+	color: var(--ink);
+}
+
+.status_failed {
+	font-weight: 500;
+	color: var(--accent-ink);
+}
+
+.status_waiting,
+.status_draft {
+	color: var(--ink-3);
+}
+
+.status_settled {
+	color: var(--settled-ink);
+}
+
+.status_due {
+	font-weight: 500;
+	color: var(--time-ink);
+}
+
+.mark {
+	flex: none;
+	overflow: visible;
+}
+
+.mark_underway :global(.arc) {
+	transform-origin: 7px 7px;
+	animation: turn 1.6s linear infinite;
+}
+
+@keyframes turn {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.mark_underway :global(.arc) {
+		animation: none;
+	}
+}
+
+/* Counts */
+
+/* A count is a circle: as tall as it is wide while it holds one figure, and
+   only a longer number widens it. */
+.count {
+	display: inline-flex;
+	box-sizing: border-box;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	font: 500 12px/20px var(--font-sans);
+	font-variant-numeric: tabular-nums;
+	color: var(--ink-3);
+	text-align: center;
+	border-radius: 10px;
+}
+
+.count_seal {
+	color: var(--ink-inverse);
+	background: var(--accent);
+}

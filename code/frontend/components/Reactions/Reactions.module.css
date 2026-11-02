@@ -1,0 +1,37 @@
+/* Reactions under a message, as a messenger shows them (the owner,
+   2026-11-02, after Telegram): one filled pill per emoji, the emoji and then
+   the faces of who gave it, no border and no seam between the two. The
+   member's own is on the blue of a colleague at work. */
+.reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.chip { --reaction-ground: var(--tray); display: inline-flex; align-items: center; height: 30px; background: var(--reaction-ground); border-radius: 15px; transition: background-color 120ms ease-out; }
+.chip:hover { --reaction-ground: var(--sheet-press); }
+.chip[data-mine] { --reaction-ground: color-mix(in srgb, var(--underway) 16%, var(--sheet)); }
+.chip[data-mine]:hover { --reaction-ground: color-mix(in srgb, var(--underway) 22%, var(--sheet)); }
+.emoji { align-self: stretch; display: inline-flex; align-items: center; padding: 0 4px 0 9px; border: 0; border-radius: 15px 0 0 15px; background: transparent; font-size: 17px; line-height: 1; cursor: pointer; }
+.people { display: flex; align-items: center; gap: 2px; align-self: stretch; padding: 0 3px 0 0; border: 0; border-radius: 0 15px 15px 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+.emoji:focus-visible, .people:focus-visible, .add:focus-visible { outline: 2px solid var(--ink, #10100d); outline-offset: 2px; }
+/* Who reacted, as round faces with no online dot (the owner, 2026-11-02:
+   "remove the online mark in reactions, and make the people circles"), each
+   ringed in the pill's own colour, which parts it from the one it overlaps. */
+.faces { display: inline-flex; align-items: center; }
+.face { display: inline-flex; padding: 2px; border-radius: 50%; background: var(--reaction-ground); transition: background-color 120ms ease-out; }
+.face > * { border-radius: 50%; overflow: hidden; }
+.face + .face { margin-left: -9px; }
+.more { padding: 0 5px 0 3px; font: 500 12px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.add { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 15px; background: var(--tray); color: var(--ink-3); opacity: 0; cursor: pointer; }
+.add:hover { background: var(--sheet-press); color: var(--ink-2); }
+.reactions:hover .add, .add:focus-visible { opacity: 1; }
+.listHead { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); font: 500 13px/20px var(--font-sans); }
+.listHead > span:first-child { font-size: 20px; }
+.list { display: grid; gap: 2px; max-height: 240px; margin: 0; padding: 8px; overflow-y: auto; list-style: none; }
+.list li { display: flex; align-items: center; gap: 10px; padding: 8px; font: 400 14px/20px var(--font-sans); }
+.list li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.list small { display: block; color: var(--ink-3); font-size: 12px; line-height: 16px; }
+
+/* One transform and one opacity timeline for emoji, pill and portraits.
+   Decoding finishes before this begins; inner faces have no animation. */
+.chip { position: relative; transform-origin: 16px 50%; }
+.chip:not([data-ready]) { opacity: 0; }
+.chip[data-ready] { animation: reactionAppears 440ms cubic-bezier(0.18, 1.35, 0.32, 1) both; }
+@keyframes reactionAppears { from { opacity: 0; transform: scale(0.55); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .chip[data-ready] { animation: none; } .chip, .face { transition: none; } }
