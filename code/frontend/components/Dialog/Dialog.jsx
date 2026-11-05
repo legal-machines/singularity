@@ -23,7 +23,12 @@ import styles from "./Dialog.module.css";
 // A dialog laid out "spacious" is a short task of its own with room to
 // breathe: a larger title and its line, what it holds under them, and its
 // actions at its foot as every dialog's.
-export function Dialog({ title, description, size = "medium", tone, layout, onClose, actions, children, initialFocus }) {
+// What its leading action waits on, such as a consent to tick, and what went
+// wrong when it was tried, stand in its footnote: over the actions and under
+// what scrolls, so they are always in sight (the owner, 2026-11-05: the
+// report's consent stood out of sight under its scroll, beside a Send that
+// could not be pressed).
+export function Dialog({ title, description, size = "medium", tone, layout, onClose, actions, footnote, children, initialFocus }) {
 	const paperRef = useRef(null);
 	const scrimRef = useRef(null);
 	const opener = useRef(document.activeElement);
@@ -114,6 +119,7 @@ export function Dialog({ title, description, size = "medium", tone, layout, onCl
 				</header>
 				{description != null ? <p id={descriptionId} className={styles.description}>{description}</p> : null}
 				{children != null ? <div className={styles.body}>{children}</div> : null}
+				{footnote != null ? <div className={styles.footnote}>{footnote}</div> : null}
 				{actions != null ? <footer className={styles.foot}>{actions}</footer> : null}
 			</div>
 		</div>,

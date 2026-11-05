@@ -22,6 +22,14 @@ nlohmann::json list_summaries(const nlohmann::json &params);
 nlohmann::json create(const nlohmann::json &params);
 nlohmann::json update(const nlohmann::json &params);
 nlohmann::json remove(const nlohmann::json &params);
+// This computer's Trash of Matters (Matter/MatterTrash, D-247):
+// project.listTrash deletes from it what has stood there 30 days, then lists
+// the rest; project.moveToTrash, project.restoreFromTrash and
+// project.deleteFromTrash, the last as matter.delete does.
+nlohmann::json list_trash(const nlohmann::json &params);
+nlohmann::json move_to_trash(const nlohmann::json &params);
+nlohmann::json restore_from_trash(const nlohmann::json &params);
+nlohmann::json delete_from_trash(const nlohmann::json &params);
 nlohmann::json open_folder(const nlohmann::json &params);
 nlohmann::json assign_folder(const nlohmann::json &params,
                              const std::optional<std::string> &selected_path);

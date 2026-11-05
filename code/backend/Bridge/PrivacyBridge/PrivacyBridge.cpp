@@ -99,6 +99,9 @@ Json outbound_call_json(const protected_api::papinian::OutboundCall &call) {
 				{"entityId", marker.project_entity_id.empty() ? Json(nullptr) : Json(marker.project_entity_id)},
 		});
 	}
+	Json pictures = Json::array();
+	for (const protected_api::papinian::OutboundPicture &picture : call.pictures)
+		pictures.push_back(Json{{"name", picture.name}, {"bytes", picture.bytes}, {"sha256", picture.sha256}});
 	return Json{
 			{"kind", call.kind},
 			{"time", call.time},
@@ -106,6 +109,8 @@ Json outbound_call_json(const protected_api::papinian::OutboundCall &call) {
 			{"modelId", call.model_id},
 			{"protectionMode", call.protection_mode},
 			{"markers", std::move(markers)},
+			// The pictures it carried as they are, unmasked (D-256).
+			{"pictures", std::move(pictures)},
 			{"categoryCounts", call.category_counts},
 			{"url", call.url.empty() ? Json(nullptr) : Json(call.url)},
 			// Which marker numbering the call's markers belong to: "[[E1]]" of

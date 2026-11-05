@@ -198,6 +198,119 @@ Json privacy_metadata_to_json(
   };
 }
 
+// A model call as the Matter keeps it for its bill (D-252): only what a bill
+// shows - its time and route, the provider's own id for the request, the
+// fingerprints of what was sent and what came back, its tokens and cost -
+// never a marker, passage, relation or table of what left.
+Json billed_call_to_json(const protected_api::papinian::OutboundCall &call) {
+  Json value{{"time", call.time}, {"providerId", call.provider_id}, {"modelId", call.model_id},
+      {"protectionMode", call.protection_mode}};
+  const auto text = [&value](const char *key, const std::string &said) {
+    if (said.empty() == false) value[key] = said;
+  };
+  const auto number = [&value](const char *key, const std::optional<long long> &said) {
+    if (said.has_value()) value[key] = *said;
+  };
+  text("servedBy", call.served_by);
+  text("providerRequestId", call.provider_request_id);
+  text("payloadSha256", call.payload_sha256);
+  text("responseSha256", call.response_sha256);
+  number("inputTokens", call.input_tokens);
+  number("cachedInputTokens", call.cached_input_tokens);
+  number("outputTokens", call.output_tokens);
+  number("reasoningTokens", call.reasoning_tokens);
+  number("costMicros", call.cost_micros);
+  text("costCurrency", call.cost_currency);
+  text("costClassification", call.cost_classification);
+  text("costMethodology", call.cost_methodology);
+  // Its place in its computer's work record, and the provider's own record of
+  // its cost once asked (D-252).
+  text("recordChain", call.record_chain);
+  number("recordIndex", call.record_index);
+  if (call.confirmation.has_value()) {
+    const protected_api::papinian::CostConfirmation &confirmed = *call.confirmation;
+    Json confirmation{{"source", confirmed.source}, {"currency", confirmed.currency}, {"provider", confirmed.provider},
+        {"model", confirmed.model}, {"createdAt", confirmed.created_at}, {"confirmedAt", confirmed.confirmed_at},
+        {"recordSha256", confirmed.record_sha256}};
+    if (confirmed.cost_micros) confirmation["costMicros"] = *confirmed.cost_micros;
+    if (confirmed.input_tokens) confirmation["inputTokens"] = *confirmed.input_tokens;
+    if (confirmed.output_tokens) confirmation["outputTokens"] = *confirmed.output_tokens;
+    value["confirmation"] = std::move(confirmation);
+  }
+  return value;
+}
+
+protected_api::papinian::OutboundCall billed_call_from_json(const Json &value) {
+  protected_api::papinian::OutboundCall call;
+  call.kind = "model";
+  const auto text = [&value](const char *key) {
+    return value.contains(key) && value.at(key).is_string() ? value.at(key).get<std::string>() : std::string();
+  };
+  const auto number = [&value](const char *key) -> std::optional<long long> {
+    if (value.contains(key) && value.at(key).is_number_integer()) return value.at(key).get<long long>();
+    return std::nullopt;
+  };
+  call.time = text("time");
+  call.provider_id = text("providerId");
+  call.model_id = text("modelId");
+  call.protection_mode = text("protectionMode").empty() ? std::string("off") : text("protectionMode");
+  call.served_by = text("servedBy");
+  call.provider_request_id = text("providerRequestId");
+  call.payload_sha256 = text("payloadSha256");
+  call.response_sha256 = text("responseSha256");
+  call.input_tokens = number("inputTokens");
+  call.cached_input_tokens = number("cachedInputTokens");
+  call.output_tokens = number("outputTokens");
+  call.reasoning_tokens = number("reasoningTokens");
+  call.cost_micros = number("costMicros");
+  call.cost_currency = text("costCurrency");
+  call.cost_classification = text("costClassification");
+  call.cost_methodology = text("costMethodology");
+  call.record_chain = text("recordChain");
+  call.record_index = number("recordIndex");
+  if (value.contains("confirmation") && value.at("confirmation").is_object()) {
+    const Json &kept = value.at("confirmation");
+    const auto keptText = [&kept](const char *key) {
+      return kept.contains(key) && kept.at(key).is_string() ? kept.at(key).get<std::string>() : std::string();
+    };
+    const auto keptNumber = [&kept](const char *key) -> std::optional<long long> {
+      if (kept.contains(key) && kept.at(key).is_number_integer()) return kept.at(key).get<long long>();
+      return std::nullopt;
+    };
+    protected_api::papinian::CostConfirmation confirmed;
+    confirmed.source = keptText("source");
+    confirmed.cost_micros = keptNumber("costMicros");
+    confirmed.currency = keptText("currency");
+    confirmed.input_tokens = keptNumber("inputTokens");
+    confirmed.output_tokens = keptNumber("outputTokens");
+    confirmed.provider = keptText("provider");
+    confirmed.model = keptText("model");
+    confirmed.created_at = keptText("createdAt");
+    confirmed.confirmed_at = keptText("confirmedAt");
+    confirmed.record_sha256 = keptText("recordSha256");
+    call.confirmation = std::move(confirmed);
+  }
+  return call;
+}
+
+// The calls a task's record keeps for its bill: those it kept before, and the
+// model calls of this run's privacy record not among them yet, each once, in
+// the order made.
+std::vector<protected_api::papinian::OutboundCall> billed_calls_of(const MatterTask &task) {
+  std::vector<protected_api::papinian::OutboundCall> calls = task.billed_calls;
+  const auto isSame = [](const protected_api::papinian::OutboundCall &one, const protected_api::papinian::OutboundCall &other) {
+    return one.time == other.time && one.payload_sha256 == other.payload_sha256
+        && one.provider_request_id == other.provider_request_id;
+  };
+  for (const protected_api::papinian::OutboundCall &call : task.privacy_metadata.outbound_calls) {
+    if (call.kind != "model") continue;
+    if (std::any_of(calls.begin(), calls.end(), [&](const auto &kept) { return isSame(kept, call); })) continue;
+    calls.push_back(call);
+  }
+  std::stable_sort(calls.begin(), calls.end(), [](const auto &one, const auto &other) { return one.time < other.time; });
+  return calls;
+}
+
 protected_api::papinian::PrivacyMetadata privacy_metadata_from_json(
     const Json &value, const std::string &legacy_mode) {
   protected_api::papinian::PrivacyMetadata metadata;
@@ -1616,6 +1729,16 @@ Json task_to_json(const MatterTask &task) {
     value["origin"] = Json{{"actorId", task.origin->actor_id}, {"by", task.origin->by},
         {"agentId", task.origin->agent_id}, {"ceiling", task.origin->ceiling}, {"localOnly", task.origin->local_only},
         {"signature", Json{{"publicKey", task.origin->public_key}, {"value", task.origin->signature}}}};
+  // Each model call's billing evidence (D-252), written only for an operation
+  // that made one, so every other task is stored exactly as before.
+  {
+    const std::vector<protected_api::papinian::OutboundCall> billed = billed_calls_of(task);
+    if (billed.empty() == false) {
+      Json calls = Json::array();
+      for (const protected_api::papinian::OutboundCall &call : billed) calls.push_back(billed_call_to_json(call));
+      value["billedCalls"] = std::move(calls);
+    }
+  }
   return value;
 }
 
@@ -1682,6 +1805,12 @@ MatterTask task_from_json(const Json &value) {
 			}
 		}
 		task.origin = std::move(statement);
+	}
+	// Absent from every task written before a Matter kept its calls' billing
+	// evidence (D-252), and from any that made no model call.
+	if (value.contains("billedCalls") && value.at("billedCalls").is_array()) {
+		for (const Json &saved : value.at("billedCalls"))
+			if (saved.is_object()) task.billed_calls.push_back(billed_call_from_json(saved));
 	}
 	if (value.contains("operationApproval"))
 		task.operation_approval = operation_approval_from_json(value.at("operationApproval"));

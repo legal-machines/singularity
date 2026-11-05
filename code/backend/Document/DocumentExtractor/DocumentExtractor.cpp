@@ -428,9 +428,12 @@ std::string email_message_text(const std::string &raw) {
 
 // ---- A picture ------------------------------------------------------------------------
 
+// A phone's photograph of a page is HEIC or HEIF: read where this computer's
+// pictures open it (ImageIO on the Mac).
 bool is_picture_extension(const std::string &extension) {
   return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".tif"
-      || extension == ".tiff" || extension == ".bmp" || extension == ".gif";
+      || extension == ".tiff" || extension == ".bmp" || extension == ".gif" || extension == ".heic"
+      || extension == ".heif";
 }
 
 // A picture's words, read by this computer's text recognition and said to be

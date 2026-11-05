@@ -11,9 +11,9 @@ import styles from "./OfficeConnection.module.css";
 // anything (D-105), which only Singularity's own window can answer. Connecting
 // them, and the panes allowed, are the guide's (OfficeGuide.jsx).
 
-// The question a pane asks: allow it to read the Matters here and work with
-// their colleagues. Shown on top of whatever page is open, with the code the
-// pane shows, so the person can see it is the pane they just asked from.
+// The question a pane asks, shown on top of whatever page is open as the guide
+// asks it (D-248): Singularity's question whether the pane shows the same
+// code, so the person can see it is the pane they just asked from.
 export function OfficePairingQuestion() {
 	const [pending, setPending] = useState([]);
 	// A question the person closed without answering stays unanswered: the pane
@@ -50,14 +50,14 @@ export function OfficePairingQuestion() {
 
 	return (
 		<Dialog
-			title={`Allow ${application} to work with Singularity?`}
-			description={`${application} on this computer asks to read your Matters, their threads and documents, and to give work to your colleagues, from its Singularity pane. Allow it only if the pane shows this code:`}
+			title={`${application} asks to connect`}
+			description={`Does ${application}'s pane show this code?`}
 			size="small"
 			onClose={() => setSetAside(list => [...list, request.pairingId])}
 			actions={(
 				<>
-					<Button variant="quiet" onClick={() => answer(false)}>Don't allow</Button>
-					<Button variant="primary" onClick={() => answer(true)}>Allow</Button>
+					<Button onClick={() => answer(false)}>No</Button>
+					<Button variant="primary" onClick={() => answer(true)}>Yes, allow</Button>
 				</>
 			)}
 		>

@@ -693,7 +693,15 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 }
 
 void AgentScheduler::open_missing_chats() {
-	// At the first wake, then every five minutes at most.
+	// A colleague whose chat could not open at its last try is tried again at
+	// every wake until it opens: onboarding hires the first colleague before
+	// the Matters folder is chosen, and with no desk yet its chat waited five
+	// minutes or a restart, so its member could not write to it (2026-11-05:
+	// "Pasha can't be written to from this computer yet"). With no folder a
+	// try makes nothing.
+	for (const std::string &agentId : colleagues_awaiting_chat()) open_own_chat(agentId);
+	// At the first wake, then every five minutes at most: every colleague with
+	// no chat of its own.
 	{
 		const std::lock_guard<std::mutex> lock(mutex_);
 		const auto now = std::chrono::steady_clock::now();

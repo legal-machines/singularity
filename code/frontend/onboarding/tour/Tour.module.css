@@ -125,3 +125,12 @@
 .disclaimer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .disclaimer a:hover { color: #10100d; }
 .disclaimer a:focus-visible { outline: 2px solid #10100d; outline-offset: 2px; border-radius: 2px; }
+
+/* The permissions step (PermissionsAsk): each permission's state beside its
+   name, in its colour as a word, and its two ways forward under a refusal. */
+.ask .features { margin: 0 0 4px; }
+.permissionState { margin-left: 8px; color: var(--tour-muted); font-weight: 500; }
+.permissionState[data-state="allowed"] { color: #3a8060; }
+.permissionState[data-state="denied"] { color: var(--entry-brick); }
+.permissionActions { display: flex; gap: 16px; margin-top: 2px; }
+.permissionActions .later { display: inline; width: auto; min-height: 0; margin: 0; padding: 2px 0; text-align: left; }

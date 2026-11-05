@@ -1,11 +1,16 @@
 #include "Bridge/AccountBridge/AccountBridge.hpp"
+#include "Node/WorkLog/WorkLog.hpp"
+#include "Node/WorkLogShare/WorkLogShare.hpp"
 #include "Organisation/FirmRole/FirmRole.hpp"
 #include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
 #include "Platform/AppSettings/AppSettings.hpp"
 #include "Platform/PrivateFile/PrivateFile.hpp"
+#include "Platform/SeatPasswordStore/SeatPasswordStore.hpp"
+#include "Platform/Sha256/Sha256.hpp"
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <filesystem>
@@ -92,6 +97,13 @@ std::string recovery_text(const std::vector<std::string> &codes) {
 	return text;
 }
 
+// Whether the seat signed in finished onboarding on this computer before (D-250).
+bool is_onboarded_here(const platform::AppSettings &settings) {
+	if (settings.account.has_value() == false) return false;
+	const std::string seat = platform::onboarded_seat_key(settings.account->organisation_id, settings.account->seat_id);
+	return std::find(settings.onboarded_seats.begin(), settings.onboarded_seats.end(), seat) != settings.onboarded_seats.end();
+}
+
 Json account_state_json(const platform::AppSettings &settings, const AccountServices &services) {
 	bool hasSession = false;
 	if (services.has_session) {
@@ -151,6 +163,9 @@ platform::AppSettings save_account(const std::string &organisation_id, const std
 		if (answer->organisation_name.has_value() == true) resume.organisation_name = answer->organisation_name;
 	}
 	settings.account = resume;
+	// A seat that finished onboarding on this computer goes straight back to
+	// work here (D-250): its onboarding stands complete again.
+	if (is_onboarded_here(settings) == true) settings.onboarding_completed = true;
 	platform::save_app_settings(settings);
 	forget_setups();
 	return settings;
@@ -197,9 +212,12 @@ std::string seat_role_words(const std::string &role) {
 	return role == "admin" ? "administrator" : "member";
 }
 
+// Signed in; onboardedHere says whether this seat finished onboarding on this
+// computer before, so the page goes straight back to work (D-250).
 Json signed_in_json(const platform::AppSettings &settings, const AccountServices &services) {
 	return Json{{"status", node::to_string(node::SignInStatus::SignedIn)},
-	            {"account", account_state_json(settings, services)}};
+	            {"account", account_state_json(settings, services)},
+	            {"onboardedHere", is_onboarded_here(settings)}};
 }
 
 // A seat's own new recovery codes, kept in memory for Save as file and Print
@@ -214,6 +232,121 @@ void keep_own_recovery_codes(const std::vector<std::string> &codes) {
 	if (organisation_id.empty() == true) return;
 	const std::lock_guard<std::mutex> lock(setup_mutex());
 	setups()[organisation_id].recovery_codes = codes;
+}
+
+// A seat's password kept on this computer at the member's choice (D-243). Its
+// entry is named by the firm's email and the seat as the sign-in names it
+// (empty for the administrator's), under Singularity's own prefix, so no call
+// reaches another entry. The page never reads it back: a sign-in asks for it
+// with savedPassword, and it is used here.
+constexpr auto kSavedPasswordWindow = std::chrono::minutes(10);
+
+void wipe(std::string &secret) {
+	secret.assign(secret.size(), '\0');
+	secret.clear();
+}
+
+bool asks_for_saved_password(const Json &params) {
+	return params.is_object() && params.contains("savedPassword") && params.at("savedPassword").is_boolean()
+		&& params.at("savedPassword").get<bool>() == true;
+}
+
+// The seat as the sign-in names it: its id, or none for the administrator's.
+std::string named_seat_of(const Json &params) {
+	if (params.contains("seat") == false || params.at("seat").is_string() == false) return {};
+	const std::string seat = params.at("seat").get<std::string>();
+	if (seat.find_first_not_of(" \t\r\n") == std::string::npos) return {};
+	return node::normalized_seat_id(seat);
+}
+
+std::string seat_password_target(const std::string &email, const std::string &seat) {
+	return std::string(platform::seat_password_store::kTargetPrefix) + email + "/" + seat;
+}
+
+bool has_seat_password_store(const AccountServices &services) {
+	return services.seat_password_store && services.save_seat_password && services.read_seat_password
+		&& services.forget_seat_password && services.seat_password_store().has_value();
+}
+
+// Who signed in on this computer, and with which password, as a digest salted
+// anew for each run: the one seat whose password may be kept, for ten
+// minutes. In memory only; signing out forgets it.
+struct SignedInSeat {
+	std::string email;
+	std::string seat;
+	std::string password_digest;
+	std::chrono::steady_clock::time_point at;
+};
+
+// A sign-in that asked for a second step: who it was, and the kept password
+// it used (empty when the member typed theirs), for that challenge only.
+struct PendingChallenge {
+	SignedInSeat who;
+	std::string saved_password;
+};
+
+std::mutex &memory_mutex() {
+	static std::mutex mutex;
+	return mutex;
+}
+std::optional<SignedInSeat> &last_signed_in_seat() {
+	static std::optional<SignedInSeat> held;
+	return held;
+}
+std::map<std::string, PendingChallenge> &pending_challenges() {
+	static std::map<std::string, PendingChallenge> held;
+	return held;
+}
+
+const std::string &digest_salt() {
+	static const std::string salt = [] {
+		std::random_device random;
+		std::string value;
+		for (int index = 0; index < 32; ++index) value.push_back(static_cast<char>(random() & 0xff));
+		return value;
+	}();
+	return salt;
+}
+
+std::string digest_of(const std::string &password) {
+	return platform::sha256_hex_digest(digest_salt() + password);
+}
+
+// Drops what has outlived its ten minutes, the kept passwords wiped. The
+// memory lock is held.
+void drop_stale_memory() {
+	const auto now = std::chrono::steady_clock::now();
+	auto &pending = pending_challenges();
+	for (auto entry = pending.begin(); entry != pending.end();) {
+		if (now - entry->second.who.at > kSavedPasswordWindow) {
+			wipe(entry->second.saved_password);
+			entry = pending.erase(entry);
+		} else {
+			++entry;
+		}
+	}
+	auto &last = last_signed_in_seat();
+	if (last.has_value() && now - last->at > kSavedPasswordWindow) last.reset();
+}
+
+void remember_signed_in(SignedInSeat who) {
+	const std::lock_guard<std::mutex> lock(memory_mutex());
+	who.at = std::chrono::steady_clock::now();
+	last_signed_in_seat() = std::move(who);
+}
+
+void forget_signed_in_memory() {
+	const std::lock_guard<std::mutex> lock(memory_mutex());
+	for (auto &entry : pending_challenges()) wipe(entry.second.saved_password);
+	pending_challenges().clear();
+	last_signed_in_seat().reset();
+}
+
+// What answers a sign-in whose kept password could not be used: refused by
+// Legal Machines, or none kept. It is forgotten; the page asks for the password.
+Json saved_password_refused_json(const AccountServices &services) {
+	const persistence::PersistenceLock lock(persistence::persistence_mutex());
+	return Json{{"status", "saved_password_refused"}, {"account", account_state_json(platform::load_app_settings(), services)}};
 }
 
 } // namespace
@@ -261,15 +394,51 @@ nlohmann::json verify_two_factor(const nlohmann::json &params, const AccountServ
 
 	const std::string organisation_id = node::normalized_organisation_id(required_text(params, "organisationId"));
 	const std::string seat_id = node::normalized_seat_id(required_text(params, "seatId"));
-	const std::string password = required_text(params, "password");
+	const std::string challenge_id = required_text(params, "challengeId");
+	// The password the member typed, or the one this computer keeps, held here
+	// for the challenge its own sign-in made (D-243).
+	std::string password;
+	if (asks_for_saved_password(params) == true) {
+		if (params.contains("password") == true && params.at("password").is_null() == false) {
+			throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "Give the password or ask for the saved one, not both.");
+		}
+		const std::lock_guard<std::mutex> lock(memory_mutex());
+		drop_stale_memory();
+		const auto found = pending_challenges().find(challenge_id);
+		if (found != pending_challenges().end()) password = found->second.saved_password;
+	} else {
+		password = required_text(params, "password");
+	}
 	if (password.empty() == true) {
 		throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "Sign in again to get a new code.");
 	}
-	const std::string challenge_id = required_text(params, "challengeId");
 	// The service names the organisation and the person once the code is right:
 	// the app shows its own firm by that name, and a member signing in again
 	// finds their own name (D-136).
-	const node::SignInAnswer named = node::verify_two_factor(services.post, challenge_id, required_text(params, "code"));
+	std::optional<node::SignInAnswer> answered;
+	try {
+		answered = node::verify_two_factor(services.post, challenge_id, required_text(params, "code"));
+	} catch (...) {
+		wipe(password);
+		throw;
+	}
+	const node::SignInAnswer &named = *answered;
+
+	// Who signed in: the seat whose sign-in made the challenge, as that sign-in
+	// named it, or as this call does. Its kept password is let go.
+	std::optional<SignedInSeat> who;
+	{
+		const std::lock_guard<std::mutex> lock(memory_mutex());
+		const auto found = pending_challenges().find(challenge_id);
+		if (found != pending_challenges().end()) {
+			who = found->second.who;
+			wipe(found->second.saved_password);
+			pending_challenges().erase(found);
+		}
+	}
+	if (who.has_value() == false) who = SignedInSeat{organisation_email_of(params).value_or(std::string()), seat_id, {}, {}};
+	who->password_digest = digest_of(password);
+	remember_signed_in(*who);
 
 	// The download session is asked against this very check (the service
 	// counts it for ten minutes), never against whichever code came last.
@@ -277,6 +446,7 @@ nlohmann::json verify_two_factor(const nlohmann::json &params, const AccountServ
 	const platform::AppSettings settings = save_account(organisation_id, seat_id, &named, organisation_email_of(params));
 	record_seat_role(seat_id, named);
 	start_authorization(services, password, challenge_id);
+	wipe(password);
 	Json result = signed_in_json(settings, services);
 	// Signed in by a recovery code (D-218): the page asks for a new
 	// authenticator app and says how many codes are left.
@@ -354,7 +524,15 @@ nlohmann::json reset_seat_two_factor(const nlohmann::json &params, const Account
 nlohmann::json own_seat(const nlohmann::json &, const AccountServices &services) {
 	if (!services.session_post) throw node::AccountFailure(node::AccountFailureKind::WrongCredentials, "Sign in again to see your seat.");
 	const node::OwnSeat seat = node::own_seat(services.session_post);
-	Json result{{"seatId", seat.seat_id}, {"role", seat.role}, {"twoFactor", seat.has_two_factor}};
+	// A design partner's computer keeps its model calls for the work log its
+	// members may send; any other keeps none, and erases what it kept. So does
+	// a build without Legal Machines' keys for work logs, which could never
+	// send what it kept (D-257).
+	const bool keeps_work_logs = seat.is_design_partner && node::work_log_share::recipients_ready();
+	node::work_log::set_kept(keeps_work_logs);
+	Json result{{"seatId", seat.seat_id}, {"role", seat.role}, {"twoFactor", seat.has_two_factor}, {"designPartner", seat.is_design_partner},
+		{"workLogs", keeps_work_logs},
+		{"diagnosticsConsent", seat.diagnostics_consent.has_value() == true ? Json(*seat.diagnostics_consent) : Json(nullptr)}};
 	if (seat.recovery_codes_left.has_value() == true) result["recoveryCodesLeft"] = *seat.recovery_codes_left;
 	return result;
 }
@@ -419,20 +597,250 @@ nlohmann::json reset_password(const nlohmann::json &params, const AccountService
 	return Json{{"changed", true}};
 }
 
+namespace {
+
+// Where a report goes: Legal Machines' board for its version's line (the mail
+// server's /intake/singularity, which takes one from a design partner's seat,
+// or from a Debug build, Legal Machines' own; D-257).
+constexpr const char *kProblemReportUrl = "https://mail.legalmachines.org/intake/singularity";
+constexpr std::size_t kMostProblemPictures = 3;
+constexpr std::size_t kMostProblemPictureBytes = 10u * 1024 * 1024;
+
+// Standard base64 (RFC 4648), padded or not; none where a character is not one.
+std::optional<std::string> from_base64(const std::string &text) {
+	std::string bytes;
+	unsigned value = 0;
+	int bits = 0;
+	for (const char character : text) {
+		int digit = -1;
+		if (character >= 'A' && character <= 'Z') digit = character - 'A';
+		else if (character >= 'a' && character <= 'z') digit = character - 'a' + 26;
+		else if (character >= '0' && character <= '9') digit = character - '0' + 52;
+		else if (character == '+') digit = 62;
+		else if (character == '/') digit = 63;
+		else if (character == '=') break;
+		else return std::nullopt;
+		value = (value << 6) | static_cast<unsigned>(digit);
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			bytes.push_back(static_cast<char>((value >> bits) & 0xFF));
+		}
+	}
+	return bytes;
+}
+
+// A name as one line of a form: no quotes, no line breaks.
+std::string form_name(const std::string &name) {
+	std::string out;
+	for (const char character : name.substr(0, 200)) out += (character == '"' || character == '\r' || character == '\n' || character == '\\') ? '_' : character;
+	return out.empty() == true ? std::string("screenshot") : out;
+}
+
+} // namespace
+
+nlohmann::json report_problem(const nlohmann::json &params, const AccountServices &services) {
+	if (!services.problem_post) throw node::AccountFailure(node::AccountFailureKind::ServiceUnavailable, "This build can't send a report.");
+	const std::string title = required_text(params, "title");
+	if (title.find_first_not_of(" \t\r\n") == std::string::npos)
+		throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "Give the report a title.");
+	const auto text_of = [&params](const char *key) {
+		return params.contains(key) && params.at(key).is_string() ? params.at(key).get<std::string>() : std::string();
+	};
+	// The Diagnostics Consent the member has just ticked for this seat (D-257):
+	// kept by Legal Machines first, and nothing is sent unless it was.
+	const std::string accepted = text_of("acceptedConsent");
+	if (accepted.empty() == false) {
+		if (!services.session_post) throw node::AccountFailure(node::AccountFailureKind::WrongCredentials, "Sign in again to send the report.");
+		node::accept_diagnostics_consent(services.session_post, accepted);
+	}
+	std::random_device random;
+	std::string boundary = "singularity-report-";
+	for (int at = 0; at < 4; ++at) boundary += std::to_string(random());
+	std::string body;
+	const auto field = [&](const std::string &name, const std::string &value) {
+		body += "--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" + value + "\r\n";
+	};
+	field("version", services.app_version);
+	// A Debug build's report is Legal Machines' own; any other comes from a
+	// design partner's seat alone, and the board labels it so (D-257).
+#if defined(NDEBUG)
+	field("build", "Release");
+#else
+	field("build", "Debug");
+#endif
+	field("title", title);
+	// What it is about, by the id of the member's choice ("ux"), which the
+	// board labels in its own words (D-257).
+	const std::string category = text_of("category");
+	if (category.empty() == false) {
+		if (category.size() > 20 || std::all_of(category.begin(), category.end(), [](char c) { return c >= 'a' && c <= 'z'; }) == false)
+			throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "Choose what the report is about.");
+		field("category", category);
+	}
+	field("description", text_of("description"));
+	field("technical", text_of("technical"));
+	if (params.contains("pictures") && params.at("pictures").is_array()) {
+		const Json &pictures = params.at("pictures");
+		if (pictures.size() > kMostProblemPictures)
+			throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "A report carries three screenshots at most.");
+		for (const Json &picture : pictures) {
+			if (picture.is_object() == false || picture.contains("data") == false || picture.at("data").is_string() == false)
+				throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "A screenshot could not be read.");
+			const std::optional<std::string> bytes = from_base64(picture.at("data").get<std::string>());
+			if (bytes.has_value() == false || bytes->empty() == true)
+				throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "A screenshot could not be read.");
+			if (bytes->size() > kMostProblemPictureBytes)
+				throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "A screenshot can be 10 MB at most.");
+			const std::string name = picture.contains("name") && picture.at("name").is_string() ? picture.at("name").get<std::string>() : std::string();
+			body += "--" + boundary + "\r\nContent-Disposition: form-data; name=\"picture\"; filename=\"" + form_name(name)
+				+ "\"\r\nContent-Type: application/octet-stream\r\n\r\n" + *bytes + "\r\n";
+		}
+	}
+	body += "--" + boundary + "--\r\n";
+	const platform::HttpResponse response = services.problem_post(kProblemReportUrl, "multipart/form-data; boundary=" + boundary, body);
+	const Json answer = Json::parse(response.body, nullptr, false);
+	const std::string said = answer.is_object() && answer.contains("error") && answer.at("error").is_string() ? answer.at("error").get<std::string>()
+		: std::string();
+	if (response.status == 401)
+		throw node::AccountFailure(node::AccountFailureKind::WrongCredentials, "Sign in to Singularity again, then send the report.");
+	// Legal Machines takes reports from its design partners' seats alone.
+	if (response.status == 403)
+		throw node::AccountFailure(node::AccountFailureKind::Refused, said.empty() == true
+			? std::string("Only Legal Machines' design partners send bug reports from Singularity.") : said);
+	if (response.status == 429)
+		throw node::AccountFailure(node::AccountFailureKind::TooManyAttempts, said.empty() == true ? std::string("Too many reports this hour. Send it a little later.") : said);
+	if (response.status >= 400 && response.status < 500)
+		throw node::AccountFailure(node::AccountFailureKind::InvalidInput, said.empty() == true ? std::string("The report was not taken.") : said);
+	if (response.status < 200 || response.status >= 300 || answer.is_object() == false || answer.contains("number") == false
+			|| answer.at("number").is_number_integer() == false)
+		throw node::AccountFailure(node::AccountFailureKind::ServiceUnavailable, "The board isn't answering. Try again in a moment.");
+	return Json{{"number", answer.at("number").get<long long>()}};
+}
+
+nlohmann::json work_log_preview(const nlohmann::json &params, const AccountServices &) {
+	const node::work_log_share::Preview shown = node::work_log_share::preview(required_text(params, "matterId"), required_text(params, "chatId"));
+	return Json{{"calls", shown.calls}, {"protectedCalls", shown.protected_calls}, {"unprotectedCalls", shown.unprotected_calls},
+		{"failedCalls", shown.failed_calls}, {"from", shown.from}, {"to", shown.to}, {"bytes", shown.bytes}, {"canSend", shown.can_send},
+		{"reason", shown.reason}};
+}
+
+nlohmann::json share_work_log(const nlohmann::json &params, const AccountServices &services) {
+	if (!services.problem_post || !services.session_post)
+		throw node::AccountFailure(node::AccountFailureKind::WrongCredentials, "Sign in to Singularity again, then send the work log.");
+	const auto text_of = [&params](const char *key, std::size_t most) {
+		const std::string text = params.contains(key) && params.at(key).is_string() ? params.at(key).get<std::string>() : std::string();
+		if (text.size() > most) throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "That is more than a work log carries.");
+		return text;
+	};
+	node::work_log_share::Request request;
+	request.matter_id = required_text(params, "matterId");
+	request.chat_id = required_text(params, "chatId");
+	request.chat_title = text_of("chatTitle", 300);
+	request.note = text_of("note", 8000);
+	// The conversation's messages as the member's page shows them: two
+	// thousand at most, and 4 MB of words.
+	if (params.contains("messages") && params.at("messages").is_array()) {
+		std::size_t words = 0;
+		for (const Json &message : params.at("messages")) {
+			if (request.messages.size() >= 2000) break;
+			if (message.is_object() == false) continue;
+			node::work_log_share::Message kept;
+			kept.author = message.contains("author") && message.at("author").is_string() ? message.at("author").get<std::string>() : std::string();
+			kept.at = message.contains("at") && message.at("at").is_string() ? message.at("at").get<std::string>() : std::string();
+			kept.text = message.contains("text") && message.at("text").is_string() ? message.at("text").get<std::string>() : std::string();
+			words += kept.author.size() + kept.at.size() + kept.text.size();
+			if (words > 4u * 1024 * 1024) break;
+			request.messages.push_back(std::move(kept));
+		}
+	}
+	// The Diagnostics Consent the member has just ticked for this seat (D-257):
+	// kept with Legal Machines first, and nothing is sent unless it was.
+	const std::string accepted = text_of("acceptedConsent", 20);
+	if (accepted.empty() == false) node::accept_diagnostics_consent(services.session_post, accepted);
+	const platform::AppSettings settings = platform::load_app_settings();
+	request.facts.organisation = settings.account.has_value() == true ? settings.account->organisation_id : std::string();
+	request.facts.seat = settings.account.has_value() == true ? settings.account->seat_id : std::string();
+	request.facts.app_version = services.app_version;
+#if defined(NDEBUG)
+	request.facts.build = "Release";
+#else
+	request.facts.build = "Debug";
+#endif
+	request.facts.platform = services.platform_name;
+	request.facts.device_public_key = services.device_public_key ? services.device_public_key() : std::string();
+	const node::work_log_share::Poster post = [&services](const std::string &url, const std::string &content_type, const std::string &body) {
+		const platform::HttpResponse response = services.problem_post(url, content_type, body);
+		return std::make_pair(static_cast<long>(response.status), response.body);
+	};
+	try {
+		const node::work_log_share::Sent sent = node::work_log_share::send(request, services.sign_with_device, post);
+		return Json{{"sent", true}, {"sha256", sent.sha256}, {"recipients", sent.recipients}, {"bytes", sent.bytes}};
+	} catch (const node::AccountFailure &) {
+		throw;
+	} catch (const std::runtime_error &error) {
+		throw node::AccountFailure(node::AccountFailureKind::Refused, error.what());
+	}
+}
+
 nlohmann::json sign_in_with_email(const nlohmann::json &params, const AccountServices &services) {
 
 	const std::string email = required_text(params, "email");
-	const std::string password = required_text(params, "password");
 	// The seat's id (D-204); a page before seats names none, the administrator's.
 	const std::string seat = params.contains("seat") && params.at("seat").is_string() ? params.at("seat").get<std::string>() : std::string();
-	const node::SignInAnswer answer = node::sign_in_with_email(services.post, email, seat, password);
+	// The password the member typed, or the one this computer keeps for the
+	// seat (D-243), read here and never said to the page.
+	const bool from_store = asks_for_saved_password(params);
+	const std::optional<std::string> firm_email = organisation_email_of(params);
+	const std::string named_seat = named_seat_of(params);
+	std::string target;
+	std::string password;
+	if (from_store == true) {
+		if (params.contains("password") == true && params.at("password").is_null() == false) {
+			throw node::AccountFailure(node::AccountFailureKind::InvalidInput, "Give the password or ask for the saved one, not both.");
+		}
+		if (firm_email.has_value() == false || has_seat_password_store(services) == false) return saved_password_refused_json(services);
+		target = seat_password_target(*firm_email, named_seat);
+		std::optional<std::string> kept = services.read_seat_password(target);
+		if (kept.has_value() == false || kept->empty() == true) return saved_password_refused_json(services);
+		password = std::move(*kept);
+	} else {
+		password = required_text(params, "password");
+	}
+	std::optional<node::SignInAnswer> answered;
+	try {
+		answered = node::sign_in_with_email(services.post, email, seat, password);
+	} catch (const node::AccountFailure &failure) {
+		wipe(password);
+		// A kept password Legal Machines refuses is forgotten, and said so.
+		if (from_store == true && failure.getKind() == node::AccountFailureKind::WrongCredentials) {
+			services.forget_seat_password(target);
+			return saved_password_refused_json(services);
+		}
+		throw;
+	} catch (...) {
+		wipe(password);
+		throw;
+	}
+	const node::SignInAnswer &answer = *answered;
 	const auto with_seat = [&answer](Json result) {
 		if (answer.organisation_id.has_value()) result["organisationId"] = *answer.organisation_id;
 		if (answer.seat_id.has_value()) result["seatId"] = *answer.seat_id;
 		return result;
 	};
+	const SignedInSeat who{firm_email.value_or(std::string()), named_seat, digest_of(password), {}};
 
 	if (answer.status == node::SignInStatus::TwoFactorRequired) {
+		// The code's check comes next: who this was, and the kept password, for
+		// that challenge alone.
+		{
+			const std::lock_guard<std::mutex> lock(memory_mutex());
+			drop_stale_memory();
+			PendingChallenge pending{who, from_store ? password : std::string()};
+			pending.who.at = std::chrono::steady_clock::now();
+			pending_challenges()[answer.challenge_id] = std::move(pending);
+		}
+		wipe(password);
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
 		return with_seat(Json{{"status", node::to_string(answer.status)},
 		                      {"challengeId", answer.challenge_id},
@@ -443,6 +851,7 @@ nlohmann::json sign_in_with_email(const nlohmann::json &params, const AccountSer
 	// A new organisation whose setup is not finished (D-146): it goes on with
 	// two-factor authentication; the token stays here.
 	if (answer.status == node::SignInStatus::SetupRequired && answer.organisation_id.has_value()) {
+		wipe(password);
 		keep_setup_token(*answer.organisation_id, answer.setup_token);
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
 		return with_seat(Json{{"status", node::to_string(answer.status)},
@@ -451,6 +860,7 @@ nlohmann::json sign_in_with_email(const nlohmann::json &params, const AccountSer
 		                      {"account", account_state_json(platform::load_app_settings(), services)}});
 	}
 	if (answer.status != node::SignInStatus::SignedIn) {
+		wipe(password);
 		// Waiting for approval, or for the email to be confirmed: nothing is
 		// kept and nothing is downloaded (D-030).
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
@@ -463,14 +873,58 @@ nlohmann::json sign_in_with_email(const nlohmann::json &params, const AccountSer
 	const platform::AppSettings settings =
 		save_account(*answer.organisation_id, *answer.seat_id, &answer, node::normalized_email(email));
 	record_seat_role(*answer.seat_id, answer);
+	remember_signed_in(who);
 	// A colleague's seat's sign-in stands checked (D-204): this computer's
 	// session is asked against it.
 	start_authorization(services, password, answer.challenge_id);
+	wipe(password);
 	Json result = signed_in_json(settings, services);
 	// A colleague's seat with no authenticator yet sets one up before it works (D-215).
 	if (answer.needs_two_factor_setup == true) result["twoFactorSetup"] = "required";
 	return with_seat(result);
 
+}
+
+nlohmann::json seat_password_store(const nlohmann::json &, const AccountServices &services) {
+	if (!services.seat_password_store) return Json{{"store", nullptr}};
+	return Json{{"store", optional_text_json(services.seat_password_store())}};
+}
+
+nlohmann::json saved_seat_password(const nlohmann::json &params, const AccountServices &services) {
+	const std::string target = seat_password_target(node::normalized_email(required_text(params, "email")), named_seat_of(params));
+	if (has_seat_password_store(services) == false) return Json{{"saved", false}};
+	std::optional<std::string> kept = services.read_seat_password(target);
+	const bool saved = kept.has_value() == true && kept->empty() == false;
+	if (kept.has_value() == true) wipe(*kept);
+	return Json{{"saved", saved}};
+}
+
+nlohmann::json save_seat_password(const nlohmann::json &params, const AccountServices &services) {
+	const std::string email = node::normalized_email(required_text(params, "email"));
+	const std::string seat = named_seat_of(params);
+	std::string password = required_text(params, "password");
+	// Only the seat that signed in here in the last ten minutes, and only the
+	// very password it signed in with.
+	bool may_keep = false;
+	{
+		const std::lock_guard<std::mutex> lock(memory_mutex());
+		drop_stale_memory();
+		const std::optional<SignedInSeat> &last = last_signed_in_seat();
+		may_keep = password.empty() == false && last.has_value() == true && last->email == email && last->seat == seat
+			&& last->password_digest == digest_of(password);
+	}
+	bool saved = false;
+	if (may_keep == true && has_seat_password_store(services) == true) {
+		saved = services.save_seat_password(seat_password_target(email, seat), seat.empty() ? email : seat, password);
+	}
+	wipe(password);
+	return Json{{"saved", saved}};
+}
+
+nlohmann::json forget_seat_password(const nlohmann::json &params, const AccountServices &services) {
+	const std::string target = seat_password_target(node::normalized_email(required_text(params, "email")), named_seat_of(params));
+	const bool forgotten = has_seat_password_store(services) == true && services.forget_seat_password(target) == true;
+	return Json{{"forgotten", forgotten}};
 }
 
 nlohmann::json register_organisation(const nlohmann::json &params, const AccountServices &services) {
@@ -670,16 +1124,29 @@ nlohmann::json sign_out(const nlohmann::json &, const AccountServices &services)
 
 	if (services.forget_session) services.forget_session();
 	forget_setups();
+	// Who signed in here, and a sign-in's held password, go with the session: no
+	// password is kept for a seat after it signed out (D-243). One the member
+	// chose to keep stays kept.
+	forget_signed_in_memory();
 	// The role of the seat signing out is settled first, so it signs in again
 	// to the role it had (D-184).
 	organisation::firm_role();
 	const persistence::PersistenceLock lock(persistence::persistence_mutex());
 	platform::AppSettings settings = platform::load_app_settings();
+	// A seat that finished onboarding before the seats were recorded here is
+	// recorded as it leaves, so it does not go through onboarding once more
+	// when it signs in again (D-250).
+	if (settings.account.has_value() == true && settings.onboarding_completed == true && is_onboarded_here(settings) == false) {
+		settings.onboarded_seats.push_back(platform::onboarded_seat_key(settings.account->organisation_id, settings.account->seat_id));
+	}
 	settings.account.reset();
 	// Signed out, this computer opens at the entry again: the next member signs
-	// in there, and one who has been here goes straight back to work (D-136).
+	// in there, and one who has been here goes straight back to work (D-136,
+	// D-250: the seats that finished onboarding here stay listed).
 	settings.onboarding_completed = false;
-	platform::save_app_settings(settings);
+	// No file keeps the account afterwards, not even the settings' recovery
+	// copy (the owner, 2026-11-05).
+	platform::save_app_settings_leaving_no_copy(settings);
 	return account_state_json(settings, services);
 
 }

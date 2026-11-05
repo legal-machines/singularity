@@ -23,4 +23,14 @@ nlohmann::json allow_broader_access(const nlohmann::json &params);
 // resolve_project_discovery_scope().
 nlohmann::json revoke_broader_access(const nlohmann::json &params);
 
+// What the computer itself allows Singularity, asked during onboarding
+// before the work that needs it (Platform/SystemPermissions):
+// system.permissions -> { permissions: [{ key, state, problem }] }, as known
+// without asking; system.askPermission { key } -> { key, state, problem },
+// after the system's own question; system.openPermissionSettings { key } ->
+// whether the system's settings opened where it is allowed.
+nlohmann::json system_permissions(const nlohmann::json &params);
+nlohmann::json ask_system_permission(const nlohmann::json &params);
+nlohmann::json open_system_permission_settings(const nlohmann::json &params);
+
 } // namespace singularity::bridge::platform_bridge

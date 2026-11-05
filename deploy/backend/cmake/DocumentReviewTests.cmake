@@ -21,6 +21,13 @@ if(TARGET playbook_agent_tests)
   target_link_libraries(document_review_tests PRIVATE lm_document_review)
   target_compile_definitions(document_review_tests PRIVATE
     "SINGULARITY_TEST_FIXTURES_DIR=\"${NATIVE_APP_CODE_ROOT}/tests/fixtures\"")
+  if(MSVC)
+    # main() is one 3,400-line function: a Debug build gives it a frame so
+    # large that a review's deeper calls passed MSVC's default 1 MiB
+    # main-thread stack (0xC00000FD after 245 s, 2026-11-05). The 8 MiB
+    # macOS and Linux give a main thread, as chat_execution_tests has.
+    target_link_options(document_review_tests PRIVATE /STACK:8388608)
+  endif()
   add_test(NAME document_review COMMAND document_review_tests)
   singularity_label_test(document_review acceptance document)
 endif()

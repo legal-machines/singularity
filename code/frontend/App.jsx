@@ -32,7 +32,7 @@ import { TeamPage } from "./pages/Team/TeamPage.jsx";
 import { ThreadPage } from "./pages/Thread/ThreadPage.jsx";
 import { watchFirmComputers } from "./data/coordination.js";
 import { askToChangeApp, recoverySignInLine, takeRecoverySignIn, watchTwoStepSetup } from "./data/twoStep.js";
-import { watchUpdates } from "./data/updates.js";
+import { tellUpdated, watchUpdates } from "./data/updates.js";
 import { connectRealWork, hasNative, hireColleague, markChatRead, realColleaguePresences, shownMembers, shownThreads, useRealWork } from "./data/native.js";
 import { conversationsFor } from "./pages/Messages/conversations.js";
 import { toast } from "./components/Toast/toast.js";
@@ -123,6 +123,11 @@ export function App({ emulation = null }) {
 		// Singularity's new versions, from Legal Machines' site.
 		watchUpdates();
 	}, []);
+	// The first start of a newer version says so once, with what is new in it;
+	// onboarding's preview never tells it.
+	useEffect(() => {
+		if (emulation == null) tellUpdated().catch(() => {});
+	}, [emulation]);
 	// A sign-in by a recovery code (D-218) is told once Singularity opens, with
 	// the way to a new authenticator app; onboarding's preview never tells it.
 	// A seat with no authenticator app is led to set one up wherever Legal

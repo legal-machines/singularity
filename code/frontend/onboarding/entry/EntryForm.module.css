@@ -80,6 +80,12 @@
 	margin-bottom: 0;
 }
 
+/* Where Windows can keep the seat's password, the member's choice stands
+   right under the field it keeps (D-243). */
+.content .keepPassword {
+	margin-top: 12px;
+}
+
 .contentStage {
 	min-height: 0;
 	/* Only unusually long content scrolls; focus rings keep their room. */

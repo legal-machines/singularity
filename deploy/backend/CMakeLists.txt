@@ -70,6 +70,11 @@ endif()
 if(APPLE)
   enable_language(OBJC OBJCXX)
 
+  # The Mac reads a picture's words with Vision, and the picture itself with
+  # ImageIO (Document/PdfExtractor/PdfExtractorMacOS.mm, which the app and
+  # its tests build): every target defined here links both, before any is.
+  link_libraries("-framework Vision" "-framework ImageIO")
+
   # Ad-hoc signing ("-") gives every rebuild a different code identity, so
   # macOS can never remember a Keychain "Always Allow" grant across builds -
   # the app re-prompts for the Keychain password every single time (see
@@ -672,10 +677,20 @@ if(APPLE)
     Platform/MailDraft/MailDraftMacOS.mm
     Platform/MacOSChrome/MacOSChrome.hpp
     Platform/MacOSChrome/MacOSChrome.mm
+    Platform/SeatPasswordStore/SeatPasswordStoreNone.cpp
     Platform/TrashFile/TrashFileMacOS.mm
+    Platform/UpdateInstall/UpdateInstallMacOS.mm
+    Platform/SystemPermissions/SystemPermissionsMacOS.mm
     Platform/UdpSocket/UdpSocketPosix.cpp
+    Platform/WebSocket/WebSocketMacOS.mm
     Platform/WindowNavigation/WindowNavigationMacOS.cpp
   )
+  # What macOS allows Singularity, asked in onboarding, holds its blocks with ARC.
+  set_source_files_properties("${NATIVE_APP_SOURCE_DIR}/Platform/SystemPermissions/SystemPermissionsMacOS.mm"
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+  # The relay's WebSocket (D-242) keeps its task and blocks with ARC.
+  set_source_files_properties("${NATIVE_APP_SOURCE_DIR}/Platform/WebSocket/WebSocketMacOS.mm"
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
   # The file-drop module holds blocks and objects across a drag: ARC keeps them.
   set_source_files_properties("${NATIVE_APP_SOURCE_DIR}/Platform/FileDrop/FileDropMacOS.mm"
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
@@ -708,8 +723,13 @@ elseif(WIN32)
     Platform/FileDrop/FileDropWindows.cpp
     Platform/FileSystemWatcher/FileSystemWatcherWindows.cpp
     Platform/HttpClient/HttpClientWindows.cpp
+    Platform/SeatPasswordStore/SeatPasswordStoreWindows.cpp
     Platform/TrashFile/TrashFileWindows.cpp
+    Platform/UpdateInstall/UpdateInstallWindows.cpp
+    Platform/UpdateHelper/UpdateHelper.cpp
+    Platform/SystemPermissions/SystemPermissionsWindows.cpp
     Platform/UdpSocket/UdpSocketWindows.cpp
+    Platform/WebSocket/WebSocketWindows.cpp
     Platform/WebViewData/WebViewDataWindows.cpp
     Platform/WebViewRecovery/WebViewRecoveryWindows.cpp
     Platform/WindowNavigation/WindowNavigationWindows.cpp
@@ -731,6 +751,13 @@ elseif(WIN32)
     list(APPEND NATIVE_APP_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/app.rc")
   endif()
   singularity_add_executable(native_app WIN32 ${NATIVE_APP_SOURCES})
+  # Every thread of the app gets the 8 MiB of stack a Linux thread has, not
+  # MSVC's default 1 MiB: a colleague's work goes deep, a Debug build's frames
+  # are large, and an MSVC catch block runs on top of every frame of the call
+  # that threw (a locked credential overflowed document_review's 1 MiB,
+  # 0xC00000FD, 2026-11-05). Reserved, not committed: a thread uses what it
+  # touches.
+  target_link_options(native_app PRIVATE /STACK:8388608)
 else()
   list(APPEND NATIVE_APP_SOURCES
     Document/PdfExtractor/PdfExtractorPdfium.cpp
@@ -738,8 +765,12 @@ else()
     Platform/FileDrop/FileDropLinux.cpp
     Platform/FileSystemWatcher/FileSystemWatcherLinux.cpp
     Platform/HttpClient/HttpClientLinux.cpp
+    Platform/SeatPasswordStore/SeatPasswordStoreNone.cpp
     Platform/TrashFile/TrashFileLinux.cpp
+    Platform/UpdateInstall/UpdateInstallLinux.cpp
+    Platform/SystemPermissions/SystemPermissionsLinux.cpp
     Platform/UdpSocket/UdpSocketPosix.cpp
+    Platform/WebSocket/WebSocketLinux.cpp
     Platform/WindowNavigation/WindowNavigationLinux.cpp
   )
   # libcurl is a soft dependency: widely preinstalled on Linux desktops but
@@ -798,7 +829,9 @@ if(WIN32)
   target_sources(native_app PRIVATE "${NATIVE_APP_SOURCE_DIR}/Provider/CredentialStore/CredentialStoreWindows.cpp")
   # psapi is Platform/ProcessMetrics/ProcessMetrics.cpp's GetProcessMemoryInfo -
   # real peak-RSS evidence for Phase 05's resource benchmark harness.
-  target_link_libraries(native_app PRIVATE dwmapi uxtheme ole32 shell32 advapi32 crypt32 winhttp psapi)
+  # oleaut32 is Windows Firewall's COM (Platform/SystemPermissions, D-244):
+  # its rules come as VARIANTs and BSTRs.
+  target_link_libraries(native_app PRIVATE dwmapi uxtheme ole32 oleaut32 shell32 advapi32 crypt32 winhttp psapi)
 endif()
 if(APPLE)
   target_sources(native_app PRIVATE "${NATIVE_APP_SOURCE_DIR}/Provider/CredentialStore/CredentialStoreMacOS.mm")
@@ -809,6 +842,7 @@ if(APPLE)
     "-framework CoreServices"
     "-framework Foundation"
     "-framework Metal"
+    "-framework Network"
   )
 endif()
 if(UNIX AND NOT APPLE)
@@ -1748,7 +1782,7 @@ if(BUILD_TESTING)
       webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
       native_app_gliner2_bridge_library
       "-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-      "-framework CoreServices" "-framework Foundation" "-framework Metal"
+      "-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
     )
     target_compile_definitions(context_automation_real_acceptance PRIVATE
       "NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1781,7 +1815,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(usage_live_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1825,7 +1859,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(chat_preview_live_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1860,7 +1894,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(chat_execution_live_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1890,7 +1924,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(external_research_live_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1920,7 +1954,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(connected_golden_live_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -1966,7 +2000,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(long_horizon_replay_runner PRIVATE
 		SINGULARITY_CONNECTED_GOLDEN_MEMORY_DIAGNOSTIC=1
@@ -2008,7 +2042,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal")
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network")
 	target_compile_definitions(singularity_cli_offline PRIVATE
 		SINGULARITY_ISOLATED_TEST_SETTINGS=1
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -2043,7 +2077,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal")
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network")
 	target_compile_definitions(singularity_cli_fake PRIVATE
 		SINGULARITY_ISOLATED_TEST_SETTINGS=1
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -2086,7 +2120,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(singularity_cli PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -2126,7 +2160,7 @@ if(BUILD_TESTING)
 		webview::core nfd nlohmann_json::nlohmann_json libzip::zip pugixml::pugixml utf8proc
 		native_app_gliner2_bridge_library
 		"-framework Security" "-framework PDFKit" "-framework CoreGraphics"
-		"-framework CoreServices" "-framework Foundation" "-framework Metal"
+		"-framework CoreServices" "-framework Foundation" "-framework Metal" "-framework Network"
 	)
 	target_compile_definitions(singularity_backend_acceptance PRIVATE
 		"NATIVE_APP_DISPLAY_NAME=\"${NATIVE_APP_DISPLAY_NAME}\""
@@ -2917,6 +2951,7 @@ if(BUILD_TESTING)
     Provider/ProviderRegistry/ProviderRegistry.test.cpp
     Provider/ProviderRegistry/ProviderRegistry.cpp
     Provider/ModelClassification/ModelClassification.cpp
+    Platform/Sha256/Sha256.cpp
   )
   if(APPLE)
     target_sources(provider_registry_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}/Platform/HttpClient/HttpClientMacOS.mm")
@@ -4872,6 +4907,54 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME app_update COMMAND app_update_tests)
 
+  # Singularity installing its own new versions (Platform/UpdateInstall,
+  # D-261): what the last install did, said once from one line any system's
+  # helper writes; and a test program, never an installed Singularity, which
+  # installs by hand and changes nothing.
+  set(SINGULARITY_UPDATE_INSTALL_TEST_SOURCES
+    Platform/UpdateInstall/UpdateInstall.test.cpp
+    Platform/UpdateInstall/UpdateInstall.cpp
+    Platform/Sha256/Sha256.cpp
+  )
+  if(APPLE)
+    list(APPEND SINGULARITY_UPDATE_INSTALL_TEST_SOURCES Platform/UpdateInstall/UpdateInstallMacOS.mm)
+  elseif(WIN32)
+    list(APPEND SINGULARITY_UPDATE_INSTALL_TEST_SOURCES
+      Platform/UpdateInstall/UpdateInstallWindows.cpp
+      Platform/UpdateHelper/UpdateHelper.cpp)
+  else()
+    list(APPEND SINGULARITY_UPDATE_INSTALL_TEST_SOURCES Platform/UpdateInstall/UpdateInstallLinux.cpp)
+  endif()
+  singularity_add_executable(update_install_tests ${SINGULARITY_UPDATE_INSTALL_TEST_SOURCES})
+  target_include_directories(update_install_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  if(APPLE)
+    target_link_libraries(update_install_tests PRIVATE "-framework Foundation")
+  endif()
+  if(MSVC)
+    target_compile_options(update_install_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(update_install_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME update_install COMMAND update_install_tests)
+
+  # Singularity's updater on Windows (Platform/UpdateHelper): the request it
+  # reads, its SHA-256 comparison and the member's sentences, on every system;
+  # on Windows the command line split back by Windows itself.
+  singularity_add_executable(update_helper_tests
+    Platform/UpdateHelper/UpdateHelper.test.cpp
+    Platform/UpdateHelper/UpdateHelper.cpp
+  )
+  target_include_directories(update_helper_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  if(WIN32)
+    target_link_libraries(update_helper_tests PRIVATE shell32)
+  endif()
+  if(MSVC)
+    target_compile_options(update_helper_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(update_helper_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME update_helper COMMAND update_helper_tests)
+
   # Signing in to Legal Machines on this computer, through the account bridge,
   # over an injected transport: no network, no credential store, no download.
   # Settings live in a directory of the test's own (SINGULARITY_ISOLATED_TEST_SETTINGS).
@@ -4880,13 +4963,17 @@ if(BUILD_TESTING)
     Bridge/AccountBridge/AccountBridge.cpp
     Organisation/FirmRole/FirmRole.cpp
     Node/LegalMachinesAccount/LegalMachinesAccount.cpp
+    Node/OpenPgpMessage/OpenPgpMessage.cpp
+    Node/WorkLog/WorkLog.cpp
+    Node/WorkLogShare/WorkLogShare.cpp
     Platform/AppSettings/AppSettings.cpp
+    Platform/Sha256/Sha256.cpp
     PapinianGuard/Policy/Policy.cpp
     Provider/ModelClassification/ModelClassification.cpp
     Node/LegacyWorkspace/LegacyWorkspace.cpp
   )
   target_include_directories(account_bridge_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
-  target_link_libraries(account_bridge_tests PRIVATE nlohmann_json::nlohmann_json)
+  target_link_libraries(account_bridge_tests PRIVATE nlohmann_json::nlohmann_json libzip::zip lm_mbedtls monocypher)
   target_compile_definitions(account_bridge_tests PRIVATE
     SINGULARITY_ISOLATED_TEST_SETTINGS=1
     "NATIVE_APP_SLUG=\"${NATIVE_APP_SLUG}\"")
@@ -4896,6 +4983,44 @@ if(BUILD_TESTING)
     target_compile_options(account_bridge_tests PRIVATE -Wall -Wextra -Wpedantic)
   endif()
   add_test(NAME account_bridge COMMAND account_bridge_tests)
+
+  # A seat's password kept at the member's choice (D-243, Platform/
+  # SeatPasswordStore): on Windows the user's Credential Manager itself, under a
+  # test entry of Singularity's own prefix that the test removes again; on macOS
+  # and Linux, that nothing is kept.
+  if(WIN32)
+    singularity_add_executable(seat_password_store_tests
+      Platform/SeatPasswordStore/SeatPasswordStore.test.cpp
+      Platform/SeatPasswordStore/SeatPasswordStoreWindows.cpp
+    )
+    target_link_libraries(seat_password_store_tests PRIVATE advapi32)
+  else()
+    singularity_add_executable(seat_password_store_tests
+      Platform/SeatPasswordStore/SeatPasswordStore.test.cpp
+      Platform/SeatPasswordStore/SeatPasswordStoreNone.cpp
+    )
+  endif()
+  target_include_directories(seat_password_store_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  if(MSVC)
+    target_compile_options(seat_password_store_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(seat_password_store_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME seat_password_store COMMAND seat_password_store_tests)
+
+  # What Windows Firewall's rules for Singularity mean for the firm's computers
+  # reaching this one (D-244, Platform/SystemPermissions/FirewallState.hpp):
+  # the decision alone, the same on every system; Windows reads the rules.
+  singularity_add_executable(firewall_state_tests
+    Platform/SystemPermissions/FirewallState.test.cpp
+  )
+  target_include_directories(firewall_state_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  if(MSVC)
+    target_compile_options(firewall_state_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(firewall_state_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME firewall_state COMMAND firewall_state_tests)
 
   # Signing in and the model download session over an injected transport: the
   # password and the session token never reach an error, a trace or settings.
@@ -4911,6 +5036,72 @@ if(BUILD_TESTING)
     target_compile_options(legal_machines_account_tests PRIVATE -Wall -Wextra -Wpedantic)
   endif()
   add_test(NAME legal_machines_account COMMAND legal_machines_account_tests)
+
+  # An OpenPGP message sealed on this computer to Legal Machines' keys (D-257):
+  # read from a key openpgp.js made, and opened again with that key's secret.
+  singularity_add_executable(openpgp_message_tests
+    Node/OpenPgpMessage/OpenPgpMessage.test.cpp
+    Node/OpenPgpMessage/OpenPgpMessage.cpp
+  )
+  target_include_directories(openpgp_message_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_link_libraries(openpgp_message_tests PRIVATE lm_mbedtls monocypher)
+  if(MSVC)
+    target_compile_options(openpgp_message_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(openpgp_message_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME openpgp_message COMMAND openpgp_message_tests)
+  set_tests_properties(openpgp_message PROPERTIES
+    ENVIRONMENT "SINGULARITY_OPENPGP_SAMPLE=${CMAKE_CURRENT_BINARY_DIR}/openpgp-sample.asc"
+    FIXTURES_SETUP openpgp_sample)
+  # A design partner's work log of its model calls (D-257): kept only where
+  # its folder is named and the record is on, each chat apart, for 14 days,
+  # and erased when it is turned off.
+  singularity_add_executable(work_log_tests
+    Node/WorkLog/WorkLog.test.cpp
+    Node/WorkLog/WorkLog.cpp
+    Platform/Sha256/Sha256.cpp
+  )
+  target_include_directories(work_log_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_link_libraries(work_log_tests PRIVATE nlohmann_json::nlohmann_json)
+  if(MSVC)
+    target_compile_options(work_log_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(work_log_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME work_log COMMAND work_log_tests)
+
+  # A design partner's work log sent (D-257): packed as a zip, signed, put in
+  # a letter Seal reads, sealed to Legal Machines' pinned keys and posted to
+  # the mail server's intake; never while a pinned key is missing.
+  singularity_add_executable(work_log_share_tests
+    Node/WorkLogShare/WorkLogShare.test.cpp
+    Node/WorkLogShare/WorkLogShare.cpp
+    Node/WorkLog/WorkLog.cpp
+    Node/OpenPgpMessage/OpenPgpMessage.cpp
+    Platform/Sha256/Sha256.cpp
+  )
+  target_include_directories(work_log_share_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_link_libraries(work_log_share_tests PRIVATE nlohmann_json::nlohmann_json libzip::zip lm_mbedtls monocypher)
+  if(MSVC)
+    target_compile_options(work_log_share_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(work_log_share_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME work_log_share COMMAND work_log_share_tests)
+
+  # Its interop proof: openpgp.js, the version Seal opens it with (a
+  # devDependency of deploy/frontend), and GnuPG where it is installed, open
+  # the sample the test above sealed. Skipped where Node or the frontend's
+  # packages are not installed.
+  find_program(SINGULARITY_NODE_PROGRAM node)
+  if(SINGULARITY_NODE_PROGRAM)
+    add_test(NAME openpgp_interop
+      COMMAND "${SINGULARITY_NODE_PROGRAM}" "${NATIVE_APP_SOURCE_DIR}/Node/OpenPgpMessage/OpenPgpMessage.interop.mjs"
+              "${CMAKE_CURRENT_BINARY_DIR}/openpgp-sample.asc"
+              "${CMAKE_CURRENT_SOURCE_DIR}/../frontend/node_modules/openpgp/dist/node/openpgp.mjs")
+    set_tests_properties(openpgp_interop PROPERTIES FIXTURES_REQUIRED openpgp_sample SKIP_RETURN_CODE 77)
+  endif()
 
   # The developer model source, compiled as a Debug build has it and as every
   # other build has it (none at all), from the same test source.
@@ -5541,6 +5732,30 @@ if(BUILD_TESTING)
   target_include_directories(direct_transport_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
   target_link_libraries(direct_transport_tests PRIVATE monocypher nlohmann_json::nlohmann_json Threads::Threads)
   add_test(NAME direct_transport COMMAND direct_transport_tests)
+  # This computer's Trash of Matters (Matter/MatterTrash, D-247).
+  singularity_add_executable(matter_trash_tests
+    Matter/MatterTrash/MatterTrash.test.cpp
+    Matter/MatterTrash/MatterTrash.cpp
+  )
+  target_include_directories(matter_trash_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_link_libraries(matter_trash_tests PRIVATE nlohmann_json::nlohmann_json)
+  add_test(NAME matter_trash COMMAND matter_trash_tests)
+  # A personal conversation cleared by the member here (Chat/ConversationClearing).
+  singularity_add_executable(conversation_clearing_tests
+    Chat/ConversationClearing/ConversationClearing.test.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+  )
+  target_include_directories(conversation_clearing_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_link_libraries(conversation_clearing_tests PRIVATE nlohmann_json::nlohmann_json)
+  add_test(NAME conversation_clearing COMMAND conversation_clearing_tests)
+  # The relay's WebSocket frames (Platform/WebSocket, D-242), as the Linux
+  # client speaks them: RFC 6455's samples, a message in pieces, a broken frame.
+  singularity_add_executable(websocket_frames_tests
+    Platform/WebSocket/WebSocketFrames.test.cpp
+    Platform/WebSocket/WebSocketFrames.cpp
+  )
+  target_include_directories(websocket_frames_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  add_test(NAME websocket_frames COMMAND websocket_frames_tests)
   # How a computer behind a router learns the address it shows outside: STUN's
   # Binding request and response (RFC 8489), checked against RFC 5769's samples.
   singularity_add_executable(stun_tests
@@ -6155,6 +6370,8 @@ if(BUILD_TESTING)
   singularity_add_executable(matter_request_execution_tests
     Routing/MatterRequestExecution/MatterRequestExecution.test.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/ComputedStatements/ComputedStatements.cpp
     Context/TemporalContext/TemporalContext.cpp
     Context/TemporalSemantics/TemporalSemantics.cpp
@@ -6285,6 +6502,8 @@ if(BUILD_TESTING)
     Bridge/ChatBridge/ChatBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/ComputedStatements/ComputedStatements.cpp
     Context/TemporalContext/TemporalContext.cpp
     Context/TemporalSemantics/TemporalSemantics.cpp
@@ -6427,6 +6646,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -6566,6 +6787,8 @@ if(BUILD_TESTING)
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Bridge/ContextBridge/ContextBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -6698,6 +6921,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -6837,6 +7062,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -6965,6 +7192,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -7092,6 +7321,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -7220,6 +7451,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -7353,6 +7586,8 @@ if(BUILD_TESTING)
     Chat/ChatOperationSetup/ChatOperationSetup.cpp
     Chat/ChatActions/ChatActions.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -7648,6 +7883,8 @@ if(BUILD_TESTING)
     Bridge/ChatExecutionBridge/ChatExecutionBridge.cpp
     Bridge/ChatPreviewBridge/ChatPreviewBridge.cpp
     Routing/MatterRequestExecution/MatterRequestExecution.cpp
+    Chat/ConversationClearing/ConversationClearing.cpp
+    Chat/ConversationClearing/ConversationClearingRecords.cpp
     Context/SourcePicker/SourcePicker.cpp
     Consilium/ConsiliumActions/ConsiliumActions.cpp
     WorkProduct/WorkProductActions/WorkProductActions.cpp
@@ -8713,6 +8950,32 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_dependencies(native_app singularity_mcp)
 endif()
 
+# Singularity's updater on Windows (Platform/UpdateHelper; D-261). It stands
+# alone, Windows' own libraries and a static runtime, because Singularity
+# starts it from a copy outside its install folder, which the installer
+# empties and fills again; it leaves its outcome through UpdateInstall.cpp,
+# plain C++. Built beside the executable and installed beside it, where
+# Platform/UpdateInstall finds it.
+if(WIN32)
+  add_executable(singularity_update WIN32
+    "${NATIVE_APP_SOURCE_DIR}/Platform/UpdateHelper/UpdateHelper.cpp"
+    "${NATIVE_APP_SOURCE_DIR}/Platform/UpdateHelper/UpdateHelperWindows.cpp"
+    "${NATIVE_APP_SOURCE_DIR}/Platform/UpdateInstall/UpdateInstall.cpp"
+  )
+  set_target_properties(singularity_update PROPERTIES
+    OUTPUT_NAME "singularity-update"
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_include_directories(singularity_update PRIVATE "${NATIVE_APP_SOURCE_DIR}")
+  target_compile_definitions(singularity_update PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+  target_link_libraries(singularity_update PRIVATE bcrypt shell32 user32 gdi32 advapi32 ole32 dwmapi)
+  if(MSVC)
+    target_compile_options(singularity_update PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_link_options(singularity_update PRIVATE -static -municode)
+  endif()
+  add_dependencies(native_app singularity_update)
+endif()
+
 # Every target that reads PDFs through PDFium links it, and on Windows finds
 # pdfium.dll beside its own executable (Linux finds libpdfium.so through the
 # build tree's RPATH).
@@ -8753,6 +9016,7 @@ elseif(WIN32)
   install(TARGETS native_app RUNTIME DESTINATION . COMPONENT Runtime)
   # The helper an AI app starts, beside the executable as in the build tree.
   install(TARGETS singularity_mcp RUNTIME DESTINATION . COMPONENT Runtime)
+  install(TARGETS singularity_update RUNTIME DESTINATION . COMPONENT Runtime)
   # Microsoft's Visual C++ runtime, which ONNX Runtime's own build
   # (onnxruntime.dll) needs: Microsoft's redistributable, pinned by its
   # versioned URL and SHA-256, which the installer runs and then removes
@@ -8992,7 +9256,18 @@ elseif(WIN32)
   # installer can be produced locally from the macOS Docker toolchain.
   set(CPACK_NSIS_BRANDING_TEXT_CODE "BrandingText \"Legal Machines\"")
   set(CPACK_NSIS_INSTALLED_ICON_NAME "${NATIVE_APP_DISPLAY_NAME}.exe")
-  set(CPACK_NSIS_MUI_FINISHPAGE_RUN "${NATIVE_APP_DISPLAY_NAME}.exe")
+  # The last page offers to start Singularity, through Explorer, so that it
+  # runs as the person and not with the installer's rights: an elevated
+  # Singularity takes no files dragged in from Explorer (the owner,
+  # 2026-11-05). An update installs silently and shows no page; its updater
+  # starts Singularity itself (Platform/UpdateHelper).
+  set(CPACK_NSIS_DEFINES "
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_TEXT \"Run ${NATIVE_APP_DISPLAY_NAME}\"
+!define MUI_FINISHPAGE_RUN_FUNCTION RunSingularityAsUser
+Function RunSingularityAsUser
+  Exec '\"$WINDIR\\explorer.exe\" \"$INSTDIR\\${NATIVE_APP_DISPLAY_NAME}.exe\"'
+FunctionEnd")
   set(CPACK_NSIS_UNINSTALL_NAME "Uninstall ${NATIVE_APP_DISPLAY_NAME}")
   # The Visual C++ runtime is installed from Microsoft's redistributable the
   # package carries, quietly, and the redistributable is then removed. Its
@@ -9659,6 +9934,38 @@ foreach(singularity_target IN LISTS singularity_all_targets)
       break()
     endif()
   endforeach()
+endforeach()
+
+# Every program that makes model calls keeps them in a design partner's work
+# log (Node/WorkLog, D-257) - recorded only where the app names the log's
+# folder - whichever source list brought the calls in; the account bridge
+# turns it on and off from the seat's own record. A colleague's calls come
+# from the review library (lm_document_review), which, like its other
+# domains, leaves the log to whoever links it: a program that links it, or
+# that the review joins once this directory is read (the bridges, see
+# cmake/DocumentIntelligence.cmake), compiles the log too.
+foreach(singularity_target IN LISTS singularity_all_targets)
+  get_target_property(singularity_target_type ${singularity_target} TYPE)
+  if(NOT singularity_target_type STREQUAL "EXECUTABLE")
+    continue()
+  endif()
+  get_target_property(singularity_target_sources ${singularity_target} SOURCES)
+  get_target_property(singularity_target_links ${singularity_target} LINK_LIBRARIES)
+  set(singularity_makes_calls FALSE)
+  set(singularity_has_work_log FALSE)
+  if(singularity_target_links MATCHES "(^|;)lm_document_review(;|$)")
+    set(singularity_makes_calls TRUE)
+  endif()
+  foreach(singularity_source IN LISTS singularity_target_sources)
+    if(singularity_source MATCHES "(ProtectedInference/ProtectedInference|ColleagueWork/ColleagueWork|AccountBridge/AccountBridge|NativeBridge/NativeBridge|DocumentReviewBridge/DocumentReviewBridge)\\.cpp$")
+      set(singularity_makes_calls TRUE)
+    elseif(singularity_source MATCHES "WorkLog/WorkLog\\.cpp$")
+      set(singularity_has_work_log TRUE)
+    endif()
+  endforeach()
+  if(singularity_makes_calls AND NOT singularity_has_work_log)
+    target_sources(${singularity_target} PRIVATE "${NATIVE_APP_SOURCE_DIR}/Node/WorkLog/WorkLog.cpp")
+  endif()
 endforeach()
 
 # On macOS every program that reads PDFs with PDFKit also writes their copies

@@ -103,7 +103,7 @@ export function NewMatterDialog({ onClose, onCreated }) {
 		<Dialog
 			layout="spacious"
 			title={step == 0 ? "New Matter" : `Share ${name.trim()}`}
-			description={step == 0 ? "What the firm calls it, and where its files are" : "Each lawyer you choose is asked to accept it on their computer"}
+			description={step == 0 ? "What the firm calls it, and where its files are" : "Each lawyer you choose gets it on their computers, end‑to‑end encrypted"}
 			initialFocus="input"
 			onClose={onClose}
 			actions={(

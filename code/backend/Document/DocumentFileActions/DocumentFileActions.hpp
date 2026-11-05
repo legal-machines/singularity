@@ -73,4 +73,15 @@ matters::Matter create_folder(const std::string& matter_id, const std::string& p
 matters::Matter add_external_file(const std::string& matter_id, const std::string& destination_folder_relative_path,
                                   const std::string& source_absolute_path, bool move_source, bool keep_both = false);
 
+// Adds an external folder into the Project folder, whole: a real copy of it
+// and of the folders and files inside, under its own name or the next free
+// one ("Data Room 2"), as a folder dragged onto a Matter has it (the owner,
+// 2026-11-04: drag and drop must work reliably). Hidden files, Office's lock
+// files ("~$...") and links are left out. A folder of more than
+// kMostAddedFolderFiles files, or one that holds or lies inside this Project,
+// is refused before anything is copied.
+inline constexpr std::size_t kMostAddedFolderFiles = 5000;
+matters::Matter add_external_folder(const std::string& matter_id, const std::string& destination_folder_relative_path,
+                                    const std::string& source_absolute_path);
+
 } // namespace singularity::document

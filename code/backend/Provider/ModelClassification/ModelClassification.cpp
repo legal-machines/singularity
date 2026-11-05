@@ -40,4 +40,13 @@ std::optional<std::string> classify_model_exclusion(const std::string &model_id)
   return std::nullopt;
 }
 
+std::optional<bool> takes_pictures(const std::string &provider_id, const ModelDescriptor &model) {
+  if (provider_id == "local") return false;
+  if (!model.input_modalities.empty())
+    return std::find(model.input_modalities.begin(), model.input_modalities.end(), "image")
+        != model.input_modalities.end();
+  if (provider_id == "anthropic") return true;
+  return std::nullopt;
+}
+
 } // namespace singularity::providers

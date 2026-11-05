@@ -2,8 +2,10 @@
 #include "Routing/Observability/OperationEvent.hpp"
 
 #include "Platform/HttpClient/HttpClient.hpp"
+#include "Platform/Sha256/Sha256.hpp"
 #include "Provider/Types/GenerationStream.hpp"
 #include "Provider/Types/PromptCache.hpp"
+#include "Provider/Types/InputPictures.hpp"
 
 #include <ctime>
 #include <nlohmann/json.hpp>
@@ -57,20 +59,28 @@ public:
   }
 };
 
+// A request's body as text: a byte that is not UTF-8 in it - a letter cut in
+// two by something that clipped its words - goes as U+FFFD, never failing the
+// whole request (2026-11-05: "The model could not be asked:
+// [json.exception.type_error.316] invalid UTF-8 byte at index 2257").
+std::string body_text(const Json &body) {
+  return body.dump(-1, ' ', false, Json::error_handler_t::replace);
+}
+
 // The body as sent, with the answer first among a structured output's fields:
 // a model writes them in the schema's order (OpenAI Structured Outputs), and
 // the answer is what the lawyer reads while it is written - after every other
 // field, alphabetically, it came last of all.
 std::string answer_first(const Json &body) {
-  if (!body.contains("response_format")) return body.dump();
+  if (!body.contains("response_format")) return body_text(body);
   const Json &format = body.at("response_format");
   if (!format.is_object() || !format.contains("json_schema") || !format.at("json_schema").is_object()
-      || !format.at("json_schema").contains("schema")) return body.dump();
+      || !format.at("json_schema").contains("schema")) return body_text(body);
   const Json &schema = format.at("json_schema").at("schema");
   if (!schema.is_object() || !schema.contains("properties") || !schema.at("properties").is_object()
-      || !schema.at("properties").contains("response")) return body.dump();
+      || !schema.at("properties").contains("response")) return body_text(body);
   using Ordered = nlohmann::ordered_json;
-  Ordered ordered = Ordered::parse(body.dump());
+  Ordered ordered = Ordered::parse(body_text(body));
   Ordered &properties = ordered["response_format"]["json_schema"]["schema"]["properties"];
   Ordered first = Ordered::object();
   first["response"] = properties["response"];
@@ -354,6 +364,18 @@ std::optional<double> discovered_price_per_token(const Json &model, const char *
   }
 }
 
+// What the model reads, as OpenRouter reports it in
+// `architecture.input_modalities`. Empty where absent or malformed.
+std::vector<std::string> discovered_input_modalities(const Json &model) {
+  std::vector<std::string> modalities;
+  if (!model.contains("architecture") || !model.at("architecture").is_object()) return modalities;
+  const Json &architecture = model.at("architecture");
+  if (!architecture.contains("input_modalities") || !architecture.at("input_modalities").is_array()) return modalities;
+  for (const auto &modality : architecture.at("input_modalities"))
+    if (modality.is_string()) modalities.push_back(modality.get<std::string>());
+  return modalities;
+}
+
 std::vector<std::string> discovered_supported_parameters(const Json &model) {
   std::vector<std::string> parameters;
   if (!model.contains("supported_parameters") || !model.at("supported_parameters").is_array()) {
@@ -596,6 +618,7 @@ std::optional<std::vector<ModelDescriptor>> parse_openai_style_models_response(c
       descriptor.supports_structured_output = derive_supports_structured_output(descriptor.supported_parameters);
       descriptor.supports_native_tools = derive_supports_native_tools(descriptor.supported_parameters);
       descriptor.supports_tool_choice = derive_supports_tool_choice(descriptor.supported_parameters);
+      descriptor.input_modalities = discovered_input_modalities(model);
       models.push_back(std::move(descriptor));
     }
   }
@@ -1012,13 +1035,26 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
     if (!isOpenRouter) body["stream_options"] = Json{{"include_usage", true}};
   }
 
+  // The member's pictures, after the words, as image inputs (D-256).
+  std::vector<std::string> pictureDigests;
+  if (const std::shared_ptr<const std::vector<InputPicture>> pictures = current_input_pictures();
+      pictures && pictures->empty() == false) {
+    Json &content = body["messages"][0]["content"];
+    if (content.is_string()) content = Json::array({Json{{"type", "text"}, {"text", content.get<std::string>()}}});
+    for (const InputPicture &picture : *pictures) {
+      content.push_back(Json{{"type", "image_url"},
+          {"image_url", Json{{"url", "data:" + picture.media_type + ";base64," + picture.base64}}}});
+      pictureDigests.push_back(picture.sha256);
+    }
+  }
+
   if (!final_payload_validator) {
     throw std::invalid_argument("final provider payload validator is required");
   }
   const auto serialized_body = answer_first(body);
   // Keep this call adjacent to transport: no provider content mutation may
   // occur after validation and before the bytes leave this layer.
-  final_payload_validator(FinalPayloadView{serialized_body, {prompt}});
+  final_payload_validator(FinalPayloadView{serialized_body, {prompt}, pictureDigests});
 
   std::shared_ptr<ChatCompletionStream> events;
   const auto send = [&](const std::string &bytes) {
@@ -1043,7 +1079,7 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
     if (reason && lowercase(*reason).find("tool_choice") != std::string::npos) {
       body["tool_choice"] = "auto";
       const std::string retried = answer_first(body);
-      final_payload_validator(FinalPayloadView{retried, {prompt}});
+      final_payload_validator(FinalPayloadView{retried, {prompt}, pictureDigests});
       events.reset();
       response = send(retried);
     }
@@ -1130,6 +1166,10 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
 
   const auto &first_choice = payload.at("choices").at(0);
   GenerationResult result;
+  // The request as the provider's records name it, and the answer's
+  // fingerprint: the evidence a bill's line rests on (D-252).
+  if (payload.contains("id") && payload.at("id").is_string()) result.response_id = payload.at("id").get<std::string>();
+  result.response_sha256 = platform::sha256_hex_digest(response.body);
   if (first_choice.contains("message") && first_choice.at("message").contains("content") &&
       first_choice.at("message").at("content").is_string()) {
     result.text = first_choice.at("message").at("content").get<std::string>();
@@ -1194,20 +1234,33 @@ GenerationResult generate_anthropic(const std::string &api_key, const std::strin
                                     const FinalPayloadValidator &final_payload_validator,
 								    IProviderTransport &transport,
 								    std::optional<std::uint64_t> maximum_output_tokens) {
+  // The member's pictures, before the words, as Anthropic reads them best (D-256).
+  Json content = prompt;
+  std::vector<std::string> pictureDigests;
+  if (const std::shared_ptr<const std::vector<InputPicture>> pictures = current_input_pictures();
+      pictures && pictures->empty() == false) {
+    content = Json::array();
+    for (const InputPicture &picture : *pictures) {
+      content.push_back(Json{{"type", "image"},
+          {"source", Json{{"type", "base64"}, {"media_type", picture.media_type}, {"data", picture.base64}}}});
+      pictureDigests.push_back(picture.sha256);
+    }
+    content.push_back(Json{{"type", "text"}, {"text", prompt}});
+  }
   const Json body{
       {"model", model_id},
       // Anthropic requires a ceiling; with none asked for, one no answer reaches.
       {"max_tokens", maximum_output_tokens.value_or(8192)},
-      {"messages", Json::array({Json{{"role", "user"}, {"content", prompt}}})},
+      {"messages", Json::array({Json{{"role", "user"}, {"content", std::move(content)}}})},
   };
 
   if (!final_payload_validator) {
     throw std::invalid_argument("final provider payload validator is required");
   }
-  const auto serialized_body = body.dump();
+  const auto serialized_body = body_text(body);
   // This is the final serialized Anthropic request body. Validate it after
   // construction and immediately before handing it to the transport.
-  final_payload_validator(FinalPayloadView{serialized_body, {prompt}});
+  final_payload_validator(FinalPayloadView{serialized_body, {prompt}, pictureDigests});
 
   const platform::HttpResponse response = post_generation(transport,
       "https://api.anthropic.com/v1/messages",
@@ -1276,6 +1329,8 @@ GenerationResult generate_anthropic(const std::string &api_key, const std::strin
   }
 
   GenerationResult result;
+  if (payload.contains("id") && payload.at("id").is_string()) result.response_id = payload.at("id").get<std::string>();
+  result.response_sha256 = platform::sha256_hex_digest(response.body);
   for (const auto &block : payload.at("content")) {
     if (block.contains("type") && block.at("type") == "text" && block.contains("text") &&
         block.at("text").is_string()) {
@@ -1407,6 +1462,53 @@ ProviderTestResult test_connection(const std::string &provider_id, const std::st
   }
   const std::string root = openai_style_root(provider_id, base_url);
   return test_openai_style(generic_service_name(root), root, api_key);
+}
+
+bool is_openrouter_root(const std::string &root) { return root.find("openrouter.ai") != std::string::npos; }
+
+std::optional<GenerationRecord> parse_openrouter_generation(const std::string &body) {
+  const Json payload = Json::parse(body, nullptr, false);
+  if (payload.is_discarded() || !payload.is_object() || !payload.contains("data") || !payload.at("data").is_object())
+    return std::nullopt;
+  const Json &data = payload.at("data");
+  const auto count = [&data](const char *native, const char *plain) -> std::optional<long long> {
+    for (const char *key : {native, plain})
+      if (data.contains(key) && data.at(key).is_number_integer() && data.at(key).get<long long>() >= 0)
+        return data.at(key).get<long long>();
+    return std::nullopt;
+  };
+  const auto text = [&data](const char *key) {
+    return data.contains(key) && data.at(key).is_string() ? data.at(key).get<std::string>() : std::string();
+  };
+  GenerationRecord record;
+  if (data.contains("total_cost") && data.at("total_cost").is_number() && data.at("total_cost").get<double>() >= 0.0)
+    record.cost_micros = std::llround(data.at("total_cost").get<double>() * 1000000.0);
+  // The provider's own count of tokens where OpenRouter gives it, as the call
+  // itself reported them; its own count otherwise.
+  record.input_tokens = count("native_tokens_prompt", "tokens_prompt");
+  record.output_tokens = count("native_tokens_completion", "tokens_completion");
+  record.provider = text("provider_name");
+  record.model = text("model");
+  record.created_at = text("created_at");
+  record.record_sha256 = platform::sha256_hex_digest(body);
+  return record;
+}
+
+std::optional<GenerationRecord> openrouter_generation(const std::string &api_key, const std::string &root,
+                                                      const std::string &id) {
+  if (api_key.empty() || id.empty() || !is_openrouter_root(root)) return std::nullopt;
+  // An id is OpenRouter's own ("gen-..."): letters, digits and dashes alone go
+  // into the address.
+  if (!std::all_of(id.begin(), id.end(), [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '_'; }))
+    return std::nullopt;
+  try {
+    const platform::HttpResponse response =
+        platform::https_get(trim_trailing_slash(root) + "/generation?id=" + id, {{"Authorization", "Bearer " + api_key}});
+    if (response.status != 200) return std::nullopt;
+    return parse_openrouter_generation(response.body);
+  } catch (...) {
+    return std::nullopt;
+  }
 }
 
 GenerationResult generate(const std::string &provider_id, const std::string &api_key,

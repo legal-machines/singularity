@@ -73,6 +73,77 @@ find_routing_entry(const OperationUsageEvidence& operation,
   return std::nullopt;
 }
 
+BilledCall billed_of(const protected_api::papinian::OutboundCall& call) {
+  BilledCall billed;
+  billed.time = call.time;
+  billed.provider_id = call.provider_id;
+  billed.model_id = call.model_id;
+  billed.served_by = call.served_by;
+  billed.provider_request_id = call.provider_request_id;
+  billed.payload_sha256 = call.payload_sha256;
+  billed.response_sha256 = call.response_sha256;
+  billed.input_tokens = call.input_tokens;
+  billed.cached_input_tokens = call.cached_input_tokens;
+  billed.output_tokens = call.output_tokens;
+  billed.reasoning_tokens = call.reasoning_tokens;
+  billed.cost_micros = call.cost_micros;
+  billed.cost_currency = call.cost_currency;
+  billed.cost_classification = call.cost_classification;
+  billed.cost_methodology = call.cost_methodology;
+  billed.protection_mode = call.protection_mode;
+  billed.record_chain = call.record_chain;
+  billed.record_index = call.record_index;
+  billed.confirmation = call.confirmation;
+  return billed;
+}
+
+// Every model call an operation made, in the order made (D-252): only what a
+// bill shows of a call, never the markers or passages that left with it. The
+// Matter's own record of them comes first - it travels to every computer of
+// the firm, whichever ran the work; else each Routing Log entry the operation
+// wrote here. `recorded` is false when neither holds them: the work ran
+// before Singularity kept them, or on a computer that kept them only there.
+std::vector<BilledCall> billed_calls(const OperationUsageEvidence& operation,
+                                     const matters::MatterTask& task,
+                                     const std::vector<routing::RoutingLogEntry>& entries,
+                                     bool& recorded) {
+  if (task.billed_calls.empty() == false) {
+    recorded = true;
+    std::vector<BilledCall> kept;
+    for (const protected_api::papinian::OutboundCall& call : task.billed_calls)
+      if (call.kind.empty() || call.kind == "model") kept.push_back(billed_of(call));
+    std::stable_sort(kept.begin(), kept.end(),
+                     [](const BilledCall& left, const BilledCall& right) { return left.time < right.time; });
+    return kept;
+  }
+  std::vector<const routing::RoutingLogEntry*> own;
+  for (const routing::RoutingLogEntry& entry : entries) {
+    if (entry.operation_id.empty() == false && entry.operation_id == operation.operation_id)
+      own.push_back(&entry);
+  }
+  if (own.empty() == true) {
+    for (const routing::RoutingLogEntry& entry : entries) {
+      if (entry.matter_id == operation.project_id && entry.task_id == operation.task_id &&
+          entry.attempt == operation.attempt && entry.time == operation.timestamp) {
+        own.push_back(&entry);
+        break;
+      }
+    }
+  }
+  recorded = own.empty() == false;
+  std::vector<BilledCall> calls;
+  for (const routing::RoutingLogEntry* entry : own) {
+    if (entry->outbound_calls_recorded == false) recorded = false;
+    for (const protected_api::papinian::OutboundCall& call : entry->privacy_metadata.outbound_calls) {
+      if (call.kind != "model") continue;
+      calls.push_back(billed_of(call));
+    }
+  }
+  std::stable_sort(calls.begin(), calls.end(),
+                   [](const BilledCall& left, const BilledCall& right) { return left.time < right.time; });
+  return calls;
+}
+
 bool optional_equal(const std::optional<std::string>& left,
                     const std::optional<std::string>& right) {
   return left == right;
@@ -154,6 +225,8 @@ void add_currency_total(std::vector<CurrencyTotal>& totals,
 
 } // namespace
 
+BilledCall billed_call_of(const protected_api::papinian::OutboundCall& call) { return billed_of(call); }
+
 const char* to_string(CostClassification classification) noexcept {
   switch (classification) {
   case CostClassification::Actual:
@@ -214,6 +287,10 @@ UsageSummary reconcile_usage(const std::vector<matters::Matter>& projects,
     for (const matters::MatterTask& task : project.tasks) {
       if (task.created_at < period.start || task.created_at >= period.end)
         continue;
+      // A person's or an AI colleague's words in a thread, and a thread's
+      // closing, are no request: no model read them, and no bill counts them.
+      if (task.operation_type == "member_message" || task.operation_type == "agent_message")
+        continue;
 
       OperationUsageEvidence operation;
       operation.project_id = project.id;
@@ -232,6 +309,16 @@ UsageSummary reconcile_usage(const std::vector<matters::Matter>& projects,
       operation.consilium_id = task.consilium_group_id;
       operation.workflow_run_id = task.workflow_run_id;
       operation.work_product_ids = work_products_for_operation(project, task.id);
+      // Whose work it was (D-252): a turn an AI colleague began itself is
+      // written under its name; any other names the person who asked.
+      operation.agent_id = task.agent_id;
+      operation.agent_initiated = task.agent_initiated;
+      if (task.agent_initiated == true) {
+        operation.agent_name = task.author_name;
+      } else if (task.author_actor_id.empty() == false) {
+        operation.asked_by_actor_id = task.author_actor_id;
+        operation.asked_by_name = task.author_name;
+      }
       operation.privacy_mode =
           task.privacy_metadata.mode.empty() ? task.protected_api_mode : task.privacy_metadata.mode;
       operation.protected_external = task.protected_api_applied;
@@ -246,6 +333,7 @@ UsageSummary reconcile_usage(const std::vector<matters::Matter>& projects,
       operation.usage =
           reconcile_provider_usage(task.usage, routing_entry ? &*routing_entry : nullptr);
       operation.cost_classification = classify_cost(operation.usage);
+      operation.calls = billed_calls(operation, task, routing_entries, operation.calls_recorded);
       operation.evidence_status = "operation_only";
       if (routing_entry.has_value()) {
         const bool identity_matches =
@@ -279,6 +367,12 @@ UsageSummary reconcile_usage(const std::vector<matters::Matter>& projects,
         external.chat_id = operation.chat_id;
         external.consilium_id = operation.consilium_id;
         external.workflow_run_id = operation.workflow_run_id;
+        // The research is the same colleague's work, asked by the same person.
+        external.agent_id = operation.agent_id;
+        external.agent_initiated = operation.agent_initiated;
+        external.agent_name = operation.agent_name;
+        external.asked_by_actor_id = operation.asked_by_actor_id;
+        external.asked_by_name = operation.asked_by_name;
         external.privacy_mode = operation.privacy_mode;
         external.protected_external = operation.protected_external;
         external.protection_recorded = operation.protection_recorded;

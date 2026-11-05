@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform/HttpClient/HttpClient.hpp"
+#include "Platform/UpdateInstall/UpdateInstall.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -17,10 +18,15 @@ namespace singularity::node::update {
 // key signs what it names - the version, the installer's name, its size and
 // its SHA-256 - so whoever holds the site alone can never hand a firm another
 // program. Singularity asks when it opens, every few hours and when the
-// member asks; it downloads only at the member's asking, into Downloads,
-// keeps the installer only if it is exactly the one signed, and shows it in
-// its folder for the member to run. The request names the system, the
-// processor and this version - nothing of the firm.
+// member asks. From 0.1.1 on it installs what it finds itself (D-261; the
+// owner, 2026-11-05: "make it so that from version 0.1.1 everything is
+// automatic"): it downloads the new version into its own Updates folder,
+// keeps it only if it is exactly the one signed, readies it to install
+// (Platform/UpdateInstall), and installs it as Singularity ends - when the
+// member asks to restart, or the next time Singularity closes - never in the
+// middle of anyone's work. Where it cannot install itself, it says why and
+// shows the installer for the member to run, as before. The request names the
+// system, the processor and this version - nothing of the firm.
 
 // Where the latest release is asked for, below Legal Machines' API
 // (Node/LegalMachinesConnection kLegalMachinesApiBase), and the one place an
@@ -89,6 +95,14 @@ Check check(const std::string &current_version, const std::string &os, const std
 using Download = std::function<int(const std::string &url, const std::filesystem::path &destination,
 	const platform::DownloadProgress &progress)>;
 
+// The words that follow "Singularity 0.1.2 is ready." on `os`: when it
+// installs, and what the system asks for then.
+std::string ready_words(const std::string &os);
+
+// The version an Updates folder's file is of - "singularity-0.1.2-macOS-arm64.dmg",
+// "by-hand-0.1.2" - or empty when its name names none.
+std::string file_version(const std::string &name);
+
 // Downloads `release`'s installer into `folder` and returns its path: what
 // arrives must be exactly the size and SHA-256 the signature covers, or it is
 // removed and refused in plain words (std::runtime_error). An installer
@@ -103,9 +117,14 @@ std::filesystem::path download(const Release &release, const std::filesystem::pa
 // the installer downloaded.
 struct Status {
 	// "unknown" before the first check; then "checking", "current",
-	// "available", "downloading", "downloaded", "offline", "refused" or
-	// "failed" (a download that did not finish).
+	// "available", "downloading", "ready" (downloaded and readied: it installs
+	// as Singularity ends), "downloaded" (for the member to install by hand),
+	// "offline", "refused" or "failed" (a download that did not finish).
 	std::string state = "unknown";
+	// Whether this build downloads and installs its updates itself: every
+	// shipping build; a development build only from a test feed, so it is never
+	// swapped for the published one.
+	bool automatic = false;
 	std::string current_version;
 	std::optional<Release> release;
 	// When the site was last asked, UTC ISO-8601; empty before.
@@ -115,6 +134,9 @@ struct Status {
 	// Once downloaded: the installer's path.
 	std::string installer;
 	std::string detail;
+	// What the last install did, when there is something to say of it: an
+	// install the system's permission was refused for, or one that failed.
+	std::optional<platform::update_install::Outcome> last_install;
 };
 
 Status status();
@@ -127,11 +149,19 @@ Status check_now();
 Status download_now();
 // Shows the downloaded installer in its folder.
 void show_installer();
+// Restart now: the version readied installs as Singularity ends, and the new
+// version opens then. The caller closes the window, Singularity's ordinary end.
+Status install_now();
+// Called as Singularity ends, whichever way - its work stopped, just before
+// the process exits: hands a readied version over to be installed. Never
+// throws.
+void finish_on_exit() noexcept;
 
 // The keys that sign Singularity's releases (base64 of 32 bytes each): the
 // one in use, and a next one once it is made, so the key can change without
-// leaving a firm behind. And the folder installers go to: this computer's
-// Downloads, or Singularity's own records where there is none.
+// leaving a firm behind. And the folder installers go to: Singularity's own
+// Updates folder in this computer's records, which nothing else writes and no
+// system asks permission for.
 std::vector<std::string> release_public_keys();
 std::filesystem::path installers_folder();
 

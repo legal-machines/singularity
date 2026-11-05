@@ -186,6 +186,89 @@
         }
       },
       "_order": 228
+    },
+    {
+      "name": "system.permissions",
+      "policy": "worker",
+      "result": {
+        "type": "object",
+        "required": [
+          "permissions"
+        ],
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "state",
+                "problem"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "allowed",
+                    "denied",
+                    "unknown",
+                    "not_needed"
+                  ]
+                },
+                "problem": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "_order": 339
+    },
+    {
+      "name": "system.askPermission",
+      "policy": "worker",
+      "params": {
+        "key": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "key",
+          "state",
+          "problem"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "allowed",
+              "denied",
+              "unknown",
+              "not_needed"
+            ]
+          },
+          "problem": {
+            "type": "string"
+          }
+        }
+      },
+      "_order": 340
+    },
+    {
+      "name": "system.openPermissionSettings",
+      "policy": "worker",
+      "params": {
+        "key": "string"
+      },
+      "result": "boolean",
+      "_order": 341
     }
   ]
 }

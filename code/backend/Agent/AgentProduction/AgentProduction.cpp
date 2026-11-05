@@ -45,8 +45,13 @@
 namespace singularity::agents {
 namespace {
 
+// At most 120 bytes, cut where a letter begins: a Russian name cut at a byte
+// split a letter, which no JSON can carry.
 std::string clipped_name(const std::string &value) {
-	return value.size() <= 120 ? value : value.substr(0, 120);
+	if (value.size() <= 120) return value;
+	std::size_t at = 120;
+	while (at > 0 && (static_cast<unsigned char>(value[at]) & 0xC0) == 0x80) --at;
+	return value.substr(0, at);
 }
 
 // --- The agent as a colleague: its brief, its first words, its reports ---
@@ -373,6 +378,11 @@ void record_operation(const AnalysisInput &input, const std::string &task_id, co
 		task.created_at = workspaces::current_timestamp();
 		task.operation_type = "agent_run";
 		task.operation_role = "reasoning";
+		// The colleague's own check: its work, begun by itself, so the Matter's
+		// bill names it (D-252).
+		task.agent_id = input.agent_id;
+		task.agent_initiated = true;
+		task.author_name = input.agent_name;
 		task.prompt = clipped_name("Data room watch: " + input.agent_name);
 		task.requested_provider_id = provider_id;
 		task.requested_model_id = model_id;
@@ -1344,6 +1354,10 @@ std::string say_waiting_of(const Agent &agent, const AgentAssignment &work, cons
 void report_run_of(const Agent &agent, const AgentRun &run) {
 	// A task's answer, or its failure, is a turn of the thread already.
 	if (run.task.has_value() == true && run.task->task_id.empty() == false) return;
+	// So is a failure the colleague's reply said there in its own words
+	// (2026-11-05: with no model set, a message was answered "I can't answer
+	// right now" and again "I couldn't do that just now").
+	if (run.status == "failed" && run.task.has_value() == true && run.task->is_failure_said == true) return;
 	const std::string words = report_words(agent, run);
 	if (words.empty() == true) return;
 	const std::string chatId = open_thread_of(agent);

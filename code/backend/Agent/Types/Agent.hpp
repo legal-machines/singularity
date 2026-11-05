@@ -314,6 +314,9 @@ struct RunTask {
 	// The answer's opening words, as the run shows them.
 	std::string answer_excerpt;
 	std::string message;
+	// Its failure said in the conversation already, by the colleague's own
+	// reply: the run's report does not say it again. Not kept.
+	bool is_failure_said = false;
 	// What its request cost, as the provider billed it; none when it did not
 	// say.
 	std::optional<double> cost;

@@ -124,6 +124,11 @@ nlohmann::json add_external_file(const nlohmann::json& params) {
       params.at("sourceAbsolutePath").get<std::string>(), params.value("move", false), params.value("keepBoth", false)));
 }
 
+nlohmann::json add_external_folder(const nlohmann::json& params) {
+  return matter_bridge::serialize(document::add_external_folder(params.at("matterId").get<std::string>(),
+      params.at("destinationFolderRelativePath").get<std::string>(), params.at("sourceAbsolutePath").get<std::string>()));
+}
+
 nlohmann::json reprocess_document(const nlohmann::json& params) {
   return matter_bridge::serialize(
       matter::reprocess_document(params.at("matterId").get<std::string>(), params.at("documentId").get<std::string>()));

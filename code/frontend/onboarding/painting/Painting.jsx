@@ -4,7 +4,11 @@ import { mountEntryPainting } from "./mountPainting.js";
 import logoMark from "../assets/logo-mark-reverse.svg";
 import styles from "./Painting.module.css";
 
-const poster = new URL("./poster.webp", import.meta.url).href;
+// A file beside the page, named by its path: the packaged page is one classic
+// script, where an imported file's address was left a placeholder
+// (2026-11-03). Only shown, never drawn into the painting, it may come from its
+// file; the parts the painting draws may not (artwork.js).
+const poster = "painting/poster.webp";
 
 // The living painting from the site: a still poster, and over it the same
 // painting drawn live, its figures turning to the pointer. Space pauses it,

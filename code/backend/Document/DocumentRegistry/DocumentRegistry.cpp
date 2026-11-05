@@ -1067,7 +1067,8 @@ bool process_pending_documents(const std::filesystem::path& workspace_path, matt
 		const bool isEmail = document.file_type == DocumentFormat::unknown && extension == ".eml";
 		// A picture likewise, by text recognition (D-115).
 		const bool isPicture = document.file_type == DocumentFormat::unknown && (extension == ".png" || extension == ".jpg"
-			|| extension == ".jpeg" || extension == ".tif" || extension == ".tiff" || extension == ".bmp" || extension == ".gif");
+			|| extension == ".jpeg" || extension == ".tif" || extension == ".tiff" || extension == ".bmp" || extension == ".gif"
+			|| extension == ".heic" || extension == ".heif");
 		if (document.file_type == DocumentFormat::unknown && isEmail == false && isPicture == false) {
 			document.lifecycle_state = matters::DocumentLifecycleState::Unsupported;
 			document.attention_detail.reset();

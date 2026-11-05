@@ -500,6 +500,15 @@ struct MatterTask {
 	// is Standard; a successful external protected request records true.
 	bool protected_api_applied = false;
   protected_api::papinian::PrivacyMetadata privacy_metadata;
+	// Each model call the operation made, as its bill line reads it (D-252):
+	// its time, provider and model, the provider's own id for the request, the
+	// fingerprints of what was sent and what came back, and its own tokens and
+	// cost - never a marker, passage or anything that stands for the Matter's
+	// content. Kept in the Matter, so every computer of the firm can bill the
+	// work whichever ran it; the full record of what left stays in the Routing
+	// Log of the computer that sent it. Written from privacy_metadata's calls
+	// as the operation is saved, and kept from then on.
+	std::vector<protected_api::papinian::OutboundCall> billed_calls;
   TaskStatus status = TaskStatus::Success;
   // Phase 24 request lifecycle: the user pressed Stop for this operation and
   // the cancellation genuinely took effect (Chat/ChatExecution/ChatExecution.hpp).

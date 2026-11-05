@@ -86,6 +86,15 @@ export function setupOf(nativeApp) {
 				: Promise.resolve({ app, opened: false, problem: "" })),
 			allowPane: pairingId => nativeApp.decideOfficePairing(pairingId, true),
 			onPairing: listener => (typeof nativeApp.on == "function" ? nativeApp.on("office.pairingRequested", listener) : null) ?? (() => {}),
+			// What the computer itself allows Singularity (system.permissions,
+			// Platform/SystemPermissions): as known without asking, asked with
+			// the system's own question, and its place in the system's settings.
+			// A bridge without them lists none.
+			permissions: async () => (typeof nativeApp.getSystemPermissions == "function"
+				? (await nativeApp.getSystemPermissions())?.permissions ?? []
+				: []),
+			askPermission: key => nativeApp.askSystemPermission(key),
+			openPermissionSettings: key => nativeApp.openSystemPermissionSettings(key),
 			// The first AI colleague, the whole firm's, never one Matter's
 			// (agent.hire, D-157): its face, name, role, position and field.
 			hireColleague: ({ name, species, role, position, area }) => nativeApp.hireColleague({
@@ -161,6 +170,13 @@ export function setupOf(nativeApp) {
 		openOfficeApp: async app => ({ app, opened: true, problem: "" }),
 		allowPane: async () => ({}),
 		onPairing: () => () => {},
+		// A browser asks the computer for nothing: each is allowed when asked.
+		permissions: async () => [],
+		askPermission: async key => {
+			await pause();
+			return { key, state: "allowed", problem: "" };
+		},
+		openPermissionSettings: async () => false,
 	};
 }
 

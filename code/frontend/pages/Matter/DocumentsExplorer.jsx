@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Avatar } from "../../components/Avatar/Avatar.jsx";
 import { Button } from "../../components/Button/Button.jsx";
 import { ConfirmDialog } from "../../components/Manage/Manage.jsx";
+import { DropOverlay } from "../../components/FileDrop/DropOverlay.jsx";
+import { useWindowFileDrop } from "../../components/FileDrop/windowDrop.js";
 import { FileKindIcon } from "../../components/FileKind/FileKind.jsx";
 import { Icon } from "../../components/Icon/Icon.jsx";
 import { useNavigation } from "../../components/Navigation/navigation.js";
@@ -10,7 +12,7 @@ import { Word } from "../../components/Parts/Parts.jsx";
 import { sizeWords } from "../../components/Review/Review.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { openDocumentLens } from "../../components/DocumentLens/lens.js";
-import { nativeApp, openMatterFolder, removeDocumentFromMatter, shownMembers, showInFolder, viewerSeatId } from "../../data/native.js";
+import { addDroppedToMatter, nativeApp, openMatterFolder, removeDocumentFromMatter, shownMembers, showInFolder, viewerSeatId } from "../../data/native.js";
 import { viewerId } from "../../data/workspace.js";
 import { findMember, formatDay, formatClock } from "../words.js";
 
@@ -27,10 +29,16 @@ import styles from "./DocumentsExplorer.module.css";
 // (the owner, 2026-11-02: "I must be able to stop tracking a document inside
 // the app"): one no longer in the folder is no longer tracked; one still in it
 // goes to the computer's bin, as on its own page.
+// Files and folders dragged from Finder, File Explorer or Outlook onto the list
+// go into the folder it shows, a folder whole (the owner, 2026-11-04: "drag and
+// drop must work reliably on macOS and Windows").
 export function DocumentsExplorer({ matter, documents, isReal }) {
 	const { open } = useNavigation();
 	const [folder, setFolder] = useState([]);
 	const [removing, setRemoving] = useState(null);
+	const sectionRef = useRef(null);
+	const [isDropping, setDropping] = useState(false);
+	const [isAdding, setAdding] = useState(false);
 	const addedBy = useAddedBy(matter, documents, isReal);
 	const at = folder.join("/");
 	const { folders, files } = contentsOf(documents, folder);
@@ -64,6 +72,21 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 		}
 	}
 
+	const here = folder.length > 0 ? folder.at(-1) : matter.name;
+	useWindowFileDrop(sectionRef, isReal == true, setDropping, async dropped => {
+		if (dropped.length == 0) return;
+		setAdding(true);
+		try {
+			const { added, problems } = await addDroppedToMatter(at, dropped);
+			if (added.length > 0) toast(added.length == 1 ? `${added[0].displayName ?? added[0].name} is in ${here}.` : `${added.length} documents are in ${here}.`);
+			if (problems.length > 0) toast(problems.length == 1 ? problems[0] : `${problems.length} could not be added. ${problems[0]}`, { tone: "seal" });
+		} catch (error) {
+			toast(error?.message ?? "The files could not be added. Try again.", { tone: "seal" });
+		} finally {
+			setAdding(false);
+		}
+	});
+
 	async function reveal(item) {
 		try {
 			await showInFolder(item.documentId);
@@ -73,7 +96,8 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 	}
 
 	return (
-		<section className={styles.explorer} aria-label={`${matter.name}: documents`}>
+		<section ref={sectionRef} className={styles.explorer} aria-label={`${matter.name}: documents`} aria-busy={isAdding || undefined}
+			data-file-drop={isReal ? "" : undefined}>
 			{/* The Matter's folder in the computer's own file browser, where its
 			    name stood (the owner, 2026-11-02: "remove Add documents, and in place
 			    of Harbor make a button Show in Finder / File Explorer"); inside a
@@ -98,7 +122,7 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 			</div>
 
 			{folders.length + files.length == 0 ? (
-				<p className={styles.empty}>{at == "" ? `No document is in ${matter.name} yet. Add the files you work on, or drop them into its folder.` : "This folder is empty."}</p>
+				<p className={styles.empty}>{at == "" ? `No document is in ${matter.name} yet. Drop the files you work on here.` : "This folder is empty. Drop files here to add them."}</p>
 			) : (
 				<div className={styles.table} role="table" aria-label={at == "" ? matter.name : folder.at(-1)}>
 					<div className={styles.head} role="row">
@@ -144,6 +168,7 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 					))}
 				</div>
 			)}
+			{isDropping ? <DropOverlay words={`Drop to add to ${here}`} /> : null}
 			{removing != null ? (
 				<ConfirmDialog
 					title={isAway(removing) ? `Stop tracking ${removing.name}?` : `Remove ${removing.name} from ${matter.name}?`}

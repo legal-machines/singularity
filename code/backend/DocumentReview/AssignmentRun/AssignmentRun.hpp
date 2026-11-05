@@ -34,6 +34,10 @@ struct ColleagueWorkOutcome {
 	std::string currency;
 	std::string excerpt;
 	std::optional<std::string> workProductId;
+	// A failure the colleague said in the conversation already, in its own
+	// words ("I can't answer right now: ..."): the run's report does not say
+	// it again.
+	bool isFailureSaid = false;
 };
 
 ColleagueWorkOutcome runColleagueWork(const ReviewRunInput& input);

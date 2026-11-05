@@ -4,10 +4,13 @@
 #include "Agent/AgentStore/AgentStore.hpp"
 
 #include "Matter/CoordinationTransport/DirectTransport.hpp"
+#include "Matter/CoordinationTransport/RelayClient.hpp"
 #include "Matter/FirmComputers/FirmComputersProduction.hpp"
 #include "Matter/CoordinationTransport/FolderTransport.hpp"
 #include "Matter/SharedMatter/SharedMatter.hpp"
+#include "LocalModel/ModelPackageManager/ModelPackageManager.hpp"
 #include "Node/LegacyWorkspace/LegacyWorkspace.hpp"
+#include "Node/LegalMachinesConnection/LegalMachinesConnection.hpp"
 #include "Platform/ActorIdentity/ActorIdentity.hpp"
 #include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
 #include "Platform/AppSettings/AppSettings.hpp"
@@ -53,8 +56,23 @@ Environment production_environment() {
 	environment.transports = [](const std::filesystem::path &firm_folder, const seal::ComputerKeys &keys) {
 		std::vector<std::shared_ptr<transport::Transport>> carriers;
 		try {
+			// Legal Machines' relay, for the firm's computers no direct way
+			// reaches (D-242): opened with the seat's session and this computer's
+			// coordination key, made once with the program's link.
+			std::shared_ptr<transport::link::Relay> relay;
+			if (!transport::DirectTransport::existing()) {
+				transport::link::RelayClient::Options relayOptions;
+				relayOptions.url = std::string(node::kLegalMachinesApiBase) + "/relay";
+				const std::string coordinationKey = seal::key_text(keys.public_key);
+				relayOptions.headers = [coordinationKey]() {
+					std::vector<platform::HttpHeader> headers = local_models::production_model_package_manager().session_headers();
+					if (headers.empty() == false) headers.push_back({"X-LM-Coordination-Key", coordinationKey});
+					return headers;
+				};
+				relay = std::make_shared<transport::link::RelayClient>(std::move(relayOptions));
+			}
 			const std::shared_ptr<transport::DirectTransport> direct =
-				transport::DirectTransport::shared(transport::noise::key_pair_from_secret(keys.secret));
+				transport::DirectTransport::shared(transport::noise::key_pair_from_secret(keys.secret), relay);
 			// What comes over the link is taken at once, not at the next round:
 			// a message on the office network shows as a socket that pushes
 			// would show it (the owner, 2026-10-26).

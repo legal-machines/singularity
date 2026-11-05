@@ -16,6 +16,17 @@ if (!scriptSource?.startsWith('./')) {
 
 await stat(resolve(frontendRoot, 'dist', scriptSource));
 
+// Onboarding's painting draws its parts from the script beside the page, never
+// from their files, which taint its canvas on disk (vite.config.js,
+// painting-parts-script).
+const paintingParts = await readFile(resolve(frontendRoot, 'dist/painting/parts.js'), 'utf8');
+if (!paintingParts.startsWith('window.__singularityPaintingParts = {"')) {
+  throw new Error("The painting's parts script beside the page is missing its parts");
+}
+if (await stat(resolve(frontendRoot, 'dist/painting/parts')).then(() => true, () => false)) {
+  throw new Error("The painting's parts must not also stand beside the page as files");
+}
+
 // Singularity's pane in Word, Excel and Outlook (code/frontend/office): Office's
 // script and the connection's transport first, then one deferred bundle.
 const pane = await readFile(resolve(frontendRoot, 'dist/office/index.html'), 'utf8');

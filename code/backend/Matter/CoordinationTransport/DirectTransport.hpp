@@ -44,8 +44,10 @@ public:
 
 	// The program's own, made with this computer's X25519 keys the first time
 	// it is asked for: on the port Singularity prefers, or any free one when
-	// that is taken.
-	static std::shared_ptr<DirectTransport> shared(const noise::KeyPair& self);
+	// that is taken; with Legal Machines' relay for the computers no direct
+	// way reaches (D-242), when one is given.
+	static std::shared_ptr<DirectTransport> shared(const noise::KeyPair& self,
+		std::shared_ptr<link::Relay> relay = nullptr);
 	// The program's own, if one was made; never makes one.
 	static std::shared_ptr<DirectTransport> existing();
 	static constexpr std::uint16_t kPreferredPort = 47380;

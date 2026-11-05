@@ -1,5 +1,5 @@
 {
-  "apiVersion": 100,
+  "apiVersion": 105,
   "compatibility": {
     "window.singularity": [
       "platform",

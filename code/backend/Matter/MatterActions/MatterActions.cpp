@@ -13,6 +13,7 @@
 #include "Platform/FileSystemWatcher/FileSystemWatcher.hpp"
 #include "Platform/OpenExternal/OpenExternal.hpp"
 #include "Platform/PermissionAccess/PermissionAccess.hpp"
+#include "Platform/SecureRandom/SecureRandom.hpp"
 #include "Routing/AiSetup/AiSetup.hpp"
 #include "Routing/RoutingLog/SentPassagesFolder.hpp"
 
@@ -611,24 +612,91 @@ bool is_personal_project(const matters::Matter &matter) {
   return folder.filename().u8string().rfind("pc_", 0) == 0 && folder.parent_path().filename().u8string() == "Personal";
 }
 
-matters::Matter open_personal_project(const std::filesystem::path &folder, const std::string &id) {
+namespace {
+
+// How many times a personal conversation's project is made while files the
+// coordination brings keep coming into its place.
+constexpr int kPersonalProjectAttempts = 3;
+
+// What came into one folder's place from another: each entry moved in where
+// none of its name stands, a folder's entries one by one where one does;
+// where a file of the name stands already, the one there is kept.
+void move_into(const std::filesystem::path &from, const std::filesystem::path &into) {
+  namespace fs = std::filesystem;
   std::error_code error;
-  std::filesystem::create_directories(folder, error);
+  fs::create_directories(into, error);
+  for (fs::directory_iterator entry(from, error), end; error.value() == 0 && entry != end; entry.increment(error)) {
+    const fs::path target = into / entry->path().filename();
+    std::error_code moved;
+    if (fs::exists(target, moved) == false) {
+      fs::rename(entry->path(), target, moved);
+    } else if (fs::is_directory(entry->path(), moved) && fs::is_directory(target, moved)) {
+      move_into(entry->path(), target);
+    }
+  }
+}
+
+} // namespace
+
+matters::Matter open_personal_project(const std::filesystem::path &folder, const std::string &id) {
+  namespace fs = std::filesystem;
+  std::error_code error;
+  fs::create_directories(folder, error);
   if (error) throw std::runtime_error("The conversation could not be kept on this computer: its folder could not be made.");
-  const std::string canonical = std::filesystem::weakly_canonical(folder).u8string();
+  const std::string canonical = fs::weakly_canonical(folder).u8string();
   {
     const persistence::PersistenceLock lock(persistence::persistence_mutex());
     // Made here when neither computer of the two has written it yet; the other
     // computer's arrives under the same id, so the two are one project.
-    if (!persistence::has_project_data(canonical)) {
-      matters::Matter project;
-      project.id = id;
-      project.name = "Personal conversation";
-      project.created_at = workspaces::current_timestamp();
-      project.updated_at = project.created_at;
-      project.directory_path = canonical;
-      (void)persistence::initialize_project(canonical, project, platform::resolve_actor_identity());
-      seal_new_matter(canonical, project.id);
+    //
+    // What travelled in the channel before its conversation was made here -
+    // the offers of Matters a colleague shared (MatterOffers, .lm/Offers) -
+    // stands where the project's data goes, and that data moves only onto an
+    // absent place (ProjectStore; 2026-11-05: "Windows error 183", and a
+    // folder that is not empty refuses a rename on macOS and Linux too). It is
+    // set aside while the project is made, and put back into it, never
+    // replacing what stands there. A file the coordination brings meanwhile
+    // makes a new .lm of its own: it is put back too, and the project is made
+    // again, a few times at most.
+    for (int attempt = 1; persistence::has_project_data(canonical) == false; ++attempt) {
+      const fs::path data = fs::u8path(canonical) / ".lm";
+      std::optional<fs::path> aside;
+      if (fs::is_directory(data, error)) {
+        aside = fs::u8path(canonical) / (".lm.carried-" + platform::secure_random_hex(8));
+        fs::rename(data, *aside, error);
+        if (error) throw std::runtime_error("The conversation could not be kept on this computer: what came for it could not be set aside.");
+      }
+      try {
+        matters::Matter project;
+        project.id = id;
+        project.name = "Personal conversation";
+        project.created_at = workspaces::current_timestamp();
+        project.updated_at = project.created_at;
+        project.directory_path = canonical;
+        (void)persistence::initialize_project(canonical, project, platform::resolve_actor_identity());
+        seal_new_matter(canonical, project.id);
+      } catch (...) {
+        // Nothing made: what came stands where it stood, with anything that
+        // came meanwhile.
+        bool isCameMeanwhile = false;
+        if (aside.has_value()) {
+          std::error_code restored;
+          if (fs::exists(data, restored) == false) {
+            fs::rename(*aside, data, restored);
+          } else {
+            isCameMeanwhile = persistence::has_project_data(canonical) == false;
+            move_into(*aside, data);
+          }
+          fs::remove_all(*aside, restored);
+        }
+        if (isCameMeanwhile && attempt < kPersonalProjectAttempts) continue;
+        throw;
+      }
+      if (aside.has_value()) {
+        move_into(*aside, data);
+        std::error_code removed;
+        fs::remove_all(*aside, removed);
+      }
     }
   }
   return create_or_open_from_folder(canonical);

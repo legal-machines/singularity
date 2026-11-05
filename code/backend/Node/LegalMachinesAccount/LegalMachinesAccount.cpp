@@ -575,6 +575,8 @@ OwnSeat own_seat(const AccountPoster &session_post) {
 	seat.role = text_at(payload, "role").value_or("member");
 	seat.has_two_factor = flag_at(payload, "twoFactor");
 	seat.recovery_codes_left = count_at(payload, "recoveryCodesLeft");
+	seat.is_design_partner = flag_at(payload, "designPartner");
+	seat.diagnostics_consent = text_at(payload, "diagnosticsConsent");
 	record_outcome("own_seat", "read");
 	return seat;
 
@@ -675,6 +677,19 @@ void change_own_password(const AccountPoster &session_post, const std::string &c
 
 }
 
+void accept_diagnostics_consent(const AccountPoster &session_post, const std::string &version) {
+
+	if (version.empty() == true || version.size() > 20
+			|| std::all_of(version.begin(), version.end(), [](char c) { return (c >= '0' && c <= '9') || c == '.'; }) == false)
+		throw AccountFailure(AccountFailureKind::InvalidInput, "That is not a version of the Diagnostics Consent.");
+	const platform::HttpResponse response = post_seat_request(session_post, "/organisations/seats/own/diagnostics-consent",
+		Json{{"version", version}}, "accept_diagnostics_consent");
+	if (response.status < 200 || response.status >= 300)
+		refuse_own_request(response, "accept_diagnostics_consent", "The consent could not be kept. Nothing was sent. Try again.");
+	record_outcome("accept_diagnostics_consent", "kept");
+
+}
+
 void request_recovery(const AccountPoster &post, const std::string &email) {
 
 	const platform::HttpResponse response = post_or_fail(post, "/organisations/recover", Json{{"email", normalized_email(email)}});
@@ -692,8 +707,19 @@ void reset_password(const AccountPoster &post, const std::string &email, const s
 	Json request{{"email", normalized_email(email)}, {"code", email_code}, {"newPassword", wanted}};
 	if (two_step_code.empty() == false) request["twoStepCode"] = two_step_code;
 	const platform::HttpResponse response = post_or_fail(post, "/organisations/reset-password", request);
-	if (response.status < 200 || response.status >= 300)
+	if (response.status < 200 || response.status >= 300) {
+		// Legal Machines checks the email's code first; where it is right and
+		// the seat signs in with two steps, a reset with no two-step code is
+		// answered 400 with its ask for one, and nothing is used up
+		// (handle_organisation_reset_password). Its other 400s - a code expired
+		// or used - never name the authenticator.
+		const std::string words = refusal_words(response.body, "");
+		if (response.status == 400 && two_step_code.empty() == true && words.find("authenticator") != std::string::npos) {
+			record_outcome("reset_password", "two_step_code_required");
+			throw AccountFailure(AccountFailureKind::TwoStepCodeRequired, words);
+		}
 		refuse_own_request(response, "reset_password", "The password could not be changed. Try again.");
+	}
 	record_outcome("reset_password", "changed");
 
 }

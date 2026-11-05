@@ -27,6 +27,13 @@
 	color: var(--ink);
 }
 
+/* The ring of the one in focus stays inside it: around it, in the track's
+   narrow gaps, it ran into its neighbour and the two read as one (the owner,
+   2026-11-05: "stuck together"). */
+.track button:focus-visible {
+	outline-offset: -2px;
+}
+
 /* Over a narrow column: the whole width, its choices sharing it. */
 .stretch {
 	display: flex;

@@ -193,6 +193,7 @@ Json model_descriptor_to_json(const providers::ModelDescriptor &model) {
       {"supportsStructuredOutput", model.supports_structured_output},
       {"supportsNativeTools", model.supports_native_tools},
       {"supportsToolChoice", model.supports_tool_choice},
+      {"inputModalities", model.input_modalities},
   };
 }
 
@@ -251,6 +252,11 @@ providers::ModelDescriptor model_descriptor_from_json(const Json &value) {
   }
   if (value.contains("supportsToolChoice") && value.at("supportsToolChoice").is_boolean()) {
     model.supports_tool_choice = value.at("supportsToolChoice").get<bool>();
+  }
+  // What the model reads (D-256); absent in settings written before it was kept.
+  if (value.contains("inputModalities") && value.at("inputModalities").is_array()) {
+    for (const auto &modality : value.at("inputModalities"))
+      if (modality.is_string()) model.input_modalities.push_back(modality.get<std::string>());
   }
   return model;
 }
@@ -729,6 +735,14 @@ AppSettings load_app_settings_from_disk() {
         }
       }
     }
+    // The seats that finished onboarding here (D-250).
+    if (data.contains("onboardedSeats") && data.at("onboardedSeats").is_array()) {
+      for (const auto &seat : data.at("onboardedSeats")) {
+        if (seat.is_string() && seat.get<std::string>().empty() == false) {
+          settings.onboarded_seats.push_back(seat.get<std::string>());
+        }
+      }
+    }
 	if (data.contains("projectActionPreferences") && data.at("projectActionPreferences").is_array()) {
 		for (const Json &entry : data.at("projectActionPreferences")) {
 			if (!entry.is_object()) continue;
@@ -827,6 +841,7 @@ void save_app_settings(const AppSettings &settings) {
            ? Json(*settings.user_default_legal_instructions)
            : Json(nullptr)},
       {"dismissedNoticeIds", settings.dismissed_notice_ids},
+      {"onboardedSeats", settings.onboarded_seats},
   };
 	Json project_action_preferences = Json::array();
 	for (const ProjectActionPreference &preference : settings.project_action_preferences) {
@@ -927,6 +942,32 @@ void save_app_settings(const AppSettings &settings) {
     std::filesystem::remove(temporary_path, cleanup_error);
     throw;
   }
+}
+
+void save_app_settings_leaving_no_copy(const AppSettings &settings) {
+  save_app_settings(settings);
+  const auto path = app_settings_file_path();
+  // The recovery copy held the settings as they were before; now it holds
+  // them as they are.
+  const auto recovery_temporary = unique_temporary_path(previous_path(path));
+  try {
+    stage_copy_of_file(path, recovery_temporary);
+    atomic_replace(recovery_temporary, previous_path(path));
+  } catch (...) {
+    std::error_code cleanup_error;
+    std::filesystem::remove(recovery_temporary, cleanup_error);
+    throw;
+  }
+  // An unreadable file kept beside the settings held whatever they held then.
+  std::error_code listing_error;
+  const std::string unreadable = path.filename().string() + ".unreadable-";
+  for (const auto &entry : std::filesystem::directory_iterator(path.parent_path(), listing_error)) {
+    if (entry.path().filename().string().rfind(unreadable, 0) != 0) continue;
+    std::error_code removal_error;
+    std::filesystem::remove(entry.path(), removal_error);
+  }
+  // Another save may be cached against the recovery copy's old stamp.
+  ++settings_saves();
 }
 
 nlohmann::json connected_provider_json(const ConnectedProvider &provider) {

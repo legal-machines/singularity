@@ -466,6 +466,14 @@ nlohmann::json complete_onboarding(const nlohmann::json &) {
   settings.onboarding_completed = true;
   settings.local_node_setup.completed = true;
   settings.local_node_setup.next_step = platform::NodeSetupStep::Ready;
+  // The seat that finished it here is not asked through it again on this
+  // computer (D-250), even after it signs out and back in.
+  if (settings.account.has_value() == true) {
+    const std::string seat = platform::onboarded_seat_key(settings.account->organisation_id, settings.account->seat_id);
+    if (std::find(settings.onboarded_seats.begin(), settings.onboarded_seats.end(), seat) == settings.onboarded_seats.end()) {
+      settings.onboarded_seats.push_back(seat);
+    }
+  }
   platform::save_app_settings(settings);
   return onboarding_status_json(settings);
 }

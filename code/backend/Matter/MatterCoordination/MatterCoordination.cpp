@@ -492,9 +492,9 @@ void save(const Records &records) {
 		const Linked &linked = records.matters[index++];
 		Json marks = Json::object();
 		for (const auto &[place, mark] : linked.marks) {
-			Json kept = Json::array({mark.counter, mark.sender, mark.name});
-			if (mark.base.has_value() == true) kept.push_back(*mark.base);
-			marks[place] = std::move(kept);
+			Json entry = Json::array({mark.counter, mark.sender, mark.name});
+			if (mark.base.has_value() == true) entry.push_back(*mark.base);
+			marks[place] = std::move(entry);
 		}
 		matter["known"] = linked.view.known;
 		matter["marks"] = std::move(marks);
@@ -2309,23 +2309,29 @@ CoordinationStatus statusOf(const Records &records) {
 	const Environment &environment = installed();
 	if (environment.code_of && environment.device_key) result.device_code = environment.code_of(environment.device_key());
 	const std::string actor = myActor();
+	const std::string me = environment.device_id ? environment.device_id() : std::string();
+	// Whether a Matter or the firm's record travels, as the lawyer is told it
+	// (D-137), and what of it is on its way, and how far it has come (D-207).
+	const auto travelling = [&](const Linked &linked) {
+		LinkedMatter view = linked.view;
+		view.offered_to = linked.offered_to;
+		if (environment.connected) view.connected = environment.connected(view.matter_id);
+		const auto heard = heardFrom().find(me + "\n" + view.matter_id);
+		if (heard != heardFrom().end()) view.heard = heard->second;
+		view.receiving = receivingOf(linked, me, view.connected);
+		if (environment.sending) view.sending = environment.sending(view.matter_id);
+		return view;
+	};
 	for (const Linked &linked : records.matters) {
 		if (isPersonal(linked) == false) {
-			LinkedMatter matter = linked.view;
-			matter.offered_to = linked.offered_to;
-			// Whether it travels, as the lawyer is told it (D-137).
-			if (environment.connected) matter.connected = environment.connected(matter.matter_id);
-			const std::string me = environment.device_id ? environment.device_id() : std::string();
-			const auto heard = heardFrom().find(me + "\n" + matter.matter_id);
-			if (heard != heardFrom().end()) matter.heard = heard->second;
-			// What of it is on its way, and how far it has come (D-207).
-			matter.receiving = receivingOf(linked, me, matter.connected);
-			if (environment.sending) matter.sending = environment.sending(matter.matter_id);
-			result.matters.push_back(std::move(matter));
+			result.matters.push_back(travelling(linked));
 			continue;
 		}
-		// The firm's record is no conversation of the member's.
-		if (isFirmChannel(linked) == true) continue;
+		// The firm's record is no conversation of the member's: it is said apart.
+		if (isFirmChannel(linked) == true) {
+			result.firm = travelling(linked);
+			continue;
+		}
 		LinkedMatter channel = linked.view;
 		for (const std::string &member : linked.pair) {
 			if (member != actor && (channel.other_actor_id.empty() == true || isMyActor(member) == false)) channel.other_actor_id = member;
@@ -2896,7 +2902,7 @@ void sync_once() {
 		std::map<std::string, std::set<std::string>> named;
 		{
 			Written &kept = written();
-			const std::lock_guard<std::mutex> lock(kept.mutex);
+			const std::lock_guard<std::mutex> writtenLock(kept.mutex);
 			named.swap(kept.paths);
 		}
 		std::size_t sentAtOnce = 0;

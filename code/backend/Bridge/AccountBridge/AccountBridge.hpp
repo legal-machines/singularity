@@ -32,7 +32,47 @@ struct AccountServices {
 	// application. For the recovery codes (D-146).
 	std::function<std::optional<std::string>(const std::string &default_name)> choose_save_path;
 	std::function<bool(const std::string &path)> open_document;
+	// This computer's user's store for a seat's password, kept only when the
+	// member chooses so (D-243, Platform/SeatPasswordStore): which store it is
+	// (empty where there is none), and keeping, reading and forgetting one
+	// entry by its target. The page never reads what it keeps.
+	std::function<std::optional<std::string>()> seat_password_store;
+	std::function<bool(const std::string &target, const std::string &user, const std::string &password)> save_seat_password;
+	std::function<std::optional<std::string>(const std::string &target)> read_seat_password;
+	std::function<bool(const std::string &target)> forget_seat_password;
+	// A problem report (account.reportProblem) and a work log
+	// (account.shareWorkLog), posted with this computer's sign-in, whose
+	// headers stay native: the address, the content type and the bytes. And the
+	// version this build is (docs/VERSION) and the system it runs on.
+	std::function<platform::HttpResponse(const std::string &url, const std::string &content_type, const std::string &body)> problem_post;
+	std::string app_version;
+	std::string platform_name;
+	// This computer's device key (Platform/DeviceKey): its public half, and a
+	// signature with it, which a work log carries inside its seal (D-257).
+	std::function<std::string()> device_public_key;
+	std::function<std::string(const std::string &message)> sign_with_device;
 };
+
+// account.reportProblem {title, category?, acceptedConsent?, description,
+// technical, pictures: [{name, data}]} -> {number}: a problem report, made a
+// card of the board Legal Machines keeps for this version's line (the owner,
+// 2026-11-05; D-257), with this computer's sign-in, at most three screenshots
+// of 10 MB. Legal Machines takes it from a design partner's seat, or from a
+// Debug build.
+nlohmann::json report_problem(const nlohmann::json &params, const AccountServices &services);
+
+// account.workLogPreview {matterId, chatId} -> what a design partner's member
+// sees before sending a chat's work log (D-257): its calls kept here, how many
+// were protected or failed, when, how much, and whether it can be sent.
+nlohmann::json work_log_preview(const nlohmann::json &params, const AccountServices &services);
+
+// account.shareWorkLog {matterId, chatId, chatTitle, note, messages: [{author,
+// at, text}], acceptedConsent?} -> {sent, sha256, recipients, bytes}: the chat's
+// work log sealed on this computer to Legal Machines' keys and sent with this
+// computer's sign-in (Node/WorkLogShare, D-257). The Diagnostics Consent the
+// member ticked is kept with Legal Machines first, and nothing is sent unless
+// it was.
+nlohmann::json share_work_log(const nlohmann::json &params, const AccountServices &services);
 
 // account.signIn {organisationId, seatId, password} -> {status, challengeId?,
 // maskedEmail?, account}. On "signed_in" the account is saved (identifiers and
@@ -42,7 +82,10 @@ nlohmann::json sign_in(const nlohmann::json &params, const AccountServices &serv
 // account.verifyTwoFactor {challengeId, code, organisationId, seatId, password,
 // email?} -> {status: "signed_in", account}. The password is the one the person typed
 // for this sign-in, still in the sign-in sheet; it is used for the download
-// session and not kept.
+// session and not kept. With {savedPassword: true} in place of the password,
+// the one this computer kept for the seat whose sign-in made the challenge
+// (account.signInWithEmail with savedPassword), held here for that challenge
+// only and never said to the page (D-243).
 nlohmann::json verify_two_factor(const nlohmann::json &params, const AccountServices &services);
 
 // account.lookup {email} -> {exists}: whether Legal Machines knows an
@@ -56,7 +99,26 @@ nlohmann::json lookup(const nlohmann::json &params, const AccountServices &servi
 // opened, which account.verifyTwoFactor and account.resendEmailCode then take.
 // A colleague's seat is signed in at once, with no second step. The firm's
 // email is kept here (AccountResume::organisation_email).
+// With {savedPassword: true} in place of the password, the seat signs in with
+// the password this computer keeps for it (D-243), which the page never sees;
+// when Legal Machines refuses it, or none is kept, it is forgotten and the
+// answer is {status: "saved_password_refused", account}.
 nlohmann::json sign_in_with_email(const nlohmann::json &params, const AccountServices &services);
+
+// A seat's password kept on this computer at the member's choice (D-243),
+// named by the firm's email and the seat as the sign-in names it (none for the
+// administrator's). No call ever answers with the password.
+// account.seatPasswordStore {} -> {store: "windows" | null}: where it can be
+// kept here; null where it cannot.
+// account.savedSeatPassword {email, seat?} -> {saved}: whether one is kept.
+// account.saveSeatPassword {email, seat?, password} -> {saved}: kept only for
+// the seat that signed in on this computer in the last ten minutes, and only
+// the very password it signed in with; otherwise nothing is kept.
+// account.forgetSeatPassword {email, seat?} -> {forgotten}.
+nlohmann::json seat_password_store(const nlohmann::json &params, const AccountServices &services);
+nlohmann::json saved_seat_password(const nlohmann::json &params, const AccountServices &services);
+nlohmann::json save_seat_password(const nlohmann::json &params, const AccountServices &services);
+nlohmann::json forget_seat_password(const nlohmann::json &params, const AccountServices &services);
 
 // account.register {legalEntityName, country, registrationNumber, email,
 // password, agreements, productUpdates?} -> {organisationId, seatId,

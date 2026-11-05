@@ -1,11 +1,15 @@
-/* The window's notices (Toaster.jsx), as onboarding's (onboarding/entry/
-   Notice.module.css): centred over the sheet, an --edge below the window's
-   top as the traffic lights stand (the owner, 2026-11-02: "the notification
-   must keep the common margin"), the newest on top. They stand over the
-   page and never move it; only an Undo in one takes a press. */
+/* The window's notices (Toaster.jsx): centred over the sheet, just under the
+   window's strip, so what a page sets in the strip - a thread's title, its
+   Matter and its faces - stays in sight, with an --edge of air between the
+   strip's marks and the notice, as between the window's top and them (the
+   owner, 2026-11-02: "the notification must keep the common margin";
+   2026-11-05: a notice covered a thread's head). Onboarding's own notice
+   (onboarding/entry/Notice.module.css) keeps an --edge below the top, where
+   no head stands. The newest is on top. They stand over the page and never
+   move it; only an Undo in one takes a press. */
 .stack {
 	position: fixed;
-	top: var(--edge);
+	top: var(--titlebar-height);
 	left: calc(var(--sidebar-width) + (100vw - var(--sidebar-width)) / 2);
 	z-index: var(--layer-toast);
 	display: flex;

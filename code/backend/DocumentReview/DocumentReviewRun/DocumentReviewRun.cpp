@@ -3808,6 +3808,7 @@ void installForColleagues() {
 			output.task.state = "failed";
 			output.reason = done.reason;
 			output.task.message = done.reason;
+			output.task.is_failure_said = done.isFailureSaid;
 		}
 		return output;
 	};

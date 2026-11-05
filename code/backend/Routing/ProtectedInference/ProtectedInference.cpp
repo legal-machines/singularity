@@ -20,7 +20,9 @@
 #include "PapinianGuard/SemanticRoles/SemanticRoles.hpp"
 
 #include "Provider/Types/TaskError.hpp"
+#include "Provider/Types/InputPictures.hpp"
 #include "Platform/Sha256/Sha256.hpp"
+#include "Node/WorkLog/WorkLog.hpp"
 #include "Routing/MemoryDiagnostics/MemoryDiagnostics.hpp"
 #include "Routing/Observability/OperationEvent.hpp"
 #include "Routing/RoutingLog/OutboundRecord.hpp"
@@ -277,6 +279,26 @@ void collect_schema_literals(const nlohmann::json &value, std::vector<std::strin
 		}
 	} else if (value.is_array()) {
 		for (const auto &entry : value) collect_schema_literals(entry, literals);
+	}
+}
+
+// Every picture or file a provider body carries, as the base64 it carries it
+// in (D-256): a data URL of bytes anywhere (an OpenAI-style image_url) and an
+// Anthropic block's base64 source. Everything else a body holds is words.
+void collect_body_pictures(const nlohmann::json &value, std::vector<std::string> &pictures) {
+	if (value.is_object()) {
+		const auto type = value.find("type");
+		const auto data = value.find("data");
+		if (type != value.end() && type->is_string() && type->get_ref<const std::string &>() == "base64"
+				&& data != value.end() && data->is_string())
+			pictures.push_back(data->get<std::string>());
+		for (auto entry = value.begin(); entry != value.end(); ++entry) collect_body_pictures(entry.value(), pictures);
+	} else if (value.is_array()) {
+		for (const auto &entry : value) collect_body_pictures(entry, pictures);
+	} else if (value.is_string()) {
+		const std::string &text = value.get_ref<const std::string &>();
+		const std::size_t marker = text.rfind("data:", 0) == 0 ? text.find(";base64,") : std::string::npos;
+		if (marker != std::string::npos) pictures.push_back(text.substr(marker + 8));
 	}
 }
 
@@ -2219,6 +2241,35 @@ bool carries_computable_symbol(const std::string &prompt,
 
 } // namespace
 
+// The pictures of the member's own that the exact body carries (D-256), or a
+// refusal: a picture in a body that is not one the member attached to this
+// request and sent is never sent, whatever the protection.
+std::vector<protected_api::papinian::OutboundPicture> hold_pictures_to_the_members(
+		const providers::FinalPayloadView &payload) {
+	const nlohmann::json body = nlohmann::json::parse(payload.serialized_body, nullptr, false);
+	std::vector<std::string> carried;
+	if (body.is_discarded() == false) collect_body_pictures(body, carried);
+	const std::shared_ptr<const std::vector<providers::InputPicture>> given = providers::current_input_pictures();
+	std::vector<protected_api::papinian::OutboundPicture> sent;
+	bool isHeld = carried.size() == payload.picture_sha256.size();
+	for (std::size_t index = 0; index < carried.size() && isHeld; ++index) {
+		const providers::InputPicture *found = nullptr;
+		if (given) {
+			for (const providers::InputPicture &picture : *given)
+				if (picture.base64 == carried[index] && picture.sha256 == payload.picture_sha256[index]) found = &picture;
+		}
+		if (found == nullptr) {
+			isHeld = false;
+			break;
+		}
+		sent.push_back(protected_api::papinian::OutboundPicture{found->name, found->bytes, found->sha256});
+	}
+	if (isHeld == false)
+		throw providers::TaskError(providers::TaskErrorCode::ProtectedPayloadLeakDetected,
+			"Singularity blocked the request because it carried a picture no member attached to it, so nothing was sent.");
+	return sent;
+}
+
 ProtectedGenerationResult execute_protected_generation(
     const std::string &provider_id, const std::string &api_key,
     const std::string &model_id, const ModelVisibleTurn &turn,
@@ -2605,9 +2656,19 @@ ProtectedGenerationResult execute_protected_generation(
 	}
 	bool final_payload_validated = false;
 	std::string final_payload_sha256;
+	// The member's pictures the validated body carried as they are (D-256).
+	std::vector<protected_api::papinian::OutboundPicture> sent_pictures;
+	// A design partner's computer keeps this call in its chat's work log
+	// (Node/WorkLog, D-257): the body exactly as it leaves, once the final
+	// check below has let it through - never a body it refused, never the text
+	// before protection, never the mapping (AG-SEC-3).
+	std::optional<std::string> workLogBody;
 
   const providers::FinalPayloadValidator validate_final_payload =
       [&](const providers::FinalPayloadView &payload) {
+		auto keepForWorkLog = [&]() {
+			if (node::work_log::wanted() == true) workLogBody = payload.serialized_body;
+		};
 		final_payload_sha256 = platform::sha256_hex_digest(payload.serialized_body);
 		// EXACT PROVIDER BODY: the real, final serialized body, exactly as it
 		// will be transported - emitted only once this same leak boundary
@@ -2628,7 +2689,9 @@ ProtectedGenerationResult execute_protected_generation(
 				throw providers::TaskError(providers::TaskErrorCode::ProtectedPayloadLeakDetected,
 					"Singularity blocked the request because its execution control plane changed before provider delivery.");
 		}
-		if (!protection_active) { emitValidatedBody(); final_payload_validated = true; return; }
+		// No picture but the member's own, protection on or off (D-256).
+		sent_pictures = hold_pictures_to_the_members(payload);
+		if (!protection_active) { emitValidatedBody(); final_payload_validated = true; keepForWorkLog(); return; }
         protected_api::papinian::GuardValidation validation;
 		// What still stands and where, in words - never the value - for the
 		// refusal and its routing record.
@@ -2697,6 +2760,7 @@ ProtectedGenerationResult execute_protected_generation(
         }
 		emitValidatedBody();
 		final_payload_validated = true;
+		keepForWorkLog();
       };
 
 	// The outbound record of this call (Routing/RoutingLog/OutboundRecord.hpp):
@@ -2709,7 +2773,8 @@ ProtectedGenerationResult execute_protected_generation(
 	// or Memory call, or a single call with no table of its own.
 	const bool isOutboundOperation = outboundOperationKey != request_namespace;
 	bool isOutboundCallNoted = false;
-	const auto noteOutboundCall = [&]() {
+	// `answered` is what came back, or none when the call failed before it.
+	const auto noteOutboundCall = [&](const providers::GenerationResult *answered) {
 		isOutboundCallNoted = true;
 		protected_api::papinian::OutboundCall call;
 		call.kind = "model";
@@ -2717,6 +2782,24 @@ ProtectedGenerationResult execute_protected_generation(
 		call.model_id = model_id;
 		call.protection_mode = protected_api::to_string(policy.mode);
 		call.payload_sha256 = final_payload_sha256;
+		// Each picture that left as it is, by its name, size and SHA-256 (D-256).
+		call.pictures = sent_pictures;
+		// The evidence a bill's line rests on (D-252): the request as the
+		// provider's records name it, the answer's fingerprint, and this call's
+		// own tokens and cost as the provider reported them.
+		if (answered != nullptr) {
+			call.provider_request_id = answered->response_id;
+			call.response_sha256 = answered->response_sha256;
+			call.input_tokens = answered->usage.input_tokens;
+			call.cached_input_tokens = answered->usage.cached_input_tokens;
+			call.output_tokens = answered->usage.output_tokens;
+			call.reasoning_tokens = answered->usage.reasoning_tokens;
+			call.cost_micros = answered->usage.cost_micros;
+			call.cost_currency = answered->usage.cost_currency.value_or("");
+			call.cost_classification = answered->usage.cost_classification.value_or("");
+			call.cost_methodology = answered->usage.cost_methodology.value_or("");
+			call.served_by = answered->usage.served_by.value_or("");
+		}
 		if (protection_active) {
 			// Markers are numbered per table: the call names the table it read them from.
 			if (activeOperationSymbols->outbound_scope.empty()) activeOperationSymbols->outbound_scope = outbound::new_symbol_scope();
@@ -2832,6 +2915,28 @@ ProtectedGenerationResult execute_protected_generation(
 	liveScope.emplace(std::move(restored));
   }
   providers::GenerationResult generation;
+	// The call as its chat's work log keeps it, on a design partner's computer
+	// (D-257): what went, the answer as read before anything was restored, or
+	// what failed.
+	const auto workLogStarted = std::chrono::steady_clock::now();
+	const std::string workLogAt = node::work_log::wanted() == true ? node::work_log::now_text() : std::string();
+	const auto keepCall = [&](const std::string &answer, const std::string &failure) {
+		if (workLogBody.has_value() == false) return;
+		node::work_log::Call call;
+		call.at = workLogAt;
+		call.milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - workLogStarted).count();
+		call.provider_id = provider_id;
+		call.model_id = model_id;
+		call.purpose = request_namespace;
+		call.is_protected = protection_active;
+		call.request = *workLogBody;
+		call.answer = answer;
+		call.failure = failure;
+		call.input_tokens = generation.usage.input_tokens.value_or(-1);
+		call.output_tokens = generation.usage.output_tokens.value_or(-1);
+		node::work_log::record(call);
+		workLogBody.reset();
+	};
   try {
 	memory_diagnostics::checkpoint("protected_inference_before_provider_serialization",
 		"protected_prompt_bytes=" + std::to_string(outbound_prompt.size()));
@@ -2845,7 +2950,7 @@ ProtectedGenerationResult execute_protected_generation(
                     : providers::generate(provider_id, api_key, model_id, outbound_prompt,
                                           validate_final_payload, base_url, maximum_output_tokens,
                                           output_contract, tool_control, turn.reasoning_effort);
-	noteOutboundCall();
+	noteOutboundCall(&generation);
 	if (generation.tool_calls.empty())
 		if (std::optional<std::string> last = textual_answer::last_of_whole_objects(generation.text)) {
 			observability::emit({observability::OperationEventKind::ModelResultKind,
@@ -2876,6 +2981,16 @@ ProtectedGenerationResult execute_protected_generation(
 			"provider: parsed generation result", {{"textBytes", std::to_string(generation.text.size())},
 			{"toolCalls", std::to_string(generation.tool_calls.size())},
 			{"outputLimitReached", generation.finish_reason == "length" || generation.finish_reason == "max_tokens" ? "true" : "false"}}, forensicResponse});
+	}
+	if (workLogBody.has_value() == true) {
+		nlohmann::json toolCalls = nlohmann::json::array();
+		for (const auto &call : generation.tool_calls)
+			toolCalls.push_back(nlohmann::json{{"id", call.call_id}, {"name", call.wire_name},
+				{"arguments", call.arguments.is_discarded() ? nlohmann::json(nullptr) : call.arguments}});
+		keepCall(nlohmann::json{{"text", generation.text}, {"toolCalls", toolCalls},
+			{"finishReason", generation.finish_reason.value_or("")}, {"responseId", generation.response_id}}
+				.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace),
+			std::string());
 	}
 	memory_diagnostics::progress("provider: response received - " + std::to_string(generation.text.size())
 		+ " text bytes, " + std::to_string(generation.tool_calls.size()) + " tool call(s)");
@@ -2913,7 +3028,18 @@ ProtectedGenerationResult execute_protected_generation(
 	// A request the final check let through and the provider then failed on
 	// (refused it, timed out, broke off) may still have reached the provider:
 	// it is recorded as sent, never assumed to have stayed here.
-	if (final_payload_validated == true && isOutboundCallNoted == false) noteOutboundCall();
+	if (final_payload_validated == true && isOutboundCallNoted == false) noteOutboundCall(nullptr);
+	// And kept, with what failed, in a design partner's work log (D-257).
+	if (workLogBody.has_value() == true) {
+		std::string failure = "The call failed.";
+		try {
+			throw;
+		} catch (const std::exception &error) {
+			failure = error.what();
+		} catch (...) {
+		}
+		keepCall(std::string(), failure);
+	}
 	throw;
   }
 

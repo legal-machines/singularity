@@ -181,6 +181,13 @@ public:
   void on_quit_request(std::function<void()> quit);
 
   /*
+   * Ends the window's event loop as closing the window does: run() returns
+   * and Singularity ends the ordinary way (Restart now, D-261). Call on the
+   * window's thread.
+   */
+  void close();
+
+  /*
    * Window geometry
    * ---------------
    */

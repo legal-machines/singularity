@@ -1,3 +1,4 @@
+#include "Chat/ConversationClearing/ConversationClearing.hpp"
 #include "Agent/AgentActions/AgentActions.hpp"
 #include "Agent/AgentProduction/AgentProduction.hpp"
 #include "Agent/AgentScheduler/AgentScheduler.hpp"
@@ -30,6 +31,9 @@
 #include "Matter/MatterRepository/MatterRepository.hpp"
 #include "Tool/DeviceTrust/DeviceTrust.hpp"
 #include "Node/LegacyWorkspace/LegacyWorkspace.hpp"
+#include "Node/WorkLog/WorkLog.hpp"
+#include "Node/WorkLogShare/WorkLogShare.hpp"
+#include "Platform/DeviceKey/DeviceKey.hpp"
 #include "Tool/Types/ToolTypes.hpp"
 #include "Bridge/AccountBridge/AccountBridge.hpp"
 #include "Bridge/ChatBridge/ChatBridge.hpp"
@@ -72,6 +76,7 @@
 #include "Bridge/NativeBridge/NativeError.hpp"
 #include "Platform/NativeDialogs/NativeDialogs.hpp"
 #include "Platform/OpenExternal/OpenExternal.hpp"
+#include "Platform/SeatPasswordStore/SeatPasswordStore.hpp"
 #include "Platform/Sha256/Sha256.hpp"
 #include "Provider/AccountGate/AccountGate.hpp"
 #include "Provider/Types/TaskError.hpp"
@@ -111,7 +116,7 @@ enum class ExecutionPolicy { UiThread, Worker };
 // this same constant, so they cannot independently drift from each other -
 // deploy/scripts/generate_native_contract.py's verify_implementation()
 // checks this constant's value against the contract's own apiVersion.
-constexpr int kNativeApiVersion = 100;
+constexpr int kNativeApiVersion = 105;
 
 // The organisation this computer is signed in to, for the firm's seal
 // (D-167); empty when it is signed in to none.
@@ -293,6 +298,7 @@ std::string bridge_script(const std::string &window_frame) {
     checkForUpdate: () => invoke('update.check', {}),
     downloadUpdate: () => invoke('update.download', {}),
     showUpdate: () => invoke('update.show', {}),
+    installUpdate: () => invoke('update.install', {}),
     getOnboardingStatus: () => invoke('onboarding.getStatus'),
     completeOnboarding: () => invoke('onboarding.complete'),
     prepareMainWindow: () => invoke('window.prepareMain'),
@@ -366,6 +372,17 @@ std::string bridge_script(const std::string &window_frame) {
     findLegalMachinesOrganisation: (email) => invoke('account.lookup', { email }),
     signInToLegalMachinesWithEmail: (email, seat, password) =>
       invoke('account.signInWithEmail', { email, seat, password }),
+    // A seat's password kept by this computer's user's own store, at the
+    // member's choice (D-243): the page learns only whether one is kept, and a
+    // sign-in asks for it to be used natively; no call ever answers with it.
+    getSeatPasswordStore: () => invoke('account.seatPasswordStore', {}),
+    hasSavedSeatPassword: (email, seat) => invoke('account.savedSeatPassword', { email, seat }),
+    saveSeatPassword: (email, seat, password) => invoke('account.saveSeatPassword', { email, seat, password }),
+    forgetSeatPassword: (email, seat) => invoke('account.forgetSeatPassword', { email, seat }),
+    signInToLegalMachinesWithSavedPassword: (email, seat) =>
+      invoke('account.signInWithEmail', { email, seat, savedPassword: true }),
+    verifyLegalMachinesCodeWithSavedPassword: (challengeId, code, organisationId, seatId, email) =>
+      invoke('account.verifyTwoFactor', { challengeId, code, organisationId, seatId, email, savedPassword: true }),
     registerLegalMachinesOrganisation: (registration) => invoke('account.register', registration),
     // A new organisation one thing a page (D-146): created from its details
     // and agreements, then, once its email is confirmed, its administrator's
@@ -407,6 +424,9 @@ std::string bridge_script(const std::string &window_frame) {
     resetSeatTwoFactor: (seatId) => invoke('account.resetSeatTwoFactor', { seatId }),
     requestAccountRecovery: (email) => invoke('account.requestRecovery', { email }),
     resetAccountPassword: (email, code, twoStepCode, newPassword) => invoke('account.resetPassword', { email, code, twoStepCode, newPassword }),
+    reportProblem: (report) => invoke('account.reportProblem', report),
+    getWorkLogPreview: (matterId, chatId) => invoke('account.workLogPreview', { matterId, chatId }),
+    shareWorkLog: (log) => invoke('account.shareWorkLog', log),
     // A colleague archived, restored with a new password, or removed (D-214).
     setSeatState: (seatId, state, password) => invoke('organisation.setSeatState', { seatId, state, password }),
     authorizeLocalModels: (password) => invoke('localModels.authorize', { password }),
@@ -441,6 +461,12 @@ R"js(
       invoke('usage.getSummary', { periodStart, periodEnd, projectId }),
     generateProjectUsageStatement: (projectId, periodStart, periodEnd, structuredFormat = 'json') =>
       invoke('usage.generateProjectStatement', { projectId, periodStart, periodEnd, structuredFormat }),
+    // A Matter's month of AI work as a statement for its client (D-252): a PDF
+    // and its signed file, in the folder the lawyer chooses.
+    saveWorkStatement: (projectId, periodStart, periodEnd, periodName) =>
+      invoke('usage.saveWorkStatement', { projectId, periodStart, periodEnd, periodName }),
+    confirmWorkCosts: (projectId, periodStart, periodEnd) =>
+      invoke('usage.confirmCosts', { projectId, periodStart, periodEnd }),
     createMatter: (name, description) => invoke('matter.create', { name, description }),
     // The direct "New Project" flow (Beta UX correction): one folder picker,
     // one real Project created and assigned to that exact folder - never a
@@ -453,6 +479,10 @@ R"js(
     chooseNewMatterFolder: () => invoke('matter.chooseNewFolder', {}),
     updateMatter: (id, patch) => invoke('matter.update', { id, ...patch }),
     deleteMatter: (id) => invoke('matter.delete', { id }),
+    listMatterTrash: () => invoke('project.listTrash', {}),
+    moveMatterToTrash: (id) => invoke('project.moveToTrash', { id }),
+    restoreMatterFromTrash: (id) => invoke('project.restoreFromTrash', { id }),
+    deleteMatterFromTrash: (id) => invoke('project.deleteFromTrash', { id }),
     addMatterDocument: (matterId) => invoke('matter.addDocument', { matterId }),
     removeMatterDocument: (matterId, documentId) =>
       invoke('matter.removeDocument', { matterId, documentId }),
@@ -487,6 +517,8 @@ R"js(
     addExternalMatterFile: (matterId, destinationFolderRelativePath, sourceAbsolutePath, move = false, keepBoth = false) =>
       invoke('matter.addExternalFile', keepBoth ? { matterId, destinationFolderRelativePath, sourceAbsolutePath, move, keepBoth }
         : { matterId, destinationFolderRelativePath, sourceAbsolutePath, move }),
+    addExternalMatterFolder: (matterId, destinationFolderRelativePath, sourceAbsolutePath) =>
+      invoke('document.addExternalFolder', { matterId, destinationFolderRelativePath, sourceAbsolutePath }),
     // "Try again" on a document stuck at Needs attention - a real
     // re-invocation of the extraction pipeline, never a fake success.
     reprocessMatterDocument: (matterId, documentId) => invoke('matter.reprocessDocument', { matterId, documentId }),
@@ -875,6 +907,9 @@ R"js(		// A Matter's correspondence (Correspondence.json, D-106).
     // A personal conversation of two members (D-042): opened, and every one held here.
     openPersonalChat: (otherActorId) => invoke('chat.openPersonal', { otherActorId }),
     listPersonalChats: () => invoke('chat.listPersonal', {}),
+    clearConversation: (chatId) => invoke('chat.clearConversation', { chatId }),
+    restoreConversation: (chatId, clearedBefore) => invoke('chat.restoreConversation', { chatId, clearedBefore }),
+    listClearedConversations: () => invoke('chat.clearedConversations', {}),
     // Selected IDs are a local privacy control; document content is still
     // retrieved and injected server-side (see build_document_context), so the
     // renderer never receives or resends extracted source text.
@@ -1026,6 +1061,9 @@ R"js(    revealProtectedOccurrence: (matterId, occurrenceId, previewToken) =>
 	listContextMergeConflicts: (projectId) => invoke('context.listMergeConflicts', { projectId }),
 	resolveContextMergeConflict: (projectId, conflictId, resolution, editedValue) =>
 	  invoke('context.resolveMergeConflict', { projectId, conflictId, resolution, editedValue }),
+    getSystemPermissions: () => invoke('system.permissions'),
+    askSystemPermission: (key) => invoke('system.askPermission', { key }),
+    openSystemPermissionSettings: (key) => invoke('system.openPermissionSettings', { key }),
     openExternal: (url) => invoke('system.openExternal', { url }),
     on: (eventName, listener) => {
       const wrapped = (event) => listener(event.detail);
@@ -1438,6 +1476,12 @@ public:
     // lawyers by a number both show (D-205). Their background runs in the
     // window only, below; quiet while no seat is signed in.
     matter::firm_computers::install_environment(matter::firm_computers::production_environment());
+    // A design partner's work log lives in this computer's own records
+    // (D-257), kept only while the seat's own record says design partner. A
+    // build without Legal Machines' keys for work logs could never send one:
+    // it keeps none from its first call, and erases what an earlier build kept.
+    node::work_log::set_directory(platform::computer_records_directory() / "Work Log");
+    if (node::work_log_share::recipients_ready() == false) node::work_log::set_kept(false);
     // A Matter other people work in keeps its data: one person's removal must
     // not erase every member's history (Beta 1 #142, until #169 is decided).
     // What the domains say changed reaches the window as it happens (Beta 1
@@ -1737,6 +1781,11 @@ private:
     register_handler("permissions.revokeBroaderAccess", ExecutionPolicy::Worker,
                      platform_bridge::revoke_broader_access);
 
+    // What the computer itself allows, asked in onboarding (Platform/SystemPermissions).
+    register_handler("system.permissions", ExecutionPolicy::Worker, platform_bridge::system_permissions);
+    register_handler("system.askPermission", ExecutionPolicy::Worker, platform_bridge::ask_system_permission);
+    register_handler("system.openPermissionSettings", ExecutionPolicy::Worker, platform_bridge::open_system_permission_settings);
+
     register_handler("system.openExternal", ExecutionPolicy::UiThread,
                      [](const Json &params) -> Json {
                        const auto url = params.at("url").get<std::string>();
@@ -1763,6 +1812,14 @@ private:
                        return update_bridge::download(params);
                      });
     register_handler("update.show", ExecutionPolicy::UiThread, update_bridge::show);
+    // Restart now (D-261): the version readied installs as Singularity ends,
+    // and Singularity ends the ordinary way, as when its window closes.
+    register_handler("update.install", ExecutionPolicy::UiThread,
+                     [this](const Json &params) {
+                       Json installing = update_bridge::install(params);
+                       window_.close();
+                       return installing;
+                     });
 
     register_handler("onboarding.getStatus", ExecutionPolicy::Worker,
                      node_bridge::get_onboarding_status);
@@ -1986,6 +2043,16 @@ private:
                      [this](const Json &params) {
                        return account_bridge::sign_in_with_email(params, account_services());
                      });
+    // A seat's password in this computer's user's own store (D-243,
+    // Platform/SeatPasswordStore): never answered with, never logged.
+    register_handler("account.seatPasswordStore", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::seat_password_store(params, account_services()); });
+    register_handler("account.savedSeatPassword", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::saved_seat_password(params, account_services()); });
+    register_handler("account.saveSeatPassword", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::save_seat_password(params, account_services()); });
+    register_handler("account.forgetSeatPassword", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::forget_seat_password(params, account_services()); });
     register_handler("account.register", ExecutionPolicy::Worker,
                      [this](const Json &params) {
                        return account_bridge::register_organisation(params, account_services());
@@ -2043,6 +2110,13 @@ private:
                      [this](const Json &params) { return account_bridge::request_recovery(params, account_services()); });
     register_handler("account.resetPassword", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::reset_password(params, account_services()); });
+    register_handler("account.reportProblem", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::report_problem(params, account_services()); });
+    // A design partner's work log of one chat, sealed to Legal Machines (D-257).
+    register_handler("account.workLogPreview", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::work_log_preview(params, account_services()); });
+    register_handler("account.shareWorkLog", ExecutionPolicy::Worker,
+                     [this](const Json &params) { return account_bridge::share_work_log(params, account_services()); });
     register_handler("account.getState", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::get_state(params, account_services()); });
     // Signed out, the window opens at the entry again, in onboarding's fixed
@@ -2124,12 +2198,22 @@ private:
     register_handler("usage.getSummary", ExecutionPolicy::Worker, usage_bridge::get_summary);
     register_handler("usage.generateProjectStatement", ExecutionPolicy::UiThread,
                      [this](const Json& params) { return generate_project_usage_statement(params); });
+    register_handler("usage.saveWorkStatement", ExecutionPolicy::UiThread,
+                     [this](const Json& params) { return save_work_statement(params); });
+    register_handler("usage.confirmCosts", ExecutionPolicy::Worker, usage_bridge::confirm_costs);
+    // This computer's work record, kept from now on and timestamped as it grows (D-252).
+    usage_bridge::start_work_record();
 
     register_handler("matter.create", ExecutionPolicy::Worker, matter_bridge::create);
 
     register_handler("matter.update", ExecutionPolicy::Worker, matter_bridge::update);
 
     register_handler("matter.delete", ExecutionPolicy::Worker, matter_bridge::remove);
+    // This computer's Trash of Matters (Matter/MatterTrash, D-247).
+    register_handler("project.listTrash", ExecutionPolicy::Worker, matter_bridge::list_trash);
+    register_handler("project.moveToTrash", ExecutionPolicy::Worker, matter_bridge::move_to_trash);
+    register_handler("project.restoreFromTrash", ExecutionPolicy::Worker, matter_bridge::restore_from_trash);
+    register_handler("project.deleteFromTrash", ExecutionPolicy::Worker, matter_bridge::delete_from_trash);
 
     // Opens the native multi-file picker (UI thread) and, unless
     // cancelled, copies every chosen file into the Matter's folder, beside its
@@ -2160,6 +2244,7 @@ private:
     register_handler("matter.deleteDocument", ExecutionPolicy::Worker, document_bridge::delete_document);
     register_handler("matter.createFolder", ExecutionPolicy::Worker, document_bridge::create_folder);
     register_handler("matter.addExternalFile", ExecutionPolicy::Worker, document_bridge::add_external_file);
+    register_handler("document.addExternalFolder", ExecutionPolicy::Worker, document_bridge::add_external_folder);
     register_handler("matter.reprocessDocument", ExecutionPolicy::Worker, document_bridge::reprocess_document);
     register_handler("matter.resolveDocumentSource", ExecutionPolicy::Worker, document_bridge::resolve_document_source);
     register_handler("matter.readDocumentView", ExecutionPolicy::Worker, document_bridge::read_document_view);
@@ -2311,6 +2396,25 @@ private:
     register_handler("coordination.declineOffer", ExecutionPolicy::Worker, matter_bridge::coordination_decline_offer);
     register_handler("chat.openPersonal", ExecutionPolicy::Worker, matter_bridge::open_personal_chat);
     register_handler("chat.listPersonal", ExecutionPolicy::Worker, matter_bridge::list_personal_chats);
+    // A personal conversation cleared by the member here (Chat/ConversationClearing).
+    register_handler("chat.clearConversation", ExecutionPolicy::Worker, [](const Json &params) -> Json {
+      const std::string chat_id = params.at("chatId").get<std::string>();
+      const std::string now = workspaces::current_timestamp();
+      const auto before = chat::conversation_clearing::clear(chat_id, now);
+      return Json{{"chatId", chat_id}, {"clearedBefore", now}, {"previouslyClearedBefore", before ? Json(*before) : Json(nullptr)}};
+    });
+    register_handler("chat.restoreConversation", ExecutionPolicy::Worker, [](const Json &params) -> Json {
+      const std::string chat_id = params.at("chatId").get<std::string>();
+      const auto value = params.find("clearedBefore");
+      const std::optional<std::string> cleared = value != params.end() && value->is_string() ? std::optional<std::string>(value->get<std::string>()) : std::nullopt;
+      chat::conversation_clearing::restore(chat_id, cleared);
+      return Json{{"chatId", chat_id}, {"clearedBefore", cleared ? Json(*cleared) : Json(nullptr)}};
+    });
+    register_handler("chat.clearedConversations", ExecutionPolicy::Worker, [](const Json &) -> Json {
+      Json conversations = Json::array();
+      for (const auto &[chat_id, at] : chat::conversation_clearing::all()) conversations.push_back(Json{{"chatId", chat_id}, {"clearedBefore", at}});
+      return Json{{"conversations", std::move(conversations)}};
+    });
     // The sample matter: copied once into the default Projects folder and
     // opened, so a lawyer can try Singularity without a client's files.
     register_handler("project.createSample", ExecutionPolicy::Worker, matter_bridge::create_sample);
@@ -2675,6 +2779,13 @@ private:
     return usage_bridge::finish_statement(prepared, dialogs_.choose_folder());
   }
 
+  // Built and signed from this computer's records before the folder is asked
+  // for, so a refusal never asks the lawyer where to put it.
+  Json save_work_statement(const Json& params) {
+    const usage_bridge::PreparedWorkStatement prepared = usage_bridge::prepare_work_statement(params);
+    return usage_bridge::finish_work_statement(prepared, dialogs_.choose_folder());
+  }
+
   Json build_hash() {
     std::call_once(build_hash_once_, [this] {
       build_hash_value_ =
@@ -2702,8 +2813,15 @@ private:
       capabilities.push_back(name);
     }
     std::sort(capabilities.begin(), capabilities.end());
+    // Which build this is, as a design partner's report says it (D-257).
+#if defined(NDEBUG)
+    constexpr const char *build = "Release";
+#else
+    constexpr const char *build = "Debug";
+#endif
     return Json{{"apiVersion", kNativeApiVersion},
                 {"appVersion", NATIVE_APP_VERSION},
+                {"build", build},
                 {"capabilities", capabilities},
                 {"platform", platform::contract_platform_name()}};
   }
@@ -2880,6 +2998,23 @@ private:
       return dialogs_.choose_save_path(default_name, "Text", "txt");
     };
     services.open_document = [](const std::string &path) { return platform::open_in_default_application(path); };
+    services.seat_password_store = [] { return platform::seat_password_store::kind(); };
+    services.save_seat_password = [](const std::string &target, const std::string &user, const std::string &password) {
+      return platform::seat_password_store::save(target, user, password);
+    };
+    services.read_seat_password = [](const std::string &target) { return platform::seat_password_store::read(target); };
+    services.forget_seat_password = [](const std::string &target) { return platform::seat_password_store::forget(target); };
+    // A report or a work log of up to 24 MB: five minutes to go on a slow line.
+    services.problem_post = [](const std::string &url, const std::string &content_type, const std::string &body) {
+      std::vector<platform::HttpHeader> headers = local_models::production_model_package_manager().session_headers();
+      if (headers.empty() == true) return platform::HttpResponse{401, "", {}};
+      headers.push_back({"Content-Type", content_type});
+      return platform::https_post(url, headers, body, 300);
+    };
+    services.app_version = NATIVE_APP_VERSION;
+    services.platform_name = platform::contract_platform_name();
+    services.device_public_key = [] { return platform::device_public_key(); };
+    services.sign_with_device = [](const std::string &message) { return platform::sign_with_device_key(message); };
     return services;
   }
 

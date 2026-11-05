@@ -1,8 +1,8 @@
-/* The code a pane shows, as the window shows it beside its question. */
+/* The code a pane shows, set as every code a member compares (UI-27) and as
+   the guide sets it. */
 .code {
-	font: 500 30px/36px var(--font-sans);
-	letter-spacing: 0.06em;
+	margin: 0;
+	font: 500 28px/34px var(--font-code);
+	letter-spacing: 0.04em;
 	color: var(--ink);
-	font-variant-numeric: tabular-nums;
-	text-align: center;
 }

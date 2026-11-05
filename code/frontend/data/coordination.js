@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import { addressOf } from "../components/Navigation/navigation.js";
 import { noteOnline } from "../components/Avatar/online.js";
 import { dropNotice, endNotice, notice, toast } from "../components/Toast/toast.js";
-import { connectRealWork, hasNative, listArrivedMatter, lookForArrivedMatters, matterNameOf, nativeApp, noteConnectedComputers, onMatterGiven, realWork, shownMembers } from "./native.js";
+import { connectRealWork, hasNative, listArrivedMatter, lookForArrivedMatters, matterNameOf, nativeApp, noteConnectedComputers, onMatterGiven, realWork, shownMembers, viewerSeatId } from "./native.js";
 import { viewerMay } from "./workspace.js";
 import { endingOf, isWhole, transferNotices } from "./transfers.js";
 
@@ -125,7 +125,7 @@ async function read() {
 		const connected = new Set(matters.flatMap(matter => matter.connected ?? []));
 		noteOnline((firm.computers ?? current.computers ?? []).filter(computer => connected.has(computer.deviceId)).map(computer => computer.actorId));
 		tellChecks(firm.computers, firm.checkAsking);
-		tellGiven(firm.computers, firm.offers);
+		tellGiven(firm.offers);
 		tellOffers(matters);
 		tellLinkProblems(matters);
 		await tellTransfers(matters, status?.deviceCode ?? "");
@@ -191,8 +191,16 @@ async function firmRead() {
 
 // Whose a computer of the firm is, as the window can say it: its member's name
 // once the firm's record names who sits in its seat, else the seat's office -
-// before two computers are checked, no name has reached this one (D-205).
+// before two computers are checked, no name has reached this one (D-205). A
+// computer of the member's own seat is theirs, "your other computer", never
+// named by their office or their name as if someone else's (the owner,
+// 2026-11-05, the only member of a new firm, at his own second computer: "why
+// does he get this, he is the only one in the organisation").
 export function computerOwner(computer) {
+	const ownSeat = viewerSeatId();
+	if (computer != null && ownSeat != null && (computer.seatId ?? "").toLowerCase() == ownSeat.toLowerCase()) {
+		return { name: "you", first: "you", member: null, isYours: true };
+	}
 	const member = computer == null ? null : shownMembers().find(person => (person.actorId ?? "") == computer.actorId);
 	if (member != null && (member.name ?? "") != "") return { name: member.name, first: member.name.split(/\s+/)[0], member };
 	if (computer?.role == "administrator") return { name: "your firm’s administrator", first: "the administrator", member: null };
@@ -201,6 +209,12 @@ export function computerOwner(computer) {
 
 function possessive(owner) {
 	return `${owner.name}’s`;
+}
+
+// A computer of the firm as a sentence names it: "Nora Pierce’s new
+// computer", or "your other computer" for one of the member's own seat.
+export function computerNamed(owner, kind = "computer") {
+	return owner?.isYours == true ? "your other computer" : `${possessive(owner)} ${kind}`;
 }
 
 // A computer that began a check with this one is said at once, wherever the
@@ -217,7 +231,7 @@ function tellChecks(computers, asking) {
 		standing.add(key);
 		checkNotices.add(key);
 		notice(key, {
-			text: `${sentence(possessive(owner))} computer asks to check with this one.`,
+			text: `${sentence(computerNamed(owner))} asks to check with this one.`,
 			tone: "waiting",
 			action: { label: "Check", run: () => openFirmDialog({ kind: "check", deviceId }) },
 		});
@@ -235,7 +249,7 @@ function tellChecks(computers, asking) {
 		standing.add(key);
 		checkNotices.add(key);
 		notice(key, {
-			text: `${sentence(possessive(owner))} new computer waits for you to check it.`,
+			text: `${sentence(computerNamed(owner, "new computer"))} waits for you to check it.`,
 			tone: "waiting",
 			action: { label: "Check", run: () => openFirmDialog({ kind: "check", deviceId: computer.deviceId }) },
 		});
@@ -255,28 +269,24 @@ function tellChecks(computers, asking) {
 	}
 }
 
-// A Matter given to this member is said once it is here to answer, with who
-// gives it and how much of it comes; gone once answered.
+// A Matter a colleague shares with this member comes by itself (D-253; the
+// owner, 2026-11-05: "since it was shared with me, why didn't it show in the
+// Matters list?"): taking what a colleague of the firm gave this seat, from a
+// computer checked with this one, holds no decision (PHIL-7). It is taken
+// once, its arrival is said with who shares it and how much has come, and
+// it is listed among the member's Matters once whole (D-207).
 const givenNotices = new Set();
+const taking = new Set();
 
-function tellGiven(computers, offers) {
-	const standing = new Set();
+function tellGiven(offers) {
 	for (const offer of offers ?? []) {
-		if (current.dialog?.kind == "offer" && current.dialog.matterId == offer.matterId) continue;
-		const owner = computerOwner(computers.find(entry => entry.deviceId == offer.fromDeviceId));
-		const key = `given:${offer.matterId}:${offer.fromDeviceId}`;
-		standing.add(key);
-		givenNotices.add(key);
-		notice(key, {
-			text: `${sentence(owner.name)} shares ${offer.name || "a Matter"} with you.`,
-			tone: "waiting",
-			action: { label: "Open", run: () => openFirmDialog({ kind: "offer", matterId: offer.matterId, fromDeviceId: offer.fromDeviceId }) },
+		const key = `${offer.matterId}:${offer.fromDeviceId}`;
+		if (taking.has(key)) continue;
+		taking.add(key);
+		acceptGivenMatter(offer).catch(() => {
+			// Taken at the next reading.
+			taking.delete(key);
 		});
-	}
-	for (const key of [...givenNotices]) {
-		if (standing.has(key)) continue;
-		givenNotices.delete(key);
-		dropNotice(key);
 	}
 }
 
@@ -342,7 +352,7 @@ export async function acceptGivenMatter(offer) {
 	arriving.set(offer.matterId, Date.now());
 	const giver = computerOwner(current.computers.find(entry => entry.deviceId == offer.fromDeviceId));
 	accepted.set(offer.matterId, { name: offer.name ?? "", bytes: offer.bytes ?? 0, files: offer.files ?? 0,
-		fromDeviceId: offer.fromDeviceId, fromName: giver.name, at: Date.now() });
+		fromDeviceId: offer.fromDeviceId, fromName: giver.isYours == true ? "" : giver.name, at: Date.now() });
 	const given = `given:${offer.matterId}:${offer.fromDeviceId}`;
 	givenNotices.delete(given);
 	dropNotice(given);

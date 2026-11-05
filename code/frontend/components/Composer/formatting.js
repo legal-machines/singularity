@@ -39,6 +39,23 @@ export function toggledMark(value, start, end, mark) {
 	return { from: start, to: end, insert, start: at, end: at + core.length };
 }
 
+// Whether the keys are a Mac's: there Command formats, elsewhere Ctrl.
+export function isMacKeyboard() {
+	return document.documentElement.dataset.nativePlatform == "darwin" || navigator.platform.startsWith("Mac");
+}
+
+// `mark` put around a text field's selection, or taken away from it, through
+// the editor itself, so Undo takes it back in one step. `onChange` is given
+// the words only where the editor cannot type them.
+export function formatField(area, mark, onChange) {
+	const change = toggledMark(area.value, area.selectionStart, area.selectionEnd, mark);
+	area.focus();
+	area.setSelectionRange(change.from, change.to);
+	const isTyped = typeof document.execCommand == "function" && document.execCommand("insertText", false, change.insert) == true;
+	if (isTyped == false) onChange(area.value.slice(0, change.from) + change.insert + area.value.slice(change.to));
+	requestAnimationFrame(() => area.setSelectionRange(change.start, change.end));
+}
+
 // Whether the caret stands inside a code block begun with ``` and not yet
 // closed: there Enter starts a new line, never sends.
 export function isInCodeBlock(value, caret) {

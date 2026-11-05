@@ -196,8 +196,12 @@
 	--layer-caption: 80;
 
 	/* The window. The title band is the native strip that drags the window
-	   (AppWindow, MacOSChrome); its height is the native one. */
-	--titlebar-height: 60px;
+	   (AppWindow, MacOSChrome); its height is the native one. Where the page
+	   draws it (Windows, Linux), the firm's 24-point mark stands an --edge
+	   below the window's top, as it stands an --edge in from its side, with
+	   the window's buttons and the sidebar's on its middle line (the owner,
+	   2026-11-05: "the space at the top must equal the space at the sides"). */
+	--titlebar-height: calc(var(--edge) * 2 + 24px);
 	--sidebar-width: 280px;
 	/* The window's measure (UI-29; the owner, 2026-11-02: "a multiple of 4"):
 	   on macOS the traffic lights stand an --edge in and an --edge down, every

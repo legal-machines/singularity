@@ -11,6 +11,7 @@ import { Page, PageHead } from "../../components/Page/Page.jsx";
 import { ProjectBand } from "../../components/ProjectMark/ProjectMark.jsx";
 import { ProviderViewButton } from "../../components/ProviderView/ProviderView.jsx";
 import { SheetBar } from "../../components/SheetBar/SheetBar.jsx";
+import { ShareWorkLogDialog, useCanShareWorkLog } from "../../components/WorkLog/ShareWorkLog.jsx";
 import { deleteThread, renameThread, setThreadArchived, useRealWork } from "../../data/native.js";
 import { findThread } from "../threadState.js";
 import { findMatter, findMember } from "../words.js";
@@ -86,12 +87,23 @@ export function ThreadPage({ state, onDecide, onReply, onReact, onEditPost, onDe
 	);
 }
 
+// The thread's messages as the member sees them, for its work log (D-257).
+function messagesOf(thread) {
+	return (thread.posts ?? []).map(post => ({
+		author: findMember(post.authorId ?? post.byId)?.name ?? "",
+		at: post.at ?? post.createdAt ?? "",
+		text: Array.isArray(post.paragraphs) ? post.paragraphs.join("\n\n") : post.text ?? "",
+	}));
+}
+
 // What the member may do to the thread (D-214): rename it, archive it apart
 // from the Matter's threads or bring it back, or delete it, which its notice
-// can still undo; its words are never erased.
+// can still undo; its words are never erased. On a design partner's seat it
+// also sends the thread's work log to Legal Machines (D-257).
 function ThreadMenu({ thread, matter }) {
 	const { open } = useNavigation();
 	const [asking, setAsking] = useState(null);
+	const canShareWorkLog = useCanShareWorkLog() && thread.real?.chatId != null;
 	const backToMatter = () => open({ kind: "matter", matterId: matter.id, tab: "threads" });
 
 	async function archive(archived) {
@@ -116,7 +128,12 @@ function ThreadMenu({ thread, matter }) {
 					? { key: "restore", label: "Restore", icon: "return", onSelect: () => archive(false) }
 					: { key: "archive", label: "Archive", icon: "closed", onSelect: () => archive(true) },
 				{ key: "delete", label: "Delete", icon: "trash", onSelect: () => setAsking("delete") },
-			]} />
+				canShareWorkLog ? { key: "workLog", label: "Send work log to Legal Machines", icon: "send", onSelect: () => setAsking("workLog") } : null,
+			].filter(Boolean)} />
+			{asking == "workLog" ? (
+				<ShareWorkLogDialog matterId={thread.real.matterId} chatId={thread.real.chatId} title={thread.title} messages={messagesOf(thread)}
+					onClose={() => setAsking(null)} />
+			) : null}
 			{asking == "rename" ? (
 				<RenameThreadDialog title={thread.title} onClose={() => setAsking(null)}
 					onSave={async title => {

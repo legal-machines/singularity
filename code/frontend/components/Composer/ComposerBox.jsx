@@ -4,7 +4,7 @@ import { firstName, positionOf } from "../../pages/words.js";
 import { TextArea } from "../Field/Field.jsx";
 import { Icon } from "../Icon/Icon.jsx";
 import { Popover } from "../Popover/Popover.jsx";
-import { formatMarkOf, isInCodeBlock, toggledMark } from "./formatting.js";
+import { formatField, formatMarkOf, isInCodeBlock, isMacKeyboard } from "./formatting.js";
 import { MentionList } from "./MentionList.jsx";
 import { mentionAt, mentionOptions, withMention } from "./mentions.js";
 
@@ -97,12 +97,7 @@ export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, on
 	function format(mark) {
 		const area = field.current;
 		if (area == null) return;
-		const change = toggledMark(area.value, area.selectionStart, area.selectionEnd, mark);
-		area.focus();
-		area.setSelectionRange(change.from, change.to);
-		const isTyped = typeof document.execCommand == "function" && document.execCommand("insertText", false, change.insert) == true;
-		if (isTyped == false) onChange(area.value.slice(0, change.from) + change.insert + area.value.slice(change.to));
-		requestAnimationFrame(() => area.setSelectionRange(change.start, change.end));
+		formatField(area, mark, onChange);
 	}
 
 	function discard() {
@@ -160,7 +155,7 @@ export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, on
 							return;
 						}
 					}
-					const mark = formatMarkOf(event, isMac());
+					const mark = formatMarkOf(event, isMacKeyboard());
 					if (mark != null) {
 						event.preventDefault();
 						format(mark);
@@ -210,10 +205,6 @@ export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, on
 		</div>
 	);
 });
-
-function isMac() {
-	return document.documentElement.dataset.nativePlatform == "darwin" || navigator.platform.startsWith("Mac");
-}
 
 // An act in the send's place, named in words: "Close thread".
 export function ComposerAction({ children, disabled, tooltip, onClick }) {

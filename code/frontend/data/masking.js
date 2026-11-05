@@ -28,6 +28,19 @@ export function maskText(projectId, text) {
 	return answer;
 }
 
+// Whether client data protection masks what leaves this computer
+// (protectedApi.getPolicy). Protection masks words, not pictures: a picture a
+// member attaches then goes to the AI model as it is, and says so before it
+// goes (D-256). Unknown counts as on, so the note is never missing.
+export async function isProtectionOn() {
+	try {
+		const policy = await nativeApp().getProtectedApiPolicy?.();
+		return (policy?.mode ?? "standard") != "off";
+	} catch {
+		return true;
+	}
+}
+
 // A whole document as a model receives it (protectedApi.previewDocument):
 // asked once at a time, and its last answer kept, so a document opened again
 // shows at once while it is asked again. Singularity keeps the answer ready

@@ -10,6 +10,7 @@
 #include "Matter/MatterRepository/MatterRepository.hpp"
 #include "Node/ActiveWorkspace/ActiveWorkspace.hpp"
 #include "Node/LegacyWorkspace/LegacyWorkspace.hpp"
+#include "Node/WorkLog/WorkLog.hpp"
 #include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
 #include "Platform/ActorIdentity/ActorIdentity.hpp"
 #include "Platform/AppLifecycle/AppLifecycle.hpp"
@@ -440,6 +441,7 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 	request.maximum_output_tokens = allowance;
 	if (isLocal == false) request.project_entity_hints = context_actions::memory_protection_hints(call.matterId);
 	request.prompt = call.prompt;
+	request.pictures = call.pictures;
 	request.prompt_parts = call.promptParts;
 	request.prompt_instruction = call.promptInstruction;
 	request.reasoning_effort = call.reasoningEffort;
@@ -502,6 +504,9 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 		const platform::HttpCancelScope scope(token);
 		// What the provider may keep of the conversation's prompt between calls.
 		const providers::PromptCacheScope cached(call.promptCache);
+		// The chat this call works for, whose work log a design partner's
+		// computer keeps it in (D-257).
+		const node::work_log::ChatScope recorded(call.matterId, call.chatId);
 		result = routing::execute(request);
 	} catch (const providers::TaskError& error) {
 		endWatch();

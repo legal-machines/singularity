@@ -5,7 +5,7 @@ import { Painting } from "./painting/Painting.jsx";
 import { EntryForm } from "./entry/EntryForm.jsx";
 import { FirmWait } from "./FirmWait.jsx";
 import { Lens } from "./tour/Lens.jsx";
-import { PAGES, pagesFor } from "./tour/pages.js";
+import { PAGES, pagesFor, permissionKeys, platformOf } from "./tour/pages.js";
 import { Tour } from "./tour/Tour.jsx";
 import { SetupPreview } from "./tour/SetupPreview.jsx";
 import { Welcome } from "./Welcome.jsx";
@@ -49,7 +49,11 @@ export function Onboarding({ onComplete, hold = false }) {
 	const [painting, setPainting] = useState(START < 0 && !WELCOME_PREVIEW);
 	const [leaving, setLeaving] = useState(false);
 	const [joined, setJoined] = useState(false);
-	const pages = pagesFor({ isMember: joined });
+	// What the computer does not allow Singularity yet, by key: the slide that
+	// asks names only those, and is left out when there are none (D-249). Read
+	// once, before the slides.
+	const [missingPermissions, setMissingPermissions] = useState(null);
+	const pages = pagesFor({ isMember: joined, missingPermissions });
 	// Signed in: the welcome with the organisation's name, before the slides
 	// or, for a member who has been here, the app (the owner, 2026-10-29).
 	const [welcome, setWelcome] = useState(WELCOME_PREVIEW ? { name: "Marlowe Finch LLP", returning: PREVIEW === "welcome-sign-in", celebrate: PREVIEW === "welcome" } : null);
@@ -91,6 +95,21 @@ export function Onboarding({ onComplete, hold = false }) {
 		};
 	}, [resumed]);
 	useEffect(() => {
+		const keys = permissionKeys();
+		if (keys.length === 0 || typeof window.nativeApp?.getSystemPermissions != "function") return undefined;
+		let current = true;
+		window.nativeApp.getSystemPermissions().then(
+			(answer) => {
+				const states = Object.fromEntries((answer?.permissions ?? []).map((item) => [item.key, item.state]));
+				if (current) setMissingPermissions(keys.filter((key) => !["allowed", "not_needed"].includes(states[key])));
+			},
+			() => {},
+		);
+		return () => {
+			current = false;
+		};
+	}, []);
+	useEffect(() => {
 		if (warm) return undefined;
 		const warming = setTimeout(() => setWarm(true), WARM_AFTER_MS);
 		return () => clearTimeout(warming);
@@ -119,6 +138,14 @@ export function Onboarding({ onComplete, hold = false }) {
 			const viewer = (await window.nativeApp?.getOrganisation?.())?.viewer;
 			returning = Boolean(viewer?.name && viewer?.position);
 			if (viewer?.may?.connectModels === false) setJoined(true);
+		} catch {
+			// The slides ask for what is missing.
+		}
+		// A seat that went through onboarding on this computer before, with its
+		// data here, goes straight back to work: signing it in marks onboarding
+		// complete here (the owner, 2026-11-05, D-250).
+		try {
+			if ((await window.nativeApp?.getOnboardingStatus?.())?.completed === true) returning = true;
 		} catch {
 			// The slides ask for what is missing.
 		}
@@ -162,6 +189,8 @@ export function Onboarding({ onComplete, hold = false }) {
 	// be closed with Alt+F4).
 	const captionInPage = window.nativeApp?.windowFrame == "page" || document.documentElement.dataset.nativeWindowFrame == "page";
 	const preview = page != null && !pages[page].scene ? pages[page].preview ?? pages[page].ask : null;
+	// The system's questions the picture shows: those of the slide's own rows.
+	const asked = page != null ? pages[page].permissions?.[platformOf()]?.map((item) => item.key) ?? null : null;
 
 	return (
 		<main className={styles.page} data-tour={!holding && page != null && !welcome || undefined} data-leaving={leaving || undefined} data-caption={captionInPage ? "page" : undefined} style={{ "--leave-ms": `${LEAVE_MS}ms` }}>
@@ -181,7 +210,7 @@ export function Onboarding({ onComplete, hold = false }) {
 			<div className={styles.art}>
 				{painting || holding ? <Painting /> : null}
 				{warm && !holding ? <Lens paused={configuring} shown={page != null && !preview} scene={pages[page ?? 0].scene ?? "team"} profile={drafts.role ?? null} onReady={() => setLensReady(true)} /> : null}
-				{preview && !holding ? <SetupPreview kind={preview} draft={drafts[preview]} /> : null}
+				{preview && !holding ? <SetupPreview kind={preview} draft={drafts[preview]} asked={asked} /> : null}
 			</div>
 			{welcome ? <Welcome name={welcome.name} celebrate={welcome.celebrate} onContinue={welcomed} /> : null}
 			<div className={styles.controls}>

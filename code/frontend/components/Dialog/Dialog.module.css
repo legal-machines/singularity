@@ -121,6 +121,13 @@
 	max-width: 760px;
 }
 
+/* A guide that sets a sketch beside its steps (OfficeGuide.jsx): wider, and
+   as tall as the window allows, so its steps scroll only in a small one. */
+.wide {
+	max-width: 920px;
+	max-height: calc(100vh - 48px);
+}
+
 .head {
 	display: flex;
 	align-items: flex-start;
@@ -144,6 +151,15 @@
 	min-height: 0;
 	padding: 16px 24px 4px;
 	overflow-y: auto;
+}
+
+/* What the leading action waits on, and what went wrong with it (Dialog.jsx):
+   never under the scroll. */
+.footnote {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px 24px 0;
 }
 
 .foot {
@@ -181,6 +197,10 @@
 
 .dialog[data-layout="spacious"] .body {
 	padding: 28px 36px 0;
+}
+
+.dialog[data-layout="spacious"] .footnote {
+	padding: 24px 36px 0;
 }
 
 .dialog[data-layout="spacious"] .foot {

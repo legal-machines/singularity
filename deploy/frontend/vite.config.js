@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -52,6 +52,38 @@ function characterManifestScript() {
 	};
 }
 
+// Onboarding's living painting's parts (code/frontend/onboarding/painting/parts)
+// as a classic script beside the page, painting/parts.js, which sets
+// window.__singularityPaintingParts to each part's WebP bytes in base64. On
+// disk (file://) WebView2 counts each file as an origin of its own, so a part
+// the page drew from its file tainted the canvas and WebGL refused it: on
+// Windows the painting stood still as its poster (2026-11-04). Bytes the page
+// holds itself never taint (onboarding/painting/artwork.js). The parts' files
+// are not copied beside the page as well.
+const paintingParts = resolve(frontendRoot, "onboarding/painting/parts");
+const PAINTING_PARTS_SCRIPT = "painting/parts.js";
+function paintingPartsScript() {
+	const source = () => {
+		const parts = {};
+		for (const name of readdirSync(paintingParts).filter((file) => file.endsWith(".webp")).sort()) {
+			parts[name.slice(0, -".webp".length)] = readFileSync(resolve(paintingParts, name)).toString("base64");
+		}
+		return `window.__singularityPaintingParts = ${JSON.stringify(parts)};\n`;
+	};
+	return {
+		name: "painting-parts-script",
+		configureServer(server) {
+			server.middlewares.use(`/${PAINTING_PARTS_SCRIPT}`, (_request, response) => {
+				response.setHeader("Content-Type", "text/javascript; charset=utf-8");
+				response.end(source());
+			});
+		},
+		generateBundle() {
+			this.emitFile({ type: "asset", fileName: PAINTING_PARTS_SCRIPT, source: source() });
+		},
+	};
+}
+
 // Onboarding's layout and its moving layers reload together in the window
 // under development: an edit to its JSX or CSS reloads the whole page rather
 // than keeping a half-updated tree and its running animations.
@@ -74,7 +106,7 @@ export default defineConfig({
 	root: frontendRoot,
 	cacheDir: resolve(deploymentRoot, "node_modules/.vite"),
 	publicDir: resolve(frontendRoot, "public"),
-	plugins: [reloadOnboarding(), react(), desktopClassicScript(), characterManifestScript()],
+	plugins: [reloadOnboarding(), react(), desktopClassicScript(), characterManifestScript(), paintingPartsScript()],
 	base: "./",
 	resolve: {
 		// The source root is code/frontend while the packages are installed

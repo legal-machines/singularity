@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "../../components/Button/Button.jsx";
 import { Dialog } from "../../components/Dialog/Dialog.jsx";
-import { Field, Input } from "../../components/Field/Field.jsx";
+import { Field, Input, PasswordInput } from "../../components/Field/Field.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { viewerMay } from "../../data/workspace.js";
 import { PROVIDERS, isConnected, reasonOf } from "../../onboarding/tour/providers.js";
@@ -145,11 +145,9 @@ function ConnectDialog({ provider, setup, onClose, onConnected }) {
 			)}
 		>
 			<Field label="API key" error={error ?? undefined}>
-				<Input
-					type="password"
+				<PasswordInput
+					kind="key"
 					value={key}
-					spellCheck={false}
-					autoComplete="off"
 					onChange={event => {
 						setKey(event.target.value);
 						setError(null);

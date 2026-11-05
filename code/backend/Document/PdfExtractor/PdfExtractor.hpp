@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Document/DocumentExtractor/DocumentExtractor.hpp"
+#include "Document/PdfExtractor/ModelPictureRules.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -24,6 +25,15 @@ extract_pdf_document(const DocumentExtractionRequest &request);
 // TIFF - read by the same text recognition (D-115). Nothing where this computer
 // cannot read them, or where the picture holds no words.
 [[nodiscard]] std::optional<std::string> recognize_image_text(const std::filesystem::path &path);
+
+// A picture file as a model reads it (D-256): one every provider takes as it
+// is goes as it is (ModelPictureRules.hpp); a phone's HEIC or HEIF photograph,
+// a TIFF or BMP scan, one too large, or one its file turns, is redrawn where
+// this computer can - by macOS's ImageIO, by Windows's own imaging - upright,
+// at most picture::kRedrawnLongEdge pixels on its long edge, as PNG where it
+// has transparency and fits, as JPEG otherwise. Nothing where it cannot be, or
+// where the file is no picture.
+[[nodiscard]] std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path);
 
 // ---- Work on a PDF, always in a copy (D-115) ---------------------------------------
 //

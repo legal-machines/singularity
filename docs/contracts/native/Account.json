@@ -93,8 +93,9 @@
         "code": "string",
         "organisationId": "string",
         "seatId": "string",
-        "password": "string",
-        "email": "string | undefined"
+        "password": "string | undefined",
+        "email": "string | undefined",
+        "savedPassword": "boolean | undefined"
       },
       "result": "AccountSignInResult",
       "_order": 170
@@ -120,7 +121,8 @@
       "params": {
         "email": "string",
         "seat": "string | undefined",
-        "password": "string"
+        "password": "string | undefined",
+        "savedPassword": "boolean | undefined"
       },
       "result": "AccountSignInResult",
       "_order": 270
@@ -366,6 +368,81 @@
       },
       "result": "PasswordChanged",
       "_order": 328
+    },
+    {
+      "name": "account.reportProblem",
+      "policy": "worker",
+      "params": {
+        "title": "string",
+        "category": "string | undefined",
+        "acceptedConsent": "string | undefined",
+        "description": "string",
+        "technical": "string",
+        "pictures": "ProblemPicture[]"
+      },
+      "result": "ProblemReported",
+      "_order": 355
+    },
+    {
+      "name": "account.workLogPreview",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "chatId": "string"
+      },
+      "result": "WorkLogPreview",
+      "_order": 357
+    },
+    {
+      "name": "account.shareWorkLog",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "chatId": "string",
+        "chatTitle": "string",
+        "note": "string",
+        "messages": "WorkLogMessage[]",
+        "acceptedConsent": "string | undefined"
+      },
+      "result": "WorkLogShared",
+      "_order": 358
+    },
+    {
+      "name": "account.seatPasswordStore",
+      "policy": "worker",
+      "result": "SeatPasswordStore",
+      "_order": 350
+    },
+    {
+      "name": "account.savedSeatPassword",
+      "policy": "worker",
+      "params": {
+        "email": "string",
+        "seat": "string | undefined"
+      },
+      "result": "SavedSeatPassword",
+      "_order": 351
+    },
+    {
+      "name": "account.saveSeatPassword",
+      "policy": "worker",
+      "params": {
+        "email": "string",
+        "seat": "string | undefined",
+        "password": "string"
+      },
+      "result": "SeatPasswordSaved",
+      "_order": 352
+    },
+    {
+      "name": "account.forgetSeatPassword",
+      "policy": "worker",
+      "params": {
+        "email": "string",
+        "seat": "string | undefined"
+      },
+      "result": "SeatPasswordForgotten",
+      "_order": 353
     }
   ]
 }

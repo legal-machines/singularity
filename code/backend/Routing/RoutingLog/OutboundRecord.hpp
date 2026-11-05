@@ -106,6 +106,15 @@ inline void forget_passage_bytes(Registry &kept, const NotedCalls &noted) {
 	kept.passageBytes -= noted.passageBytes <= kept.passageBytes ? noted.passageBytes : kept.passageBytes;
 }
 
+// Where each model call that left is written into this computer's work record
+// (D-252, Usage/WorkRecord): installed once by the app, which then gives the
+// call its place there (record_chain, record_index). None in a test that
+// installs none, so a call is then noted as it was.
+inline std::function<void(protected_api::papinian::OutboundCall &)> &work_record_sink() {
+	static std::function<void(protected_api::papinian::OutboundCall &)> sink;
+	return sink;
+}
+
 // Notes one call under its operation. Never throws: a record that cannot be
 // kept must not undo a request that already left. `isOperation` is false for
 // a call keyed by its own request namespace, which no attempt's entry can
@@ -115,6 +124,14 @@ inline void record_call(const std::string &operationKey, protected_api::papinian
 	if (operationKey.empty() == true) return;
 	try {
 		if (call.time.empty() == true) call.time = utc_now();
+		// Its place in this computer's record, before it is noted: the record is
+		// of the call as it is billed.
+		if (call.kind == "model" && work_record_sink()) {
+			try {
+				work_record_sink()(call);
+			} catch (...) {
+			}
+		}
 		Registry &kept = registry();
 		const std::lock_guard<std::mutex> lock(kept.mutex);
 		auto found = kept.calls.find(operationKey);

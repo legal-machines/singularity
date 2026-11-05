@@ -246,10 +246,100 @@ std::optional<std::string> recognize_image_file(const std::filesystem::path &pat
 		return std::nullopt;
 	}
 }
+
+// A picture redrawn by Windows's own imaging (D-256): decoded, turned as its
+// camera turned it, made no larger than any provider reads, and written as PNG
+// where it has transparency and fits, as JPEG on white paper otherwise.
+std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path) {
+	try {
+		using namespace winrt::Windows::Graphics::Imaging;
+		using winrt::Windows::Storage::Streams::Buffer;
+		using winrt::Windows::Storage::Streams::DataWriter;
+		using winrt::Windows::Storage::Streams::InMemoryRandomAccessStream;
+		using winrt::Windows::Storage::Streams::InputStreamOptions;
+		try {
+			winrt::init_apartment(winrt::apartment_type::multi_threaded);
+		} catch (const winrt::hresult_error &) {
+		}
+		std::vector<char> bytes;
+		{
+			std::ifstream input(path, std::ios::binary);
+			if (!input) return std::nullopt;
+			bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+		}
+		if (bytes.empty()) return std::nullopt;
+		InMemoryRandomAccessStream stream;
+		{
+			DataWriter writer(stream);
+			writer.WriteBytes(winrt::array_view<const std::uint8_t>(reinterpret_cast<const std::uint8_t *>(bytes.data()),
+				reinterpret_cast<const std::uint8_t *>(bytes.data()) + bytes.size()));
+			writer.StoreAsync().get();
+			writer.DetachStream();
+		}
+		stream.Seek(0);
+		const BitmapDecoder decoder = BitmapDecoder::CreateAsync(stream).get();
+		const double longest = static_cast<double>(std::max(decoder.OrientedPixelWidth(), decoder.OrientedPixelHeight()));
+		BitmapTransform transform;
+		if (longest > static_cast<double>(picture::kRedrawnLongEdge)) {
+			const double scale = static_cast<double>(picture::kRedrawnLongEdge) / longest;
+			transform.ScaledWidth(std::max<std::uint32_t>(1, static_cast<std::uint32_t>(decoder.PixelWidth() * scale)));
+			transform.ScaledHeight(std::max<std::uint32_t>(1, static_cast<std::uint32_t>(decoder.PixelHeight() * scale)));
+			transform.InterpolationMode(BitmapInterpolationMode::Fant);
+		}
+		const SoftwareBitmap drawn = decoder.GetSoftwareBitmapAsync(BitmapPixelFormat::Bgra8, BitmapAlphaMode::Straight,
+			transform, ExifOrientationMode::RespectExifOrientation, ColorManagementMode::ColorManageToSRgb).get();
+		const std::uint32_t width = static_cast<std::uint32_t>(drawn.PixelWidth());
+		const std::uint32_t height = static_cast<std::uint32_t>(drawn.PixelHeight());
+		const std::uint32_t length = width * height * 4U;
+		if (width == 0 || height == 0) return std::nullopt;
+		Buffer pixels(length);
+		drawn.CopyToBuffer(pixels);
+		std::vector<std::uint8_t> bgra(pixels.data(), pixels.data() + length);
+		bool hasAlpha = false;
+		for (std::uint32_t index = 3; index < length && hasAlpha == false; index += 4) hasAlpha = bgra[index] != 255;
+		const auto encoded = [&](const winrt::guid &kind, const std::vector<std::uint8_t> &data,
+				BitmapAlphaMode alpha) -> std::optional<std::string> {
+			InMemoryRandomAccessStream written;
+			const bool isJpeg = kind == BitmapEncoder::JpegEncoderId();
+			BitmapPropertySet options;
+			if (isJpeg)
+				options.Insert(L"ImageQuality", BitmapTypedValue(winrt::box_value(static_cast<float>(picture::kRedrawnJpegQuality)),
+					winrt::Windows::Foundation::PropertyType::Single));
+			BitmapEncoder encoder = BitmapEncoder::CreateAsync(kind, written, options).get();
+			encoder.SetPixelData(BitmapPixelFormat::Bgra8, alpha, width, height, 96.0, 96.0,
+				winrt::array_view<const std::uint8_t>(data.data(), data.data() + data.size()));
+			encoder.FlushAsync().get();
+			const std::uint32_t size = static_cast<std::uint32_t>(written.Size());
+			if (size == 0) return std::nullopt;
+			written.Seek(0);
+			Buffer read(size);
+			const auto taken = written.ReadAsync(read, size, InputStreamOptions::None).get();
+			return std::string(reinterpret_cast<const char *>(taken.data()), taken.Length());
+		};
+		if (hasAlpha) {
+			std::optional<std::string> png = encoded(BitmapEncoder::PngEncoderId(), bgra, BitmapAlphaMode::Straight);
+			if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) return ModelPicture{"image/png", std::move(*png)};
+			// On white paper, as a page shows it: what shows through is white.
+			for (std::uint32_t index = 0; index < length; index += 4) {
+				const unsigned int alpha = bgra[index + 3];
+				for (std::uint32_t channel = 0; channel < 3; ++channel)
+					bgra[index + channel] = static_cast<std::uint8_t>((bgra[index + channel] * alpha + 255U * (255U - alpha)) / 255U);
+				bgra[index + 3] = 255;
+			}
+		}
+		std::optional<std::string> jpeg = encoded(BitmapEncoder::JpegEncoderId(), bgra, BitmapAlphaMode::Ignore);
+		if (jpeg.has_value() && jpeg->size() <= picture::kMostBytesAsItIs) return ModelPicture{"image/jpeg", std::move(*jpeg)};
+		return std::nullopt;
+	} catch (...) {
+		return std::nullopt;
+	}
+}
 #else
 // Linux: no text recognition yet; a scan's pages stay unread and are said to be.
 std::optional<std::string> recognize_page(FPDF_PAGE) { return std::nullopt; }
 std::optional<std::string> recognize_image_file(const std::filesystem::path &) { return std::nullopt; }
+// Nor a picture redrawn: one goes as it is, or not at all.
+std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &) { return std::nullopt; }
 #endif
 
 DocumentExtractionResult failure(ExtractionStatus status, std::string code, std::string message) {
@@ -547,6 +637,13 @@ bool page_shows_unread_content(FPDF_PAGE page, FPDF_TEXTPAGE textPage, std::size
 std::string pdf_extractor_version() { return current_extractor_version(); }
 
 std::optional<std::string> recognize_image_text(const std::filesystem::path &path) { return recognize_image_file(path); }
+
+// A picture as a model reads it (D-256): as it is where every provider takes
+// it, otherwise redrawn where this system can (redrawn_picture).
+std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path) {
+	if (std::optional<ModelPicture> kept = picture::as_it_is(path)) return kept;
+	return redrawn_picture(path);
+}
 
 bool pdf_text_recognition_available() {
 #if defined(_WIN32)

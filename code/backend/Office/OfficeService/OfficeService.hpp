@@ -3,6 +3,7 @@
 #include "Office/OfficeApps/OfficeApps.hpp"
 #include "Office/OfficeClients/OfficeClients.hpp"
 #include "Office/OfficeConnection/OfficeConnection.hpp"
+#include "Platform/SystemPermissions/SystemPermissions.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -54,6 +55,24 @@ OfficeStatus office_status();
 // the system to trust it, writes and registers the add-ins and starts serving
 // the panes. Blocks while the system asks the person. Never throws.
 OfficeStatus connect_office();
+
+// The certificate the panes are reached with, as onboarding asks it before
+// Office is connected (D-244, key "officeCertificate"), so connecting asks
+// nothing more. Not needed where neither Word, Excel, PowerPoint nor Outlook
+// is installed; allowed once this user's system trusts it; denied when the
+// person said no in this run. Never asks, never throws.
+platform::system_permissions::Permission office_certificate_permission();
+
+// Makes the certificate as connect_office does, when there is none or it ends
+// within a month, and asks the system to trust it for this user: Windows' own
+// security warning, or the Mac's password. Says what came of it. Blocks while
+// the system asks the person. Never throws.
+platform::system_permissions::Permission ask_office_certificate_trust();
+
+// Opens where the person sees the certificates their account trusts: on
+// Windows the current user's Certificates, whose Trusted Root Certification
+// Authorities lists Singularity's. False where it cannot.
+bool open_office_certificate_settings();
 
 // Opens the application the person is connecting, from Singularity's window
 // only (D-191): Word, Excel and PowerPoint with Singularity's own file, whose

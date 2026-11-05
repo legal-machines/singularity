@@ -260,6 +260,10 @@ void forget_memory(const std::string &agent_id, const std::string &note_id);
 // member's desk - where it has none yet, and brings its brief up to date where
 // it has one (D-157). Never throws; never call it with an agent lock held.
 void open_own_chat(const std::string &agent_id);
+// The colleagues whose own chat could not open at their last try - no Matters
+// folder yet, as for onboarding's first colleague - which the scheduler tries
+// again at each wake until it opens.
+std::vector<std::string> colleagues_awaiting_chat();
 
 // Takes back work not yet begun. Work begun is ended as a run is, by stopping
 // the run.

@@ -14,7 +14,9 @@
 const REFUSALS = {
 	"account.wrong_credentials": "Email or password is wrong.",
 	"account.wrong_code": "That code doesn’t match. Try again.",
-	"account.too_many_attempts": "Too many tries. Wait a few minutes.",
+	// Five wrong passwords in a row hold a seat, and too many failed sign-ins
+	// hold a network, for 15 minutes at most (Legal Machines' account service).
+	"account.too_many_attempts": "Too many tries. Wait 15 minutes, then try again.",
 	"account.offline": "Can’t reach Legal Machines. Check the internet.",
 	"account.service_unavailable": "Legal Machines isn’t answering. Try again soon.",
 	"account.refused": "Legal Machines declined. Try again in a few minutes.",
@@ -31,6 +33,11 @@ export function refusalOf(error) {
 // example.com is a known organisation that signs in with an authenticator app
 // (one that begins "mail" with a mailed code), and every code it asks for is
 // PREVIEW_CODE. The page never shows it (the owner, 2026-10-29).
+//
+// A seat's password is kept, at the member's choice, where the computer's own
+// store can keep it (D-243): Windows' Credential Manager. The page asks only
+// whether one is kept; signing in with it is the native side's, and the page
+// never reads it back.
 //
 // A test of the whole product in the app may stand in for Legal Machines the
 // same way (the owner, 2026-10-31: "I can't give you the code from the mail;
@@ -60,6 +67,22 @@ export function accountOf(nativeApp) {
 			signIn: (email, seat, password) => nativeApp.signInToLegalMachinesWithEmail(email, seat, password),
 			verify: (challengeId, code, organisationId, seatId, password, email) =>
 				nativeApp.verifyLegalMachinesCode(challengeId, code, organisationId, seatId, password, email),
+			// Where this computer keeps a seat's password (D-243): "windows", or
+			// null where it keeps none and the page offers none.
+			passwordStore: async () => (typeof nativeApp.getSeatPasswordStore == "function"
+				? (await nativeApp.getSeatPasswordStore())?.store ?? null
+				: null),
+			// Whether a password is kept for the firm's email and seat, never the password.
+			hasSavedPassword: async (email, seat) => (await nativeApp.hasSavedSeatPassword(email, seat))?.saved === true,
+			// Kept only for the seat that just signed in here, with the password it
+			// signed in with; forgotten at the member's word.
+			savePassword: async (email, seat, password) => (await nativeApp.saveSeatPassword(email, seat, password))?.saved === true,
+			forgetPassword: async (email, seat) => (await nativeApp.forgetSeatPassword(email, seat))?.forgotten === true,
+			// A sign-in, and its code, with the kept password: {status:
+			// "saved_password_refused"} once Legal Machines refuses it, forgotten.
+			signInWithSavedPassword: (email, seat) => nativeApp.signInToLegalMachinesWithSavedPassword(email, seat),
+			verifyWithSavedPassword: (challengeId, code, organisationId, seatId, email) =>
+				nativeApp.verifyLegalMachinesCodeWithSavedPassword(challengeId, code, organisationId, seatId, email),
 			// A new organisation from its details and agreements, no password yet; a
 			// code goes to its email.
 			create: (registration) => nativeApp.createLegalMachinesOrganisation(registration),
@@ -93,7 +116,7 @@ export function accountOf(nativeApp) {
 			resetPassword: (email, code, twoStepCode, password) => nativeApp.resetAccountPassword(email, code, twoStepCode, password),
 		};
 	}
-	return standIn(emulation);
+	return standIn(emulation, nativeApp);
 }
 
 // What a Debug build started for a whole-product test says it stands in for:
@@ -115,7 +138,7 @@ export function emulatedFirm() {
 // How long a test's new firm waits for Legal Machines' approval.
 export const EMULATED_APPROVAL_MS = 6000;
 
-function standIn(emulation) {
+function standIn(emulation, nativeApp) {
 	const pause = () => new Promise((resolve) => setTimeout(resolve, 650));
 	const wrongCode = () => Object.assign(new Error("wrong code"), { code: "account.wrong_code" });
 	const seat = { organisationId: "preview-firm", seatId: "preview-seat" };
@@ -124,6 +147,23 @@ function standIn(emulation) {
 	const signedIn = (role = "administrator") => {
 		if (emulation != null) emulatedFirmName = firm;
 		return { status: "signed_in", account: { organisationName: firm, role } };
+	};
+	// The stand-in keeps no password. Where the app could keep one, a test's
+	// stand-in remembers only that one was saved, until the page closes.
+	const savedSeats = new Set();
+	const savedKey = (email, seatId) => `${email.trim().toLowerCase()}/${(seatId ?? "").trim().toLowerCase()}`;
+	const signIn = async (email, seatId) => {
+		await pause();
+		if (emulation?.mode === "join" || (seatId ?? "").trim().toLowerCase() !== seat.seatId) {
+			return { ...signedIn("member"), organisationId: seat.organisationId, seatId: (seatId ?? "").trim().toLowerCase() };
+		}
+		const method = email.trim().toLowerCase().startsWith("mail") ? "email" : "authenticator";
+		return { status: "two_factor_required", method, challengeId: "preview", maskedEmail: null, ...seat };
+	};
+	const verify = async (challengeId, code) => {
+		await pause();
+		if (code !== PREVIEW_CODE && !PREVIEW_RECOVERY_CODES.includes(code)) throw wrongCode();
+		return signedIn();
 	};
 	return {
 		preview: true,
@@ -138,19 +178,26 @@ function standIn(emulation) {
 		},
 		// The administrator's seat is "preview-seat" and goes on to its code; any
 		// other seat is a colleague's, signed in at once (D-204), as is a test's.
-		signIn: async (email, seatId) => {
-			await pause();
-			if (emulation?.mode === "join" || (seatId ?? "").trim().toLowerCase() !== seat.seatId) {
-				return { ...signedIn("member"), organisationId: seat.organisationId, seatId: (seatId ?? "").trim().toLowerCase() };
+		signIn,
+		verify,
+		// Where the app says it could keep a password; a browser keeps none.
+		passwordStore: async () => (typeof nativeApp?.getSeatPasswordStore == "function"
+			? (await nativeApp.getSeatPasswordStore())?.store ?? null
+			: null),
+		hasSavedPassword: async (email, seatId) => savedSeats.has(savedKey(email, seatId)),
+		savePassword: async (email, seatId) => {
+			savedSeats.add(savedKey(email, seatId));
+			return true;
+		},
+		forgetPassword: async (email, seatId) => savedSeats.delete(savedKey(email, seatId)),
+		signInWithSavedPassword: async (email, seatId) => {
+			if (!savedSeats.has(savedKey(email, seatId))) {
+				await pause();
+				return { status: "saved_password_refused" };
 			}
-			const method = email.trim().toLowerCase().startsWith("mail") ? "email" : "authenticator";
-			return { status: "two_factor_required", method, challengeId: "preview", maskedEmail: null, ...seat };
+			return signIn(email, seatId);
 		},
-		verify: async (challengeId, code) => {
-			await pause();
-			if (code !== PREVIEW_CODE && !PREVIEW_RECOVERY_CODES.includes(code)) throw wrongCode();
-			return signedIn();
-		},
+		verifyWithSavedPassword: (challengeId, code) => verify(challengeId, code),
 		create: async (registration) => {
 			await pause();
 			if (registration?.legalEntityName) firm = registration.legalEntityName.trim();
@@ -198,9 +245,17 @@ function standIn(emulation) {
 			await pause();
 			return { sent: true };
 		},
+		// As Legal Machines does: the email's code first; then, for an
+		// administrator with an authenticator app (any email but one that begins
+		// "mail"), its code, asked for when none came.
 		resetPassword: async (email, code, twoStepCode) => {
 			await pause();
-			if (code !== PREVIEW_CODE || (twoStepCode !== PREVIEW_CODE && !PREVIEW_RECOVERY_CODES.includes(twoStepCode))) throw wrongCode();
+			if (code !== PREVIEW_CODE) throw wrongCode();
+			if (email.trim().toLowerCase().startsWith("mail")) return { changed: true };
+			if (!twoStepCode) {
+				throw Object.assign(new Error("Enter the code your authenticator app shows, or a recovery code."), { code: "account.two_step_code_required" });
+			}
+			if (twoStepCode !== PREVIEW_CODE && !PREVIEW_RECOVERY_CODES.includes(twoStepCode)) throw wrongCode();
 			return { changed: true };
 		},
 		// A browser prints the codes from a page of their own.

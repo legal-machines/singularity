@@ -6,6 +6,7 @@ import { CodeInput } from "./CodeInput.jsx";
 import { CountryField } from "./CountryField.jsx";
 import { Notice } from "./Notice.jsx";
 import { QrCode } from "./QrCode.jsx";
+import { SecretInput } from "../../components/Field/SecretInput.jsx";
 import { countryNamed } from "./countries.js";
 import { MIN_PASSWORD_LENGTH, passwordStrength } from "./password.js";
 import { accountOf, refusalOf } from "./account.js";
@@ -71,10 +72,22 @@ const COLLEAGUE_SETTING_UP = [
 	["twoFactorCode", "Code from the app"],
 	["recovery", "Recovery codes"],
 ];
+// The administrator's forgotten password, one thing a page (D-215; the owner,
+// 2026-11-05): the code mailed to the firm's email, the new password twice,
+// and last, where two-step sign-in is on, the code the authenticator app
+// shows, new every 30 seconds, on a page of its own so it is fresh when sent.
+const RECOVERING = [
+	["forgot", "Forgot your password"],
+	["recoverCode", "Code from the email"],
+	["recoverPassword", "New password"],
+	["recoverTwoStep", "Code from the app"],
+];
+const RECOVERY_STEPS = new Set(RECOVERING.map(([name]) => name));
 // What each step starts on: its first field, or else its title.
 const FIRST_FIELD = {
 	email: "email", seat: "seat", password: "password", code: "code", confirm: "code",
-	name: "legalEntityName", newPassword: "password", twoFactorCode: "code", recover: "code",
+	name: "legalEntityName", newPassword: "password", twoFactorCode: "code",
+	recoverCode: "code", recoverPassword: "password", recoverTwoStep: "twoStep",
 };
 // A recovery code as Legal Machines writes it: eight letters and digits,
 // "7K4Q-M2XF".
@@ -153,7 +166,8 @@ export function EntryForm({ onComplete }) {
 	const [twoFactor, setTwoFactor] = useState(null);
 	const [twoFactorTry, setTwoFactorTry] = useState(0);
 	// A forgotten password (D-215): the administrator's, reset by the code
-	// mailed to the firm's email with the code their authenticator shows.
+	// mailed to the firm's email and, where two-step sign-in is on, the code
+	// their authenticator shows or a recovery code, asked for last.
 	const [twoStepCode, setTwoStepCode] = useState("");
 	// A colleague's seat with no authenticator yet sets one up after its
 	// agreements, with its own session (D-215), before it works.
@@ -170,6 +184,16 @@ export function EntryForm({ onComplete }) {
 	// (D-152): after its recovery codes, onboarding goes straight on, with no
 	// code asked again.
 	const [signedInHere, setSignedInHere] = useState(null);
+	// Where this computer keeps a seat's password at the member's choice
+	// (D-243): "windows", or null where it keeps none and nothing is offered.
+	// Whether it keeps one for the seat at hand, and the member's choice:
+	// ticked, the password the seat signs in with is kept; unticked, a kept one
+	// is forgotten once the seat signs in. A sign-in by the kept password checks
+	// its code with it too.
+	const [passwordStore, setPasswordStore] = useState(null);
+	const [savedPassword, setSavedPassword] = useState(false);
+	const [keepPassword, setKeepPassword] = useState(false);
+	const [bySavedPassword, setBySavedPassword] = useState(false);
 	const [seat, setSeat] = useState(null);
 	const [challengeId, setChallengeId] = useState(null);
 	const [maskedEmail, setMaskedEmail] = useState(null);
@@ -225,6 +249,31 @@ export function EntryForm({ onComplete }) {
 		const timer = setTimeout(() => setKeyCopied(false), 1600);
 		return () => clearTimeout(timer);
 	}, [keyCopied]);
+	// Whether this computer can keep a seat's password, asked once (D-243).
+	useEffect(() => {
+		let current = true;
+		account.passwordStore?.().then((store) => current && setPasswordStore(store ?? null), () => {});
+		return () => {
+			current = false;
+		};
+	}, []);
+	// The password's page says whether this computer keeps the seat's password:
+	// kept, its box stands ticked and the field may stay empty.
+	useEffect(() => {
+		if (step !== "password" || !passwordStore || !seatLogin) return undefined;
+		let current = true;
+		account.hasSavedPassword(email, seatLogin).then(
+			(saved) => {
+				if (!current) return;
+				setSavedPassword(saved);
+				setKeepPassword(saved);
+			},
+			() => current && setSavedPassword(false),
+		);
+		return () => {
+			current = false;
+		};
+	}, [step, passwordStore, email, seatLogin]);
 	useEffect(() => {
 		if (resendRemaining <= 0) return;
 		const timer = setTimeout(() => setResendRemaining((value) => value - 1), 1000);
@@ -262,7 +311,7 @@ export function EntryForm({ onComplete }) {
 				if (!current) return;
 				if (approved) {
 					current = false;
-					if (password) request(() => account.signIn(email, seat.seatId, password), "password", signedInAs);
+					if (password) request(() => signIn(seat.seatId), "password", signedInAs);
 					else {
 						restart();
 						setNotice("Your organisation is approved. Sign in to go on.");
@@ -309,7 +358,7 @@ export function EntryForm({ onComplete }) {
 		seat: "email", password: "seat", code: "password",
 		name: "email", country: "name", agree: "country", confirm: journey === "register" ? "agree" : "email",
 		twoFactor: ownSetup ? "memberAgree" : "newPassword", twoFactorCode: "twoFactor",
-		forgot: "password", recover: "forgot",
+		forgot: "password", recoverCode: "forgot", recoverPassword: "recoverCode", recoverTwoStep: "recoverPassword",
 	};
 	const back = () => {
 		const previous = backOf[step];
@@ -344,6 +393,14 @@ export function EntryForm({ onComplete }) {
 				if (failure?.code === "account.setup_expired") {
 					restart();
 					setNotice(refusalOf(failure), "warning");
+				} else if (failure?.code === "account.too_many_attempts" && step === "code") {
+					// Five wrong codes close a sign-in's code; there is nothing to
+					// wait for: signing in again gives a new one, with five more
+					// tries (the owner, 2026-11-05: "give people at least five
+					// tries"). The password stays as it was typed.
+					setCode("");
+					go("password", true);
+					refuse("Five wrong codes for this sign-in. Sign in again for a new code.", "password");
 				} else refuse(refusalOf(failure), fieldOf?.(failure) ?? field);
 			}
 		} finally {
@@ -385,11 +442,48 @@ export function EntryForm({ onComplete }) {
 		go("newPassword");
 	};
 
+	// A sign-in by the seat's password: the one typed, or the one this computer
+	// keeps (D-243), which the native side signs in with.
+	const signIn = (seatId, bySaved = false) => {
+		setBySavedPassword(bySaved);
+		return bySaved ? account.signInWithSavedPassword(email, seatId) : account.signIn(email, seatId, password);
+	};
+	// The member's choice for the password, once the seat signed in: ticked,
+	// the password typed is kept; unticked, a kept one is forgotten. Windows'
+	// refusal to keep it is said, and the sign-in goes on.
+	const keepChoice = async () => {
+		if (!passwordStore || !seatLogin) return;
+		const unsaved = "Windows didn’t save the password";
+		try {
+			if (keepPassword && password !== "") {
+				const saved = await account.savePassword(email, seatLogin, password);
+				setSavedPassword(saved);
+				if (!saved) setNotice(unsaved, "warning");
+			} else if (!keepPassword && savedPassword) {
+				await account.forgetPassword(email, seatLogin);
+				setSavedPassword(false);
+			}
+		} catch {
+			if (keepPassword) setNotice(unsaved, "warning");
+		}
+	};
+	// Legal Machines refused the kept password, which the native side forgot:
+	// the member types theirs on the password's page, the box as it was.
+	const savedPasswordRefused = () => {
+		setSavedPassword(false);
+		setBySavedPassword(false);
+		setPassword("");
+		if (step !== "password") go("password", true);
+		refuse("The password saved in Windows no\u00a0longer works. Enter your password.", "password");
+	};
+
 	// What a sign-in came to, by the password or after a confirmed email.
 	const signedInAs = async (result) => {
+		if (result?.status === "saved_password_refused") return savedPasswordRefused();
 		if (result?.organisationId) setSeat({ organisationId: result.organisationId, seatId: result.seatId });
 		if (result?.maskedEmail) setMaskedEmail(result.maskedEmail);
 		if (result?.status === "signed_in") {
+			await keepChoice();
 			// Signed in by a recovery code (D-218): once Singularity opens, it
 			// asks for the authenticator app again.
 			if (result.usedRecoveryCode === true) rememberRecoverySignIn(result.recoveryCodesLeft);
@@ -433,7 +527,7 @@ export function EntryForm({ onComplete }) {
 	// needs.
 	const ready = {
 		email: email.trim() !== "",
-		password: password !== "",
+		password: password !== "" || savedPassword,
 		code: byRecoveryCode ? code.replace(/-/g, "").length === RECOVERY_LENGTH : code.length === 6,
 		confirm: code.length === 6,
 		seat: seatLogin.trim() !== "",
@@ -447,7 +541,9 @@ export function EntryForm({ onComplete }) {
 		twoFactorCode: twoFactor !== null && code.length === 6,
 		recovery: kept,
 		forgot: true,
-		recover: code.length === 6 && newPasswordReady,
+		recoverCode: code.length === 6,
+		recoverPassword: newPasswordReady,
+		recoverTwoStep: byRecoveryCode ? twoStepCode.replace(/-/g, "").length === RECOVERY_LENGTH : twoStepCode.length === 6,
 	}[step] === true;
 
 	const submitEmail = (event) => {
@@ -491,39 +587,87 @@ export function EntryForm({ onComplete }) {
 		request(() => account.requestRecovery(email), "forgot", () => {
 			setCode("");
 			setTwoStepCode("");
+			setByRecoveryCode(false);
 			setPassword("");
 			setRepeat("");
 			setResendRemaining(RESEND_SECONDS);
-			go("recover");
+			go("recoverCode");
 		});
 	};
-	const submitRecover = (event) => {
+	// The email's code is checked with the new password, on the next page.
+	const submitRecoverCode = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
-		request(() => account.resetPassword(email, code, twoStepCode.trim(), password), "code", () => {
-			setPassword("");
-			setRepeat("");
-			setCode("");
-			setTwoStepCode("");
-			go("password");
-			setNotice("Your password is changed. Sign in with it.");
-		});
+		clear();
+		go("recoverPassword");
 	};
+	// The reset, sent first with no two-step code: Legal Machines checks the
+	// email's code and, where two-step sign-in is on, asks for that code, which
+	// then has a page of its own, last (account.two_step_code_required). An
+	// email code that is wrong, expired or used goes back to its page, with
+	// Resend there; five wrong codes of either kind to sending a new one.
+	const resetPassword = (twoStep) => request(async () => {
+		try {
+			await account.resetPassword(email, code, twoStep, password);
+			return { changed: true };
+		} catch (failure) {
+			if (twoStep === "" && failure?.code === "account.two_step_code_required") return { twoStep: true };
+			if (failure?.code === "account.too_many_attempts") return { back: "forgot", text: "Five wrong codes. Send a new code." };
+			if ((twoStep === "" && failure?.code === "account.wrong_code") || failure?.code === "account.invalid_input") {
+				return { back: "recoverCode", text: refusalOf(failure), field: "code" };
+			}
+			throw failure;
+		}
+	}, twoStep === "" ? "password" : "twoStep", (result) => {
+		if (result.twoStep) {
+			setTwoStepCode("");
+			setByRecoveryCode(false);
+			go("recoverTwoStep");
+			return;
+		}
+		if (result.back) {
+			setTwoStepCode("");
+			go(result.back, true);
+			refuse(result.text, result.field ?? null);
+			return;
+		}
+		setPassword("");
+		setRepeat("");
+		setCode("");
+		setTwoStepCode("");
+		setByRecoveryCode(false);
+		go("password", true);
+		setNotice("Your password is changed. Sign in with it.");
+	});
+	const submitRecoverPassword = (event) => {
+		event.preventDefault();
+		if (busy || !ready) return;
+		resetPassword("");
+	};
+	const submitRecoverTwoStep = (event) => {
+		event.preventDefault();
+		if (busy || !ready) return;
+		resetPassword(twoStepCode.trim());
+	};
+	// An empty field, where this computer keeps the seat's password, signs in
+	// with the kept one (D-243).
 	const submitPassword = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
-		request(() => account.signIn(email, seatLogin, password), "password", signedInAs);
+		request(() => signIn(seatLogin, password === "" && savedPassword), "password", signedInAs);
 	};
 	const submitCode = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
 		if (step === "code") {
-			request(() => account.verify(challengeId, code, seat?.organisationId, seat?.seatId, password, email), "code", signedInAs);
+			request(() => (bySavedPassword
+				? account.verifyWithSavedPassword(challengeId, code, seat?.organisationId, seat?.seatId, email)
+				: account.verify(challengeId, code, seat?.organisationId, seat?.seatId, password, email)), "code", signedInAs);
 			return;
 		}
 		request(() => account.confirm(seat.organisationId, code), "code", async (result) => {
 			if (result?.setup) return goSetup(result.setup);
-			if (result?.state === "active") return signedInAs(await account.signIn(email, seat?.seatId ?? seatLogin, password));
+			if (result?.state === "active") return signedInAs(await signIn(seat?.seatId ?? seatLogin));
 			go("waiting");
 		});
 	};
@@ -534,10 +678,14 @@ export function EntryForm({ onComplete }) {
 			setResendRemaining(RESEND_SECONDS);
 			setNotice("A new code is on its way");
 		};
-		if (step === "code") request(() => account.signIn(email, seatLogin || seat?.seatId, password), "code", (result) => {
+		if (step === "code") request(() => signIn(seatLogin || seat?.seatId, bySavedPassword), "code", (result) => {
+			if (result?.status === "saved_password_refused") return savedPasswordRefused();
 			if (result?.challengeId) setChallengeId(result.challengeId);
 			then();
 		});
+		// A forgotten password's code: Legal Machines mails a new one at most
+		// every 45 seconds, and the last one sent is the one it takes.
+		else if (step === "recoverCode") request(() => account.requestRecovery(email), "code", then);
 		else request(() => account.resend(seat.organisationId), "code", then);
 	};
 	const submitName = (event) => {
@@ -637,7 +785,7 @@ export function EntryForm({ onComplete }) {
 				signedInAs(signedInHere);
 				return;
 			}
-			request(() => account.signIn(email, seat?.seatId ?? "", password), "yourSeat", signedInAs);
+			request(() => signIn(seat?.seatId ?? ""), "yourSeat", signedInAs);
 			return;
 		}
 		go("waiting");
@@ -675,6 +823,9 @@ export function EntryForm({ onComplete }) {
 		setRecoveryCodes([]);
 		setKept(false);
 		setSignedInHere(null);
+		setSavedPassword(false);
+		setKeepPassword(false);
+		setBySavedPassword(false);
 		go("email", true);
 	};
 	// The codes kept on paper (the owner, 2026-10-29), in a file or copied.
@@ -735,6 +886,14 @@ export function EntryForm({ onComplete }) {
 			aria-invalid={invalid(name)} aria-describedby={describedBy(name)} {...props}
 		/>
 	);
+	// A password, with the eye that shows it (the owner, 2026-11-04): a password
+	// field still, which a password manager knows by its autocomplete.
+	const secret = (name, props) => (
+		<SecretInput
+			ref={fields[name]} id={`entry-${name}`} name={name} readOnly={busy}
+			aria-invalid={invalid(name)} aria-describedby={describedBy(name)} {...props}
+		/>
+	);
 	const detail = (key, label, props = {}) => (
 		<div className={styles.field}>
 			<label htmlFor={`entry-${key}`}>{label}</label>
@@ -748,6 +907,16 @@ export function EntryForm({ onComplete }) {
 		<CodeInput value={code} onChange={(value) => { setCode(value); clear(); }}
 			inputRef={fields.code} invalid={invalid("code")} busy={busy} describedBy={describedBy("code")} />
 	);
+	// A forgotten password's last page asks for the authenticator's six digits
+	// in the same six cells, or a recovery code.
+	const twoStepInput = () => (byRecoveryCode
+		? input("twoStep", {
+			type: "text", className: styles.code, autoComplete: "off", autoCapitalize: "characters", spellCheck: false,
+			placeholder: "XXXX-XXXX", maxLength: 9, value: twoStepCode,
+			onChange: (event) => { setTwoStepCode(asRecoveryCode(event.target.value)); clear(); },
+		})
+		: <CodeInput id="entry-twoStep" name="twoStep" value={twoStepCode} onChange={(value) => { setTwoStepCode(value); clear(); }}
+			inputRef={fields.twoStep} invalid={invalid("twoStep")} busy={busy} describedBy={describedBy("twoStep")} />);
 
 	const statement = (key, children) => (
 		<div className={styles.statement}>
@@ -791,8 +960,8 @@ export function EntryForm({ onComplete }) {
 			{accountName}
 			<div className={styles.field}>
 				<label htmlFor="entry-password">Password</label>
-				{input("password", {
-					type: "password", autoComplete: "new-password", passwordrules: passwordRules, maxLength: 200, value: password,
+				{secret("password", {
+					autoComplete: "new-password", passwordrules: passwordRules, maxLength: 200, value: password,
 					placeholder: `At least ${MIN_PASSWORD_LENGTH} characters`,
 					onChange: (event) => { setPassword(event.target.value); clear(); },
 					onBlur: adviseOnPassword,
@@ -800,8 +969,8 @@ export function EntryForm({ onComplete }) {
 			</div>
 			<div className={styles.field}>
 				<label htmlFor="entry-repeat">Repeat the password</label>
-				{input("repeat", {
-					type: "password", autoComplete: "new-password", passwordrules: passwordRules, maxLength: 200, value: repeat,
+				{secret("repeat", {
+					autoComplete: "new-password", passwordrules: passwordRules, maxLength: 200, value: repeat,
 					"aria-invalid": mismatch || invalid("repeat"), "aria-describedby": mismatch || invalid("repeat") ? "entry-notice" : undefined,
 					onChange: (event) => { setRepeat(event.target.value); clear(); },
 				})}
@@ -812,7 +981,7 @@ export function EntryForm({ onComplete }) {
 	// What the notice at the top says (Notice.jsx): what went wrong, while it
 	// stands; else that the new passwords differ, while they do; else what
 	// just happened, for a moment.
-	const choosingPassword = step === "newPassword" || step === "recover";
+	const choosingPassword = step === "newPassword" || step === "recoverPassword";
 	const message = error.text
 		? { key: `error-${error.count}`, text: error.text, tone: "problem", stays: true }
 		: choosingPassword && mismatch
@@ -893,11 +1062,21 @@ export function EntryForm({ onComplete }) {
 				{accountName}
 				<div className={styles.field}>
 					<label htmlFor="entry-password">Password</label>
-					{input("password", {
-						type: "password", autoComplete: "current-password", maxLength: 200, value: password,
+					{secret("password", {
+						autoComplete: "current-password", maxLength: 200, value: password,
+						placeholder: savedPassword ? "Saved in Windows" : undefined,
 						onChange: (event) => { setPassword(event.target.value); clear(); },
 					})}
 				</div>
+				{passwordStore === "windows" ? (
+					<label className={`${styles.statement} ${styles.keepPassword}`}>
+						<input
+							type="checkbox" checked={keepPassword} disabled={busy}
+							onChange={(event) => { setKeepPassword(event.target.checked); clear(); }}
+						/>
+						<span>Save the password in Windows</span>
+					</label>
+				) : null}
 				<div className={styles.codeSupport}>
 					<button className={styles.textButton} type="button" disabled={busy} onClick={() => { clear(); setNotice(""); go("forgot"); }}>Forgot your password?</button>
 				</div>
@@ -909,27 +1088,49 @@ export function EntryForm({ onComplete }) {
 			<StepForm onSubmit={submitForgot} aria-busy={busy} aria-label="Forgot your password">
 				{heading("Forgot your password?", { address: email })}
 				<p className={styles.line}>A colleague’s password is set again by your firm’s administrator, on your page in Team.</p>
-				<p className={styles.line}>The administrator gets a code at the firm’s email, and enters it with the code from their authenticator app.</p>
+				<p className={styles.line}>The administrator gets a code at the firm’s email, chooses a new password, then enters the code from their authenticator app.</p>
 				{primary("Send the code", "Sending…")}
 			</StepForm>
 		);
-	} else if (step === "recover") {
+	} else if (step === "recoverCode") {
 		body = (
-			<StepForm onSubmit={submitRecover} aria-busy={busy} aria-label="A new password">
-				{heading("Choose a new password", { line: `The code went to ${to}` })}
+			<StepForm onSubmit={submitRecoverCode} aria-busy={busy} aria-label="Code from the email">
+				{heading("Check your email", { address: `Code sent to ${email}` })}
 				<div className={styles.field}>
-					<label htmlFor="entry-code">Code from the email</label>
+					<label htmlFor="entry-code">Verification code</label>
 					{codeInput()}
 				</div>
-				<div className={styles.field}>
-					<label htmlFor="entry-twoStep">Code from your authenticator app, or a recovery code</label>
-					{input("twoStep", {
-						type: "text", inputMode: "text", autoComplete: "one-time-code", autoCapitalize: "characters", spellCheck: false,
-						maxLength: 12, value: twoStepCode, placeholder: "123456",
-						onChange: (event) => { setTwoStepCode(event.target.value); clear(); },
-					})}
+				<div className={styles.codeSupport}>
+					<button className={styles.textButton} type="button" onClick={resend} disabled={Boolean(resendRemaining) || busy}>
+						{resendRemaining ? `Resend code in ${resendRemaining}s` : "Resend code"}
+					</button>
 				</div>
+				{primary("Continue")}
+			</StepForm>
+		);
+	} else if (step === "recoverPassword") {
+		body = (
+			<StepForm onSubmit={submitRecoverPassword} aria-busy={busy} aria-label="A new password">
+				{heading("Set a new password", { line: "For your firm’s administrator" })}
 				{newPasswordFields}
+				{primary("Continue", "Checking…")}
+			</StepForm>
+		);
+	} else if (step === "recoverTwoStep") {
+		body = (
+			<StepForm onSubmit={submitRecoverTwoStep} aria-busy={busy} aria-label="Two-factor authentication">
+				{heading("Two‑factor authentication", {
+					line: byRecoveryCode ? "Enter one of your recovery codes" : "Enter the code your authenticator app shows",
+				})}
+				<div className={styles.field}>
+					<label htmlFor="entry-twoStep">{byRecoveryCode ? "Recovery code" : "Code"}</label>
+					{twoStepInput()}
+				</div>
+				<div className={styles.codeSupport}>
+					<button className={styles.textButton} type="button" disabled={busy} onClick={() => { setByRecoveryCode(!byRecoveryCode); setTwoStepCode(""); clear(); fields.twoStep.current?.focus(); }}>
+						{byRecoveryCode ? "Use the authenticator app" : "Use a recovery code"}
+					</button>
+				</div>
 				{primary("Set the new password", "Setting…")}
 			</StepForm>
 		);
@@ -1075,7 +1276,9 @@ export function EntryForm({ onComplete }) {
 	// The cover keeps its wordmark and legal links. Every later page centres
 	// its title, question and action together, with Back and progress at the
 	// window's foot.
-	const steps = journey === "register" ? REGISTRATION : journey === "colleague" ? (ownSetup ? COLLEAGUE_SETTING_UP : COLLEAGUE_SIGNING_IN)
+	const recovering = RECOVERY_STEPS.has(step);
+	const steps = recovering ? RECOVERING : journey === "register" ? REGISTRATION
+		: journey === "colleague" ? (ownSetup ? COLLEAGUE_SETTING_UP : COLLEAGUE_SIGNING_IN)
 		: journey === "signin" ? SIGNING_IN : [];
 	const at = steps.findIndex(([name]) => name === step || journey === "signin" && step === "confirm" && name === "code");
 	const cover = step === "email";
@@ -1097,7 +1300,8 @@ export function EntryForm({ onComplete }) {
 			</div>
 			{at >= 0 ? (
 				<Dots
-					steps={steps.map(([, title]) => title)} current={at} label={journey === "register" ? "Registration" : "Signing in"}
+					steps={steps.map(([, title]) => title)} current={at}
+					label={recovering ? "A new password" : journey === "register" ? "Registration" : "Signing in"}
 					canGo={(index) => !(busy && step === "twoFactorCode") && behind.includes(steps[index][0])}
 					onGo={(index) => {
 						attempt.current += 1;

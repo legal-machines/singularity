@@ -174,6 +174,27 @@ Check check(const std::string &current_version, const std::string &os, const std
 	return Check{"available", release, "Singularity " + release.version + " is available."};
 }
 
+std::string ready_words(const std::string &os) {
+	if (os == "windows") return "It installs when Singularity restarts, with Windows' permission.";
+	if (os == "linux") return "It installs when Singularity restarts, with your password.";
+	return "It installs when Singularity restarts.";
+}
+
+std::string file_version(const std::string &name) {
+	// The first part between dashes, spaces or brackets that is a version.
+	std::string part;
+	for (std::size_t at = 0; at <= name.size(); ++at) {
+		const char c = at < name.size() ? name[at] : '-';
+		if (c == '-' || c == ' ' || c == '(' || c == ')' || c == '_') {
+			if (parse(part).isValid) return part;
+			part.clear();
+		} else {
+			part += c;
+		}
+	}
+	return "";
+}
+
 std::filesystem::path download(const Release &release, const std::filesystem::path &folder, const Download &fetch,
                                const platform::DownloadProgress &progress) {
 	if (!isInstallerName(release.file_name, release.os) || !isHex64(release.sha256) || release.bytes == 0

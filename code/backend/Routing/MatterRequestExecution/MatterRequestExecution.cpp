@@ -6,6 +6,7 @@
 
 #include "Chat/ChatActions/ChatActions.hpp"
 #include "Chat/ChatContinuity/ChatContinuity.hpp"
+#include "Chat/ConversationClearing/ConversationClearing.hpp"
 #include "Chat/OperationOrigin/OperationOrigin.hpp"
 #include "Context/ComputedStatements/ComputedStatements.hpp"
 #include "Context/ProjectEvidence/ProjectEvidence.hpp"
@@ -3441,6 +3442,16 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
     }
     history_candidates = std::move(scoped);
   }
+  // A conversation the member cleared here begins afresh: what was said up to
+  // then goes into no request made from this computer
+  // (Chat/ConversationClearing; the owner, 2026-11-04).
+  if (spec.chat_id) {
+    if (const auto cleared = chat::conversation_clearing::cleared_before(*spec.chat_id)) {
+      history_candidates.erase(std::remove_if(history_candidates.begin(), history_candidates.end(),
+          [&](const matters::MatterTask &candidate) { return !candidate.created_at.empty() && candidate.created_at <= *cleared; }),
+          history_candidates.end());
+    }
+  }
   // Every earlier turn as a record, and each finished answer whole as capacity
   // allows (PromptAssembler admits and states the coverage).
   prompt_input.history_items = chat::conversation_history_items(matter, history_candidates);
@@ -3453,7 +3464,12 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 	if (spec.chat_id) {
 		const auto compactedChat = std::find_if(matter.chats.begin(), matter.chats.end(),
 			[&](const matters::MatterChat &entry) { return entry.id == *spec.chat_id; });
-		if (compactedChat != matter.chats.end() && compactedChat->compaction) {
+		// A compaction made before the conversation was cleared here is part of
+		// what was cleared.
+		const auto clearedAt = chat::conversation_clearing::cleared_before(*spec.chat_id);
+		const bool isClearedCompaction = compactedChat != matter.chats.end() && compactedChat->compaction && clearedAt
+			&& compactedChat->compaction->created_at <= *clearedAt;
+		if (compactedChat != matter.chats.end() && compactedChat->compaction && !isClearedCompaction) {
 			const matters::ChatCompaction &compaction = *compactedChat->compaction;
 			const std::set<std::string> covered(compaction.covered_task_ids.begin(),
 				compaction.covered_task_ids.end());

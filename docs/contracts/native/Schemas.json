@@ -250,6 +250,12 @@
           "$ref": "#/schemas/ProjectNote"
         }
       },
+      "correspondenceIntake": {
+        "type": "array",
+        "items": {
+          "$ref": "#/schemas/IntakeRule"
+        }
+      },
       "issues": {
         "type": "array",
         "items": {
@@ -3155,6 +3161,32 @@
           "string",
           "null"
         ]
+      },
+      "pictures": {
+        "description": "The pictures a member attached that the call carried as they are, unmasked (D-256): each by its name, size and SHA-256, never its bytes.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "bytes",
+            "sha256"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "additionalProperties": false
+        }
       }
     },
     "additionalProperties": true
@@ -4449,13 +4481,20 @@
     ],
     "properties": {
       "apiVersion": {
-        "const": 100
+        "const": 105
       },
       "platform": {
         "type": "string"
       },
       "appVersion": {
         "type": "string"
+      },
+      "build": {
+        "description": "Which build this is, as a design partner's problem report says it (D-257).",
+        "enum": [
+          "Debug",
+          "Release"
+        ]
       },
       "capabilities": {
         "type": "array",
@@ -4491,7 +4530,13 @@
       "usage",
       "costClassification",
       "costDisplay",
-      "evidenceStatus"
+      "evidenceStatus",
+      "agentId",
+      "agentName",
+      "agentInitiated",
+      "askedBy",
+      "calls",
+      "callsRecorded"
     ],
     "properties": {
       "projectId": {
@@ -4593,6 +4638,207 @@
           "operation_only",
           "needs_review"
         ]
+      },
+      "agentId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "agentName": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "agentInitiated": {
+        "type": "boolean"
+      },
+      "askedBy": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "actorId",
+          "name"
+        ],
+        "properties": {
+          "actorId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "calls": {
+        "type": "array",
+        "items": {
+          "$ref": "#/schemas/UsageCall"
+        }
+      },
+      "callsRecorded": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UsageCall": {
+    "type": "object",
+    "required": [
+      "time",
+      "providerId",
+      "modelId",
+      "servedBy",
+      "providerRequestId",
+      "payloadSha256",
+      "responseSha256",
+      "inputTokens",
+      "cachedInputTokens",
+      "outputTokens",
+      "reasoningTokens",
+      "costMicros",
+      "costCurrency",
+      "costClassification",
+      "costMethodology",
+      "protectionMode"
+    ],
+    "properties": {
+      "time": {
+        "type": "string"
+      },
+      "providerId": {
+        "type": "string"
+      },
+      "modelId": {
+        "type": "string"
+      },
+      "servedBy": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "providerRequestId": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "payloadSha256": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "responseSha256": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "inputTokens": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "cachedInputTokens": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "outputTokens": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "reasoningTokens": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "costMicros": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "costCurrency": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "costClassification": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "costMethodology": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "protectionMode": {
+        "type": "string"
+      },
+      "recorded": {
+        "description": "Whether this computer's work record holds the call (D-252).",
+        "type": "boolean"
+      },
+      "confirmation": {
+        "description": "What the provider's own record says the call cost (D-252), or null before it is asked.",
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "source",
+          "costMicros",
+          "currency",
+          "provider",
+          "confirmedAt"
+        ],
+        "properties": {
+          "source": {
+            "enum": [
+              "openrouter"
+            ]
+          },
+          "costMicros": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confirmedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
       }
     },
     "additionalProperties": false
@@ -4669,7 +4915,8 @@
           "chats",
           "consilia",
           "workflows",
-          "workProducts"
+          "workProducts",
+          "agents"
         ],
         "properties": {
           "projects": {
@@ -4709,6 +4956,12 @@
             }
           },
           "workProducts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/schemas/UsageBreakdown"
+            }
+          },
+          "agents": {
             "type": "array",
             "items": {
               "$ref": "#/schemas/UsageBreakdown"
@@ -4758,6 +5011,35 @@
         "pattern": "^[0-9a-f]{64}$"
       },
       "operationCount": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "additionalProperties": false
+  },
+  "UsageWorkStatementResult": {
+    "type": "object",
+    "required": [
+      "saved"
+    ],
+    "properties": {
+      "saved": {
+        "type": "boolean"
+      },
+      "pdfPath": {
+        "type": "string"
+      },
+      "signedPath": {
+        "type": "string"
+      },
+      "statementSha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "keyCode": {
+        "type": "string"
+      },
+      "requestCount": {
         "type": "integer",
         "minimum": 0
       }
@@ -8544,7 +8826,7 @@
     "additionalProperties": false
   },
   "AccountSignInResult": {
-    "description": "What a sign-in step came to. signed_in: the account and this computer's download session are kept; a missing protection model downloads at once only when onboarding is complete and protection is on, and otherwise when the member asks (localModels.sync papinian-ner, D-198; follow papinian.getModelStatus). two_factor_required: send the code with account.verifyTwoFactor and challengeId. email_verification_required: the organisation's email must be confirmed first; nothing was kept. awaiting_approval: Legal Machines has not approved the new organisation yet; nothing was kept, and maskedEmail is where it writes once it does. setup_required: a new organisation whose setup is not finished (D-146) goes on with setup (two_factor); the token that opens it stays native. method, with two_factor_required: authenticator when the seat's authenticator app shows the code (a recovery code stands in once), email when a code was mailed.",
+    "description": "What a sign-in step came to. signed_in: the account and this computer's download session are kept; a missing protection model downloads at once only when onboarding is complete and protection is on, and otherwise when the member asks (localModels.sync papinian-ner, D-198; follow papinian.getModelStatus). two_factor_required: send the code with account.verifyTwoFactor and challengeId. email_verification_required: the organisation's email must be confirmed first; nothing was kept. awaiting_approval: Legal Machines has not approved the new organisation yet; nothing was kept, and maskedEmail is where it writes once it does. setup_required: a new organisation whose setup is not finished (D-146) goes on with setup (two_factor); the token that opens it stays native. method, with two_factor_required: authenticator when the seat's authenticator app shows the code (a recovery code stands in once), email when a code was mailed. saved_password_refused: a sign-in asked with savedPassword, and the password this computer kept for the seat was refused by Legal Machines or is no longer kept (D-243); it is forgotten, nothing was kept, and the page asks for the password.",
     "type": "object",
     "required": [
       "status",
@@ -8557,7 +8839,8 @@
           "two_factor_required",
           "email_verification_required",
           "awaiting_approval",
-          "setup_required"
+          "setup_required",
+          "saved_password_refused"
         ]
       },
       "challengeId": {
@@ -8585,6 +8868,10 @@
         "description": "With usedRecoveryCode: how many recovery codes are left unused.",
         "type": "integer",
         "minimum": 0
+      },
+      "onboardedHere": {
+        "description": "With signed_in: whether this seat finished onboarding on this computer before (D-250); then onboarding stands complete again, and the page goes straight back to work.",
+        "type": "boolean"
       },
       "account": {
         "$ref": "#/schemas/AccountState"
@@ -11990,6 +12277,12 @@
       "documentCount": {
         "type": "integer"
       },
+      "correspondenceIntake": {
+        "type": "array",
+        "items": {
+          "$ref": "#/schemas/IntakeRule"
+        }
+      },
       "chats": {
         "type": "array",
         "items": {
@@ -13027,6 +13320,31 @@
     },
     "additionalProperties": false
   },
+  "UpdateLastInstall": {
+    "type": "object",
+    "required": [
+      "state",
+      "version",
+      "detail"
+    ],
+    "properties": {
+      "state": {
+        "type": "string",
+        "enum": [
+          "installed",
+          "refused",
+          "failed"
+        ]
+      },
+      "version": {
+        "type": "string"
+      },
+      "detail": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
   "UpdateStatus": {
     "type": "object",
     "required": [
@@ -13036,7 +13354,9 @@
       "received",
       "installer",
       "detail",
-      "release"
+      "release",
+      "automatic",
+      "lastInstall"
     ],
     "properties": {
       "state": {
@@ -13047,6 +13367,7 @@
           "current",
           "available",
           "downloading",
+          "ready",
           "downloaded",
           "offline",
           "refused",
@@ -13073,6 +13394,19 @@
         "oneOf": [
           {
             "$ref": "#/schemas/UpdateRelease"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "automatic": {
+        "type": "boolean"
+      },
+      "lastInstall": {
+        "oneOf": [
+          {
+            "$ref": "#/schemas/UpdateLastInstall"
           },
           {
             "type": "null"
@@ -13144,7 +13478,8 @@
       "firmFolder",
       "transports",
       "deviceCode",
-      "matters"
+      "matters",
+      "firm"
     ],
     "properties": {
       "firmFolder": {
@@ -13296,6 +13631,74 @@
           },
           "additionalProperties": false
         }
+      },
+      "firm": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "state",
+          "lastSyncAt",
+          "lastError",
+          "connected",
+          "heard",
+          "receiving",
+          "sending"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "carried",
+              "waiting"
+            ]
+          },
+          "lastSyncAt": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "connected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "heard": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "deviceId",
+                "at"
+              ],
+              "properties": {
+                "deviceId": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "receiving": {
+            "type": "array",
+            "items": {
+              "$ref": "#/schemas/CoordinationTransfer"
+            }
+          },
+          "sending": {
+            "type": "array",
+            "items": {
+              "$ref": "#/schemas/CoordinationTransfer"
+            }
+          }
+        },
+        "additionalProperties": false
       }
     },
     "additionalProperties": false
@@ -15317,12 +15720,15 @@
     "additionalProperties": false
   },
   "OwnSeat": {
-    "description": "This computer's own seat (D-215): its id, its role, whether two-step sign-in is on and, where Legal Machines says it, how many of its recovery codes are left unused (D-218).",
+    "description": "This computer's own seat (D-215): its id, its role, whether two-step sign-in is on and, where Legal Machines says it, how many of its recovery codes are left unused (D-218), whether its firm is one of Legal Machines' design partners, whose seats report problems and share work logs, whether this computer keeps and offers work logs (a design partner's seat on a build that holds Legal Machines' keys for them), and the version of the Diagnostics Consent this seat accepted, or null (D-257).",
     "type": "object",
     "required": [
       "seatId",
       "role",
-      "twoFactor"
+      "twoFactor",
+      "designPartner",
+      "workLogs",
+      "diagnosticsConsent"
     ],
     "properties": {
       "seatId": {
@@ -15337,6 +15743,18 @@
       "recoveryCodesLeft": {
         "type": "integer",
         "minimum": 0
+      },
+      "designPartner": {
+        "type": "boolean"
+      },
+      "workLogs": {
+        "type": "boolean"
+      },
+      "diagnosticsConsent": {
+        "type": [
+          "string",
+          "null"
+        ]
       }
     },
     "additionalProperties": false
@@ -15425,6 +15843,212 @@
         "const": true
       },
       "carriesText": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "SeatPasswordStore": {
+    "description": "Where this computer can keep a seat's password at the member's choice (D-243): windows, the user's Credential Manager, on this computer only; null where it keeps none (macOS and Linux for now), and the page offers none.",
+    "type": "object",
+    "required": [
+      "store"
+    ],
+    "properties": {
+      "store": {
+        "enum": [
+          "windows",
+          null
+        ]
+      }
+    },
+    "additionalProperties": false
+  },
+  "SavedSeatPassword": {
+    "description": "Whether this computer keeps a password for the seat, named by the firm's email and the seat as the sign-in names it (none for the administrator's). Never the password: a sign-in uses it with savedPassword (D-243).",
+    "type": "object",
+    "required": [
+      "saved"
+    ],
+    "properties": {
+      "saved": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "SeatPasswordSaved": {
+    "description": "Whether the password was kept: only for the seat that signed in on this computer in the last ten minutes, and only the very password it signed in with (D-243).",
+    "type": "object",
+    "required": [
+      "saved"
+    ],
+    "properties": {
+      "saved": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "SeatPasswordForgotten": {
+    "description": "Whether a kept password was forgotten; false when none was kept (D-243).",
+    "type": "object",
+    "required": [
+      "forgotten"
+    ],
+    "properties": {
+      "forgotten": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "ProblemPicture": {
+    "description": "A screenshot a Debug build's problem report carries: its file name and its PNG, JPEG or WebP bytes in base64.",
+    "type": "object",
+    "required": [
+      "name",
+      "data"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "data": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "ProblemReported": {
+    "description": "A problem report made a card of its version's board, by its number there (D-257).",
+    "type": "object",
+    "required": [
+      "number"
+    ],
+    "properties": {
+      "number": {
+        "type": "integer"
+      }
+    },
+    "additionalProperties": false
+  },
+  "WorkLogPreview": {
+    "description": "What a design partner's member sees before sending a chat's work log (D-257): the model calls this computer keeps for it, how many went under client data protection, without it or failed, from when to when, how many bytes, and whether it can be sent now, with why not in words.",
+    "type": "object",
+    "required": [
+      "calls",
+      "protectedCalls",
+      "unprotectedCalls",
+      "failedCalls",
+      "from",
+      "to",
+      "bytes",
+      "canSend",
+      "reason"
+    ],
+    "properties": {
+      "calls": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "protectedCalls": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "unprotectedCalls": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "failedCalls": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "from": {
+        "type": "string"
+      },
+      "to": {
+        "type": "string"
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "canSend": {
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "WorkLogMessage": {
+    "description": "One message of the conversation as the member's page shows it, sent inside the sealed work log (D-257).",
+    "type": "object",
+    "required": [
+      "author",
+      "at",
+      "text"
+    ],
+    "properties": {
+      "author": {
+        "type": "string"
+      },
+      "at": {
+        "type": "string"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "WorkLogShared": {
+    "description": "A work log sealed to Legal Machines' keys and taken by its intake (D-257): the SHA-256 of what was sealed, as the intake logged it, how many of Legal Machines' addresses it went to, and its size sealed.",
+    "type": "object",
+    "required": [
+      "sent",
+      "sha256",
+      "recipients",
+      "bytes"
+    ],
+    "properties": {
+      "sent": {
+        "const": true
+      },
+      "sha256": {
+        "type": "string"
+      },
+      "recipients": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "additionalProperties": false
+  },
+  "UsageConfirmCostsResult": {
+    "description": "What usage.confirmCosts did (D-252): the OpenRouter calls of the Matter in the period whose cost OpenRouter's own record now confirms, those it does not have yet, and whether Legal Machines timestamped this computer's work record.",
+    "type": "object",
+    "required": [
+      "confirmed",
+      "waiting",
+      "stamped"
+    ],
+    "properties": {
+      "confirmed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "waiting": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "stamped": {
         "type": "boolean"
       }
     },

@@ -214,12 +214,48 @@ export async function readMatterUsage(uiMatterId, month) {
 	return nativeApp().getUsageSummary(period.start, period.end, realMatterId);
 }
 
+// The month's AI work as a statement for the Matter's client (D-252): a PDF
+// to send with the invoice and its signed file anyone can check, written and
+// signed by this computer into the folder the lawyer chooses. Null when they
+// chose none.
+export function canSaveWorkStatement() {
+	return hasNative() && typeof nativeApp()?.saveWorkStatement == "function";
+}
+
+export async function saveWorkStatement(uiMatterId, month) {
+	const realMatterId = realIdOf(uiMatterId);
+	if (hasNative() == false || realMatterId == null) throw new Error("This Matter's statement is made on a computer that holds it.");
+	const period = monthPeriod(month);
+	// Each OpenRouter cost confirmed by its own record, and this computer's
+	// record timestamped, before the statement is signed (D-252).
+	await confirmWorkCosts(uiMatterId, month).catch(() => null);
+	const saved = await nativeApp().saveWorkStatement(realMatterId, period.start, period.end, monthText(month));
+	return saved?.saved == true ? saved : null;
+}
+
+// Asks OpenRouter for its own record of each of the month's OpenRouter calls
+// on the Matter not confirmed yet, and Legal Machines to timestamp this
+// computer's work record (usage.confirmCosts, D-252): { confirmed, waiting,
+// stamped }, or null where this build cannot. Once a minute for a Matter and
+// month at most, unless `isAgain`.
+const confirmedAt = new Map();
+export async function confirmWorkCosts(uiMatterId, month, isAgain = true) {
+	const realMatterId = realIdOf(uiMatterId);
+	if (hasNative() == false || realMatterId == null || typeof nativeApp()?.confirmWorkCosts != "function") return null;
+	const key = `${realMatterId}\n${month}`;
+	if (isAgain == false && Date.now() - (confirmedAt.get(key) ?? 0) < 60000) return null;
+	confirmedAt.set(key, Date.now());
+	const period = monthPeriod(month);
+	return nativeApp().confirmWorkCosts(realMatterId, period.start, period.end);
+}
+
 // What Usage counted, as a bill reads it: the requests, the tokens, the cost
 // in each currency as the providers charged or estimated it, how many requests
 // have no cost recorded, and the requests that reached no model (a colleague
 // asked while no model account was connected), so the bill lists every
-// request it counts.
-export function usageOnBill(summary) {
+// request it counts; and the requests by whose work they were (D-252), the
+// reader's own marked by `actorId`.
+export function usageOnBill(summary, actorId = state.actorId) {
 	if (summary == null) return null;
 	const counts = summary.classificationCounts ?? {};
 	const totals = (summary.currencyTotals ?? []).map(total => ({
@@ -247,7 +283,81 @@ export function usageOnBill(summary) {
 		models,
 		unmodelled,
 		withoutCost: (counts.usageOnly ?? 0) + (counts.unavailable ?? 0),
+		workers: workersOf(summary.operations ?? [], actorId),
 	};
+}
+
+// One request as its bill line reads it (D-252): when it ran, what for, on
+// which model, who asked or that the colleague began it itself, its cost as
+// the provider reported or estimated it, and each model call's evidence.
+function requestOnBill(operation) {
+	const usage = operation.usage ?? {};
+	const isPriced = operation.costClassification == "actual" || operation.costClassification == "estimated";
+	return {
+		id: operation.operationId,
+		time: operation.time ?? "",
+		operationType: operation.operationType ?? "",
+		operationRole: operation.operationRole ?? "",
+		chatId: operation.chatId ?? null,
+		providerId: operation.providerId ?? null,
+		modelId: operation.modelId ?? null,
+		executionKind: operation.executionKind ?? "",
+		isFailed: operation.operationStatus == "error",
+		agentInitiated: operation.agentInitiated == true,
+		askedBy: operation.askedBy ?? null,
+		tokens: usage.totalTokens ?? 0,
+		cost: isPriced && usage.costMicros != null && usage.costCurrency != null
+			? { micros: usage.costMicros, currency: usage.costCurrency, isEstimated: operation.costClassification == "estimated" }
+			: null,
+		calls: operation.calls ?? [],
+		callsRecorded: operation.callsRecorded == true,
+	};
+}
+
+// The requests by whose work they were: each AI colleague's, each member's
+// own, and those Singularity made to keep the Matter's context; the most
+// costly first, each one's requests the latest first.
+function workersOf(operations, actorId) {
+	const groups = new Map();
+	for (const operation of operations) {
+		const agentId = operation.agentId ?? null;
+		const asker = operation.askedBy ?? null;
+		const key = agentId != null ? `agent:${agentId}` : asker != null ? `person:${asker.actorId}` : "upkeep";
+		if (groups.has(key) == false) {
+			groups.set(key, {
+				key,
+				kind: agentId != null ? "colleague" : asker != null ? "person" : "upkeep",
+				agentId,
+				actorId: agentId == null ? asker?.actorId ?? null : null,
+				name: agentId != null ? operation.agentName ?? "" : asker?.name ?? "",
+				isYours: agentId == null && asker != null && actorId != "" && asker.actorId == actorId,
+				requests: [],
+			});
+		}
+		const group = groups.get(key);
+		if (group.name == "" && agentId != null && (operation.agentName ?? "") != "") group.name = operation.agentName;
+		group.requests.push({ ...requestOnBill(operation), isAskerYou: asker != null && actorId != "" && asker.actorId == actorId });
+	}
+	const workers = [...groups.values()].map(worker => ({
+		...worker,
+		requests: worker.requests.sort((one, other) => other.time.localeCompare(one.time)),
+		totals: totalsOfRequests(worker.requests),
+	}));
+	const spent = worker => worker.totals.reduce((sum, total) => sum + total.micros, 0);
+	return workers.sort((one, other) => spent(other) - spent(one) || other.requests.length - one.requests.length);
+}
+
+// What some requests cost, in each currency, estimated where any of it is.
+function totalsOfRequests(requests) {
+	const totals = new Map();
+	for (const request of requests) {
+		if (request.cost == null || request.cost.micros <= 0) continue;
+		const total = totals.get(request.cost.currency) ?? { currency: request.cost.currency, micros: 0, isEstimated: false };
+		total.micros += request.cost.micros;
+		total.isEstimated = total.isEstimated || request.cost.isEstimated;
+		totals.set(request.cost.currency, total);
+	}
+	return [...totals.values()].sort((one, other) => one.currency.localeCompare(other.currency));
 }
 
 // "$0.42" from micros of a currency: to the cent, or to four places where

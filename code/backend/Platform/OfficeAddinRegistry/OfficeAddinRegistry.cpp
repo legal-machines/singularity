@@ -7,6 +7,9 @@
 #include <windows.h>
 #elif defined(__APPLE__)
 #include "Platform/AppPaths/AppPaths.hpp"
+
+#include <fstream>
+#include <sstream>
 #endif
 
 namespace singularity::platform::office_addins {
@@ -27,7 +30,7 @@ bool is_supported() {
 	return true;
 }
 
-bool register_manifest(const std::string &addin_id, const std::filesystem::path &manifest) {
+bool register_manifest(const std::string &addin_id, const std::filesystem::path &manifest, bool) {
 	HKEY key = nullptr;
 	if (RegCreateKeyExW(HKEY_CURRENT_USER, kDeveloperKey, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &key, nullptr) != ERROR_SUCCESS) {
 		return false;
@@ -71,19 +74,73 @@ namespace {
 
 // Word's, Excel's and PowerPoint's own folders for add-ins loaded from a
 // manifest, by each application's container (PowerPoint's is spelt
-// "Powerpoint"). Outlook has none: the person adds its manifest from a file.
-std::vector<std::filesystem::path> wef_folders() {
-	std::vector<std::filesystem::path> folders;
-	const auto home = home_directory();
-	if (!home) return folders;
-	for (const char *application : {"com.microsoft.Word", "com.microsoft.Excel", "com.microsoft.Powerpoint"}) {
-		folders.push_back(*home / "Library" / "Containers" / application / "Data" / "Documents" / "wef");
-	}
-	return folders;
+// "Powerpoint"), for each that is installed. Outlook has none: the person adds
+// its manifest from a file.
+struct Application {
+	const char *container;
+	const char *bundle;
+};
+constexpr Application kApplications[] = {
+	{"com.microsoft.Word", "/Applications/Microsoft Word.app"},
+	{"com.microsoft.Excel", "/Applications/Microsoft Excel.app"},
+	{"com.microsoft.Powerpoint", "/Applications/Microsoft PowerPoint.app"},
+};
+
+std::filesystem::path wef_folder(const std::filesystem::path &home, const char *container) {
+	return home / "Library" / "Containers" / container / "Data" / "Documents" / "wef";
 }
 
 std::filesystem::path placed(const std::filesystem::path &folder, const std::string &addin_id) {
 	return folder / (addin_id + ".manifest.xml");
+}
+
+// What was placed, beside the manifest in Singularity's own records: the
+// manifest's words as placed, and the applications they went to.
+std::filesystem::path placement_record(const std::string &addin_id, const std::filesystem::path &manifest) {
+	return manifest.parent_path() / (addin_id + ".placed");
+}
+
+std::string contents_of(const std::filesystem::path &file) {
+	std::ifstream input(file, std::ios::binary);
+	if (!input) return {};
+	std::ostringstream text;
+	text << input.rdbuf();
+	return text.str();
+}
+
+// The applications the manifest's present words were placed in; none when
+// the words changed since (a new version) or nothing was placed.
+std::vector<std::string> placed_with(const std::string &addin_id, const std::filesystem::path &manifest) {
+	const std::string record = contents_of(placement_record(addin_id, manifest));
+	const std::string words = contents_of(manifest);
+	const std::size_t split = record.find("\n--\n");
+	if (words.empty() || split == std::string::npos || record.substr(split + 4) != words) return {};
+	std::vector<std::string> applications;
+	std::istringstream lines(record.substr(0, split));
+	for (std::string line; std::getline(lines, line);) {
+		if (!line.empty()) applications.push_back(line);
+	}
+	return applications;
+}
+
+void remember_placed(const std::string &addin_id, const std::filesystem::path &manifest, const std::vector<std::string> &applications) {
+	const std::filesystem::path record = placement_record(addin_id, manifest);
+	std::error_code error;
+	if (applications.empty()) {
+		std::filesystem::remove(record, error);
+		return;
+	}
+	std::ostringstream text;
+	for (const std::string &application : applications) text << application << "\n";
+	text << "--\n" << contents_of(manifest);
+	const std::filesystem::path staged = record.parent_path() / (record.filename().string() + ".staged");
+	{
+		std::ofstream output(staged, std::ios::binary | std::ios::trunc);
+		if (!output) return;
+		output << text.str();
+		if (!output) return;
+	}
+	std::filesystem::rename(staged, record, error);
 }
 
 } // namespace
@@ -92,31 +149,38 @@ bool is_supported() {
 	return true;
 }
 
-bool register_manifest(const std::string &addin_id, const std::filesystem::path &manifest) {
-	bool any = false;
-	for (const auto &folder : wef_folders()) {
+bool register_manifest(const std::string &addin_id, const std::filesystem::path &manifest, bool again) {
+	if (!again && !placed_with(addin_id, manifest).empty()) return true;
+	const auto home = home_directory();
+	if (!home) return false;
+	std::vector<std::string> applications;
+	for (const Application &application : kApplications) {
 		std::error_code error;
-		// Only where that application is installed: its container exists.
+		// Only an application installed here, and opened once: its container
+		// holds its documents' folder. Entering it is what macOS asks about.
+		if (!std::filesystem::exists(application.bundle, error)) continue;
+		const std::filesystem::path folder = wef_folder(*home, application.container);
 		if (!std::filesystem::exists(folder.parent_path(), error)) continue;
 		std::filesystem::create_directories(folder, error);
+		if (error) continue;
 		std::filesystem::copy_file(manifest, placed(folder, addin_id), std::filesystem::copy_options::overwrite_existing, error);
-		if (!error) any = true;
+		if (!error) applications.push_back(application.container);
 	}
-	return any;
+	remember_placed(addin_id, manifest, applications);
+	return !applications.empty();
 }
 
-bool is_registered(const std::string &addin_id, const std::filesystem::path &) {
-	for (const auto &folder : wef_folders()) {
-		std::error_code error;
-		if (std::filesystem::exists(placed(folder, addin_id), error)) return true;
-	}
-	return false;
+bool is_registered(const std::string &addin_id, const std::filesystem::path &manifest) {
+	return !placed_with(addin_id, manifest).empty();
 }
 
 bool unregister_manifest(const std::string &addin_id) {
-	for (const auto &folder : wef_folders()) {
+	const auto home = home_directory();
+	if (!home) return true;
+	for (const Application &application : kApplications) {
 		std::error_code error;
-		std::filesystem::remove(placed(folder, addin_id), error);
+		if (!std::filesystem::exists(application.bundle, error)) continue;
+		std::filesystem::remove(placed(wef_folder(*home, application.container), addin_id), error);
 	}
 	return true;
 }
@@ -127,7 +191,7 @@ bool is_supported() {
 	return false;
 }
 
-bool register_manifest(const std::string &, const std::filesystem::path &) {
+bool register_manifest(const std::string &, const std::filesystem::path &, bool) {
 	return false;
 }
 

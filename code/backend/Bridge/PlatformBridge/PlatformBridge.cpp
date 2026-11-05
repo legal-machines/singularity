@@ -1,11 +1,16 @@
 #include "Bridge/PlatformBridge/PlatformBridge.hpp"
 
 #include "Bridge/NodeBridge/NodeBridge.hpp"
+#include "Office/OfficeService/OfficeService.hpp"
 #include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
 #include "Platform/AppSettings/AppSettings.hpp"
 #include "Platform/PermissionAccess/PermissionAccess.hpp"
+#include "Platform/SystemPermissions/SystemPermissions.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <stdexcept>
+#include <string>
 
 namespace singularity::bridge::platform_bridge {
 namespace {
@@ -104,6 +109,45 @@ nlohmann::json revoke_broader_access(const nlohmann::json &) {
 	settings.broad_project_discovery_authorization = platform::BroadProjectDiscoveryAuthorization::NotAuthorized;
 	platform::save_app_settings(settings);
 	return permission_json(settings);
+}
+
+namespace {
+
+Json system_permission_json(const platform::system_permissions::Permission &permission) {
+	return Json{{"key", permission.key}, {"state", platform::system_permissions::word(permission.state)}, {"problem", permission.problem}};
+}
+
+std::string permission_key(const Json &params) {
+	const std::string key = params.at("key").get<std::string>();
+	if (key.empty() || key.size() > 40) throw std::invalid_argument("Name the permission.");
+	return key;
+}
+
+} // namespace
+
+// The certificate Office's panes need (D-244) is the Office domain's own, asked
+// there; the system's other permissions are the platform's. The Bridge only
+// names which one answers. It is always listed, not needed where no Office is
+// installed, so onboarding shows its row only where Office is.
+constexpr const char *kOfficeCertificate = "officeCertificate";
+
+Json system_permissions(const Json &) {
+	Json permissions = Json::array();
+	for (const auto &permission : platform::system_permissions::list()) permissions.push_back(system_permission_json(permission));
+	permissions.push_back(system_permission_json(office::office_certificate_permission()));
+	return Json{{"permissions", std::move(permissions)}};
+}
+
+Json ask_system_permission(const Json &params) {
+	const std::string key = permission_key(params);
+	if (key == kOfficeCertificate) return system_permission_json(office::ask_office_certificate_trust());
+	return system_permission_json(platform::system_permissions::ask(key));
+}
+
+Json open_system_permission_settings(const Json &params) {
+	const std::string key = permission_key(params);
+	if (key == kOfficeCertificate) return office::open_office_certificate_settings();
+	return platform::system_permissions::open_settings(key);
 }
 
 } // namespace singularity::bridge::platform_bridge

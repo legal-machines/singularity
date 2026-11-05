@@ -1,20 +1,28 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
 
 import { Button } from "../Button/Button.jsx";
+import { Dialog } from "../Dialog/Dialog.jsx";
 import { Icon } from "../Icon/Icon.jsx";
 import { nativeApp, openInWord, realDocuments } from "../../data/native.js";
 
 import styles from "./OfficeGuide.module.css";
 
-// Connecting Word, Excel, PowerPoint and Outlook to Singularity (D-105), as one guide over
-// the whole window (the owner, 2026-10-24: "make the onboarding as clear as
-// possible inside our app; diagrams by stage; always check that the person did
-// everything right; it may cover the whole interface"). Each stage shows the
-// place to press as a sketch of the application's own screen, says the steps
-// in order, and checks itself what was done - the certificate trusted, the
-// add-in known to Word, each pane connected - before it moves on. A pane's
-// request to connect is answered here, with its code.
+// Connecting Word, Excel, PowerPoint and Outlook to Singularity (D-105), as one of
+// the window's dialogs over the white (UI-32; the owner, 2026-11-04: "redo the
+// page connecting Word and Excel in the common style; it must not be a page of
+// its own, but a place under the white fill"; 2026-11-05: "make it completely
+// clear, with a very strict and clean hierarchy of layout and weight").
+//
+// It is one list of what is connected: this computer; Word, Excel and
+// PowerPoint; Outlook; the panes allowed. Each says its state in a word, and
+// the one at hand stands open: one line, the steps beside a sketch of the
+// application's own screen with the places to press marked, and its one
+// action. What is checked is checked as the person does it (the owner,
+// 2026-10-24: "always check that the person did everything right"). A pane
+// asking to connect is answered in its own application's part, its code
+// beside the question, so it reads as Singularity's question about that pane.
+// Weight is the hierarchy's: medium for the title, each part's name and the
+// code alone; every other word regular.
 
 let isGuideOpen = false;
 const listeners = new Set();
@@ -51,6 +59,16 @@ const said = (english, russian) => (isRussian ? `${english} (${russian})` : engl
 const onMac = () => document.documentElement.dataset.nativePlatform == "darwin" || (navigator.platform ?? "").startsWith("Mac");
 const system = () => (onMac() ? "macOS" : "Windows");
 
+const PARTS = [
+	{ id: "computer", name: "This computer" },
+	{ id: "word", name: "Word, Excel and PowerPoint" },
+	{ id: "outlook", name: "Outlook" },
+	{ id: "panes", name: "Allowed panes" },
+];
+
+// The part a pane's request is answered in.
+const partOf = client => (client == "outlook" ? "outlook" : "word");
+
 export function OfficeGuide({ onClose }) {
 	const [status, setStatus] = useState(null);
 	const [clients, setClients] = useState({ pending: [], clients: [] });
@@ -78,16 +96,11 @@ export function OfficeGuide({ onClose }) {
 		read();
 		const timer = setInterval(read, 2000);
 		const off = nativeApp().on?.("office.pairingRequested", read);
-		const onKey = event => {
-			if (event.key == "Escape") onClose();
-		};
-		window.addEventListener("keydown", onKey);
 		return () => {
 			clearInterval(timer);
 			if (typeof off == "function") off();
-			window.removeEventListener("keydown", onKey);
 		};
-	}, [read, onClose]);
+	}, [read]);
 
 	const act = async work => {
 		setBusy(true);
@@ -107,164 +120,132 @@ export function OfficeGuide({ onClose }) {
 		word: has("word") || has("excel") || has("powerpoint"),
 		outlook: has("outlook"),
 	};
-	const stages = [
-		{ key: "computer", label: "This computer", line: "The connection and its certificate" },
-		{ key: "word", label: "Word, Excel and PowerPoint", line: "The Matter button" },
-		{ key: "outlook", label: "Outlook", line: "The add-in, added once" },
-	];
-	const next = stages.find(stage => !done[stage.key])?.key ?? "finished";
-	const current = chosen ?? next;
-	const allDone = next == "finished";
 	const pending = clients.pending ?? [];
-	const go = key => setChosen(key);
+	const next = ["computer", "word", "outlook"].find(id => !done[id]) ?? "panes";
+	const allDone = next == "panes";
+	// A pane asking to connect opens its part: its question waits there.
+	const asking = pending.length > 0 ? partOf(pending[0].client) : null;
+	const open = asking ?? chosen ?? next;
+	const answer = request => allow => act(() => nativeApp().decideOfficePairing(request.pairingId, allow));
+	const requestsOf = id => pending.filter(request => partOf(request.client) == id);
 
-	return createPortal(
-		<div className={styles.guide} role="dialog" aria-modal="true" aria-label="Connect Word, Excel, PowerPoint and Outlook">
-			<header className={styles.top}>
-				<img className={styles.top_icon} src="app-icon.png" width="28" height="28" alt="" />
-				<p className={styles.top_title}>Singularity in Word, Excel, PowerPoint and Outlook</p>
-				<Button variant={allDone ? "primary" : "quiet"} onClick={onClose}>{allDone ? "Done" : "Finish later"}</Button>
-			</header>
-			<div className={styles.body}>
-				<nav className={styles.stages} aria-label="Stages">
-					{stages.map((stage, index) => (
-						<button
-							key={stage.key}
-							type="button"
-							className={current == stage.key ? `${styles.stage_button} ${styles.stage_on}` : styles.stage_button}
-							aria-current={current == stage.key ? "step" : undefined}
-							onClick={() => go(stage.key)}
-						>
-							<span className={done[stage.key] ? `${styles.marker} ${styles.marker_done}` : styles.marker}>
-								{done[stage.key] ? <Icon name="check" size={14} /> : index + 1}
-							</span>
-							<span className={styles.stage_text}>
-								<span className={styles.stage_label}>{stage.label}</span>
-								<span className={styles.stage_line}>{done[stage.key] ? "Done" : stage.line}</span>
-							</span>
-						</button>
-					))}
-					<button
-						type="button"
-						className={current == "finished" ? `${styles.stage_button} ${styles.stage_on}` : styles.stage_button}
-						onClick={() => go("finished")}
-					>
-						<span className={allDone ? `${styles.marker} ${styles.marker_done}` : styles.marker}>{allDone ? <Icon name="check" size={14} /> : 4}</span>
-						<span className={styles.stage_text}>
-							<span className={styles.stage_label}>Connected panes</span>
-							<span className={styles.stage_line}>{clients.clients.length == 0 ? "None yet" : `${clients.clients.length} allowed`}</span>
-						</span>
-					</button>
-				</nav>
-				<main className={styles.stage}>
-					{pending.map(request => (
-						<PairingRequest key={request.pairingId} request={request} busy={busy}
-							onAnswer={allow => act(() => nativeApp().decideOfficePairing(request.pairingId, allow))} />
-					))}
-					{status == null ? <p className={styles.line}>Reading the connection…</p> : null}
-					{status != null && current == "computer" ? (
-						<ComputerStage status={status} done={done.computer} busy={busy} act={act} onNext={() => go("word")} />
-					) : null}
-					{status != null && current == "word" ? (
-						<WordStage status={status} done={done.word} computerDone={done.computer} onBack={() => go("computer")} onNext={() => go("outlook")} />
-					) : null}
-					{status != null && current == "outlook" ? (
-						<OutlookStage status={status} done={done.outlook} computerDone={done.computer} onBack={() => go("computer")} onNext={() => go("finished")} />
-					) : null}
-					{status != null && current == "finished" ? (
-						<FinishedStage clients={clients.clients} busy={busy} act={act} done={done} status={status}
-							onRemove={() => act(() => nativeApp().disconnectOffice()).then(() => go("computer"))} />
-					) : null}
-					{problem != null ? <p className={styles.problem}>{problem}</p> : null}
-				</main>
+	const stateOf = id => {
+		if (requestsOf(id).length > 0) return { words: "Asks to connect", tone: "asking" };
+		if (id == "panes") return { words: clients.clients.length == 0 ? "None yet" : `${clients.clients.length} allowed` };
+		if (done[id]) return { words: "Connected", tone: "settled" };
+		if (id == "computer") return { words: "Not connected" };
+		return { words: done.computer ? "Not yet" : "After this computer" };
+	};
+
+	const body = status == null ? <p className={styles.line}>Reading the connection…</p>
+		: status.supported == false ? <p className={styles.line}>Word, Excel, PowerPoint and Outlook do not run on this system.</p>
+		: (
+			<div className={styles.parts}>
+				{PARTS.map(part => (
+					<Part key={part.id} name={part.name} state={stateOf(part.id)} isOpen={open == part.id} onOpen={() => setChosen(part.id)}>
+						{part.id == "computer" ? <ComputerPart status={status} done={done.computer} busy={busy} act={act} /> : null}
+						{part.id == "word" ? (
+							<WordPart status={status} done={done.word} computerDone={done.computer} requests={requestsOf("word")} answer={answer} busy={busy} />
+						) : null}
+						{part.id == "outlook" ? (
+							<OutlookPart status={status} done={done.outlook} computerDone={done.computer} requests={requestsOf("outlook")} answer={answer} busy={busy} />
+						) : null}
+						{part.id == "panes" ? (
+							<PanesPart clients={clients.clients} busy={busy} act={act} status={status}
+								onRemove={() => act(() => nativeApp().disconnectOffice()).then(() => setChosen("computer"))} />
+						) : null}
+					</Part>
+				))}
 			</div>
-		</div>,
-		document.body,
+		);
+
+	return (
+		<Dialog
+			layout="spacious"
+			size="wide"
+			title="Connect Office"
+			description="Singularity in a pane beside your documents and mail."
+			onClose={onClose}
+			actions={allDone ? <Button variant="primary" onClick={onClose}>Done</Button> : <Button onClick={onClose}>Finish later</Button>}
+		>
+			{body}
+			{problem != null ? <p className={styles.problem}>{problem}</p> : null}
+		</Dialog>
 	);
 }
 
-// ---- The stages ---------------------------------------------------------------------------
-
-function ComputerStage({ status, done, busy, act, onNext }) {
-	const notTrusted = status.connected == true && status.certificate != "trusted";
-	const mac = onMac();
+// One part of what is connected: its name and its state in a word; open, what
+// to do in it. A closed one opens at a press.
+function Part({ name, state, isOpen, onOpen, children }) {
+	const head = (
+		<>
+			<span className={styles.part_name}>{name}</span>
+			<span className={styles.part_state} data-tone={state.tone ?? undefined}>{state.words}</span>
+		</>
+	);
 	return (
-		<section className={styles.panel}>
-			<h2 className={styles.title}>Allow the connection on this computer</h2>
-			<p className={styles.lead}>
-				Singularity shows its pane inside Word, Excel, PowerPoint and Outlook from this computer only, and nothing leaves it. For that, {system()} needs
-				to trust one certificate of Singularity's, for "localhost" alone. It is no authority: it cannot vouch for any other site,
-				and it goes when you remove Singularity from Office.
-			</p>
-			<div className={mac ? `${styles.sheet} ${styles.sheet_plain}` : styles.sheet}>
-				{mac ? null : <WindowsTrustSketch />}
-				<ol className={styles.steps}>
-					<li><span className={styles.step_number}>1</span><span>Press <b>Connect</b> below.</span></li>
-					{mac ? (
-						<li><span className={styles.step_number}>2</span><span>macOS asks for the password you sign in to this Mac with, to trust a certificate for "localhost". Enter it.</span></li>
-					) : (
-						<li><span className={styles.step_number}>2</span><span>Windows asks whether to install a certificate for "localhost". Press <b>{said("Yes", "Да")}</b>.</span></li>
-					)}
-				</ol>
-			</div>
-			<Check
-				done={done}
-				doneWords={`Connected. ${system()} trusts Singularity's certificate on this computer.`}
-				waitingWords={notTrusted
-					? mac
-						? "macOS does not trust the certificate yet. Press Connect again, and enter your Mac's password when macOS asks."
-						: "Windows does not trust the certificate yet. Press Connect again, and Yes in Windows' question."
-					: "Not connected yet."}
-			/>
-			{status.supported == false ? <p className={styles.problem}>Word, Excel, PowerPoint and Outlook do not run on this system.</p> : null}
-			{status.problem ? <p className={styles.problem}>{status.problem}</p> : null}
-			<div className={styles.actions}>
-				{done ? (
-					<Button variant="primary" onClick={onNext}>Next: Word, Excel and PowerPoint</Button>
-				) : (
-					<Button variant="primary" busy={busy} disabled={status.supported == false} onClick={() => act(() => nativeApp().connectOffice())}>Connect</Button>
-				)}
-			</div>
+		<section className={styles.part} data-open={isOpen ? "" : undefined}>
+			{isOpen
+				? <div className={styles.part_head}>{head}</div>
+				: <button type="button" className={`${styles.part_head} ${styles.part_button}`} aria-expanded="false" onClick={onOpen}>{head}</button>}
+			{isOpen ? <div className={styles.part_body}>{children}</div> : null}
 		</section>
 	);
 }
 
-function WordStage({ status, done, computerDone, onBack, onNext }) {
-	const document = realDocuments().find(entry => /\.docx$/i.test(entry.name ?? "") && entry.processingState != "unavailable") ?? null;
+// ---- The parts ----------------------------------------------------------------------------
+
+function ComputerPart({ status, done, busy, act }) {
+	const mac = onMac();
+	const notTrusted = status.connected == true && status.certificate != "trusted";
+	if (done) return <p className={styles.line}>{system()} trusts Singularity's certificate, for "localhost" only.</p>;
 	return (
-		<section className={styles.panel}>
-			<h2 className={styles.title}>Add the Matter button to Word</h2>
-			<p className={styles.lead}>
-				Singularity has given Word, Excel and PowerPoint its add-in.
-				{onMac() ? " On a Mac, Office finds it only as it starts: quit Word, Excel and PowerPoint if they are open, and open them again." : ""}
-				{" "}The first time in each, you start it from the Add-ins menu; after that its Matter button stays on Home.
+		<>
+			<p className={styles.line}>{system()} trusts one certificate, for "localhost" only.</p>
+			<div className={mac ? `${styles.sheet} ${styles.sheet_plain}` : styles.sheet}>
+				{mac ? null : <WindowsTrustSketch />}
+				<ol className={styles.steps}>
+					<Step number={1}>Press Connect.</Step>
+					{mac
+						? <Step number={2}>Enter your Mac's password when macOS asks.</Step>
+						: <Step number={2}>Press {said("Yes", "Да")} when Windows asks to install the certificate.</Step>}
+				</ol>
+			</div>
+			{notTrusted ? <p className={styles.problem}>Not trusted yet. Press Connect again.</p> : null}
+			{status.problem ? <p className={styles.problem}>{status.problem}</p> : null}
+			<Button variant="primary" busy={busy} onClick={() => act(() => nativeApp().connectOffice())}>Connect</Button>
+		</>
+	);
+}
+
+function WordPart({ status, done, computerDone, requests, answer, busy }) {
+	const document = realDocuments().find(entry => /\.docx$/i.test(entry.name ?? "") && entry.processingState != "unavailable") ?? null;
+	// A pane asks only once its steps are done: its question alone stands then.
+	if (requests.length > 0) return requests.map(request => <PairingRequest key={request.pairingId} request={request} busy={busy} onAnswer={answer(request)} />);
+	if (done) return <p className={styles.line}>Word is connected. Excel and PowerPoint connect the same way.</p>;
+	return (
+		<>
+			<p className={styles.line}>
+				{!computerDone || !status.documentsRegistered ? "Connect this computer first."
+					: onMac() ? "Quit and reopen Word first: Office finds the add-in as it starts." : "The add-in is already in Word, Excel and PowerPoint."}
 			</p>
 			<div className={styles.sheet}>
 				<WordSketch />
 				<ol className={styles.steps}>
-					<li><span className={styles.step_number}>1</span><span>In Word, on <b>{said("Home", "Главная")}</b>, press <b>{said("Add-ins", "Надстройки")}</b>.</span></li>
-					<li><span className={styles.step_number}>2</span><span>Under <b>{said("Developer Add-ins", "Надстройки разработчика")}</b>, press <b>Singularity</b>.</span></li>
-					<li><span className={styles.step_number}>3</span><span>Press <b>Matter</b>, which now stands on Home. The pane opens on the right.</span></li>
-					<li><span className={styles.step_number}>4</span><span>The pane asks to connect by itself. Allow it here: the code is the same in both.</span></li>
+					<Step number={1}>In Word, on {said("Home", "Главная")}, press {said("Add-ins", "Надстройки")}.</Step>
+					<Step number={2}>Under {said("Developer Add-ins", "Надстройки разработчика")}, press Singularity.</Step>
+					<Step number={3}>Press Matter, now on Home. The pane opens.</Step>
+					<Step number={4}>The pane shows a code. Allow it here.</Step>
 				</ol>
 			</div>
-			<Check
-				done={done}
-				doneWords="Word is connected. Excel and PowerPoint show the same Matter button: Home, Add-ins, Singularity."
-				waitingWords={!computerDone ? "This computer is not connected yet: that comes first." : status.documentsRegistered ? "Waiting for Word's pane to ask to connect." : "Word does not know the add-in yet. Connect this computer first."}
-			/>
-			<div className={styles.actions}>
-				{!computerDone ? <Button onClick={onBack}>Back to This computer</Button> : null}
-				{document != null && !done ? (
-					<Button onClick={() => openInWord(document.id).catch(() => {})}>Open {(document.displayName ?? document.name).replace(/\.[^.]+$/, "")} in Word</Button>
-				) : null}
-				{done ? <Button variant="primary" onClick={onNext}>Next: Outlook</Button> : null}
-			</div>
-		</section>
+			{document != null && computerDone ? (
+				<Button onClick={() => openInWord(document.id).catch(() => {})}>Open {(document.displayName ?? document.name).replace(/\.[^.]+$/, "")} in Word</Button>
+			) : null}
+		</>
 	);
 }
 
-function OutlookStage({ status, done, computerDone, onBack, onNext }) {
+function OutlookPart({ status, done, computerDone, requests, answer, busy }) {
 	const [copied, setCopied] = useState(false);
 	const copy = async () => {
 		try {
@@ -275,108 +256,88 @@ function OutlookStage({ status, done, computerDone, onBack, onNext }) {
 		}
 	};
 	const mac = onMac();
+	if (requests.length > 0) return requests.map(request => <PairingRequest key={request.pairingId} request={request} busy={busy} onAnswer={answer(request)} />);
+	if (done) return <p className={styles.line}>Outlook is connected. A letter's Matter opens in its pane.</p>;
 	return (
-		<section className={styles.panel}>
-			<h2 className={styles.title}>Add Singularity to Outlook</h2>
-			<p className={styles.lead}>
-				Outlook keeps its add-ins in your mailbox, not on this computer, so you add this one yourself, once.
-				{mac
-					? " On a Mac it works with Microsoft 365, Outlook.com and Gmail mailboxes."
-					: " It works with Microsoft 365 and Outlook.com mailboxes; Gmail and other IMAP mailboxes take no add-ins."}
-			</p>
+		<>
+			<p className={styles.line}>{computerDone ? "Outlook keeps add-ins in your mailbox, so you add this one once." : "Connect this computer first."}</p>
 			<div className={mac ? `${styles.sheet} ${styles.sheet_plain}` : styles.sheet}>
 				{mac ? null : <OutlookSketch />}
 				<ol className={styles.steps}>
-					<li>
-						<span className={styles.step_number}>1</span>
+					<Step number={1}>
 						<span className={styles.step_body}>
-							<span>Copy where the add-in's file is:</span>
+							<span>Copy where the add-in's file is.</span>
 							<span className={styles.copy_row}>
-								<Button size="small" icon={copied ? "check" : "copy"} disabled={!status.outlookManifest} onClick={copy}>{copied ? "Copied" : "Copy the file's place"}</Button>
+								<Button size="small" icon={copied ? "check" : "copy"} disabled={!status.outlookManifest} onClick={copy}>{copied ? "Copied" : "Copy"}</Button>
 							</span>
 						</span>
-					</li>
+					</Step>
 					{mac ? (
 						<>
-							<li><span className={styles.step_number}>2</span><span>In Outlook, select a folder of your mailbox, such as its Inbox. Press the button with three dots at the right of the toolbar, then <b>Get Add-ins</b>.</span></li>
-							<li><span className={styles.step_number}>3</span><span>Choose <b>My add-ins</b>. Under Custom Addins, press <b>Add a custom add-in</b>, then <b>Add from File…</b></span></li>
-							<li><span className={styles.step_number}>4</span><span>In the window that opens, press Shift-Command-G, paste, and press Return. Press <b>Open</b>, then <b>Install</b>.</span></li>
-							<li><span className={styles.step_number}>5</span><span>In a letter, press the button with three dots again, then <b>Singularity</b>. Its pane asks to connect by itself: allow it here.</span></li>
+							<Step number={2}>In Outlook, in your Inbox, press the button with three dots at the right of the toolbar, then Get Add-ins.</Step>
+							<Step number={3}>Choose My add-ins. Under Custom Addins, press Add a custom add-in, then Add from File.</Step>
+							<Step number={4}>Press Shift-Command-G, paste, and press Return. Press Open, then Install.</Step>
+							<Step number={5}>In a letter, press the three dots, then Singularity. The pane shows a code. Allow it here.</Step>
 						</>
 					) : (
 						<>
-							<li><span className={styles.step_number}>2</span><span>In Outlook, select a folder of your Microsoft 365 or Outlook.com mailbox, such as its Inbox: Outlook offers add-ins only there. Then, on <b>Home</b>, press <b>More apps</b> at the right, under Add-ins, then <b>Add apps</b>.</span></li>
-							<li><span className={styles.step_number}>3</span><span>Choose <b>{said("My add-ins", "Мои надстройки")}</b>. At the bottom, under Custom add-ins, press <b>{said("Add a custom add-in", "Добавить настраиваемую надстройку")}</b>, then <b>{said("Add from file", "Добавить из файла")}</b>.</span></li>
-							<li><span className={styles.step_number}>4</span><span>Paste into <b>{said("File name", "Имя файла")}</b>, press <b>{said("Open", "Открыть")}</b>, then <b>{said("Install", "Установить")}</b>.</span></li>
-							<li><span className={styles.step_number}>5</span><span>Open a letter, press <b>More apps</b> again, then <b>Singularity</b>. Its pane asks to connect by itself: allow it here.</span></li>
+							<Step number={2}>In Outlook, in the Inbox of a Microsoft 365 or Outlook.com mailbox, press More apps on Home, then Add apps.</Step>
+							<Step number={3}>Choose {said("My add-ins", "Мои надстройки")}. Under Custom add-ins, press {said("Add a custom add-in", "Добавить настраиваемую надстройку")}, then {said("Add from file", "Добавить из файла")}.</Step>
+							<Step number={4}>Paste into {said("File name", "Имя файла")}. Press {said("Open", "Открыть")}, then {said("Install", "Установить")}.</Step>
+							<Step number={5}>In a letter, press More apps, then Singularity. The pane shows a code. Allow it here.</Step>
 						</>
 					)}
 				</ol>
 			</div>
-			<Check
-				done={done}
-				doneWords="Outlook is connected. Open a letter, and its Matter opens in the pane."
-				waitingWords={!computerDone ? "This computer is not connected yet: that comes first." : "Waiting for Outlook's pane to ask to connect."}
-			/>
-			<div className={styles.actions}>
-				{!computerDone ? <Button onClick={onBack}>Back to This computer</Button> : null}
-				{done ? <Button variant="primary" onClick={onNext}>Next: Connected panes</Button> : null}
-			</div>
-		</section>
+		</>
 	);
 }
 
-function FinishedStage({ clients, busy, act, done, status, onRemove }) {
+function PanesPart({ clients, busy, act, status, onRemove }) {
 	return (
-		<section className={styles.panel}>
-			<h2 className={styles.title}>{done.computer && done.word && done.outlook ? "Word, Excel, PowerPoint and Outlook work with Singularity" : "The panes allowed on this computer"}</h2>
-			<p className={styles.lead}>Each pane asked once, with its code, and reads only the Matters open in Singularity here. Remove one, and it asks again the next time.</p>
-			{clients.length == 0 ? <p className={styles.line}>No pane is allowed yet.</p> : null}
-			<ul className={styles.clients}>
-				{clients.map(client => (
-					<li key={client.clientId} className={styles.client}>
-						<span className={styles.client_text}>
-							<span className={styles.client_name}>{client.label || APPLICATION[client.client]}</span>
-							<span className={styles.line}>Allowed {day(client.pairedAt)}, last used {day(client.lastUsedAt)}</span>
-						</span>
-						<Button size="small" variant="quiet" disabled={busy} onClick={() => act(() => nativeApp().removeOfficeClient(client.clientId))}>Remove</Button>
-					</li>
-				))}
-			</ul>
-			{status.connected ? (
-				<div className={styles.actions}>
-					<Button variant="quiet" disabled={busy} onClick={onRemove}>Remove Singularity from Office</Button>
-				</div>
-			) : null}
-		</section>
+		<>
+			{clients.length == 0 ? <p className={styles.line}>A pane is allowed once it asks, with its code.</p> : (
+				<ul className={styles.clients}>
+					{clients.map(client => (
+						<li key={client.clientId} className={styles.client}>
+							<span className={styles.client_text}>
+								<span className={styles.client_name}>{client.label || APPLICATION[client.client]}</span>
+								<span className={styles.client_line}>Allowed {day(client.pairedAt)}, last used {day(client.lastUsedAt)}</span>
+							</span>
+							<Button size="small" variant="quiet" disabled={busy} onClick={() => act(() => nativeApp().removeOfficeClient(client.clientId))}>Remove</Button>
+						</li>
+					))}
+				</ul>
+			)}
+			{status.connected ? <Button disabled={busy} onClick={onRemove}>Remove Singularity from Office</Button> : null}
+		</>
 	);
 }
 
-// A pane's request to connect, answered here: the code is the one the pane shows.
+function Step({ number, children }) {
+	return (
+		<li>
+			<span className={styles.step_number}>{number}</span>
+			<span className={styles.step_text}>{children}</span>
+		</li>
+	);
+}
+
+// A pane asking to connect, answered in its application's part: Singularity's
+// question about that pane, with the code both show.
 function PairingRequest({ request, busy, onAnswer }) {
-	const application = APPLICATION[request.client] ?? "A program";
+	const application = APPLICATION[request.client] ?? "The program";
 	return (
-		<section className={styles.request} aria-live="polite">
-			<div className={styles.request_text}>
-				<p className={styles.request_title}>{application} asks to connect</p>
-				<p className={styles.line}>Allow it only if its pane shows this code. It may then read your Matters here and give work to your colleagues.</p>
+		<div className={styles.request} aria-live="polite">
+			<p className={styles.request_question}>Does {application}'s pane show this code?</p>
+			<div className={styles.request_row}>
+				<p className={styles.code}>{request.code.slice(0, 3)} {request.code.slice(3)}</p>
+				<span className={styles.request_actions}>
+					<Button disabled={busy} onClick={() => onAnswer(false)}>No</Button>
+					<Button variant="primary" disabled={busy} onClick={() => onAnswer(true)}>Yes, allow</Button>
+				</span>
 			</div>
-			<p className={styles.code}>{request.code.slice(0, 3)} {request.code.slice(3)}</p>
-			<div className={styles.request_actions}>
-				<Button variant="quiet" disabled={busy} onClick={() => onAnswer(false)}>Don't allow</Button>
-				<Button variant="primary" disabled={busy} onClick={() => onAnswer(true)}>Allow</Button>
-			</div>
-		</section>
-	);
-}
-
-// What the guide sees now, said in a line.
-function Check({ done, doneWords, waitingWords }) {
-	return (
-		<p className={done ? `${styles.check} ${styles.check_done}` : styles.check} aria-live="polite">
-			<span className={styles.check_icon}>{done ? <Icon name="check" size={16} /> : <span className={styles.watching} aria-hidden="true" />}</span>
-			<span>{done ? doneWords : waitingWords}</span>
-		</p>
+		</div>
 	);
 }
 

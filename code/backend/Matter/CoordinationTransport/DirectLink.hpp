@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Matter/CoordinationTransport/NoiseIK.hpp"
+#include "Matter/CoordinationTransport/Relay.hpp"
 #include "Matter/CoordinationTransport/ReliableDelivery.hpp"
 #include "Matter/CoordinationTransport/Stun.hpp"
 #include "Platform/UdpSocket/UdpSocket.hpp"
@@ -63,6 +64,13 @@ using Admit = std::function<bool(const PeerKey&)>;
 // - A message survives renewed keys and a moved computer: it is delivered
 //   once, whole. After the other computer restarts, what it did not confirm
 //   goes again from the start.
+// - Where no direct way answers - a router that gives each destination its own
+//   outside port, a network that lets no UDP through - the same sealed
+//   datagrams go through Legal Machines' relay (D-242), which opens none: a
+//   computer is called directly first, then through the relay and directly by
+//   turns once two calls go unanswered, and directly again every half minute
+//   while the relay carries it, so the link goes back to a direct way as soon
+//   as one answers.
 // A thread of its own runs it, from construction to destruction.
 class DirectLink {
 public:
@@ -96,6 +104,12 @@ public:
 		// alone. A server learns that address and nothing else.
 		std::vector<std::string> stunServers;
 		std::chrono::milliseconds stunEvery{300000};
+		// Legal Machines' relay (D-242), used only where no direct way answers;
+		// none: direct ways alone.
+		std::shared_ptr<Relay> relay;
+		// While the relay carries a computer, a direct way to it is tried this
+		// often.
+		std::chrono::milliseconds directRetry{30000};
 		// Called on the link's own thread, without its lock, as soon as a whole
 		// message has arrived: whoever takes them wakes at once, as a socket that
 		// pushes does, instead of on its next round. It must not wait long; it
@@ -135,11 +149,20 @@ public:
 	bool is_connected(const PeerKey& peer) const;
 	// The address the computer was last heard from; empty before.
 	std::string endpoint_of(const PeerKey& peer) const;
+	// Whether the relay carries the link to the computer now (D-242).
+	bool is_relayed(const PeerKey& peer) const;
 	// How many sessions with the computer this link began or took up.
 	std::size_t sessions_with(const PeerKey& peer) const;
 	// The addresses STUN servers said this computer's router shows outside for
 	// the link ("203.0.113.7:47380"), heard lately; none before one answered.
 	std::vector<std::string> public_addresses() const;
+
+	// The address of a computer reached through the relay: "relay/" and its
+	// key in hex. It stands where an "ip:port" stands, so the link answers
+	// a computer where it was last heard from, the relay or a direct way alike.
+	static constexpr const char* kRelayPrefix = "relay/";
+	// Calls made directly before the relay is tried too.
+	static constexpr int kDirectCalls = 2;
 
 	// What a handshake is bound to: two programs that are not this link never
 	// complete one with it.
@@ -186,6 +209,8 @@ private:
 		std::uint64_t lastCall = 0;
 		Clock::time_point lastSent{};
 		std::optional<Clock::time_point> unansweredSince;
+		// When a direct way was last tried while the relay carried it.
+		Clock::time_point directTriedAt{};
 		std::size_t sessions = 0;
 	};
 
@@ -197,7 +222,8 @@ private:
 	void onAnswer(const platform::UdpSocket::Datagram& datagram, Clock::time_point now);
 	void onData(const platform::UdpSocket::Datagram& datagram, Clock::time_point now);
 	void tick(Clock::time_point now);
-	void call(Peer& peer, Clock::time_point now);
+	// Calls the computer: directly, through the relay, or both.
+	void call(Peer& peer, Clock::time_point now, bool isDirectOnly = false);
 	void establish(Peer& peer, std::unique_ptr<Session> session);
 	void restartDelivery(Peer& peer);
 	void drop(std::unique_ptr<Session>& session);

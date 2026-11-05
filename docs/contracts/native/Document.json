@@ -161,6 +161,17 @@
       },
       "result": "DocumentVersionRestore",
       "_order": 168
+    },
+    {
+      "name": "document.addExternalFolder",
+      "policy": "worker",
+      "params": {
+        "matterId": "string",
+        "destinationFolderRelativePath": "string",
+        "sourceAbsolutePath": "string"
+      },
+      "result": "Matter",
+      "_order": 342
     }
   ]
 }

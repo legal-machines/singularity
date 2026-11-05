@@ -432,6 +432,100 @@
       "policy": "ui",
       "result": "ChosenFolder | null",
       "_order": 315
+    },
+    {
+      "name": "project.listTrash",
+      "policy": "worker",
+      "result": {
+        "type": "object",
+        "required": [
+          "matters"
+        ],
+        "properties": {
+          "matters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "trashedAt",
+                "deletesAt"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "trashedAt": {
+                  "type": "string"
+                },
+                "deletesAt": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "_order": 346
+    },
+    {
+      "name": "project.moveToTrash",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "id",
+          "trashedAt",
+          "deletesAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "trashedAt": {
+            "type": "string"
+          },
+          "deletesAt": {
+            "type": "string"
+          }
+        }
+      },
+      "_order": 347
+    },
+    {
+      "name": "project.restoreFromTrash",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "id",
+          "restored"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "restored": {
+            "type": "boolean"
+          }
+        }
+      },
+      "_order": 348
+    },
+    {
+      "name": "project.deleteFromTrash",
+      "policy": "worker",
+      "params": {
+        "id": "string"
+      },
+      "result": "MatterListResult",
+      "_order": 349
     }
   ]
 }

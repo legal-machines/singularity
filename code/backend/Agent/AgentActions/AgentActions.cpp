@@ -152,12 +152,26 @@ std::string person_name_now() {
 	}
 }
 
+// The colleagues whose chat could not open at their last try - no Matters
+// folder yet, as onboarding hires its first colleague before the folder is
+// chosen - for the scheduler to try again at each wake until it opens
+// (2026-11-05: "Pasha can't be written to from this computer yet").
+std::mutex &chatless_mutex() {
+	static std::mutex mutex;
+	return mutex;
+}
+std::set<std::string> &chatless() {
+	static std::set<std::string> waiting;
+	return waiting;
+}
+
 // The agent's thread: made and introduced for a new agent, its brief brought
 // up to date for a changed one (RunnerDependencies::open_thread). Never with
 // a lock held: it writes the Matter, which may be a slow share.
 void open_thread_for(const std::string &agent_id) {
 	const RunnerDependencies &dependencies = installed();
 	if (!dependencies.open_thread) return;
+	bool isWaiting = false;
 	try {
 		std::optional<Agent> agent;
 		{
@@ -167,9 +181,12 @@ void open_thread_for(const std::string &agent_id) {
 		// A colleague of the firm opens its own chat on the member's desk
 		// (RunnerDependencies::desk_project).
 		if (agent.has_value() == true && agent->status != AgentStatus::Draft && agent->status != AgentStatus::Stopped)
-			(void)dependencies.open_thread(*agent);
+			isWaiting = dependencies.open_thread(*agent).empty();
 	} catch (const std::exception &) {
 	}
+	const std::lock_guard<std::mutex> lock(chatless_mutex());
+	if (isWaiting == true) chatless().insert(agent_id);
+	else chatless().erase(agent_id);
 }
 
 // Who approved it is answerable for it, under the name their own Settings or
@@ -1687,6 +1704,11 @@ void forget_memory(const std::string &agent_id, const std::string &note_id) {
 
 void open_own_chat(const std::string &agent_id) {
 	open_thread_for(agent_id);
+}
+
+std::vector<std::string> colleagues_awaiting_chat() {
+	const std::lock_guard<std::mutex> lock(chatless_mutex());
+	return std::vector<std::string>(chatless().begin(), chatless().end());
 }
 
 std::vector<AgentView> list_agent_views(const std::optional<std::string> &matter_id) {

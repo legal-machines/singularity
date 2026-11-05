@@ -7,14 +7,14 @@ import { Icon } from "../../components/Icon/Icon.jsx";
 import { useNavigation } from "../../components/Navigation/navigation.js";
 import { Page, PageHead } from "../../components/Page/Page.jsx";
 import { ArchiveMatterDialog } from "../../components/Manage/ArchiveMatterDialog.jsx";
-import { ConfirmDialog, EditMatterDialog, MoreButton } from "../../components/Manage/Manage.jsx";
+import { EditMatterDialog, MoreButton } from "../../components/Manage/Manage.jsx";
 import { MarkPicker, ProjectMark } from "../../components/ProjectMark/ProjectMark.jsx";
 import { SheetBar } from "../../components/SheetBar/SheetBar.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { Part, PartRow, PartRows, Stack, Word, parts } from "../../components/Parts/Parts.jsx";
 import { Views } from "../../components/Views/Views.jsx";
 import { matterBilling } from "../../data/billing.js";
-import { bindRealMatter, deleteMatterHere, editMatter, isAcceptedWork, isRealMatter, matterWordsOf, realMatterDocuments, realMatterHistory, realWorkProducts, setMatterArchived, shownThreads, useRealWork } from "../../data/native.js";
+import { bindRealMatter, editMatter, moveMatterToTrash, isAcceptedWork, isRealMatter, matterWordsOf, realMatterDocuments, realMatterHistory, realWorkProducts, setMatterArchived, shownThreads, useRealWork } from "../../data/native.js";
 import { DocumentsExplorer } from "./DocumentsExplorer.jsx";
 import { MatterDesk, MatterThreads } from "./MatterDesk.jsx";
 import { documents, viewerId, workProducts } from "../../data/workspace.js";
@@ -45,7 +45,7 @@ export function MatterPage(props) {
 function MatterNotHere() {
 	const { open } = useNavigation();
 	return (
-		<Page>
+		<Page bar={<SheetBar trail={[{ label: "Matters", place: { kind: "matters" } }]} />}>
 			<PageHead
 				title="This Matter is not on this computer"
 				line="It may still be on its way from your firm's computers. The Matters this computer holds are in Matters."
@@ -104,13 +104,24 @@ function MatterOverview({ state }) {
 			toast(error?.message ?? "The Matter could not be changed. Try again.", { tone: "seal" });
 		}
 	}
+	// To this computer's Trash, for 30 days, with its Undo (D-247): no question
+	// first, since nothing is lost.
+	async function trashIt() {
+		try {
+			const undo = await moveMatterToTrash(matter.id);
+			open({ kind: "matters" });
+			toast(`${matter.name} is in the Trash for 30 days.`, { action: { label: "Undo", run: undo } });
+		} catch (error) {
+			toast(error?.message ?? "The Matter could not be moved to the Trash. Try again.", { tone: "seal" });
+		}
+	}
 	const manage = isReal && !isEmulation ? (
 		<MoreButton label={`More for ${matter.name}`} items={[
 			{ key: "edit", label: "Edit", icon: "edit", onSelect: () => setManaging("edit") },
 			isArchived
 				? { key: "restore", label: "Restore", icon: "return", onSelect: () => archive(false) }
 				: { key: "archive", label: "Archive", icon: "closed", onSelect: () => setManaging("archive") },
-			{ key: "delete", label: "Delete from this computer", icon: "trash", onSelect: () => setManaging("delete") },
+			{ key: "trash", label: "Move to Trash", icon: "trash", onSelect: () => trashIt() },
 		]} />
 	) : null;
 
@@ -169,18 +180,6 @@ function MatterOverview({ state }) {
 					}} />
 			) : null}
 			{managing == "archive" ? <ArchiveMatterDialog matter={matter} onClose={() => setManaging(null)} /> : null}
-			{managing == "delete" ? (
-				<ConfirmDialog
-					title={`Delete ${matter.name} from this computer?`}
-					description="It leaves your Matters and stops travelling to this computer. Its folder and documents stay where they are, and everyone else on it keeps it."
-					confirm="Delete"
-					onClose={() => setManaging(null)}
-					onConfirm={async () => {
-						await deleteMatterHere(matter.id);
-						open({ kind: "matters" });
-						toast(`${matter.name} is deleted from this computer. Its folder stays where it was.`);
-					}} />
-			) : null}
 			{markAnchor != null ? <MarkPicker matter={matter} anchor={markAnchor} onClose={() => setMarkAnchor(null)} /> : null}
 			{isInviting ? <GiveDialog projectId={matter.realMatterId} matterName={matter.name} memberIds={matter.memberIds} invitedIds={invitedIds} onClose={() => setInviting(false)} /> : null}
 

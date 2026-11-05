@@ -131,7 +131,7 @@ export function InboxPage({ state, onDone, onSave, onFile, display, onDisplayCha
 							<section key={group.id} className={styles.group} aria-labelledby={`inbox-section-${group.id}`}>
 								<h2 id={`inbox-section-${group.id}`} className={styles.divider}>{group.title}</h2>
 								<ul className={styles.lines}>
-									{group.entries.map(entry => <Line key={entry.id} entry={entry} isSelected={entry.id == cursorId} isDone={state.doneIds.includes(entry.id)} isSaved={state.savedIds.includes(entry.id)} onOpen={() => openEntry(entry)} onDone={() => markDone(entry.id)} onSave={() => toggleSaved(entry.id)} onFile={matterId => fileTo(entry.id, matterId)} onOpenMatter={entry.matterId != null ? () => open({ kind: "matter", matterId: entry.matterId, tab: "overview" }) : null} />)}
+									{group.entries.map(entry => <Line key={entry.id} entry={entry} isSelected={entry.id == cursorId} isDone={state.doneIds.includes(entry.id)} isSaved={state.savedIds.includes(entry.id)} onOpen={() => openEntry(entry)} onDone={() => markDone(entry.id)} onSave={() => toggleSaved(entry.id)} onFile={matterId => fileTo(entry.id, matterId)} onOpenMatter={entry.matterId != null && findMatter(entry.matterId) != null ? () => open({ kind: "matter", matterId: entry.matterId, tab: "overview" }) : null} />)}
 								</ul>
 							</section>
 						))}

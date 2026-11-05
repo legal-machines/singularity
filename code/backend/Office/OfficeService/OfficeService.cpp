@@ -15,6 +15,17 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -127,13 +138,16 @@ std::string certificate_word(platform::trust_store::TrustState state) {
 	}
 }
 
-// The manifests, written for this version; Word and Excel's registered.
-bool write_and_register_manifests() {
+// The manifests, written for this version; Word and Excel's registered. On
+// macOS the applications' own folders are entered only for a manifest not
+// placed yet, or `again`, when the person connects (OfficeAddinRegistry):
+// each entry is a question of macOS's.
+bool write_and_register_manifests(bool again = false) {
 	platform::ensure_record_directory(office_folder());
 	const std::string version = manifest_version(kAppVersion);
 	platform::write_file_durably(documents_manifest_path(), documents_manifest(version));
 	platform::write_file_durably(outlook_manifest_path(), outlook_manifest(version));
-	return platform::office_addins::register_manifest(kDocumentsAddinId, documents_manifest_path());
+	return platform::office_addins::register_manifest(kDocumentsAddinId, documents_manifest_path(), again);
 }
 
 std::filesystem::path panes_folder() {
@@ -219,10 +233,18 @@ OfficeStatus connect_office() {
 #endif
 			problem = trust.declined ? std::string(kDeclined) : trust.problem;
 		} else {
-			const bool registered = write_and_register_manifests();
+			const bool registered = write_and_register_manifests(true);
 			const std::lock_guard<std::mutex> lock(kept.mutex);
 			problem = serve_locked(kept, *certificate);
-			if (problem.empty() && !registered) problem = "Word, Excel and PowerPoint could not be told about Singularity's add-in.";
+#if defined(__APPLE__)
+			// macOS guards Word's, Excel's and PowerPoint's own folders: refused
+			// there, or none of them opened once yet, nothing was placed.
+			constexpr const char *kNotPlaced = "macOS did not let Singularity add its add-in to Word, Excel or PowerPoint. "
+				"Open Word once, then connect again and choose Allow when macOS asks to access data from other apps.";
+#else
+			constexpr const char *kNotPlaced = "Word, Excel and PowerPoint could not be told about Singularity's add-in.";
+#endif
+			if (problem.empty() && !registered) problem = kNotPlaced;
 			if (problem.empty() || registered) write_connection(true, now_utc());
 		}
 	} catch (const std::exception &error) {
@@ -233,6 +255,112 @@ OfficeStatus connect_office() {
 		kept.problem = problem;
 	}
 	return office_status();
+}
+
+namespace {
+
+// The person's last answer in this run, when it was no: a refusal is known
+// only from the answer, as the system keeps no record of it.
+std::mutex &certificate_answer_mutex() {
+	static auto *kept = new std::mutex();
+	return *kept;
+}
+
+bool &certificate_declined() {
+	static bool kept = false;
+	return kept;
+}
+
+bool has_office_here() {
+	for (const OfficeApp app : {OfficeApp::word, OfficeApp::excel, OfficeApp::powerpoint, OfficeApp::outlook}) {
+		if (is_installed(app)) return true;
+	}
+	return false;
+}
+
+const char *certificate_refused_words() {
+#if defined(__APPLE__)
+	return "macOS was not told to trust Singularity's certificate, so Word, Excel, PowerPoint and Outlook cannot reach "
+		"Singularity. Check again, and enter your Mac's password when macOS asks.";
+#else
+	return "Windows was told not to install Singularity's certificate, so Word, Excel, PowerPoint and Outlook cannot reach "
+		"Singularity. Check again, and choose Yes when Windows asks.";
+#endif
+}
+
+} // namespace
+
+platform::system_permissions::Permission office_certificate_permission() {
+	using platform::system_permissions::State;
+	platform::system_permissions::Permission permission{"officeCertificate", State::unknown, {}};
+	try {
+		if (!platform::office_addins::is_supported() || !has_office_here()) {
+			permission.state = State::not_needed;
+			return permission;
+		}
+		if (const auto certificate = load_local_certificate(office_folder())) {
+			if (platform::trust_store::trust_state(certificate->certificate_der) == platform::trust_store::TrustState::trusted) {
+				permission.state = State::allowed;
+				return permission;
+			}
+		}
+		const std::lock_guard<std::mutex> lock(certificate_answer_mutex());
+		if (certificate_declined()) {
+			permission.state = State::denied;
+			permission.problem = certificate_refused_words();
+		}
+	} catch (const std::exception &) {
+		permission.problem = "Singularity could not read its certificate for Word, Excel, PowerPoint and Outlook. Check again.";
+	}
+	return permission;
+}
+
+platform::system_permissions::Permission ask_office_certificate_trust() {
+	using platform::system_permissions::State;
+	platform::system_permissions::Permission permission{"officeCertificate", State::unknown, {}};
+	try {
+		if (!platform::office_addins::is_supported() || !has_office_here()) {
+			permission.state = State::not_needed;
+			return permission;
+		}
+		// The very certificate connect_office uses, made as it makes it.
+		std::optional<LocalCertificate> certificate = load_local_certificate(office_folder());
+		if (!certificate || !runs_for_more_than(*certificate, kRenewWithinDays)) {
+			certificate = make_local_certificate(kCertificateDays);
+			save_local_certificate(office_folder(), *certificate);
+		}
+		// The system asks here, in front of Singularity's window
+		// (Platform/TrustStore), and nothing is held meanwhile.
+		const auto trust = platform::trust_store::trust_for_this_user(certificate->certificate_der);
+		{
+			const std::lock_guard<std::mutex> lock(certificate_answer_mutex());
+			certificate_declined() = trust.declined;
+		}
+		if (trust.state == platform::trust_store::TrustState::trusted) {
+			permission.state = State::allowed;
+		} else if (trust.state == platform::trust_store::TrustState::unsupported) {
+			permission.state = State::not_needed;
+		} else if (trust.declined) {
+			permission.state = State::denied;
+			permission.problem = certificate_refused_words();
+		} else {
+			permission.problem = trust.problem.empty()
+				? "Singularity's certificate for Word, Excel, PowerPoint and Outlook was not trusted. Check again."
+				: trust.problem;
+		}
+	} catch (const std::exception &) {
+		permission.problem = "Singularity could not make its certificate for Word, Excel, PowerPoint and Outlook. Check again.";
+	}
+	return permission;
+}
+
+bool open_office_certificate_settings() {
+#if defined(_WIN32)
+	const HINSTANCE opened = ShellExecuteW(nullptr, L"open", L"certmgr.msc", nullptr, nullptr, SW_SHOWNORMAL);
+	return reinterpret_cast<INT_PTR>(opened) > 32;
+#else
+	return false;
+#endif
 }
 
 OpenedApp open_office_app(OfficeApp app) {

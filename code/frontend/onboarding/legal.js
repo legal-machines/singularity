@@ -11,6 +11,9 @@ export const LEGAL_LINKS = {
 	terms: `${LEGAL}/terms`,
 	privacy: `${LEGAL}/privacy`,
 	personalData: `${LEGAL}/personal-data-consent`,
+	// A design partner's seat accepts it before its first bug report or work
+	// log (D-257).
+	diagnostics: `${LEGAL}/diagnostics-consent`,
 };
 
 // Each document's title as the site publishes it. The protection model comes
@@ -22,6 +25,7 @@ export const LEGAL_TITLES = {
 	terms: "Terms of Use",
 	privacy: "Privacy Notice",
 	personalData: "Personal Data Consent",
+	diagnostics: "Diagnostics Consent",
 };
 
 // The published results of client data protection's latest test (D-195):

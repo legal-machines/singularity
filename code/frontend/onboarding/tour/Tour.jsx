@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Avatar } from "../../components/Avatar/Avatar.jsx";
+import { SecretInput } from "../../components/Field/SecretInput.jsx";
 import { readPicture, squarePhoto } from "../../data/photos.js";
 import { normalizePractice } from "../../data/practices.js";
 import { BackButton } from "../BackButton.jsx";
@@ -84,6 +85,7 @@ function Chapter({ index, pages = PAGES, setup, onNext, onBack, onComplete, onSe
 					{page.ask === "folder" ? <FolderAsk {...formProps} /> : null}
 					{page.ask === "colleague" ? <ColleagueAsk {...designProps} setup={setup} busy={busy} setBusy={setBusy} /> : null}
 					{page.ask === "apps" ? <ConnectionAsk {...designProps} setup={setup} busy={busy} setBusy={setBusy} /> : null}
+					{page.ask === "permissions" ? <PermissionsAsk {...formProps} page={page} /> : null}
 				</div> : null}
 			</div>
 			<Dots className={styles.progress} steps={pages.map(item => item.title)} current={index} label="Onboarding steps" canGo={at => !busy && at < index} onGo={onBack} />
@@ -266,6 +268,71 @@ function StoryList({ page }) {
 	return null;
 }
 
+// What the computer must allow, asked for in turn as the member presses
+// Allow access, each with the system's own question, and checked: each row
+// says what came of it, and one not allowed says how to allow it (the owner,
+// 2026-11-04). One the computer does not need here leaves the list.
+const PERMISSION_WORDS = { allowed: "Allowed", denied: "Not allowed", unknown: "Not asked yet" };
+
+function PermissionsAsk({ setup, page, active, busy, setBusy, onDone }) {
+	const texts = page.permissions?.[platformOf()] ?? [];
+	const [states, setStates] = useState({});
+	const [asking, setAsking] = useState(null);
+	const begun = useRef(false);
+	const live = useRef(true);
+	useEffect(() => { live.current = true; return () => { live.current = false; }; }, []);
+	useEffect(() => {
+		setup.permissions().then(list => {
+			if (live.current) setStates(previous => ({ ...Object.fromEntries(list.map(item => [item.key, item])), ...previous }));
+		}, () => {});
+	}, [setup]);
+	const rows = texts.filter(text => states[text.key]?.state !== "not_needed");
+	const isGiven = key => ["allowed", "not_needed"].includes(states[key]?.state);
+	const ask = async (keys) => {
+		setBusy(true);
+		for (const key of keys) {
+			if (!live.current) return;
+			setAsking(key);
+			const answer = await setup.askPermission(key).catch(error => ({ key, state: "unknown", problem: error?.message ?? "It could not be asked. Try again." }));
+			if (live.current) setStates(previous => ({ ...previous, [key]: answer }));
+		}
+		if (live.current) { setAsking(null); setBusy(false); }
+	};
+	// The member pressed Allow access: each not given yet is asked at once, in
+	// turn, and one given already is never asked (the owner, 2026-11-05, D-249).
+	useEffect(() => {
+		if (!active || begun.current) return;
+		begun.current = true;
+		setup.permissions().catch(() => []).then(list => {
+			if (!live.current) return;
+			const known = Object.fromEntries(list.map(item => [item.key, item]));
+			setStates(previous => ({ ...previous, ...known }));
+			ask(texts.map(text => text.key).filter(key => !["allowed", "not_needed"].includes(known[key]?.state)));
+		});
+	}, [active]);
+	const allGiven = rows.every(row => isGiven(row.key));
+	return <div className={styles.ask}>
+		<ul className={styles.features}>
+			{rows.map(row => {
+				const state = states[row.key]?.state ?? "unknown";
+				const problem = states[row.key]?.problem ?? "";
+				return <li key={row.key} data-permission={row.key} data-state={asking === row.key ? "asking" : state}>
+					<span className={styles.featureName}>{row.name}<span className={styles.permissionState} data-state={asking === row.key ? "asking" : state}>{asking === row.key ? "Asking…" : PERMISSION_WORDS[state] ?? PERMISSION_WORDS.unknown}</span></span>
+					<span className={styles.featureLine}>{problem || row.line}</span>
+					{state === "denied" && asking === null ? <span className={styles.permissionActions}>
+						<button className={styles.later} type="button" disabled={busy} onClick={() => ask([row.key])}>Check again</button>
+						<button className={styles.later} type="button" disabled={busy} onClick={() => setup.openPermissionSettings(row.key).catch(() => false)}>{platformOf() === "darwin" ? "Open System Settings" : "Open settings"}</button>
+					</span> : null}
+				</li>;
+			})}
+		</ul>
+		<button className={entry.primary} type="button" disabled={busy} onClick={allGiven ? onDone : () => ask(rows.filter(row => !isGiven(row.key)).map(row => row.key))}>
+			<span className={entry.buttonLabel}>{asking !== null ? "Waiting for your answer…" : allGiven ? "Continue" : "Ask again"}</span>
+		</button>
+		{!allGiven && asking === null ? <button className={styles.later} type="button" disabled={busy} onClick={onDone}>Continue anyway</button> : null}
+	</div>;
+}
+
 // How long the button stays full, saying the model runs, before onboarding
 // goes on by itself.
 const ARRIVED_MS = 700;
@@ -410,7 +477,7 @@ function ModelsAsk({ setup, active, busy, setBusy, onDone }) {
 			</div>
 			{!isOn ? <div className={entry.field}>
 				<label htmlFor="tour-key">API key</label>
-				<input ref={keyRef} id="tour-key" type="password" autoComplete="off" spellCheck={false} value={key} readOnly={busy || loading} placeholder="Paste your API key" aria-invalid={Boolean(error)} aria-describedby={error ? "tour-model-error" : undefined} onChange={event => { setKey(event.target.value); setError(""); }} />
+				<SecretInput kind="key" ref={keyRef} id="tour-key" value={key} readOnly={busy || loading} placeholder="Paste your API key" aria-invalid={Boolean(error)} aria-describedby={error ? "tour-model-error" : undefined} onChange={event => { setKey(event.target.value); setError(""); }} />
 			</div> : null}
 		</div>
 		<p id="tour-model-error" className={styles.error} role="status">{error}</p>

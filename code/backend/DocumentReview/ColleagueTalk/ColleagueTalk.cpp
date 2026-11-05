@@ -112,7 +112,8 @@ ToolAnswer runTool(const TalkInput& input, const TalkSources& sources, const std
 // cut off in the thread" and it could not quote it (2026-10-31).
 std::string lineWords(const TalkLine& line, std::size_t number, std::size_t most, long long historyFrom = -1) {
 	const std::string words = trimmed(line.text);
-	if (words.empty() == true) return std::string();
+	// A message of files alone - a picture with nothing said - is its files.
+	if (words.empty() == true && trimmed(line.carries).empty() == true) return std::string();
 	const std::string author = line.isOwn == true ? std::string("You")
 		: (line.author.empty() == true ? std::string("Someone") : line.author);
 	const std::string kept = cut(words, most);

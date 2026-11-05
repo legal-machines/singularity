@@ -108,6 +108,8 @@ inline std::string plainWordsFor(const std::string& code) {
 	if (code == "account.refused") return "Legal Machines did not accept this sign-in. Try again in a few minutes.";
 	if (code == "account.two_step_setup_required")
 		return "Your firm's sign-in needs two-step sign-in set up first. Nothing was sent. Set it up, then try again.";
+	if (code == "account.two_step_code_required")
+		return "The code from the email was accepted, and your password is not changed yet. Enter the code your authenticator app shows, or a recovery code.";
 	if (code == "account.code_required")
 		return "Legal Machines needs a new sign-in code before this computer can download the protection model. "
 			"Sign in again, and enter the code it sends.";

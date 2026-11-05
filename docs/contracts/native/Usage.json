@@ -29,6 +29,29 @@
       },
       "result": "UsageStatementGenerationResult",
       "_order": 116
+    },
+    {
+      "name": "usage.saveWorkStatement",
+      "policy": "ui",
+      "params": {
+        "projectId": "string",
+        "periodStart": "string",
+        "periodEnd": "string",
+        "periodName": "string"
+      },
+      "result": "UsageWorkStatementResult",
+      "_order": 354
+    },
+    {
+      "name": "usage.confirmCosts",
+      "policy": "worker",
+      "params": {
+        "projectId": "string",
+        "periodStart": "string",
+        "periodEnd": "string"
+      },
+      "result": "UsageConfirmCostsResult",
+      "_order": 356
     }
   ]
 }

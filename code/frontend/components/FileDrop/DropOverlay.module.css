@@ -1,0 +1,43 @@
+/* Over a place that takes files while they are dragged over it: the page's
+   own white over all it holds, so nothing shows beneath, with no frame (the
+   owner, 2026-11-05: "everything under it must be hidden while dragging, and
+   the borders must go"). It reaches as far as the place's rows do
+   (--drop-reach), and says only what is done with the files. */
+.drop {
+	position: absolute;
+	inset: calc(-1 * var(--drop-reach, 0px));
+	z-index: 5;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	font: var(--type-body-strong);
+	color: var(--ink-2);
+	background: var(--sheet);
+	pointer-events: none;
+	animation: drop-in var(--duration-fast) var(--ease-out);
+}
+
+.drop > svg {
+	color: var(--ink-3);
+}
+
+.drop > p {
+	margin: 0;
+	max-width: 48ch;
+	text-align: center;
+	text-wrap: balance;
+}
+
+@keyframes drop-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.drop {
+		animation: none;
+	}
+}

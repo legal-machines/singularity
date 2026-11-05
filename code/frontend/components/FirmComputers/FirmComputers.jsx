@@ -16,6 +16,7 @@ import {
 import { nativeApp, teamMembers } from "../../data/native.js";
 import { sizeWords } from "../../data/transfers.js";
 import { viewerId } from "../../data/workspace.js";
+import { formatWhen } from "../../pages/words.js";
 import { travelComputers, travelWords } from "./travel.js";
 
 import styles from "./FirmComputers.module.css";
@@ -379,7 +380,16 @@ function capitalised(text) {
 // other travels sealed, with nothing to read aloud.
 function ComputerCheckDialog({ deviceId }) {
 	const firm = useFirmComputers();
-	const owner = computerOwner(firm.computers.find(entry => entry.deviceId == deviceId));
+	const computer = firm.computers.find(entry => entry.deviceId == deviceId);
+	const owner = computerOwner(computer);
+	// A computer of the member's own seat: they compare the number on their two
+	// computers themselves (the owner, 2026-11-05).
+	const isYours = owner.isYours == true;
+	// One that never answers - wiped, lost, or set up again since - is turned
+	// away without the number (D-254): turning a computer away opens nothing to
+	// anyone, so it needs no check, while letting one in still does.
+	const notTheirs = isYours ? "Not mine" : owner.member != null ? `Not ${owner.first}’s` : "Not theirs";
+	const lastHeard = (computer?.announcedAt ?? "") != "" ? `It last said where it is ${formatWhen(computer.announcedAt)}.` : "";
 	const [check, setCheck] = useState({ state: "waiting", number: "", problem: "" });
 	const [attempt, setAttempt] = useState(0);
 	const [isDeciding, setDeciding] = useState(false);
@@ -415,7 +425,9 @@ function ComputerCheckDialog({ deviceId }) {
 		try {
 			if (isSame) {
 				await keepComputer(deviceId);
-				toast(`${capitalised(owner.name)}’s computer is checked. What you give each other goes to it sealed.`);
+				toast(isYours
+					? "Your other computer is checked. Your firm’s work reaches it sealed."
+					: `${capitalised(owner.name)}’s computer is checked. What you give each other goes to it sealed.`);
 			} else {
 				await refuseFirmComputer(deviceId);
 				toast("That computer stays out. Nothing of the firm’s goes to it.");
@@ -435,30 +447,41 @@ function ComputerCheckDialog({ deviceId }) {
 		</>
 	) : check.state == "failed" ? (
 		<>
+			<Button disabled={isDeciding} onClick={() => decide(false)}>{notTheirs}</Button>
 			<Button onClick={close}>Close</Button>
 			<Button variant="primary" onClick={() => setAttempt(attempt + 1)}>Try again</Button>
 		</>
-	) : <Button onClick={close}>Cancel</Button>;
+	) : (
+		<>
+			<Button disabled={isDeciding} onClick={() => decide(false)}>{notTheirs}</Button>
+			<Button onClick={close}>Cancel</Button>
+		</>
+	);
 
 	return (
 		<Dialog
 			layout="spacious"
-			title={`Check ${owner.name}’s computer`}
-			description={`Compare the number with ${owner.first}, side by side or on a call. Your two computers show the same one only when nothing stands between them.`}
+			title={isYours ? "Check your other computer" : `Check ${owner.name}’s computer`}
+			description={isYours
+				? "Compare the number on your two computers. They show the same one only when nothing stands between them."
+				: `Compare the number with ${owner.first}, side by side or on a call. Your two computers show the same one only when nothing stands between them.`}
 			onClose={close}
 			actions={actions}
 		>
 			{check.state == "ready" ? (
 				<div className={styles.check}>
 					<p className={styles.number} aria-label={check.number.split("").join(" ")}>{check.number}</p>
-					<p className={styles.note}>Does {owner.first} see the same number?</p>
+					<p className={styles.note}>{isYours ? "Does your other computer show the same number?" : `Does ${owner.first} see the same number?`}</p>
 				</div>
 			) : check.state == "failed" ? (
 				<p className={styles.problem}>{check.problem}</p>
 			) : (
 				<div className={styles.check}>
 					<p className={styles.number} data-waiting="" aria-hidden="true">•••• ••••</p>
-					<p className={styles.note}>Waiting for {owner.first}. Their computer asks them to check with you, and the number shows on both once they do.</p>
+					<p className={styles.note}>{isYours
+						? "Waiting for your other computer. Choose Check there too, and the number shows on both."
+						: `Waiting for ${owner.first}. Their computer asks them to check with you, and the number shows on both once they do.`}</p>
+					{lastHeard != "" ? <p className={styles.note}>{lastHeard} If it is gone, choose {notTheirs}.</p> : null}
 				</div>
 			)}
 		</Dialog>

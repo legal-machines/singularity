@@ -81,7 +81,7 @@ Made& made() {
 
 } // namespace
 
-std::shared_ptr<DirectTransport> DirectTransport::shared(const noise::KeyPair& self) {
+std::shared_ptr<DirectTransport> DirectTransport::shared(const noise::KeyPair& self, std::shared_ptr<link::Relay> relay) {
 	Made& state = made();
 	const std::lock_guard<std::mutex> lock(state.mutex);
 	if (state.transport) return state.transport;
@@ -91,6 +91,7 @@ std::shared_ptr<DirectTransport> DirectTransport::shared(const noise::KeyPair& s
 	// Public STUN servers, which the owner allowed (D-123, D-124): they learn
 	// this computer's outside address and nothing else.
 	options.stunServers = {"stun.l.google.com:19302", "stun.cloudflare.com:3478"};
+	options.relay = std::move(relay);
 	try {
 		state.transport = std::make_shared<DirectTransport>(options);
 	} catch (const std::exception&) {

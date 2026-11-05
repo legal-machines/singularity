@@ -3,7 +3,9 @@ import styles from "./CodeInput.module.css";
 
 // One semantic input preserves OTP autofill, paste, selection and keyboard
 // editing. The six visual cells are decoration, never six separate tab stops.
-export function CodeInput({ value, onChange, inputRef, invalid, busy, describedBy }) {
+// A page asks for one such code at a time: the email's, or the authenticator
+// app's (id "entry-twoStep", name "twoStep").
+export function CodeInput({ value, onChange, inputRef, invalid, busy, describedBy, id = "entry-code", name = "code" }) {
 	const [focused, setFocused] = useState(false);
 	const [cursor, setCursor] = useState(0);
 	const active = Math.min(cursor, 5);
@@ -11,7 +13,7 @@ export function CodeInput({ value, onChange, inputRef, invalid, busy, describedB
 	return (
 		<div className={styles.control} data-invalid={invalid || undefined}>
 			<input
-				ref={inputRef} id="entry-code" name="code" className={styles.input}
+				ref={inputRef} id={id} name={name} className={styles.input}
 				type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
 				value={value} readOnly={busy} spellCheck={false} autoCapitalize="none"
 				aria-invalid={invalid} aria-describedby={describedBy}

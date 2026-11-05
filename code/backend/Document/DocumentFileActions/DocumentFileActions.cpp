@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
+#include <string>
 #include <system_error>
+#include <vector>
 
 namespace singularity::document {
 namespace {
@@ -314,6 +316,94 @@ matters::Matter add_external_file(const std::string& matter_id, const std::strin
 	}
 
 	matter::detect_affected_paths(matter_id, {destination_absolute.string()});
+	return matter::process_project_documents(matter_id);
+}
+
+namespace {
+
+// Whether `inner` is `outer` or lies inside it, both resolved.
+bool lies_within(const std::filesystem::path& outer, const std::filesystem::path& inner) {
+	std::error_code error;
+	const std::filesystem::path base = std::filesystem::weakly_canonical(outer, error);
+	if (error) return false;
+	const std::filesystem::path candidate = std::filesystem::weakly_canonical(inner, error);
+	if (error) return false;
+	const std::filesystem::path relative = candidate.lexically_relative(base);
+	return !relative.empty() && *relative.begin() != "..";
+}
+
+// A file or folder a folder's copy leaves out: hidden ones (".DS_Store",
+// ".git"), Office's lock files ("~$Brief.docx").
+bool is_left_out(const std::filesystem::path& path) {
+	const std::string name = path.filename().u8string();
+	return name.empty() || name.front() == '.' || name.rfind("~$", 0) == 0;
+}
+
+} // namespace
+
+matters::Matter add_external_folder(const std::string& matter_id, const std::string& destination_folder_relative_path,
+		const std::string& source_absolute_path) {
+	namespace fs = std::filesystem;
+	const fs::path source = fs::u8path(source_absolute_path);
+	std::error_code error;
+	if (fs::is_directory(source, error) == false || fs::is_symlink(source, error)) {
+		throw std::runtime_error("That folder could not be found.");
+	}
+	const matters::Matter state = matter::read_project_documents(matter_id);
+	const fs::path project_root = require_directory_path(state);
+	const std::string destination_folder = trim(destination_folder_relative_path);
+	require_existing_folder(project_root, destination_folder);
+	if (lies_within(source, project_root)) throw std::runtime_error("A folder that holds this Matter can't be added to it.");
+	if (lies_within(project_root, source)) throw std::runtime_error("That folder is already in this Matter.");
+
+	// Everything it holds is listed first, so a folder too large to take is
+	// refused before a single file is copied.
+	std::vector<fs::path> folders;
+	std::vector<fs::path> files;
+	fs::recursive_directory_iterator walk(source, fs::directory_options::skip_permission_denied, error);
+	if (error) throw std::runtime_error("That folder could not be read: " + error.message());
+	for (const fs::recursive_directory_iterator end; walk != end; walk.increment(error)) {
+		if (error) throw std::runtime_error("That folder could not be read: " + error.message());
+		const fs::directory_entry& entry = *walk;
+		std::error_code kind_error;
+		const bool is_link = entry.is_symlink(kind_error);
+		const bool is_folder = !is_link && entry.is_directory(kind_error);
+		if (is_link || is_left_out(entry.path())) {
+			if (is_folder) walk.disable_recursion_pending();
+			continue;
+		}
+		if (is_folder) {
+			folders.push_back(entry.path());
+		} else if (entry.is_regular_file(kind_error)) {
+			files.push_back(entry.path());
+			if (files.size() > kMostAddedFolderFiles) {
+				throw std::runtime_error("That folder holds more than " + std::to_string(kMostAddedFolderFiles)
+					+ " files. Add the folders inside it one at a time.");
+			}
+		}
+	}
+
+	const std::string name = free_name_in(project_root / fs::u8path(destination_folder), source.filename().u8string());
+	if (is_safe_filename_component(name) == false) throw std::runtime_error("That folder's name can't be used in a Matter.");
+	const std::string top = join_relative(destination_folder, name);
+	if (documents::registry::is_relative_path_safe(project_root, top) == false) {
+		throw std::runtime_error("That destination isn't allowed.");
+	}
+	const fs::path target = project_root / fs::u8path(top);
+	fs::create_directory(target, error);
+	if (error) throw std::runtime_error("Couldn't create the folder: " + error.message());
+	for (const fs::path& folder : folders) {
+		fs::create_directories(target / folder.lexically_relative(source), error);
+		if (error) throw std::runtime_error("Couldn't create a folder inside it: " + error.message());
+	}
+	std::vector<std::string> added;
+	for (const fs::path& file : files) {
+		const fs::path destination = target / file.lexically_relative(source);
+		fs::copy_file(file, destination, fs::copy_options::none, error);
+		if (error) throw std::runtime_error("Couldn't copy " + file.filename().u8string() + ": " + error.message());
+		added.push_back(destination.string());
+	}
+	matter::detect_affected_paths(matter_id, added);
 	return matter::process_project_documents(matter_id);
 }
 

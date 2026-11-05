@@ -17,6 +17,8 @@
 #include "Provider/Types/TaskError.hpp"
 #include "Routing/AiSetupAssignment/AiSetupAssignment.hpp"
 #include "Matter/MatterRepository/MatterRepository.hpp"
+#include "Matter/MatterTrash/MatterTrash.hpp"
+#include "Node/LegacyWorkspace/LegacyWorkspace.hpp"
 #include "Chat/ChatActions/ChatActions.hpp"
 #include "Chat/ChatConversation/ChatConversation.hpp"
 #include "Persistence/ProjectStore/ProjectStore.hpp"
@@ -483,6 +485,67 @@ nlohmann::json remove(const nlohmann::json &params) {
   }
   return serialize(matter::remove(id));
 }
+namespace {
+
+nlohmann::json trashed_json(const matter::trash::Trashed &trashed) {
+  return nlohmann::json{{"id", trashed.id}, {"trashedAt", trashed.trashed_at}, {"deletesAt", trashed.deletes_at}};
+}
+
+bool is_listed_here(const std::string &id) {
+  const auto listed = matter::list();
+  return std::any_of(listed.begin(), listed.end(), [&](const matters::Matter &entry) { return entry.id == id; });
+}
+
+bool is_in_trash(const std::filesystem::path &workspace, const std::string &id) {
+  const auto trashed = matter::trash::list(workspace);
+  return std::any_of(trashed.begin(), trashed.end(), [&](const matter::trash::Trashed &entry) { return entry.id == id; });
+}
+
+} // namespace
+
+nlohmann::json list_trash(const nlohmann::json &) {
+  const auto workspace = node::require_active_workspace_path();
+  // What has stood there 30 days is deleted from this computer first; one
+  // no longer here at all simply leaves the Trash.
+  for (const std::string &id : matter::trash::expired(workspace, workspaces::current_timestamp())) {
+    if (is_listed_here(id)) {
+      try {
+        (void)remove(nlohmann::json{{"id", id}});
+      } catch (const std::exception &) {
+        // Deleted next time; it stays in the Trash meanwhile.
+        continue;
+      }
+    }
+    (void)matter::trash::take_back(workspace, id);
+  }
+  nlohmann::json matters = nlohmann::json::array();
+  for (const auto &trashed : matter::trash::list(workspace)) matters.push_back(trashed_json(trashed));
+  return nlohmann::json{{"matters", std::move(matters)}};
+}
+
+nlohmann::json move_to_trash(const nlohmann::json &params) {
+  const std::string id = params.at("id").get<std::string>();
+  if (!is_listed_here(id)) throw std::runtime_error("This Matter is no longer on this computer.");
+  return trashed_json(matter::trash::put(node::require_active_workspace_path(), id, workspaces::current_timestamp()));
+}
+
+nlohmann::json restore_from_trash(const nlohmann::json &params) {
+  const std::string id = params.at("id").get<std::string>();
+  const bool restored = matter::trash::take_back(node::require_active_workspace_path(), id);
+  return nlohmann::json{{"id", id}, {"restored", restored}};
+}
+
+// Only a Matter in the Trash is deleted from it: Delete now never reaches one
+// that was restored meanwhile, on this window or another.
+nlohmann::json delete_from_trash(const nlohmann::json &params) {
+  const std::string id = params.at("id").get<std::string>();
+  const auto workspace = node::require_active_workspace_path();
+  if (!is_in_trash(workspace, id)) throw std::runtime_error("This Matter is not in the Trash any more.");
+  nlohmann::json result = remove(nlohmann::json{{"id", id}});
+  (void)matter::trash::take_back(workspace, id);
+  return result;
+}
+
 nlohmann::json open_folder(const nlohmann::json &params) { matter::open_folder(params.at("matterId").get<std::string>()); return true; }
 nlohmann::json assign_folder(const nlohmann::json &params, const std::optional<std::string> &selected_path) {
   return serialize(matter::assign_folder(params.at("matterId").get<std::string>(), selected_path));
@@ -865,6 +928,26 @@ namespace {
 
 // Where the coordination stands, for the window: never a key, never what it
 // knows of each file.
+// Whether a Matter or the firm's record travels (D-137): its state, the
+// computers with a live encrypted session now, when something sealed last came
+// from each other computer, and what of it is on its way (D-207), coming here
+// from each computer and going to each, with how much has come.
+Json travel_json(const matter::coordination::LinkedMatter &link) {
+  const auto transfers = [](const std::vector<matter::coordination::Transfer> &list) {
+    Json found = Json::array();
+    for (const matter::coordination::Transfer &transfer : list) {
+      found.push_back(Json{{"deviceId", transfer.device_id}, {"files", transfer.files}, {"filesHere", transfer.files_here},
+          {"bytes", transfer.bytes}, {"bytesHere", transfer.bytes_here}, {"reachable", transfer.reachable}});
+    }
+    return found;
+  };
+  Json heard = Json::array();
+  for (const auto &[device, at] : link.heard) heard.push_back(Json{{"deviceId", device}, {"at", at}});
+  return Json{{"state", link.state == "carried" ? "carried" : "waiting"}, {"lastSyncAt", link.last_sync_at},
+      {"lastError", link.last_error}, {"connected", link.connected}, {"heard", std::move(heard)},
+      {"receiving", transfers(link.receiving)}, {"sending", transfers(link.sending)}};
+}
+
 Json coordination_json(const matter::coordination::CoordinationStatus &status) {
   Json matters = Json::array();
   for (const matter::coordination::LinkedMatter &link : status.matters) {
@@ -878,28 +961,20 @@ Json coordination_json(const matter::coordination::CoordinationStatus &status) {
       offering.push_back(Json{{"deviceId", computer.device_id}, {"code", computer.code}, {"files", computer.files},
           {"bytes", computer.bytes}});
     }
-    // What of the Matter is on its way (D-207): coming here from each computer,
-    // and going to each, with how much has come.
-    const auto transfers = [](const std::vector<matter::coordination::Transfer> &list) {
-      Json found = Json::array();
-      for (const matter::coordination::Transfer &transfer : list) {
-        found.push_back(Json{{"deviceId", transfer.device_id}, {"files", transfer.files}, {"filesHere", transfer.files_here},
-            {"bytes", transfer.bytes}, {"bytesHere", transfer.bytes_here}, {"reachable", transfer.reachable}});
-      }
-      return found;
-    };
-    // Whether it travels (D-137): the computers with a live encrypted session
-    // now, and when something sealed last came from each other computer.
-    Json heard = Json::array();
-    for (const auto &[device, at] : link.heard) heard.push_back(Json{{"deviceId", device}, {"at", at}});
-    matters.push_back(Json{{"matterId", link.matter_id}, {"name", link.name}, {"folder", link.folder.u8string()},
-        {"state", link.state == "carried" ? "carried" : "waiting"}, {"lastSyncAt", link.last_sync_at},
-        {"lastError", link.last_error}, {"asking", std::move(asking)}, {"offering", std::move(offering)},
-        {"connected", link.connected}, {"heard", std::move(heard)}, {"receiving", transfers(link.receiving)},
-        {"sending", transfers(link.sending)}});
+    Json matter = travel_json(link);
+    matter["matterId"] = link.matter_id;
+    matter["name"] = link.name;
+    matter["folder"] = link.folder.u8string();
+    matter["asking"] = std::move(asking);
+    matter["offering"] = std::move(offering);
+    matters.push_back(std::move(matter));
   }
+  // The firm's own record (D-203), apart from the Matters: whether it was heard
+  // from another of the firm's computers, so a computer waiting for its firm
+  // can say what has come. Null while this computer holds none.
   return Json{{"firmFolder", status.firm_folder.u8string()}, {"transports", status.transports},
-      {"deviceCode", status.device_code}, {"matters", std::move(matters)}};
+      {"deviceCode", status.device_code}, {"matters", std::move(matters)},
+      {"firm", status.firm.has_value() ? travel_json(*status.firm) : Json(nullptr)}};
 }
 
 std::optional<matters::Matter> loadedMatter(const std::string &id) {

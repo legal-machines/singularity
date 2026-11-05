@@ -45,6 +45,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <exception>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -60,6 +61,17 @@ namespace {
 
 using Json = nlohmann::json;
 namespace intelligence = document_intelligence;
+
+// At most `most` bytes, cut where a letter begins, then "...". Cut at a byte,
+// a Russian letter - two bytes - was split, and the request with it could not
+// be sent to the model at all (2026-11-05, Pasha in Magomed's chat: "The model
+// could not be asked: [json.exception.type_error.316] invalid UTF-8 byte").
+std::string cutWhole(const std::string& text, std::size_t most) {
+	if (text.size() <= most) return text;
+	std::size_t at = most;
+	while (at > 0 && (static_cast<unsigned char>(text[at]) & 0xC0) == 0x80) --at;
+	return text.substr(0, at) + "...";
+}
 
 // What a part reads of its own document and of the documents it rests on.
 constexpr std::size_t kMostPartCharacters = 60000;
@@ -222,7 +234,7 @@ std::string threadText(const matters::Matter& matter, const std::string& chatId,
 		else continue;
 		words = trimmed(words);
 		if (words.empty() == true) continue;
-		if (words.size() > 700) words = words.substr(0, 700) + "...";
+		words = cutWhole(words, 700);
 		std::string who = task.author_name.empty() == true ? std::string("Someone") : task.author_name;
 		const std::string authorId = task.author_actor_id.empty() == false ? task.author_actor_id
 			: task.operation_type == "agent_message" ? task.agent_id : std::string();
@@ -1141,6 +1153,7 @@ PartResult workOnWorkbook(const ReviewRunInput& input, const matters::Matter& ma
 
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -1488,6 +1501,7 @@ PartResult workOnPresentation(const ReviewRunInput& input, const matters::Matter
 
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -1796,6 +1810,7 @@ PartResult workOnText(const ReviewRunInput& input, const matters::Matter& matter
 		+ "Answer with one JSON object and nothing else.\n";
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -1996,6 +2011,7 @@ PartResult workOnPdf(const ReviewRunInput& input, const matters::Matter& matter,
 			"comment.\n" + std::string(kDecisionsWords) + "Answer with one JSON object and nothing else.\n";
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -2533,6 +2549,7 @@ EmailResult draftEmail(const ReviewRunInput& input, const matters::Matter& matte
 		"Answer with one JSON object and nothing else.\n";
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -4359,29 +4376,36 @@ Json runLoopCall(const ReviewRunInput& input, LoopState& state, const Json& call
 			if (done.draftId.empty() == false) partInput.assignmentDraftIds.push_back(done.draftId);
 		}
 		PartResult part;
+		// A part that stopped on an exception is put right once its catch has
+		// ended, then the exception goes on. With MSVC a catch block still stands
+		// on every frame of the call that threw until it ends, so reading the
+		// Matter there, as abandonPasses does, overflowed the 1 MB stack of a
+		// Windows thread when a credential could not be read (document_review
+		// V14b); macOS and Linux unwind before their catch blocks run.
+		std::exception_ptr stopped;
+		bool isLocked = false;
 		try {
 			part = workOnPart(partInput, matter, step);
 		} catch (const platform::CredentialUnavailable&) {
-			// The Mac is locked (D-169): no pass was made. The step reads as it did -
-			// one this call added is let go, and is added again when the work is
-			// taken up - and the work holds; nothing reads as failed.
-			abandonPasses(partInput, sourceId);
-			keep([&](AssignmentRecord& record) {
-				if (at >= record.steps.size()) return;
-				if (before.has_value() == true) record.steps[at] = *before;
-				else record.steps.erase(record.steps.begin() + static_cast<std::ptrdiff_t>(at));
-			});
-			throw;
+			isLocked = true;
+			stopped = std::current_exception();
 		} catch (...) {
-			// No version left running, and no draft taken away: the earlier
-			// version waits again, and the step reads as it did.
+			stopped = std::current_exception();
+		}
+		if (stopped != nullptr) {
 			abandonPasses(partInput, sourceId);
 			keep([&](AssignmentRecord& record) {
 				if (at >= record.steps.size()) return;
 				if (before.has_value() == true) record.steps[at] = *before;
+				// The Mac is locked (D-169): no pass was made. A step this call added
+				// is let go, and is added again when the work is taken up - and the
+				// work holds; nothing reads as failed.
+				else if (isLocked == true) record.steps.erase(record.steps.begin() + static_cast<std::ptrdiff_t>(at));
+				// No version left running, and no draft taken away: the earlier
+				// version waits again, and the step reads as it did.
 				else record.steps[at].status = "failed";
 			});
-			throw;
+			std::rethrow_exception(stopped);
 		}
 		part.label = state.kept.steps[at].label;
 		state.spent += part.costMicros;
@@ -5275,6 +5299,7 @@ ColleagueWorkOutcome runAssignmentLoop(const ReviewRunInput& input, const matter
 
 	ColleagueCall call;
 	call.matterId = input.matterId;
+	call.chatId = input.chatId;
 	call.agentId = input.agentId;
 	call.givenByActorId = input.givenByActorId;
 	call.givenByName = input.givenByName;
@@ -5591,13 +5616,18 @@ constexpr std::uint64_t kTalkAllowance = 6000;
 constexpr std::size_t kTalkMostDocumentCharacters = 400000;
 
 // What a message carries besides its words, as its thread shows it (the work's
-// own record of a thread writes the same): the files it hands over, and the
-// place in a document it is about (chat::place_words). Empty for neither.
-std::string carriedWords(const matters::Matter& matter, const matters::MatterTask& task) {
+// own record of a thread writes the same): the files it hands over, each with
+// its `notes` where it has one (a picture's: talkPictures), and the place in a
+// document it is about (chat::place_words). Empty for neither.
+std::string carriedWords(const matters::Matter& matter, const matters::MatterTask& task,
+		const std::map<std::string, std::string>& notes = {}) {
 	std::vector<std::string> names;
 	for (const std::string& id : task.attachment_document_ids) {
 		for (const matters::MatterDocument& document : matter.documents) {
-			if (document.id == id) names.push_back("“" + matters::placed_name(document) + "”");
+			if (document.id != id) continue;
+			const auto note = notes.find(id);
+			names.push_back("“" + matters::placed_name(document) + "”"
+				+ (note == notes.end() ? std::string() : " (" + note->second + ")"));
 		}
 	}
 	// Said as a fact, never as the work: a letter's own files come with the
@@ -5692,11 +5722,127 @@ std::vector<talk::TalkLine> talkConversation(const ReviewRunInput& input, const 
 		}
 		line.carries = carriedWords(matter, task);
 		line.placeDocumentId = task.place.document_id;
-		if (trimmed(line.text).empty() == false) lines.push_back(std::move(line));
+		// A message of files alone - a picture with nothing said - is one too.
+		if (trimmed(line.text).empty() == false || task.attachment_document_ids.empty() == false) lines.push_back(std::move(line));
 		else if (lines.empty() == true) ++dropped;
 	}
 	if (firstNumber != nullptr) *firstNumber = dropped + 1;
 	return lines;
+}
+
+// The most pictures one talk carries to its model, and their most bytes
+// together: within what every provider takes in one request (Anthropic's is
+// 32 MB, and base64 makes a picture a third larger).
+constexpr std::size_t kTalkMostPictures = 8;
+constexpr std::size_t kTalkMostPictureBytes = 16 * 1024 * 1024;
+
+bool isPictureFile(const std::string& name) {
+	static const std::set<std::string> kinds{".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif", ".tif", ".tiff", ".bmp"};
+	return kinds.count(extensionOf(name)) != 0;
+}
+
+// The pictures members attached to the messages a talk sends its model, given
+// to it as they are, as image inputs (D-256): a member's Send, with the
+// attachment's note in view, is their consent, protection on or off. A
+// colleague's own attachments are not among them. The newest come first while
+// they fit (kTalkMostPictures, kTalkMostPictureBytes). Each message that
+// attaches a picture says which picture it is, in the order the model sees
+// them - or why the colleague cannot see it: its model reads no pictures, the
+// picture is not on this computer or cannot be opened here, or more came than
+// one request carries - so the colleague says so plainly, never as if it saw it.
+std::shared_ptr<const std::vector<providers::InputPicture>> talkPictures(const ReviewRunInput& input,
+		const matters::Matter& matter, std::vector<talk::TalkLine>& conversation) {
+	const std::size_t first = talk::talkWindowStart(talk::firstNewLine(conversation));
+	std::map<std::string, const matters::MatterTask*> tasks;
+	for (const matters::MatterTask& task : matter.tasks) tasks[task.id] = &task;
+	// The members' messages in the window that attach a picture, newest first.
+	std::vector<std::size_t> attaching;
+	for (std::size_t index = conversation.size(); index > first; --index) {
+		const talk::TalkLine& line = conversation[index - 1];
+		const auto task = tasks.find(line.id);
+		if (line.isOwn == true || task == tasks.end() || task->second->operation_type != "member_message") continue;
+		for (const std::string& id : task->second->attachment_document_ids) {
+			const matters::MatterDocument* document = documentById(matter, id);
+			if (document != nullptr && isPictureFile(matters::placed_name(*document)) == true) {
+				attaching.push_back(index - 1);
+				break;
+			}
+		}
+	}
+	if (attaching.empty() == true) return nullptr;
+	bool seesPictures = true;
+	try {
+		seesPictures = routing::model_capability(modelFor(input.matterId, input.isLocalOnly, input.agentId)).takes_pictures.value_or(true);
+	} catch (const std::exception&) {
+	}
+	// Each picture's bytes or why it is not sent, newest first.
+	struct Prepared {
+		std::string documentId;
+		std::size_t line = 0;
+		std::optional<documents::ModelPicture> picture;
+		std::string why;
+	};
+	std::vector<Prepared> prepared;
+	std::set<std::string> seen;
+	std::size_t carried = 0;
+	std::size_t carriedBytes = 0;
+	for (const std::size_t index : attaching) {
+		const matters::MatterTask& task = *tasks.at(conversation[index].id);
+		for (const std::string& id : task.attachment_document_ids) {
+			const matters::MatterDocument* document = documentById(matter, id);
+			if (document == nullptr || isPictureFile(matters::placed_name(*document)) == false) continue;
+			Prepared entry;
+			entry.documentId = id;
+			entry.line = index;
+			const std::filesystem::path path = pathOf(matter, *document);
+			if (seesPictures == false) {
+				entry.why = "a picture you cannot see: your model reads no pictures, and one that does is chosen on your page";
+			} else if (path.empty() == true) {
+				entry.why = "a picture that is not on this computer";
+			} else if (carried >= kTalkMostPictures) {
+				entry.why = "a picture not sent to you: more came than one request carries";
+			} else {
+				entry.picture = documents::picture_for_model(path);
+				if (entry.picture.has_value() == false) entry.why = "a picture that could not be opened here";
+				else if (carriedBytes + entry.picture->bytes.size() > kTalkMostPictureBytes) {
+					entry.picture.reset();
+					entry.why = "a picture not sent to you: more came than one request carries";
+				} else if (seen.insert(platform::sha256_hex_digest(entry.picture->bytes)).second == false) {
+					entry.picture.reset();
+					entry.why = "the same picture as one you see";
+				} else {
+					++carried;
+					carriedBytes += entry.picture->bytes.size();
+				}
+			}
+			prepared.push_back(std::move(entry));
+		}
+	}
+	// Numbered in the order the model sees them: the conversation's own.
+	std::stable_sort(prepared.begin(), prepared.end(), [](const Prepared& one, const Prepared& other) { return one.line < other.line; });
+	auto pictures = std::make_shared<std::vector<providers::InputPicture>>();
+	std::map<std::size_t, std::map<std::string, std::string>> notes;
+	for (Prepared& entry : prepared) {
+		if (entry.picture.has_value() == true) {
+			const matters::MatterDocument* document = documentById(matter, entry.documentId);
+			providers::InputPicture picture;
+			picture.name = document != nullptr ? matters::placed_name(*document) : std::string();
+			picture.media_type = entry.picture->media_type;
+			picture.sha256 = platform::sha256_hex_digest(entry.picture->bytes);
+			picture.bytes = entry.picture->bytes.size();
+			picture.base64 = providers::base64_of(entry.picture->bytes);
+			pictures->push_back(std::move(picture));
+			notes[entry.line][entry.documentId] = "picture " + std::to_string(pictures->size()) + " of those you see";
+		} else {
+			notes[entry.line][entry.documentId] = entry.why;
+		}
+	}
+	for (const auto& [index, lineNotes] : notes) {
+		const matters::MatterTask& task = *tasks.at(conversation[index].id);
+		conversation[index].carries = carriedWords(matter, task, lineNotes);
+	}
+	if (pictures->empty() == true) return nullptr;
+	return pictures;
 }
 
 // Who the colleague is, as its brief says it (Agent/ColleagueBrief's <role>
@@ -6178,7 +6324,7 @@ talk::ToolAnswer talkFind(TalkPlace& place, const std::string& words) {
 	if (said.size() > 3) said.resize(3);
 	for (const auto& [score, task] : said) {
 		std::string text = trimmed(task->operation_type == "member_message" ? task->prompt : task->response_text.value_or(std::string()));
-		if (text.size() > 400) text = text.substr(0, 400) + "...";
+		text = cutWhole(text, 400);
 		answer.text += "- In the thread \"" + titles[*task->chat_id] + "\", " + (task->author_name.empty() == true ? std::string("someone")
 			: task->author_name) + ", " + task->created_at.substr(0, 10) + ": " + text + "\n";
 	}
@@ -6212,7 +6358,7 @@ talk::ToolAnswer talkThreads(TalkPlace& place) {
 	std::string text = "The latest in the threads of \"" + place.matter.name + "\", oldest first:\n";
 	for (const matters::MatterTask* task : said) {
 		std::string words = trimmed(task->operation_type == "member_message" ? task->prompt : task->response_text.value_or(std::string()));
-		if (words.size() > 400) words = words.substr(0, 400) + "...";
+		words = cutWhole(words, 400);
 		text += "- In \"" + titles[*task->chat_id] + "\", " + (task->author_name.empty() == true ? std::string("someone")
 			: task->author_name) + ", " + task->created_at.substr(0, 16) + ": " + words + "\n";
 	}
@@ -6267,17 +6413,21 @@ talk::ToolAnswer talkAbilities(const std::string& need) {
 // provider keeps what every talk shares (the brief, the rules, the tools) for
 // an hour, the conversation up to its latest message for an hour, and what
 // this message looked up for five minutes.
-talk::TalkModel talkModel(const ReviewRunInput& input) {
+talk::TalkModel talkModel(const ReviewRunInput& input,
+		std::shared_ptr<const std::vector<providers::InputPicture>> pictures = nullptr) {
 	// One protection table for every call of the talk: a call of its own
 	// numbered the names afresh as each look-up added people, and the colleague
 	// read itself as [[Person2]], then [[Person3]], then [[Person6]] in one
 	// answer, while the provider cached none of it (2026-10-26).
 	const auto symbols = std::make_shared<protected_api::papinian::OperationProtectedSymbolTable>();
-	return [&input, symbols](const talk::TalkCall& talked) {
+	return [&input, symbols, pictures](const talk::TalkCall& talked) {
 		const int round = talked.round;
 		ColleagueCall call;
 		call.symbols = symbols;
+		// The pictures members attached, seen in every round (D-256).
+		call.pictures = pictures;
 		call.matterId = input.matterId;
+		call.chatId = input.chatId;
 		call.agentId = input.agentId;
 		call.givenByActorId = input.givenByActorId;
 		call.givenByName = input.givenByName;
@@ -6446,6 +6596,9 @@ talk::TalkOutcome talkOver(const ReviewRunInput& input, const matters::Matter& m
 		if (chat.id == input.chatId) said.threadTitle = chat.title;
 	}
 	said.conversation = talkConversation(input, matter, &said.firstNumber);
+	// The pictures members attached, as the colleague's model sees them (D-256).
+	std::shared_ptr<const std::vector<providers::InputPicture>> pictures;
+	if (talkReadDenied(place).has_value() == false) pictures = talkPictures(input, matter, said.conversation);
 	// Its notes are used here, and gathered by a model of their own once it has
 	// answered (D-206): the answer itself keeps none.
 	said.asksMemory = false;
@@ -6659,7 +6812,7 @@ talk::TalkOutcome talkOver(const ReviewRunInput& input, const matters::Matter& m
 		} catch (const std::exception&) {
 		}
 	};
-	talk::TalkOutcome talked = talk::runTalk(said, sources, talkModel(input));
+	talk::TalkOutcome talked = talk::runTalk(said, sources, talkModel(input, pictures));
 	talked.startedMessageId = startedMessageId;
 	// What it says names a document by its name: a handle is its tools' word.
 	std::map<std::string, std::string> names;
@@ -6770,6 +6923,7 @@ long long gatherMemory(const ReviewRunInput& input, const matters::Matter& matte
 		const talk::MemoryCall made = talk::memoryCall(ask);
 		ColleagueCall call;
 		call.matterId = input.matterId;
+		call.chatId = input.chatId;
 		call.agentId = input.agentId;
 		call.givenByActorId = input.givenByActorId;
 		call.givenByName = input.givenByName;
@@ -7021,6 +7175,7 @@ ColleagueWorkOutcome runColleagueWork(const ReviewRunInput& given) {
 			outcome.status = talked.status == "said" ? std::string("answered") : std::string("failed");
 			outcome.reason = talked.status == "said" ? std::string() : talked.failure;
 			outcome.excerpt = words.substr(0, words.find('\n'));
+			outcome.isFailureSaid = talked.status != "said" && input.isOwnRun == false;
 			return withCost(outcome, talkMicros);
 		}
 		// The work taken on: what the colleague said as it took it on stands in the
@@ -7137,6 +7292,7 @@ ColleagueWorkOutcome runColleagueWork(const ReviewRunInput& given) {
 	} catch (const std::exception&) {
 	}
 	answered.excerpt = words.substr(0, words.find('\n'));
+	answered.isFailureSaid = talked.status == "failed";
 	return withCost(answered, loopMicros + talked.costMicros + gatherMemory(input, matter, remembering, talked));
 
 }

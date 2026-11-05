@@ -2,6 +2,7 @@
 #include "Platform/Types/WindowLayout.hpp"
 #include "Bridge/NativeBridge/NativeBridge.hpp"
 #include "Bridge/NativeBridge/NativeError.hpp"
+#include "Node/AppUpdate/AppUpdate.hpp"
 #include "Office/OfficeService/OfficeService.hpp"
 #include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
 #include "Platform/AppPaths/AppPaths.hpp"
@@ -89,7 +90,9 @@ constexpr std::chrono::seconds kClosingPatience{5};
 // kClosingPatience at most, and the process then ends without static
 // destructors: a thread still finishing - a local generation, a document being
 // read - never finds its objects destroyed. The local runtime ends with this
-// process (Platform/ChildProcess). A second caller waits here until the first ends it.
+// process (Platform/ChildProcess). A version of Singularity readied to install
+// is handed over last, once the work has stopped (Node/AppUpdate, D-261). A
+// second caller waits here until the first ends it.
 [[noreturn]] void end_application(singularity::bridge::NativeBridge &bridge) {
   static std::once_flag once;
   std::call_once(once, [&bridge] {
@@ -102,6 +105,7 @@ constexpr std::chrono::seconds kClosingPatience{5};
       finished->set_value();
     }).detach();
     (void)shutDown.wait_for(kClosingPatience);
+    singularity::node::update::finish_on_exit();
     std::cout.flush();
     std::cerr.flush();
     std::fflush(nullptr);

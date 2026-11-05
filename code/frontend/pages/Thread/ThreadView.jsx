@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isEmulation } from "../../emulation/emulation.js";
 
 import { Avatar } from "../../components/Avatar/Avatar.jsx";
 import { Reactions } from "../../components/Reactions/Reactions.jsx";
 import { Button } from "../../components/Button/Button.jsx";
 import { ComposerAction, ComposerBox } from "../../components/Composer/ComposerBox.jsx";
+import { formatField, formatMarkOf, isMacKeyboard } from "../../components/Composer/formatting.js";
 import { Dialog } from "../../components/Dialog/Dialog.jsx";
 import { TextArea } from "../../components/Field/Field.jsx";
 import { Icon } from "../../components/Icon/Icon.jsx";
@@ -17,13 +18,15 @@ import { Menu, useMenu } from "../../components/Menu/Menu.jsx";
 import { useNavigation } from "../../components/Navigation/navigation.js";
 import { Popover } from "../../components/Popover/Popover.jsx";
 import { Answers as AskAnswers, Result } from "../../components/Result/Result.jsx";
-import { AddButton, DraftTray, useResultDraft } from "../../components/Result/ResultDraft.jsx";
+import { AddButton, DraftTray, sizeOf, useResultDraft } from "../../components/Result/ResultDraft.jsx";
+import { DropOverlay } from "../../components/FileDrop/DropOverlay.jsx";
+import { useWindowFileDrop } from "../../components/FileDrop/windowDrop.js";
 import { Faces } from "../../components/Faces/Faces.jsx";
 import { PersonButton } from "../../components/PersonCard/PersonCard.jsx";
 import { AssignmentBlock, AssignmentDetails, DecisionList, PostReview, RealFiles, resultDocumentIdsOf } from "../../components/Review/Review.jsx";
 import { ProjectBand } from "../../components/ProjectMark/ProjectMark.jsx";
 import { toast } from "../../components/Toast/toast.js";
-import { addDocumentFromComputer, protectionProjectOfChat, assignmentOfPost, closeRealThread, colleaguesTypingIn, confirmMemberComputer, decisionsOfPost, decideReview, decideWritten, deleteRealPostWithUndo, editRealPost, postToThread, reactToRealPost, realDocuments, reopenRealThread, showPlace, unconfirmedComputersOf, watchRealChat } from "../../data/native.js";
+import { addDocumentFromComputer, addDroppedToMatter, protectionProjectOfChat, assignmentOfPost, closeRealThread, colleaguesTypingIn, confirmMemberComputer, decisionsOfPost, decideReview, decideWritten, deleteRealPostWithUndo, editRealPost, postToThread, reactToRealPost, realDocuments, reopenRealThread, showPlace, unconfirmedComputersOf, watchRealChat } from "../../data/native.js";
 import { decisions, viewerId, workProducts } from "../../data/workspace.js";
 import { findThread, isThreadClosed, threadEvents } from "../threadState.js";
 import { findMatter, findMember, firstName, formatMoment } from "../words.js";
@@ -83,6 +86,39 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 		}),
 	};
 
+	// A long thread draws its latest messages first and the earlier ones as the
+	// reader scrolls up to them, a batch at a time, the words in view staying put:
+	// a due diligence of six colleagues drew several hundred messages, with their
+	// files and faces, at once, and the thread took long to open (2026-11-03).
+	const shownAtFirst = 40;
+	const shownMore = 40;
+	const [shown, setShown] = useState({ threadId, base: null, batches: 0 });
+	const window_ = shown.threadId == threadId ? shown : { threadId, base: null, batches: 0 };
+	const base = window_.base ?? (events.length > 0 ? events.length : null);
+	if (shown.threadId != threadId || (shown.base == null && base != null)) setShown({ threadId, base, batches: window_.batches });
+	const shownFrom = base == null ? 0 : Math.max(0, base - shownAtFirst - window_.batches * shownMore);
+	const shownEvents = events.slice(shownFrom);
+	const earlierRef = useRef(null);
+	const heightBefore = useRef(null);
+	useEffect(() => {
+		const marker = earlierRef.current;
+		const scroller = scrollRef.current;
+		if (marker == null || scroller == null || typeof IntersectionObserver != "function") return undefined;
+		const observer = new IntersectionObserver(entries => {
+			if (entries.some(entry => entry.isIntersecting) == false) return;
+			heightBefore.current = scroller.scrollHeight;
+			setShown(current => ({ ...current, batches: current.batches + 1 }));
+		}, { root: scroller, rootMargin: "600px 0px 0px 0px" });
+		observer.observe(marker);
+		return () => observer.disconnect();
+	}, [threadId, shownFrom]);
+	useLayoutEffect(() => {
+		const scroller = scrollRef.current;
+		if (scroller == null || heightBefore.current == null) return;
+		scroller.scrollTop += scroller.scrollHeight - heightBefore.current;
+		heightBefore.current = null;
+	}, [shownFrom]);
+
 	// The open thread is what the window reads first when the Matter changes.
 	const openChatId = isReal == true ? thread.real?.chatId ?? null : null;
 	useEffect(() => {
@@ -129,6 +165,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	// end so the last message scrolls clear of it; a reader at the end stays
 	// there as the box grows.
 	const viewRef = useRef(null);
+	const [isDropping, setDropping] = useState(false);
 	const [replyRoom, setReplyRoom] = useState(0);
 	useEffect(() => {
 		const reply = viewRef.current?.querySelector("[data-reply-box]");
@@ -146,7 +183,8 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	}, [replyRoom]);
 
 	return (
-		<div ref={viewRef} className={styles.view} style={{ "--reply-room": `${replyRoom}px` }} data-demonstration={isEmulation || undefined}>
+		<div ref={viewRef} className={styles.view} style={{ "--reply-room": `${replyRoom}px` }} data-demonstration={isEmulation || undefined}
+			data-file-drop={isReal == true && !isEmulation ? "" : undefined}>
 			{/* No fade at its top or foot, as a personal chat has none (the owner,
 			    2026-11-02: "remove these clouds at the top and bottom in threads,
 			    as it is done in DMs"). */}
@@ -160,15 +198,19 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 						</div>
 					</header> : null}
 					<ol className={styles.posts}>
-						{events.map((event, index) => (
-							<Event key={event.id} event={event} previous={events[index - 1]} thread={thread} state={state} onDecide={onDecide} actions={actions} />
+						{shownFrom > 0 ? <li ref={earlierRef} className={styles.earlier} aria-hidden="true" /> : null}
+						{shownEvents.map((event, index) => (
+							<Event key={event.id} event={event} previous={events[shownFrom + index - 1]} thread={thread} state={state} onDecide={onDecide} actions={actions} />
 						))}
 					</ol>
 					<HoldingPosts memberIds={isReal == true ? colleaguesTypingIn(thread.real?.chatId) : state.typing?.[thread.id] ?? []} thread={thread} />
 				</article>
 			</div>
+			{isDropping ? <DropOverlay words="Drop to attach to your reply" /> : null}
 			{!isEmulation ? <Composer
 				key={threadId}
+				dropTarget={viewRef}
+				onDropping={setDropping}
 				isClosed={isClosed}
 				isReal={isReal}
 				isEmpty={events.length == 0}
@@ -618,7 +660,7 @@ function PlaceQuote({ place }) {
 }
 
 // The member's own message, edited where it stands: Ctrl+Enter saves it,
-// Escape leaves it as it was.
+// Escape leaves it as it was, and the reply box's formatting keys format it.
 function PostEditor({ initial, onSave, onCancel }) {
 	const [value, setValue] = useState(initial);
 	return (
@@ -632,6 +674,12 @@ function PostEditor({ initial, onSave, onCancel }) {
 				value={value}
 				onChange={change => setValue(change.target.value)}
 				onKeyDown={key => {
+					const mark = formatMarkOf(key, isMacKeyboard());
+					if (mark != null) {
+						key.preventDefault();
+						formatField(key.currentTarget, mark, setValue);
+						return;
+					}
 					if (key.key == "Escape") {
 						key.preventDefault();
 						onCancel();
@@ -675,7 +723,11 @@ function Answers({ thread, decisionId, decision, choice, quote, onDecide }) {
 // a new line (the owner, 2026-11-02).
 // Closing the thread is a mode of its own: what is written becomes the
 // conclusion, and the send closes the thread.
-function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, chatId, quote, onClearQuote, onSend, onClose, returning, onStopReturning, onReturn }) {
+// Files dragged onto the thread go into the Matter's documents and with the
+// reply (the owner, 2026-11-04: drag and drop must work reliably).
+const MOST_DROPPED_ATTACHED = 20;
+
+function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, chatId, quote, onClearQuote, onSend, onClose, returning, onStopReturning, onReturn, dropTarget, onDropping }) {
 	// Read as an AI provider receives it: the draft too, as it would go out,
 	// before it is sent (D-233).
 	const isProviderView = useProviderView(chatId);
@@ -685,6 +737,19 @@ function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, ch
 	const [isClosing, setClosing] = useState(false);
 	const [isSending, setSending] = useState(false);
 	const isReturning = returning != null;
+	useWindowFileDrop(dropTarget, isReal == true && isReturning == false, onDropping, async dropped => {
+		try {
+			const { added, problems } = await addDroppedToMatter("", dropped);
+			for (const document of added.slice(0, MOST_DROPPED_ATTACHED)) {
+				handIn.addFile({ name: document.displayName ?? document.name, documentId: document.id, size: document.sizeBytes ? sizeOf(document.sizeBytes) : undefined });
+			}
+			if (added.length > MOST_DROPPED_ATTACHED) toast(`${added.length} documents are in the Matter. The first ${MOST_DROPPED_ATTACHED} go with your reply.`);
+			if (problems.length > 0) toast(problems.length == 1 ? problems[0] : `${problems.length} could not be added. ${problems[0]}`, { tone: "seal" });
+			fieldRef.current?.focus();
+		} catch (error) {
+			toast(error?.message ?? "The files could not be added. Try again.", { tone: "seal" });
+		}
+	});
 
 	// Replying to a message, or returning a version, takes the member to the
 	// reply box.

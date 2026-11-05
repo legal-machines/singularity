@@ -11,9 +11,72 @@ import { lastEvent } from "../../pages/threadState.js";
 // the member here included.
 export const RECENT_MOST = 3;
 
+// Recent cleared, or one conversation taken out of it, without touching the
+// conversations themselves (the owner, 2026-11-04: "a way to remove the
+// Recent list without deleting the chats"): what stood in it then leaves it,
+// and a conversation comes back only once something new happens in it. Kept on
+// this computer, as the Matters' order is (Matters.jsx).
+const CLEARED_KEY = "singularity.recent.cleared";
+const CHANGED = "singularity:recent-changed";
+
+// What this window cleared, when the computer cannot keep it.
+let clearedHere = null;
+
+function readable(kept) {
+	if (kept == null || typeof kept != "object") return { clearedAt: "", removed: {} };
+	return { clearedAt: typeof kept.clearedAt == "string" ? kept.clearedAt : "", removed: kept.removed != null && typeof kept.removed == "object" ? kept.removed : {} };
+}
+
+export function recentCleared() {
+	try {
+		const text = window.localStorage.getItem(CLEARED_KEY);
+		return readable(text == null ? null : JSON.parse(text));
+	} catch {
+		// The computer keeps nothing for the window: what it cleared stands.
+		return readable(clearedHere);
+	}
+}
+
+function keepCleared(cleared) {
+	clearedHere = cleared;
+	try {
+		window.localStorage.setItem(CLEARED_KEY, JSON.stringify(cleared));
+	} catch {
+		// Not kept: Recent still clears in this window.
+	}
+	window.dispatchEvent(new Event(CHANGED));
+}
+
+// Clears Recent as it stands now; returns how to put it back.
+export function clearRecent(now = new Date().toISOString()) {
+	const before = recentCleared();
+	keepCleared({ clearedAt: now, removed: {} });
+	return () => keepCleared(before);
+}
+
+// Takes one conversation out of Recent; returns how to put it back.
+export function removeFromRecent(key, now = new Date().toISOString()) {
+	const before = recentCleared();
+	keepCleared({ ...before, removed: { ...before.removed, [key]: now } });
+	return () => keepCleared(before);
+}
+
+export function onRecentCleared(listener) {
+	window.addEventListener(CHANGED, listener);
+	return () => window.removeEventListener(CHANGED, listener);
+}
+
+// Whether an entry still stands in Recent: something happened in it since
+// Recent was cleared, or since it was taken out.
+export function standsAfterClearing(entry, cleared) {
+	if (cleared.clearedAt != "" && entry.standsAt <= cleared.clearedAt) return false;
+	const removedAt = cleared.removed[entry.key];
+	return removedAt == null || entry.standsAt > removedAt;
+}
+
 // `opened`: when the member opened each conversation in this window, by its
 // address ("#messages/<member>", "#thread/<thread>").
-export function recentConversations(state, opened = {}) {
+export function recentConversations(state, opened = {}, cleared = recentCleared()) {
 	const found = new Map();
 	for (const conversation of conversationsFor(state)) {
 		if (conversation.kind != "member") continue;
@@ -31,7 +94,7 @@ export function recentConversations(state, opened = {}) {
 	}
 	return [...found.values()]
 		.map(entry => ({ ...entry, standsAt: [entry.at ?? "", opened[entry.key] ?? ""].sort().at(-1) }))
-		.filter(entry => entry.standsAt != "")
+		.filter(entry => entry.standsAt != "" && standsAfterClearing(entry, cleared))
 		.sort((first, second) => second.standsAt.localeCompare(first.standsAt))
 		.slice(0, RECENT_MOST);
 }

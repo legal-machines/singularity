@@ -866,6 +866,7 @@ std::optional<std::size_t> estimate_model_context_window_tokens(
 ModelCapability model_capability(const ModelTarget &target) {
 	ModelCapability capability;
 	if (target.provider_id == "local") {
+		capability.takes_pictures = false;
 		const std::optional<std::size_t> window = live_local_model_context_window_tokens(target.model_id);
 		if (window.has_value() && *window > 0) {
 			capability.context_window_tokens = static_cast<std::uint64_t>(*window);
@@ -882,6 +883,7 @@ ModelCapability model_capability(const ModelTarget &target) {
 	const auto model = std::find_if(provider->models.begin(), provider->models.end(),
 		[&](const providers::ModelDescriptor &candidate) { return candidate.id == target.model_id; });
 	if (model == provider->models.end()) return capability;
+	capability.takes_pictures = providers::takes_pictures(target.provider_id, *model);
 	capability.context_window_tokens = model->context_window_tokens;
 	capability.max_output_tokens = model->max_output_tokens;
 	capability.input_price_per_token = model->input_price_per_token;
@@ -922,6 +924,8 @@ InferenceResult execute(const InferenceRequest &request) {
   if (trim(request.prompt).empty()) {
     throw std::runtime_error("Enter a prompt to run.");
   }
+	// Every model call this request makes carries the member's pictures (D-256).
+	const providers::InputPicturesScope pictured(request.pictures);
 	if (request.research_mode == research::ResearchMode::Contradictory) {
 		throw std::runtime_error(
 			"This request both requires current web research and asks Singularity not to use the internet. Clarify which you want.");

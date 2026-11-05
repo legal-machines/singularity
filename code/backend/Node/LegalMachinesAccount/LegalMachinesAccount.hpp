@@ -99,6 +99,10 @@ enum class AccountFailureKind {
 	// The seat has no authenticator app yet, and its session opens nothing but
 	// setting one up: set up two-step sign-in, then the same call works.
 	TwoStepSetupRequired,
+	// The administrator's password reset (D-215) took the email's code, and
+	// the seat signs in with two steps: the same reset goes on with the code
+	// its authenticator app shows, or a recovery code. Nothing was used up.
+	TwoStepCodeRequired,
 };
 
 // A sign-in the service did not accept, or could not be asked. Its message is
@@ -130,6 +134,7 @@ public:
 			case AccountFailureKind::AlreadyRegistered: return "account.already_registered";
 			case AccountFailureKind::SetupExpired: return "account.setup_expired";
 			case AccountFailureKind::TwoStepSetupRequired: return "account.two_step_setup_required";
+			case AccountFailureKind::TwoStepCodeRequired: return "account.two_step_code_required";
 		}
 		return "account.refused";
 	}
@@ -225,8 +230,20 @@ struct OwnSeat {
 	// How many recovery codes are left unused (D-218); none where the service
 	// does not say.
 	std::optional<int> recovery_codes_left;
+	// Its firm is one of Legal Machines' design partners (D-257), a mark
+	// Legal Machines alone sets: the seat may report problems and share work
+	// logs. False where the service does not say.
+	bool is_design_partner = false;
+	// The version of the Diagnostics Consent this seat accepted (D-257), or
+	// none: a design partner's seat sends nothing to Legal Machines before it.
+	std::optional<std::string> diagnostics_consent;
 };
 OwnSeat own_seat(const AccountPoster &session_post);
+// The seat accepts this version of the Diagnostics Consent (D-257; the owner,
+// 2026-11-05: "before sending, on each seat, a checkbox: a separate consent to
+// sending this data"): Legal Machines keeps it on the seat with when. Throws
+// where it is not kept, so that nothing is sent without it.
+void accept_diagnostics_consent(const AccountPoster &session_post, const std::string &version);
 struct OwnTwoFactorKey {
 	std::string secret;
 	std::string uri;
@@ -256,7 +273,9 @@ std::vector<std::string> renew_own_recovery_codes(const AccountPoster &session_p
 // {base}/organisations/recover {email}); reset_password takes that code, with
 // two-step on also a code the authenticator shows or a recovery code, and the
 // new password, which signs every computer of the seat out (POST
-// {base}/organisations/reset-password).
+// {base}/organisations/reset-password). Sent with no two-step code, a reset
+// whose email code is right fails with TwoStepCodeRequired where two steps are
+// on, so the code that changes every 30 seconds is asked for last, on its own.
 void request_recovery(const AccountPoster &post, const std::string &email);
 void reset_password(const AccountPoster &post, const std::string &email, const std::string &email_code,
 	const std::string &two_step_code, const std::string &wanted);

@@ -1,13 +1,28 @@
 #include "Bridge/UsageBridge/UsageBridge.hpp"
 
+#include "Agent/AgentStore/AgentStore.hpp"
+#include "Matter/MatterRepository/MatterRepository.hpp"
+#include "Node/ActiveWorkspace/ActiveWorkspace.hpp"
 #include "Node/LegacyWorkspace/LegacyWorkspace.hpp"
+#include "Persistence/PersistenceCoordinator/PersistenceCoordinator.hpp"
+#include "Platform/AppSettings/AppSettings.hpp"
+#include "Platform/AppLifecycle/AppLifecycle.hpp"
+#include "Platform/DeviceKey/DeviceKey.hpp"
+#include "Platform/HttpClient/HttpClient.hpp"
+#include "Node/LegalMachinesConnection/LegalMachinesConnection.hpp"
+#include "Provider/CredentialStore/CredentialStore.hpp"
+#include "Provider/ProviderRegistry/ProviderRegistry.hpp"
 #include "Usage/UsageQueries/UsageQueries.hpp"
 #include "Usage/UsageStatement/UsageStatement.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <chrono>
+#include <future>
 #include <map>
+#include <mutex>
+#include <thread>
 
 namespace singularity::bridge::usage_bridge {
 namespace {
@@ -52,8 +67,75 @@ Json currency_totals_json(const std::vector<usage::CurrencyTotal>& totals) {
   return result;
 }
 
-Json operation_json(const usage::OperationUsageEvidence& operation) {
+// One model call's evidence as the bill shows it (D-252): fingerprints, the
+// provider's own id for the request, and its own tokens and cost.
+Json billed_call_json(const usage::BilledCall& call) {
+  const auto text = [](const std::string& value) { return value.empty() ? Json(nullptr) : Json(value); };
+  return Json{{"time", call.time},
+              {"providerId", call.provider_id},
+              {"modelId", call.model_id},
+              {"servedBy", text(call.served_by)},
+              {"providerRequestId", text(call.provider_request_id)},
+              {"payloadSha256", text(call.payload_sha256)},
+              {"responseSha256", text(call.response_sha256)},
+              {"inputTokens", optional_integer_json(call.input_tokens)},
+              {"cachedInputTokens", optional_integer_json(call.cached_input_tokens)},
+              {"outputTokens", optional_integer_json(call.output_tokens)},
+              {"reasoningTokens", optional_integer_json(call.reasoning_tokens)},
+              {"costMicros", optional_integer_json(call.cost_micros)},
+              {"costCurrency", text(call.cost_currency)},
+              {"costClassification", text(call.cost_classification)},
+              {"costMethodology", text(call.cost_methodology)},
+              {"protectionMode", call.protection_mode.empty() ? std::string("off") : call.protection_mode},
+              {"recorded", call.record_chain.empty() == false && call.record_index.has_value()},
+              {"confirmation", call.confirmation.has_value()
+                                   ? Json{{"source", call.confirmation->source},
+                                          {"costMicros", optional_integer_json(call.confirmation->cost_micros)},
+                                          {"currency", text(call.confirmation->currency)},
+                                          {"provider", text(call.confirmation->provider)},
+                                          {"confirmedAt", text(call.confirmation->confirmed_at)}}
+                                   : Json(nullptr)}};
+}
+
+// The AI colleagues of this computer by id, with their names: the bill says
+// whose work each request was. A colleague no longer here keeps the name its
+// own work recorded, if any.
+using AgentNames = std::map<std::string, std::string>;
+
+AgentNames agent_names_of(const usage::UsageSummary& summary) {
+  AgentNames names;
+  for (const usage::OperationUsageEvidence& operation : summary.operations) {
+    if (operation.agent_id.empty() == false && operation.agent_name.empty() == false)
+      names[operation.agent_id] = operation.agent_name;
+  }
+  bool isAnyAgent = false;
+  for (const usage::OperationUsageEvidence& operation : summary.operations)
+    isAnyAgent = isAnyAgent || operation.agent_id.empty() == false;
+  if (isAnyAgent == false) return names;
+  try {
+    const std::lock_guard<std::mutex> lock(agents::agent_store_mutex());
+    for (const agents::Agent& agent : agents::load_agents()) {
+      if (agent.name.empty() == false) names[agent.id] = agent.name;
+    }
+  } catch (const std::exception&) {
+    // The names the operations recorded stand.
+  }
+  return names;
+}
+
+Json operation_json(const usage::OperationUsageEvidence& operation, const AgentNames& names) {
+  Json calls = Json::array();
+  for (const usage::BilledCall& call : operation.calls) calls.push_back(billed_call_json(call));
+  const auto named = names.find(operation.agent_id);
   return Json{
+      {"agentId", operation.agent_id.empty() ? Json(nullptr) : Json(operation.agent_id)},
+      {"agentName", named != names.end() ? Json(named->second) : Json(nullptr)},
+      {"agentInitiated", operation.agent_initiated},
+      {"askedBy", operation.asked_by_actor_id.empty()
+                      ? Json(nullptr)
+                      : Json{{"actorId", operation.asked_by_actor_id}, {"name", operation.asked_by_name}}},
+      {"calls", std::move(calls)},
+      {"callsRecorded", operation.calls_recorded},
       {"projectId", operation.project_id},
       {"operationId", operation.operation_id},
       {"taskId", operation.task_id},
@@ -170,8 +252,10 @@ Json breakdowns_json(const usage::UsageSummary& summary) {
   std::map<std::string, BreakdownAccumulator> consilia;
   std::map<std::string, BreakdownAccumulator> workflows;
   std::map<std::string, BreakdownAccumulator> work_products;
+  std::map<std::string, BreakdownAccumulator> colleagues;
   for (const usage::OperationUsageEvidence& operation : summary.operations) {
     add_to_breakdown(projects, operation.project_id, operation);
+    if (operation.agent_id.empty() == false) add_to_breakdown(colleagues, operation.agent_id, operation);
     if (operation.provider_id) add_to_breakdown(providers, *operation.provider_id, operation);
     if (operation.model_id) add_to_breakdown(models, *operation.model_id, operation);
     if (operation.chat_id) add_to_breakdown(chats, *operation.chat_id, operation);
@@ -189,13 +273,16 @@ Json breakdowns_json(const usage::UsageSummary& summary) {
           {"chats", breakdown_json(chats)},
           {"consilia", breakdown_json(consilia)},
           {"workflows", breakdown_json(workflows)},
-          {"workProducts", breakdown_json(work_products)}};
+          {"workProducts", breakdown_json(work_products)},
+          // By the AI colleague whose work each request was (D-252).
+          {"agents", breakdown_json(colleagues)}};
 }
 
 Json summary_json(const usage::UsageSummary& summary) {
+  const AgentNames names = agent_names_of(summary);
   Json operations = Json::array();
   for (const usage::OperationUsageEvidence& operation : summary.operations) {
-    operations.push_back(operation_json(operation));
+    operations.push_back(operation_json(operation, names));
   }
   return Json{
       {"period", {{"start", summary.period.start},
@@ -311,6 +398,220 @@ nlohmann::json finish_statement(
               {"contentHashAlgorithm", "sha256"},
               {"contentHash", result.content_hash},
               {"operationCount", result.operation_count}};
+}
+
+PreparedWorkStatement prepare_work_statement(const nlohmann::json& params) {
+  const usage::UsagePeriod period = period_from_params(params);
+  const std::optional<std::string> project_id = project_id_from_params(params, true);
+  const usage::UsageSummary summary = usage::get_usage_summary(period, project_id);
+  usage::WorkStatementNames names;
+  names.matter_id = *project_id;
+  names.period_name = params.contains("periodName") && params.at("periodName").is_string()
+                          ? params.at("periodName").get<std::string>()
+                          : period.start.substr(0, 7);
+  {
+    const persistence::PersistenceLock lock(persistence::persistence_mutex());
+    const std::optional<matters::Matter> matter = matters::load_matter(node::require_active_workspace_path(), *project_id);
+    if (matter.has_value() == false) throw std::runtime_error("This Matter is no longer available.");
+    names.matter_name = matter->name;
+    for (const matters::MatterChat& chat : matter->chats) names.threads[chat.id] = chat.title;
+  }
+  const platform::AppSettings settings = platform::load_app_settings();
+  if (const std::optional<platform::DisplayPerson> person = platform::display_person(settings);
+      person.has_value() && person->organisation_name.has_value())
+    names.firm = *person->organisation_name;
+  try {
+    const std::lock_guard<std::mutex> lock(agents::agent_store_mutex());
+    for (const agents::Agent& agent : agents::load_agents()) {
+      const std::string title = agent.office.title.empty() == false ? agent.office.title : agent.office.ranks_with;
+      names.colleagues[agent.id] = {agent.name, title};
+    }
+  } catch (const std::exception&) {
+    // The names the operations recorded stand.
+  }
+  const std::string public_key = platform::device_public_key();
+  PreparedWorkStatement prepared;
+  const std::string key_code = platform::device_key_code(public_key);
+  usage::WorkRecordExcerpt record;
+  if (usage::work_record::Chain* chain = usage::work_record::this_computer())
+    record = usage::work_record::excerpt_for(*chain, key_code, summary);
+  prepared.signed_file = usage::signed_work_statement(
+      usage::build_work_statement(summary, names, workspaces::current_timestamp(), record), public_key,
+      platform::device_key_code(public_key), [](const std::string& bytes) { return platform::sign_with_device_key(bytes); });
+  return prepared;
+}
+
+nlohmann::json finish_work_statement(const PreparedWorkStatement& prepared, const std::optional<std::string>& folder) {
+  if (folder.has_value() == false) return Json{{"saved", false}};
+  const usage::WorkStatementFiles files =
+      usage::write_work_statement(std::filesystem::u8path(*folder), prepared.signed_file);
+  return Json{{"saved", true},
+              {"pdfPath", files.pdf_path.u8string()},
+              {"signedPath", files.signed_path.u8string()},
+              {"statementSha256", files.statement_sha256},
+              {"keyCode", prepared.signed_file.at("signature").at("keyCode")},
+              {"requestCount", files.request_count}};
+}
+
+// ---- The provider's confirmation and this computer's work record (D-252) ----------
+
+namespace {
+
+// A call of the Matter OpenRouter keeps a record of, not confirmed yet.
+struct Unconfirmed {
+  std::string task_id;
+  std::string payload_sha256;
+  std::string request_id;
+  std::string provider_id;
+};
+
+// Legal Machines' timestamp of the chain's head, from its fingerprint alone.
+std::optional<usage::work_record::Stamp> stamp_of(const usage::work_record::Entry& head) {
+  try {
+    const platform::HttpResponse response = platform::https_post(
+        std::string(node::kLegalMachinesApiBase) + "/timestamp", {{"Content-Type", "application/json"}},
+        Json{{"sha256", head.hash}}.dump(), 15);
+    if (response.status != 200) return std::nullopt;
+    const Json body = Json::parse(response.body, nullptr, false);
+    if (body.is_object() == false || body.value("sha256", std::string()) != head.hash) return std::nullopt;
+    usage::work_record::Stamp stamp;
+    stamp.index = head.index;
+    stamp.hash = head.hash;
+    stamp.time = body.value("time", std::string());
+    stamp.key_id = body.value("keyId", std::string());
+    stamp.signature = body.value("signature", std::string());
+    if (stamp.time.empty() || stamp.key_id.empty() || stamp.signature.empty()) return std::nullopt;
+    return stamp;
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+bool stamp_head() {
+  usage::work_record::Chain* chain = usage::work_record::this_computer();
+  if (chain == nullptr || chain->needs_stamp() == false) return false;
+  const std::optional<usage::work_record::Entry> head = chain->head();
+  if (head.has_value() == false) return false;
+  const std::optional<usage::work_record::Stamp> stamp = stamp_of(*head);
+  return stamp.has_value() && chain->add_stamp(*stamp);
+}
+
+}  // namespace
+
+nlohmann::json confirm_costs(const nlohmann::json& params) {
+  const usage::UsagePeriod period = period_from_params(params);
+  const std::optional<std::string> project_id = project_id_from_params(params, true);
+  const usage::UsageSummary summary = usage::get_usage_summary(period, project_id);
+  std::vector<Unconfirmed> asked;
+  for (const usage::OperationUsageEvidence& operation : summary.operations) {
+    for (const usage::BilledCall& call : operation.calls) {
+      if (call.confirmation.has_value() || call.provider_request_id.rfind("gen-", 0) != 0) continue;
+      asked.push_back(Unconfirmed{operation.task_id, call.payload_sha256, call.provider_request_id, call.provider_id});
+      if (asked.size() >= 200) break;
+    }
+    if (asked.size() >= 200) break;
+  }
+  // Each OpenRouter connection's address and the firm's key for it, on this
+  // computer only (AG-SEC-1): the key goes to OpenRouter and nowhere else.
+  std::map<std::string, std::pair<std::string, std::string>> accounts;
+  {
+    const platform::AppSettings settings = platform::load_app_settings();
+    for (const platform::ConnectedProvider& provider : settings.local_node_setup.connected_providers) {
+      const std::string root = provider.base_url.value_or(std::string());
+      if (providers::is_openrouter_root(root) == false) continue;
+      const std::optional<std::string> key = platform::get_provider_credential(provider.id);
+      if (key.has_value() && key->empty() == false) accounts[provider.id] = {root, *key};
+    }
+  }
+  std::vector<std::pair<Unconfirmed, std::future<std::optional<providers::GenerationRecord>>>> lookups;
+  std::size_t next = 0;
+  std::map<std::string, protected_api::papinian::CostConfirmation> found;
+  const std::string now = workspaces::current_timestamp();
+  while (next < asked.size() || lookups.empty() == false) {
+    // Four at a time.
+    while (next < asked.size() && lookups.size() < 4) {
+      const Unconfirmed call = asked[next++];
+      const auto account = accounts.find(call.provider_id);
+      if (account == accounts.end()) continue;
+      const std::string root = account->second.first;
+      const std::string key = account->second.second;
+      const std::string id = call.request_id;
+      lookups.push_back({call, std::async(std::launch::async, [root, key, id]() {
+                           return providers::openrouter_generation(key, root, id);
+                         })});
+    }
+    if (lookups.empty()) break;
+    auto [call, lookup] = std::move(lookups.front());
+    lookups.erase(lookups.begin());
+    const std::optional<providers::GenerationRecord> record = lookup.get();
+    if (record.has_value() == false) continue;
+    protected_api::papinian::CostConfirmation confirmation;
+    confirmation.source = "openrouter";
+    confirmation.cost_micros = record->cost_micros;
+    confirmation.currency = "USD";
+    confirmation.input_tokens = record->input_tokens;
+    confirmation.output_tokens = record->output_tokens;
+    confirmation.provider = record->provider;
+    confirmation.model = record->model;
+    confirmation.created_at = record->created_at;
+    confirmation.confirmed_at = now;
+    confirmation.record_sha256 = record->record_sha256;
+    found[call.task_id + "\n" + call.payload_sha256 + "\n" + call.request_id] = std::move(confirmation);
+  }
+  long long confirmed = 0;
+  if (found.empty() == false) {
+    const persistence::PersistenceLock lock(persistence::persistence_mutex());
+    const std::filesystem::path workspace = node::require_active_workspace_path();
+    std::optional<matters::Matter> matter = matters::load_matter(workspace, *project_id);
+    if (matter.has_value()) {
+      for (matters::MatterTask& task : matter->tasks) {
+        // The calls its record keeps for its bill, this run's among them.
+        for (const protected_api::papinian::OutboundCall& call : task.privacy_metadata.outbound_calls) {
+          if (call.kind != "model") continue;
+          const bool isKept = std::any_of(task.billed_calls.begin(), task.billed_calls.end(), [&](const auto& kept) {
+            return kept.time == call.time && kept.payload_sha256 == call.payload_sha256 &&
+                   kept.provider_request_id == call.provider_request_id;
+          });
+          if (isKept == false) task.billed_calls.push_back(call);
+        }
+        for (protected_api::papinian::OutboundCall& call : task.billed_calls) {
+          const auto confirmation = found.find(task.id + "\n" + call.payload_sha256 + "\n" + call.provider_request_id);
+          if (confirmation == found.end() || call.confirmation.has_value()) continue;
+          call.confirmation = confirmation->second;
+          ++confirmed;
+        }
+      }
+      if (confirmed > 0) matters::save_matter(workspace, *matter);
+    }
+  }
+  const bool stamped = stamp_head();
+  return Json{{"confirmed", confirmed},
+              {"waiting", static_cast<long long>(asked.size()) - confirmed},
+              {"stamped", stamped}};
+}
+
+void start_work_record() {
+  static std::once_flag once;
+  std::call_once(once, [] {
+    try {
+      usage::work_record::install(platform::app_settings_directory() / "Work record");
+    } catch (...) {
+      return;
+    }
+    std::thread([] {
+      int seconds = 0;
+      while (platform::lifecycle::is_closing() == false) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (++seconds < 30) continue;
+        seconds = 0;
+        usage::work_record::Chain* chain = usage::work_record::this_computer();
+        if (chain == nullptr || chain->needs_stamp() == false) continue;
+        const auto written = chain->last_written();
+        if (written.has_value() && std::chrono::steady_clock::now() - *written < std::chrono::seconds(10)) continue;
+        stamp_head();
+      }
+    }).detach();
+  });
 }
 
 } // namespace singularity::bridge::usage_bridge

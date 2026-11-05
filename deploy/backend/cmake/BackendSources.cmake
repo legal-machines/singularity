@@ -106,6 +106,9 @@ set(NATIVE_APP_SOURCES
   Chat/ChatActions/ChatActions.cpp
   Chat/ChatActions/ChatActions.hpp
   Chat/ChatContinuity/ChatContinuity.hpp
+  Chat/ConversationClearing/ConversationClearing.cpp
+  Chat/ConversationClearing/ConversationClearing.hpp
+  Chat/ConversationClearing/ConversationClearingRecords.cpp
   Chat/ChatConversation/ChatConversation.cpp
   Chat/ChatConversation/ChatConversation.hpp
   Chat/ChatExecution/ChatExecution.cpp
@@ -287,12 +290,21 @@ set(NATIVE_APP_SOURCES
   Matter/CoordinationTransport/FolderTransport.hpp
   Matter/CoordinationTransport/NoiseIK.cpp
   Matter/CoordinationTransport/NoiseIK.hpp
+  Matter/CoordinationTransport/Relay.hpp
+  Matter/CoordinationTransport/RelayClient.cpp
+  Matter/CoordinationTransport/RelayClient.hpp
   Matter/CoordinationTransport/ReliableDelivery.cpp
   Matter/CoordinationTransport/ReliableDelivery.hpp
   Matter/CoordinationTransport/Stun.cpp
   Matter/CoordinationTransport/Stun.hpp
+  Platform/SystemPermissions/FirewallState.hpp
+  Platform/SystemPermissions/SystemPermissions.hpp
   Platform/UdpSocket/UdpSocket.hpp
   Platform/UdpSocket/UdpSocketAddresses.hpp
+  Platform/WebSocket/WebSocket.hpp
+  Platform/WebSocket/WebSocketFrames.cpp
+  Platform/WebSocket/WebSocketFrames.hpp
+  Platform/WebSocket/WebSocketInbox.hpp
   Matter/CoordinationSeal/CoordinationSeal.hpp
   Matter/FirmComputers/FirmComputers.cpp
   Matter/FirmComputers/FirmComputers.hpp
@@ -307,6 +319,8 @@ set(NATIVE_APP_SOURCES
   Matter/MatterOffers/MatterOffersProduction.hpp
   Matter/MatterRepository/MatterRepository.cpp
   Matter/MatterRepository/MatterRepository.hpp
+  Matter/MatterTrash/MatterTrash.cpp
+  Matter/MatterTrash/MatterTrash.hpp
   Matter/Types/Matter.hpp
   Matter/Types/TimeEntry.hpp
 
@@ -358,6 +372,12 @@ set(NATIVE_APP_SOURCES
   Node/LegalMachinesConnection/LegalMachinesConnection.hpp
   Node/NodeSummary/NodeSummary.cpp
   Node/NodeSummary/NodeSummary.hpp
+  Node/OpenPgpMessage/OpenPgpMessage.cpp
+  Node/OpenPgpMessage/OpenPgpMessage.hpp
+  Node/WorkLog/WorkLog.cpp
+  Node/WorkLog/WorkLog.hpp
+  Node/WorkLogShare/WorkLogShare.cpp
+  Node/WorkLogShare/WorkLogShare.hpp
 
   PapinianGuard/PatternScanner/PatternScanner.hpp
   PapinianGuard/SemanticAlgebra/SemanticAlgebra.cpp
@@ -460,11 +480,14 @@ set(NATIVE_APP_SOURCES
   Platform/OpenExternal/OpenExternal.hpp
   Platform/PermissionAccess/PermissionAccess.cpp
   Platform/PermissionAccess/PermissionAccess.hpp
+  Platform/UpdateInstall/UpdateInstall.cpp
+  Platform/UpdateInstall/UpdateInstall.hpp
   Platform/PrivateFile/PrivateFile.hpp
   Platform/WebViewData/WebViewData.hpp
   Platform/WebViewRecovery/WebViewRecovery.hpp
   Platform/ProcessMetrics/ProcessMetrics.cpp
   Platform/ProcessMetrics/ProcessMetrics.hpp
+  Platform/SeatPasswordStore/SeatPasswordStore.hpp
   Platform/SecureRandom/SecureRandom.hpp
   Platform/Sha256/Sha256.cpp
   Platform/Sha256/Sha256.hpp

@@ -10,7 +10,7 @@ import { Views } from "../../components/Views/Views.jsx";
 import { useFirmComputers, watchFirmComputers } from "../../data/coordination.js";
 import { hasNative, nativeApp } from "../../data/native.js";
 import { recoveryCodesLine, takeChangeAsked, useTwoStepSetup } from "../../data/twoStep.js";
-import { checkForUpdates, downloadUpdate, showUpdate, updateLine, useUpdates, watchUpdates } from "../../data/updates.js";
+import { checkForUpdates, downloadUpdate, restartToUpdate, showUpdate, updateLine, useUpdates, watchUpdates } from "../../data/updates.js";
 
 import { ApiKeys } from "./ApiKeys.jsx";
 import { Group, Setting } from "./rows.jsx";
@@ -152,6 +152,7 @@ function UpdateAction({ update }) {
 	if (hasNative() == false || typeof nativeApp().checkForUpdate != "function") return null;
 	if (update.state == "available") return <Button onClick={() => downloadUpdate()}>Download</Button>;
 	if (update.state == "downloading") return null;
+	if (update.state == "ready") return <Button onClick={() => restartToUpdate()}>Restart now</Button>;
 	if (update.state == "downloaded") return <Button onClick={() => showUpdate()}>Show in folder</Button>;
 	return <Button disabled={update.state == "checking"} onClick={() => checkForUpdates({ isAsked: true })}>Check for updates</Button>;
 }

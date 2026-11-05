@@ -5,6 +5,7 @@
 #include "Routing/Types/ModelTarget.hpp"
 #include "Routing/ProtectedInference/ProtectedInference.hpp"
 #include "LocalModel/LocalModelRegistry/LocalModelRegistry.hpp"
+#include "Provider/Types/InputPictures.hpp"
 #include "Provider/ProviderRegistry/ProviderRegistry.hpp"
 #include "PapinianGuard/PapinianGuardService/PapinianGuardService.hpp"
 #include "PapinianGuard/ProtectedComputation/ComputeBudget.hpp"
@@ -108,6 +109,10 @@ std::map<std::string, std::filesystem::path> production_generative_install_paths
 
 struct InferenceRequest {
   std::string prompt;
+	// The pictures the member attached, sent with every model call this request
+	// makes as image inputs (D-256, Provider/Types/InputPictures.hpp); none for
+	// a request that carries words only.
+	std::shared_ptr<const std::vector<providers::InputPicture>> pictures;
 	// The prompt in parts, when the caller gives it so (a colleague's talk):
 	// sent as those parts, each protected on its own (ModelVisibleTurn.hpp);
 	// `prompt` is then their joined text, for what is measured of it.
@@ -437,6 +442,9 @@ struct ModelCapability {
 	// "provider_reported" (the provider's model list), "local" (local inference's figures
 	// for this computer), or "unknown" when no source gave any.
 	std::string source = "unknown";
+	// Whether the model reads pictures (D-256, providers::takes_pictures);
+	// std::nullopt where nothing says.
+	std::optional<bool> takes_pictures;
 };
 
 // The capability of `target`: for a provider's model, the figures its model

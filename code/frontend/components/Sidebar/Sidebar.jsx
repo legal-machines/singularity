@@ -1,6 +1,7 @@
 import { AccountMenu } from "../AccountMenu/AccountMenu.jsx";
 import { Icon } from "../Icon/Icon.jsx";
 import { Menu, useMenu } from "../Menu/Menu.jsx";
+import { ProblemButton } from "../ProblemReport/ProblemReport.jsx";
 import { useNavigation } from "../Navigation/navigation.js";
 import { useFirmComputers } from "../../data/coordination.js";
 import { hasNative, shownChats } from "../../data/native.js";
@@ -87,7 +88,10 @@ export function Sidebar({ state, opened = {}, hidden = false }) {
 				</div>
 			</div>
 
-			<AccountMenu />
+			<div className={styles.foot}>
+				<AccountMenu />
+				<ProblemButton />
+			</div>
 		</aside>
 	);
 }

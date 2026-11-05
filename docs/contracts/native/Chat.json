@@ -555,6 +555,94 @@
       },
       "result": "ProjectChat",
       "_order": 317
+    },
+    {
+      "name": "chat.clearConversation",
+      "policy": "worker",
+      "params": {
+        "chatId": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "clearedBefore",
+          "previouslyClearedBefore"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "clearedBefore": {
+            "type": "string"
+          },
+          "previouslyClearedBefore": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "_order": 343
+    },
+    {
+      "name": "chat.restoreConversation",
+      "policy": "worker",
+      "params": {
+        "chatId": "string",
+        "clearedBefore": "string | null"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "clearedBefore"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "clearedBefore": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "_order": 344
+    },
+    {
+      "name": "chat.clearedConversations",
+      "policy": "worker",
+      "result": {
+        "type": "object",
+        "required": [
+          "conversations"
+        ],
+        "properties": {
+          "conversations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "chatId",
+                "clearedBefore"
+              ],
+              "properties": {
+                "chatId": {
+                  "type": "string"
+                },
+                "clearedBefore": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "_order": 345
     }
   ]
 }

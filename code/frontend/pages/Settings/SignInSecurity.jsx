@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "../../components/Button/Button.jsx";
 import { Dialog } from "../../components/Dialog/Dialog.jsx";
-import { Field, Input } from "../../components/Field/Field.jsx";
+import { Field, Input, PasswordInput } from "../../components/Field/Field.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { hasNative, nativeApp } from "../../data/native.js";
 import { twoStepSetUp, twoStepSetupPutOff, useTwoStepSetup } from "../../data/twoStep.js";
@@ -75,13 +75,13 @@ export function ChangePasswordDialog({ hasTwoFactor, onClose }) {
 		>
 			<form className={styles.dialog_fields} onSubmit={event => { event.preventDefault(); save(); }}>
 				<Field label="Current password">
-					<Input type="password" autoComplete="current-password" maxLength={200} value={current} onChange={event => { setCurrent(event.target.value); setError(null); }} />
+					<PasswordInput autoComplete="current-password" maxLength={200} value={current} onChange={event => { setCurrent(event.target.value); setError(null); }} />
 				</Field>
 				<Field label="New password" error={isShort ? "At least 12 characters" : undefined}>
-					<Input type="password" autoComplete="new-password" maxLength={200} value={wanted} onChange={event => { setWanted(event.target.value); setError(null); }} />
+					<PasswordInput autoComplete="new-password" maxLength={200} value={wanted} onChange={event => { setWanted(event.target.value); setError(null); }} />
 				</Field>
 				<Field label="Repeat the new password" error={isDifferent ? "The two passwords differ" : undefined}>
-					<Input type="password" autoComplete="new-password" maxLength={200} value={repeat} onChange={event => { setRepeat(event.target.value); setError(null); }} />
+					<PasswordInput autoComplete="new-password" maxLength={200} value={repeat} onChange={event => { setRepeat(event.target.value); setError(null); }} />
 				</Field>
 				{hasTwoFactor ? (
 					<Field label="Code from your authenticator app, or a recovery code">
@@ -288,7 +288,7 @@ export function TwoStepDialog({ mode = "on", isNeeded = false, onClose, onDone }
 				// Enter in either field sends the step, as onboarding's do.
 				<div className={styles.dialog_fields} onKeyDown={event => { if (event.key == "Enter") { event.preventDefault(); prove(); } }}>
 					<Field label="Password">
-						<Input type="password" autoComplete="current-password" maxLength={200} value={password} disabled={isBusy}
+						<PasswordInput autoComplete="current-password" maxLength={200} value={password} disabled={isBusy}
 							onChange={event => { setPassword(event.target.value); setError(null); }} />
 					</Field>
 					<Field label="Code from your authenticator app, or a recovery code">

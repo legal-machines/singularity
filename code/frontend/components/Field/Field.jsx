@@ -1,5 +1,7 @@
 import { cloneElement, forwardRef, isValidElement, useId, useLayoutEffect, useRef } from "react";
 
+import { SecretInput } from "./SecretInput.jsx";
+
 import styles from "./Field.module.css";
 
 // A field: its label above, its control, and one line below that either
@@ -32,6 +34,12 @@ export function Field({ label, hint, error, optional = false, className, childre
 
 export const Input = forwardRef(function Input({ className, size = "medium", ...props }, ref) {
 	return <input ref={ref} className={[styles.control, size == "small" ? styles.control_small : null, className].filter(Boolean).join(" ")} {...props} />;
+});
+
+// A password (kind "password") or an API key (kind "key") in a field's look,
+// with its eye (SecretInput.jsx).
+export const PasswordInput = forwardRef(function PasswordInput({ className, size = "medium", kind = "password", ...props }, ref) {
+	return <SecretInput ref={ref} kind={kind} className={[styles.control, size == "small" ? styles.control_small : null, className].filter(Boolean).join(" ")} {...props} />;
 });
 
 // A text area grows with what is written in it, up to `maxRows`.

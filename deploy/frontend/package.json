@@ -1,6 +1,6 @@
 {
   "name": "singularity",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.0",
     "jsdom": "^30.0.1",
+    "openpgp": "6.3.2",
     "vite": "^8.3.5",
     "vitest": "^4.0.0"
   }

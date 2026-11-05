@@ -222,7 +222,17 @@ struct AppSettings {
   // stays small.
   std::vector<std::string> dismissed_notice_ids;
 	std::vector<ProjectActionPreference> project_action_preferences;
+  // The seats that finished onboarding on this computer, each as
+  // "organisationId/seatId" (D-250): identifiers only, kept when one signs
+  // out, so a seat that signs in here again goes straight back to work rather
+  // than through onboarding once more.
+  std::vector<std::string> onboarded_seats;
 };
+
+// A seat as onboarded_seats names it.
+inline std::string onboarded_seat_key(const std::string &organisation_id, const std::string &seat_id) {
+  return organisation_id + "/" + seat_id;
+}
 
 // Directory holding persisted application settings. Created lazily by
 // save_app_settings(); callers must not assume it already exists.
@@ -288,6 +298,13 @@ std::optional<DisplayPerson> display_person(const AppSettings &settings);
 // prior valid file as `.previous`. Throws std::runtime_error on write,
 // flush, close, copy, or replacement failure.
 void save_app_settings(const AppSettings &settings);
+
+// As save_app_settings, and the recovery copy then holds these settings too,
+// and an unreadable file kept beside them goes: what the settings held before
+// stays in no file. For a change that must leave no copy behind, such as
+// signing out, after which no file of this computer's still names the account
+// (the owner, 2026-11-05: "local account data should no longer be there").
+void save_app_settings_leaving_no_copy(const AppSettings &settings);
 
 // A connected model account as settings.json writes it, and read back: what
 // one of the firm's computers hands another with the account's key (D-210).

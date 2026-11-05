@@ -48,3 +48,8 @@
 		animation: none;
 	}
 }
+
+/* The Matters colleagues shared, under the steps, a section's air apart. */
+.offers {
+	margin-top: 4px;
+}

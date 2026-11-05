@@ -6,6 +6,7 @@ import { Emulation } from "./emulation/Emulation.jsx";
 import { isEmulation } from "./emulation/emulation.js";
 import { Onboarding } from "./onboarding/Onboarding.jsx";
 import { completeOnboarding, firstView, viewOf, waitsForFirm } from "./onboarding/start.js";
+import { recordVersionSeen } from "./data/updates.js";
 
 // The window's first choice (D-133): onboarding until it is complete, then the
 // app. The app is not mounted while onboarding shows, so none of its work
@@ -47,7 +48,7 @@ function Window() {
 	if (view == "firm") {
 		return (
 			<>
-				<Onboarding hold onComplete={() => setView("app")} />
+				<Onboarding hold onComplete={() => recordVersionSeen().finally(() => setView("app"))} />
 				<AppBehaviour />
 			</>
 		);
@@ -61,6 +62,8 @@ function Window() {
 				<Onboarding
 					onComplete={async () => {
 						await completeOnboarding(window.nativeApp);
+						// Set up with this version: never told it was updated to it.
+						await recordVersionSeen();
 						setView("app");
 					}}
 				/>

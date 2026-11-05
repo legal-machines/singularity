@@ -81,6 +81,12 @@
       "policy": "ui",
       "result": "UpdateStatus",
       "_order": 333
+    },
+    {
+      "name": "update.install",
+      "policy": "ui",
+      "result": "UpdateStatus",
+      "_order": 359
     }
   ]
 }

@@ -231,6 +231,15 @@ struct GenerationResult {
   // ProtectedInference/InferenceExecutor) normalizes and revalidates every
   // entry before it ever reaches ToolBroker.
   std::vector<ModelToolCall> tool_calls;
+  // The provider's own id for this response ("gen-..." from OpenRouter,
+  // "chatcmpl-..." from OpenAI, "msg_..." from Anthropic), by which its own
+  // records name the request and what it charged (D-252). Empty when the
+  // response carried none.
+  std::string response_id;
+  // SHA-256 of the response body exactly as Singularity read it (a streamed
+  // answer as its events were put together): it proves which answer a cost
+  // belongs to without keeping or showing the answer (D-252).
+  std::string response_sha256;
 };
 
 // The final security boundary for generation requests. `serialized_body` is
@@ -242,6 +251,9 @@ struct GenerationResult {
 struct FinalPayloadView {
   std::string serialized_body;
   std::vector<std::string> content_segments;
+  // The SHA-256 of each picture the body carries (D-256), in the order it does:
+  // the final check holds every image in the body to the member's own.
+  std::vector<std::string> picture_sha256;
 };
 
 using FinalPayloadValidator = std::function<void(const FinalPayloadView &payload)>;
@@ -327,6 +339,30 @@ GenerationResult generate(const std::string &provider_id, const std::string &api
 						  const std::optional<GenerationOutputContract> &output_contract = std::nullopt,
 						  const std::optional<GenerationToolControl> &tool_control = std::nullopt,
 						  ReasoningEffort reasoning_effort = ReasoningEffort::Default);
+
+// OpenRouter's own record of one generation (D-252): what it charged, the
+// tokens it counted and who served it, as its /generation answer gives them,
+// with the SHA-256 of that answer as it came.
+struct GenerationRecord {
+  std::optional<long long> cost_micros;
+  std::optional<long long> input_tokens;
+  std::optional<long long> output_tokens;
+  std::string provider;
+  std::string model;
+  std::string created_at;
+  std::string record_sha256;
+};
+
+// Whether an OpenAI-style root is OpenRouter's, which keeps such records.
+bool is_openrouter_root(const std::string &root);
+// The record in OpenRouter's answer ({"data": {...}}), or nothing for any
+// other shape.
+std::optional<GenerationRecord> parse_openrouter_generation(const std::string &body);
+// Asks OpenRouter for its record of the generation `id` with the firm's key.
+// Nothing while OpenRouter does not have it yet (it keeps one moments after
+// the answer) or when it cannot be asked; never throws.
+std::optional<GenerationRecord> openrouter_generation(const std::string &api_key, const std::string &root,
+                                                      const std::string &id);
 
 GenerationResult generate_with_transport(
     const std::string &provider_id, const std::string &api_key,

@@ -309,7 +309,27 @@ Json outbound_call_to_json(const protected_api::papinian::OutboundCall &call) {
 	};
 	if (call.url.empty() == false) value["url"] = call.url;
 	if (call.payload_sha256.empty() == false) value["payloadSha256"] = call.payload_sha256;
+	// What came back, as a bill's line reads it (D-252).
+	if (call.provider_request_id.empty() == false) value["providerRequestId"] = call.provider_request_id;
+	if (call.response_sha256.empty() == false) value["responseSha256"] = call.response_sha256;
+	if (call.input_tokens) value["inputTokens"] = *call.input_tokens;
+	if (call.cached_input_tokens) value["cachedInputTokens"] = *call.cached_input_tokens;
+	if (call.output_tokens) value["outputTokens"] = *call.output_tokens;
+	if (call.reasoning_tokens) value["reasoningTokens"] = *call.reasoning_tokens;
+	if (call.cost_micros) value["costMicros"] = *call.cost_micros;
+	if (call.cost_currency.empty() == false) value["costCurrency"] = call.cost_currency;
+	if (call.cost_classification.empty() == false) value["costClassification"] = call.cost_classification;
+	if (call.cost_methodology.empty() == false) value["costMethodology"] = call.cost_methodology;
+	if (call.served_by.empty() == false) value["servedBy"] = call.served_by;
 	if (call.symbol_scope.empty() == false) value["symbolScope"] = call.symbol_scope;
+	if (call.record_chain.empty() == false) value["recordChain"] = call.record_chain;
+	if (call.record_index) value["recordIndex"] = *call.record_index;
+	if (call.pictures.empty() == false) {
+		Json pictures = Json::array();
+		for (const protected_api::papinian::OutboundPicture &picture : call.pictures)
+			pictures.push_back(Json{{"name", picture.name}, {"bytes", picture.bytes}, {"sha256", picture.sha256}});
+		value["pictures"] = std::move(pictures);
+	}
 	if (call.relations.empty() == false) {
 		Json relations = Json::array();
 		for (const protected_api::papinian::OutboundRelation &relation : call.relations) relations.push_back(relation_to_json(relation));
@@ -356,7 +376,35 @@ protected_api::papinian::OutboundCall outbound_call_from_json(const Json &value)
 	call.protection_mode = value.value("protectionMode", std::string("off"));
 	call.url = value.value("url", std::string());
 	call.payload_sha256 = value.value("payloadSha256", std::string());
+	call.provider_request_id = value.value("providerRequestId", std::string());
+	call.response_sha256 = value.value("responseSha256", std::string());
+	const auto count = [&value](const char *key) -> std::optional<long long> {
+		if (value.contains(key) && value.at(key).is_number_integer()) return value.at(key).get<long long>();
+		return std::nullopt;
+	};
+	call.input_tokens = count("inputTokens");
+	call.cached_input_tokens = count("cachedInputTokens");
+	call.output_tokens = count("outputTokens");
+	call.reasoning_tokens = count("reasoningTokens");
+	call.cost_micros = count("costMicros");
+	call.cost_currency = value.value("costCurrency", std::string());
+	call.cost_classification = value.value("costClassification", std::string());
+	call.cost_methodology = value.value("costMethodology", std::string());
+	call.served_by = value.value("servedBy", std::string());
 	call.symbol_scope = value.value("symbolScope", std::string());
+	call.record_chain = value.value("recordChain", std::string());
+	if (value.contains("recordIndex") && value.at("recordIndex").is_number_integer())
+		call.record_index = value.at("recordIndex").get<long long>();
+	if (value.contains("pictures") && value.at("pictures").is_array()) {
+		for (const Json &entry : value.at("pictures")) {
+			if (entry.is_object() == false) continue;
+			protected_api::papinian::OutboundPicture picture;
+			picture.name = entry.value("name", std::string());
+			if (entry.contains("bytes") && entry.at("bytes").is_number_unsigned()) picture.bytes = entry.at("bytes").get<std::size_t>();
+			picture.sha256 = entry.value("sha256", std::string());
+			call.pictures.push_back(std::move(picture));
+		}
+	}
 	if (value.contains("relations") && value.at("relations").is_array())
 		for (const Json &entry : value.at("relations")) call.relations.push_back(relation_from_json(entry));
 	if (value.contains("withheldRelations") && value.at("withheldRelations").is_array())

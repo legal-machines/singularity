@@ -3,8 +3,14 @@
    each row a press that opens it, its ground showing under the pointer; no
    frame and no lines between rows. */
 .explorer {
+	position: relative;
+	/* Its rows reach 12px past it (.row): a drop's white covers them too. */
+	--drop-reach: 12px;
 	display: flex;
 	flex-direction: column;
+	/* The whole room under the tabs takes a drop, not only the rows. */
+	flex: 1 0 auto;
+	min-height: 320px;
 	margin-top: 36px;
 }
 
@@ -76,12 +82,33 @@
 }
 
 /* Name, when it came and its size, as a file browser's list sets them. */
+.table {
+	container-type: inline-size;
+}
+
 .head,
 .open {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 180px 170px 96px;
 	align-items: center;
 	column-gap: 16px;
+}
+
+/* A narrow list - a narrow window, or onboarding's Matter beside its words -
+   keeps every file's name: the size goes, and who added it and when take
+   less. The fixed columns once took all of a 440px list and left the names
+   none (2026-11-03). */
+@container (max-width: 640px) {
+	.head,
+	.open {
+		grid-template-columns: minmax(0, 1fr) 132px 104px;
+		column-gap: 12px;
+	}
+
+	.size_head,
+	.size {
+		display: none;
+	}
 }
 
 .head {

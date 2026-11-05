@@ -66,6 +66,38 @@ noise::KeyPair freshKeys() {
 	return noise::key_pair_from_secret(secret);
 }
 
+bool isRelayAddress(const std::string& address) {
+	return address.rfind(DirectLink::kRelayPrefix, 0) == 0;
+}
+
+std::string relayAddress(const PeerKey& key) {
+	static const char* const kHex = "0123456789abcdef";
+	std::string address = DirectLink::kRelayPrefix;
+	for (const std::uint8_t byte : key) {
+		address += kHex[byte >> 4];
+		address += kHex[byte & 0x0F];
+	}
+	return address;
+}
+
+std::optional<PeerKey> relayedKey(const std::string& address) {
+	const std::size_t prefix = std::char_traits<char>::length(DirectLink::kRelayPrefix);
+	if (isRelayAddress(address) == false || address.size() != prefix + 64) return std::nullopt;
+	PeerKey key{};
+	const auto digit = [](char character) -> int {
+		if (character >= '0' && character <= '9') return character - '0';
+		if (character >= 'a' && character <= 'f') return character - 'a' + 10;
+		return -1;
+	};
+	for (std::size_t index = 0; index < key.size(); ++index) {
+		const int high = digit(address[prefix + index * 2]);
+		const int low = digit(address[prefix + index * 2 + 1]);
+		if (high < 0 || low < 0) return std::nullopt;
+		key[index] = static_cast<std::uint8_t>(high * 16 + low);
+	}
+	return key;
+}
+
 std::uint64_t randomNumber() {
 	Bytes bytes(8, 0);
 	platform::fill_secure_random(bytes.data(), bytes.size());
@@ -245,6 +277,12 @@ std::string DirectLink::endpoint_of(const PeerKey& peer) const {
 	return found == peers_.end() ? std::string() : found->second.endpoint;
 }
 
+bool DirectLink::is_relayed(const PeerKey& peer) const {
+	const std::lock_guard<std::mutex> lock(mutex_);
+	const auto found = peers_.find(peer);
+	return found != peers_.end() && found->second.session != nullptr && isRelayAddress(found->second.endpoint) == true;
+}
+
 std::size_t DirectLink::sessions_with(const PeerKey& peer) const {
 	const std::lock_guard<std::mutex> lock(mutex_);
 	const auto found = peers_.find(peer);
@@ -279,6 +317,13 @@ void DirectLink::run() {
 				now = Clock::now();
 			}
 			if (datagram.has_value() == true) handle(*datagram, now);
+			// What came through the relay, from where it says: handled as if it
+			// came from that computer's relay address.
+			if (options_.relay) {
+				for (Relay::Datagram& relayed : options_.relay->take()) {
+					handle(platform::UdpSocket::Datagram{relayAddress(relayed.from), std::move(relayed.bytes)}, now);
+				}
+			}
 			tick(now);
 			hasArrived = std::exchange(hasArrived_, false);
 		}
@@ -525,6 +570,15 @@ void DirectLink::tick(Clock::time_point now) {
 				call(peer, now);
 			}
 		}
+		// Carried by the relay: a direct way is tried now and then, and taken as
+		// soon as it answers.
+		if (needsCall == false && peer.session && isRelayAddress(peer.endpoint) == true && peer.candidates.empty() == false
+				&& now - peer.directTriedAt >= options_.directRetry
+				&& (peer.pending.has_value() == false || now - peer.pending->sentAt >= options_.directRetry)) {
+			peer.directTriedAt = now;
+			platform::trace::record("link", "call", {{"reason", "direct_retry"}, {"targets", peer.candidates.size()}});
+			call(peer, now, true);
+		}
 		if (peer.session && peer.endpoint.empty() == false) {
 			for (const Bytes& frame : peer.delivery.frames_to_send(now)) sendData(peer, frame, now);
 			collect(peer);
@@ -533,14 +587,28 @@ void DirectLink::tick(Clock::time_point now) {
 	}
 }
 
-void DirectLink::call(Peer& peer, Clock::time_point now) {
-	// Every address it may be at, the last it was heard from among them: the
-	// first to answer is the way.
+void DirectLink::call(Peer& peer, Clock::time_point now, bool isDirectOnly) {
+	// Every direct address it may be at, the last it was heard from among them:
+	// the first to answer is the way.
 	std::vector<std::string> targets = peer.candidates;
-	if (peer.endpoint.empty() == false && std::find(targets.begin(), targets.end(), peer.endpoint) == targets.end())
+	if (peer.endpoint.empty() == false && isRelayAddress(peer.endpoint) == false
+			&& std::find(targets.begin(), targets.end(), peer.endpoint) == targets.end())
 		targets.push_back(peer.endpoint);
+	// A direct retry while the relay carries it does not count as a call.
+	const int tries = isDirectOnly == true ? 0 : (peer.pending.has_value() == true ? peer.pending->tries + 1 : 1);
+	// The relay, last: once two direct calls went unanswered, every other call
+	// from then on (a computer without the relay is still called directly);
+	// every call while the relay carries the link already, or where no direct
+	// address is known. A call goes one way or the other, never both, so a
+	// direct way that carries a call and not its answer cannot win the call
+	// from the relay: while the relay carries the link, direct ways are tried
+	// apart (directRetry).
+	const bool canRelay = isDirectOnly == false && options_.relay && options_.relay->is_up() == true;
+	const bool isRelayTurn = tries > kDirectCalls && (tries - kDirectCalls) % 2 == 1;
+	if (canRelay == true && (isRelayTurn == true || isRelayAddress(peer.endpoint) == true || targets.empty() == true)) {
+		targets = {relayAddress(peer.key)};
+	}
 	if (targets.empty() == true) return;
-	const int tries = peer.pending.has_value() == true ? peer.pending->tries + 1 : 1;
 	if (peer.pending.has_value() == true) byIndex_.erase(peer.pending->localIndex);
 	Pending pending;
 	pending.localIndex = newIndex();
@@ -579,6 +647,11 @@ void DirectLink::sendDatagram(const std::string& address, const Bytes& bytes) {
 		dropCounter_ = dropCounter_ * 6364136223846793005ULL + 1442695040888963407ULL;
 		const double chance = static_cast<double>(dropCounter_ >> 11) / static_cast<double>(1ULL << 53);
 		if (chance < options_.testLoss) return;
+	}
+	if (isRelayAddress(address) == true) {
+		const std::optional<PeerKey> to = relayedKey(address);
+		if (to.has_value() == true && options_.relay) options_.relay->send(*to, bytes);
+		return;
 	}
 	static_cast<void>(socket_.send_to(address, bytes));
 }

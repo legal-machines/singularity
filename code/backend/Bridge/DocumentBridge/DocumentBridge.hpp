@@ -36,6 +36,8 @@ nlohmann::json move_document(const nlohmann::json& params);
 nlohmann::json delete_document(const nlohmann::json& params);
 nlohmann::json create_folder(const nlohmann::json& params);
 nlohmann::json add_external_file(const nlohmann::json& params);
+// A folder dropped on a Matter, copied whole (DocumentFileActions).
+nlohmann::json add_external_folder(const nlohmann::json& params);
 nlohmann::json reprocess_document(const nlohmann::json& params);
 
 // Phase 09's local source-resolution contract

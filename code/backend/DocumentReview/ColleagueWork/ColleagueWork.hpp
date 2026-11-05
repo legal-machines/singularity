@@ -90,6 +90,9 @@ DocumentWords wordsOfDocument(const std::filesystem::path& path, std::size_t mos
 // One call of the model for a colleague's work.
 struct ColleagueCall {
 	std::string matterId;
+	// The conversation or thread the work is for: a design partner's computer
+	// keeps the call in that chat's work log (Node/WorkLog, D-257).
+	std::string chatId;
 	std::string agentId;
 	std::string givenByActorId;
 	std::string givenByName;
@@ -109,6 +112,9 @@ struct ColleagueCall {
 	// scored or rewritten as data (routing::InferenceRequest::prompt_instruction).
 	std::string promptInstruction;
 	std::shared_ptr<const providers::PromptCache> promptCache;
+	// The pictures members attached that the call carries as they are, as image
+	// inputs (D-256); none for a call of words only.
+	std::shared_ptr<const std::vector<providers::InputPicture>> pictures;
 	// A short think for a conversational answer; the model's own otherwise.
 	providers::ReasoningEffort reasoningEffort = providers::ReasoningEffort::Default;
 	// A colleague's talk: its protection legend speaks a conversation's words.

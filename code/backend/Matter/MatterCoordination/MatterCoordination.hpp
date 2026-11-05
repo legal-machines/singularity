@@ -279,6 +279,12 @@ struct CoordinationStatus {
 	std::vector<LinkedMatter> matters;
 	// The personal channels of this computer's member, never among its Matters.
 	std::vector<LinkedMatter> personal;
+	// The firm's own record (D-203), never among the Matters or the member's
+	// conversations: whether it travels, as a Matter's view says it (D-137,
+	// D-207). A computer that waits for its firm tells by it a record heard
+	// from another of the firm's computers from one that has not come yet.
+	// Nothing while this computer holds no record of its firm.
+	std::optional<LinkedMatter> firm;
 };
 
 // Sets the firm's folder this computer exchanges through: a folder of the

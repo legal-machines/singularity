@@ -1591,6 +1591,10 @@ void AppWindow::run() {
   impl_->view.run();
 }
 
+void AppWindow::close() {
+  impl_->view.terminate();
+}
+
 /*
  * Current content size
  * --------------------

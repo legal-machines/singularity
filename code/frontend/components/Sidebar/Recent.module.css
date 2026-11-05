@@ -15,3 +15,9 @@
 .recent[aria-current="page"] { color: var(--ink); background: var(--sidebar-selected); }
 .recent_icon { display: grid; place-items: center; color: var(--ink-3); }
 .recent_name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 14px/20px var(--font-sans); }
+/* Clear, by the heading: quiet until the pointer is over the section or the
+   button has the focus. */
+.clear { padding: 0 4px; border-radius: 4px; color: var(--ink-3); font: 500 12px/18px var(--font-sans); opacity: 0; transition: opacity var(--duration-fast) var(--ease-out); }
+.section:hover .clear, .clear:focus-visible { opacity: 1; }
+.clear:hover { color: var(--ink); background: var(--sheet-hover); }
+@media (prefers-reduced-motion: reduce) { .clear { transition: none; } }

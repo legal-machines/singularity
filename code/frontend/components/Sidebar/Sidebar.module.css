@@ -99,3 +99,8 @@
 .context:empty { display: none; }
 .desk_heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; margin: 0 0 6px; padding: 0 12px; }
 .desk_heading_text { overflow: hidden; font: var(--type-small); color: var(--ink-3); white-space: nowrap; text-overflow: ellipsis; }
+/* The member's own row at the sidebar's foot, and beside it, in a Debug build,
+   the bug icon that reports a problem (components/ProblemReport). */
+.foot { display: flex; flex: none; align-items: flex-end; gap: 2px; }
+.foot > :first-child { flex: 1; min-width: 0; }
+.foot > button { margin-bottom: 8px; }

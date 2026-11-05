@@ -5,6 +5,7 @@ import { Button } from "../../components/Button/Button.jsx";
 import { Icon } from "../../components/Icon/Icon.jsx";
 import { AskedToJoin, AskingToJoin, GivenToYou } from "../../components/FirmComputers/FirmComputers.jsx";
 import { ArchiveMatterDialog } from "../../components/Manage/ArchiveMatterDialog.jsx";
+import { ConfirmDialog } from "../../components/Manage/Manage.jsx";
 import { NewMatterDialog } from "../../components/NewMatter/NewMatterDialog.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { useNavigation } from "../../components/Navigation/navigation.js";
@@ -12,7 +13,7 @@ import { Page, PageHead } from "../../components/Page/Page.jsx";
 import { ProjectMark } from "../../components/ProjectMark/ProjectMark.jsx";
 import { SheetBar } from "../../components/SheetBar/SheetBar.jsx";
 import { Views } from "../../components/Views/Views.jsx";
-import { hasNative, lookForArrivedMatters, openArrivedMatter, openMatterFolder, setMatterArchived, shownMatters, useRealWork } from "../../data/native.js";
+import { deleteMatterFromTrash, hasNative, lookForArrivedMatters, matterTrash, openArrivedMatter, openMatterFolder, restoreMatterFromTrash, setMatterArchived, shownMatters, useRealWork } from "../../data/native.js";
 import { organisation, viewerId } from "../../data/workspace.js";
 import { findMember } from "../words.js";
 
@@ -51,7 +52,10 @@ export function MattersPage({ state }) {
 	// A lawyer opens the firm's Matters here (2026-10-29: a new firm had no way to).
 	const create = hasNative() ? <Button variant="primary" icon="plus" onClick={() => setCreating(true)}>New Matter</Button> : null;
 	const openMatter = matterId => open({ kind: "matter", matterId, tab: "overview" });
-	const views = [{ id: "open", label: "Open" }, { id: "archived", label: hasNative() ? "Archived" : "Closed" }];
+	// This computer's Trash (D-247): what was deleted here in the last 30 days.
+	const trash = hasNative() ? matterTrash() : [];
+	const views = [{ id: "open", label: "Open" }, { id: "archived", label: hasNative() ? "Archived" : "Closed" },
+		...(hasNative() ? [{ id: "trash", label: "Trash" }] : [])];
 	const figuresOf = useMatterFigures(matters);
 
 	return (
@@ -98,7 +102,9 @@ export function MattersPage({ state }) {
 							);
 						})}
 					</>
-				) : archived.length > 0 ? <Archived matters={archived} onOpen={openMatter} />
+				) : view == "trash" ? (trash.length > 0 ? <Trash matters={trash} />
+					: <p className={styles.empty}>The Trash is empty. A Matter deleted here stays in it for 30 days.</p>)
+				: archived.length > 0 ? <Archived matters={archived} onOpen={openMatter} />
 					: <p className={styles.empty}>No Matter is archived.</p>}
 			</div>
 		</Page>
@@ -118,10 +124,12 @@ function Group({ title, count, children }) {
 // One Matter: its mark, its name with its figures, and the line under it;
 // pressed, it opens; at its right what can be done with it, shown under the
 // pointer, and what stands beside it, a control staying a control.
+// A Matter's row; one that cannot be opened, as in the Trash, is not a button.
 function MatterRow({ matter, line, figures = [], onOpen, actions = null, aside }) {
+	const Open = onOpen != null ? "button" : "span";
 	return (
 		<li className={styles.row}>
-			<button className={styles.row_open} type="button" onClick={onOpen}>
+			<Open className={styles.row_open} {...(onOpen != null ? { type: "button", onClick: onOpen } : { "data-still": "" })}>
 				<span className={styles.row_mark}><ProjectMark matter={matter} size={40} /></span>
 				<span className={styles.row_text}>
 					<span className={styles.row_head}>
@@ -130,7 +138,7 @@ function MatterRow({ matter, line, figures = [], onOpen, actions = null, aside }
 					</span>
 					{line != null && line != "" ? <span className={styles.row_line}>{line}</span> : null}
 				</span>
-			</button>
+			</Open>
 			{actions != null || aside != null ? <span className={styles.row_aside}>{actions}{aside}</span> : null}
 		</li>
 	);
@@ -196,6 +204,54 @@ function Archived({ matters, onOpen }) {
 			</Group>
 		);
 	});
+}
+
+// This computer's Trash (D-247): each Matter deleted here, when it went, and
+// when it is deleted for good; Restore brings it back whole, Delete now asks
+// first and deletes it from this computer at once.
+function Trash({ matters }) {
+	const [deleting, setDeleting] = useState(null);
+	const day = iso => {
+		const date = new Date(iso);
+		return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
+	};
+	return (
+		<>
+			<Group title="Deleted from this computer" count={matters.length}>
+				{matters.map(matter => (
+					<MatterRow
+						key={matter.id}
+						matter={matter.mark ?? { id: matter.id, name: matter.name }}
+						line={`Deleted ${day(matter.trashedAt)}. Goes for good on ${day(matter.deletesAt)}.`}
+						aside={
+							<>
+								<Button size="small" onClick={async () => {
+									try {
+										await restoreMatterFromTrash(matter.id);
+										toast(`${matter.name} is back among your Matters.`);
+									} catch (reason) {
+										toast(reason?.message ?? `${matter.name} could not be restored.`, { tone: "seal" });
+									}
+								}}>Restore</Button>
+								<Button size="small" onClick={() => setDeleting(matter)}>Delete now</Button>
+							</>
+						}
+					/>
+				))}
+			</Group>
+			{deleting != null ? (
+				<ConfirmDialog
+					title={`Delete ${deleting.name} for good?`}
+					description="It can't be restored here. Its folder and documents stay where they are."
+					confirm="Delete"
+					onClose={() => setDeleting(null)}
+					onConfirm={async () => {
+						await deleteMatterFromTrash(deleting.id);
+						toast(`${deleting.name} is deleted from this computer.`);
+					}} />
+			) : null}
+		</>
+	);
 }
 
 // The Matters the firm's computers brought here that are not open yet: each

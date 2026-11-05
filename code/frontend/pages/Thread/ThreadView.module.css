@@ -484,3 +484,10 @@
 	color: var(--ink);
 	white-space: nowrap;
 }
+
+/* Where the earlier messages of a long thread begin to be drawn as the
+   reader scrolls up to them (ThreadView.jsx). */
+.earlier {
+	height: 1px;
+	list-style: none;
+}

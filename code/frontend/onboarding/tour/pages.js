@@ -80,14 +80,6 @@ export const PAGES = [
 		setupTitle: "Keep your Matters together.",
 		setupLine: "Choose how work travels between your firm’s computers.",
 	},
-	{
-		id: "apps", ask: "apps",
-		title: "Your work. Connected.",
-		line: "Your team and Matters, with you in Word, Excel, PowerPoint and Outlook.",
-		action: "Connect your apps", skip: "Set up later",
-		setupTitle: "Bring your apps together.",
-		setupLine: "Choose an app to connect. You can finish the rest later.",
-	},
 	// TEMPORARY until Legal Machines' developer certificates exist (the owner,
 	// 2026-11-01): remove this entry, and its words below, once macOS
 	// notarises Singularity and Windows knows its publisher. Never on Linux.
@@ -98,28 +90,52 @@ export const PAGES = [
 			darwin: "Until Apple notarises Singularity, confirm each new version in Privacy & Security.",
 			win32: "When Windows warns about a new version, choose More info, then Run anyway.",
 		},
-		note: "Download Singularity only from legalmachines.org. Trusting Singularity’s own certificate when you connect Office is separate, and stays.",
+		note: "Download Singularity only from legalmachines.org. Singularity’s own certificate for Office is separate, and stays.",
 		action: "Continue",
 	},
-	// What the computer itself will ask, and why, before it asks (the owner,
-	// 2026-11-01). Each permission is asked where it is needed, never all at
-	// once here: a network port opens only at a Matter's first share.
+	// What the computer itself must allow, asked here, before the work that
+	// needs it, and checked (the owner, 2026-11-04: "a person could not connect
+	// Office because the app forgot to ask in advance for the permissions it
+	// needs; all of this must be asked by us in advance, and we must check that
+	// it was given"). One press asks for each in turn, with the system's own
+	// question; each says what came of it (Platform/SystemPermissions).
 	{
-		id: "permissions", preview: "permissions", next: true,
+		id: "permissions", preview: "permissions", ask: "permissions",
 		title: "Your computer asks first.",
-		line: "Singularity asks for a permission only when it needs one. Here is what, and why.",
+		line: "Singularity asks now for what it needs later, and checks that each was given.",
 		permissions: {
 			darwin: [
-				{ key: "documents", name: "Documents folder", line: "Your Matters live in a Singularity folder in Documents, where you can always find their files. Asked with your first Matter." },
-				{ key: "network", name: "Local network", line: "When you share a Matter, your firm’s computers on the office network reach each other directly, end‑to‑end encrypted. Asked the first time you share." },
+				{ key: "documents", name: "Documents folder", line: "Your Matters live in a Singularity folder in Documents, where you can always find their files." },
+				{ key: "officeApps", name: "Word, Excel and PowerPoint", line: "Singularity’s add-in goes into each app’s own folder. macOS asks once for each app." },
+				{ key: "localNetwork", name: "Local network", line: "Your firm’s computers on the office network reach each other directly, end‑to‑end encrypted." },
 			],
 			win32: [
-				{ key: "firewall", name: "Windows Firewall", line: "When you share a Matter, your colleagues’ computers reach this one directly, end‑to‑end encrypted. Asked the first time you share: allow it on private networks." },
+				{ key: "controlledFolders", name: "Ransomware protection", line: "Your Matters live in a Singularity folder in Documents, which Windows’ ransomware protection guards. Allow Singularity there." },
+				{ key: "officeCertificate", name: "Office certificate", line: "Word, Excel, PowerPoint and Outlook reach Singularity on this computer through a certificate of its own. Windows asks you to trust it." },
+				{ key: "firewall", name: "Windows Firewall", line: "Your colleagues’ computers reach this one directly, end‑to‑end encrypted. Windows asks whether to allow it on the network you are on." },
 			],
 		},
-		action: "Open Singularity",
+		action: "Allow access", skip: "Set up later",
+		setupTitle: "Allow access.",
+		setupLine: "Your computer asks once for each. Choose Allow.",
+	},
+	// Office last, once the computer allows what it needs (the owner,
+	// 2026-11-04: "swap Certificates on the way and connecting the add-in").
+	{
+		id: "apps", ask: "apps",
+		title: "Your work. Connected.",
+		line: "Your team and Matters, with you in Word, Excel, PowerPoint and Outlook.",
+		action: "Connect your apps", skip: "Set up later",
+		setupTitle: "Bring your apps together.",
+		setupLine: "Choose an app to connect. You can finish the rest later.",
 	},
 ];
+
+// What the computer itself must allow Singularity here, by its keys
+// (Platform/SystemPermissions).
+export function permissionKeys(platform = platformOf()) {
+	return (PAGES.find(page => page.ask === "permissions")?.permissions?.[platform] ?? []).map(item => item.key);
+}
 
 // The platform the app runs on, as the window reports it.
 export function platformOf() {
@@ -137,10 +153,19 @@ export function platformOf() {
 // administrator is shown every slide, as before. A slide whose words belong to
 // other systems (certificates, permissions) is left out where it has none, and
 // Linux, where Word, Excel, PowerPoint and Outlook do not run, has no apps slide.
-export function pagesFor({ isMember = false, platform = platformOf() } = {}) {
+// `missingPermissions` are the keys of what this computer does not allow yet,
+// as it said before the slides (null until it says): the slide that asks
+// names only those, and is not shown at all when none is missing (the owner,
+// 2026-11-05: "if some permission is already given, there is no need to ask
+// about it at all", D-249).
+export function pagesFor({ isMember = false, platform = platformOf(), missingPermissions = null } = {}) {
 	const pages = PAGES
 		.filter(page => !page.lines || page.lines[platform])
 		.filter(page => !page.permissions || page.permissions[platform])
+		.map(page => page.permissions && missingPermissions != null
+			? { ...page, permissions: { ...page.permissions, [platform]: page.permissions[platform].filter(item => missingPermissions.includes(item.key)) } }
+			: page)
+		.filter(page => page.ask !== "permissions" || page.permissions[platform].length > 0)
 		.filter(page => page.ask !== "apps" || platform !== "linux")
 		.map(page => page.lines ? { ...page, line: page.lines[platform] } : page);
 	if (!isMember) return pages;

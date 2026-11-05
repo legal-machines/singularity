@@ -4,7 +4,9 @@
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
+#import <ImageIO/ImageIO.h>
 #import <PDFKit/PDFKit.h>
+#import <Vision/Vision.h>
 
 #include <algorithm>
 #include <cmath>
@@ -396,8 +398,213 @@ std::string pdf_extractor_version() { return current_extractor_version(); }
 // the Mac's to bring in, and a scan's pages stay unread and are said to be.
 bool pdf_text_recognition_available() { return false; }
 
-// A picture's words wait for Vision on the Mac too.
-std::optional<std::string> recognize_image_text(const std::filesystem::path &) { return std::nullopt; }
+namespace {
+
+// A reading with fewer letters and digits than this is no reading: lines of a
+// form, a stamp, a signature (the same bound as Windows', PdfExtractorPdfium).
+constexpr std::size_t kLeastRecognizedCharacters = 20;
+// The longest edge a picture is read at: a phone's photograph of a page, 12 or
+// 48 megapixels, keeps every word legible at it, and reads in a second or two.
+constexpr int kRecognizedLongEdge = 4096;
+
+std::size_t letters_and_digits(const std::string &text) {
+	std::size_t count = 0;
+	for (std::size_t index = 0; index < text.size(); ++index) {
+		const unsigned char byte = static_cast<unsigned char>(text[index]);
+		if (byte < 0x80) {
+			if ((byte >= '0' && byte <= '9') || (byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z')) ++count;
+		} else if (byte >= 0xC3 && byte <= 0xDF) {
+			// The first byte of a two-byte letter: accented Latin, Greek, Cyrillic.
+			++count;
+		}
+	}
+	return count;
+}
+
+// The languages a picture is read in, as on Windows: English first, then
+// Russian, then the person's own, each once and only where Vision reads it.
+NSArray<NSString *> *recognition_languages(VNRecognizeTextRequest *request) {
+	NSError *error = nil;
+	NSArray<NSString *> *supported = [request supportedRecognitionLanguagesAndReturnError:&error] ?: @[];
+	NSMutableArray<NSString *> *wanted = [NSMutableArray arrayWithObjects:@"en-US", @"ru-RU", nil];
+	for (NSString *preferred in [NSLocale preferredLanguages]) [wanted addObject:preferred];
+	NSMutableArray<NSString *> *languages = [NSMutableArray array];
+	for (NSString *language in wanted) {
+		NSString *found = nil;
+		for (NSString *candidate in supported) {
+			if ([candidate caseInsensitiveCompare:language] == NSOrderedSame) { found = candidate; break; }
+		}
+		if (found == nil) {
+			// "fr-CA" is read as Vision's "fr-FR": the language, not the country.
+			NSString *prefix = [[language componentsSeparatedByString:@"-"] firstObject];
+			for (NSString *candidate in supported) {
+				if ([[[candidate componentsSeparatedByString:@"-"] firstObject] caseInsensitiveCompare:prefix] == NSOrderedSame) { found = candidate; break; }
+			}
+		}
+		if (found != nil && [languages containsObject:found] == false) [languages addObject:found];
+	}
+	return languages;
+}
+
+// The lines as a page is read: from the top, and left to right where two
+// stand side by side. Vision's boxes count up from the picture's bottom left.
+std::string text_in_reading_order(NSArray<VNRecognizedTextObservation *> *observations) {
+	struct Found {
+		double top = 0;
+		double left = 0;
+		double height = 0;
+		std::string words;
+	};
+	std::vector<Found> lines;
+	for (VNRecognizedTextObservation *observation in observations) {
+		VNRecognizedText *best = [[observation topCandidates:1] firstObject];
+		if (best == nil || best.string.length == 0) continue;
+		const CGRect box = observation.boundingBox;
+		lines.push_back(Found{1.0 - CGRectGetMidY(box), CGRectGetMinX(box), CGRectGetHeight(box), std::string(best.string.UTF8String)});
+	}
+	std::stable_sort(lines.begin(), lines.end(), [](const Found &one, const Found &other) { return one.top < other.top; });
+	std::string text;
+	std::size_t start = 0;
+	while (start < lines.size()) {
+		// One row: every line whose middle is within half a line of the first's.
+		std::size_t end = start + 1;
+		while (end < lines.size() && lines[end].top - lines[start].top < 0.5 * std::max(lines[start].height, 0.001)) ++end;
+		std::stable_sort(lines.begin() + static_cast<std::ptrdiff_t>(start), lines.begin() + static_cast<std::ptrdiff_t>(end),
+				[](const Found &one, const Found &other) { return one.left < other.left; });
+		if (text.empty() == false) text += "\n";
+		for (std::size_t index = start; index < end; ++index) {
+			if (index > start) text += "  ";
+			text += lines[index].words;
+		}
+		start = end;
+	}
+	return text;
+}
+
+} // namespace
+
+// A picture's words, read on this computer by macOS's own text recognition
+// (Vision), as Windows reads them with its own (D-114, D-115): nothing leaves
+// the computer and no model is installed for it. The picture is opened by
+// ImageIO, so a phone's HEIC photograph reads as a PNG, JPEG or TIFF does, and
+// is turned as its file says it is shown.
+std::optional<std::string> recognize_image_text(const std::filesystem::path &path) {
+	@autoreleasepool {
+		NSString *file = [NSString stringWithUTF8String:path.u8string().c_str()];
+		if (file == nil) return std::nullopt;
+		CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:file], nullptr);
+		if (source == nullptr) return std::nullopt;
+		NSDictionary *drawing = @{
+			(id)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+			(id)kCGImageSourceCreateThumbnailWithTransform: @YES,
+			(id)kCGImageSourceThumbnailMaxPixelSize: @(kRecognizedLongEdge),
+		};
+		CGImageRef image = CGImageSourceGetCount(source) > 0
+				? CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)drawing)
+				: nullptr;
+		CFRelease(source);
+		if (image == nullptr) return std::nullopt;
+
+		VNRecognizeTextRequest *request = [[VNRecognizeTextRequest alloc] init];
+		request.recognitionLevel = VNRequestTextRecognitionLevelAccurate;
+		request.usesLanguageCorrection = YES;
+		NSArray<NSString *> *languages = recognition_languages(request);
+		if (languages.count > 0) request.recognitionLanguages = languages;
+		if (@available(macOS 13.0, *)) request.automaticallyDetectsLanguage = YES;
+
+		VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCGImage:image options:@{}];
+		NSError *error = nil;
+		const BOOL isRead = [handler performRequests:@[request] error:&error];
+		CGImageRelease(image);
+		if (isRead == NO) return std::nullopt;
+		std::string text = text_in_reading_order(request.results ?: @[]);
+		if (letters_and_digits(text) < kLeastRecognizedCharacters) return std::nullopt;
+		return text;
+	}
+}
+
+namespace {
+
+// A picture written as `type` ("public.png", "public.jpeg"), at `quality` for
+// a lossy one.
+std::optional<std::string> encoded_picture(CGImageRef image, CFStringRef type, std::optional<double> quality) {
+	NSMutableData *data = [NSMutableData data];
+	CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)data, type, 1, nullptr);
+	if (destination == nullptr) return std::nullopt;
+	NSDictionary *options = quality.has_value() ? @{(id)kCGImageDestinationLossyCompressionQuality: @(*quality)} : @{};
+	CGImageDestinationAddImage(destination, image, (__bridge CFDictionaryRef)options);
+	const bool isWritten = CGImageDestinationFinalize(destination);
+	CFRelease(destination);
+	if (isWritten == false || data.length == 0) return std::nullopt;
+	return std::string(static_cast<const char *>(data.bytes), data.length);
+}
+
+// The picture on white paper: what shows through its transparency is white,
+// as a page shows it, never JPEG's black.
+CGImageRef on_white(CGImageRef image) {
+	const std::size_t width = CGImageGetWidth(image);
+	const std::size_t height = CGImageGetHeight(image);
+	CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	CGContextRef context = CGBitmapContextCreate(nullptr, width, height, 8, 0, space,
+		static_cast<CGBitmapInfo>(kCGImageAlphaNoneSkipLast));
+	CGColorSpaceRelease(space);
+	if (context == nullptr) return nullptr;
+	const CGRect whole = CGRectMake(0, 0, static_cast<CGFloat>(width), static_cast<CGFloat>(height));
+	CGContextSetRGBFillColor(context, 1, 1, 1, 1);
+	CGContextFillRect(context, whole);
+	CGContextDrawImage(context, whole, image);
+	CGImageRef flattened = CGBitmapContextCreateImage(context);
+	CGContextRelease(context);
+	return flattened;
+}
+
+} // namespace
+
+// A picture as a model reads it (D-256): as it is where every provider takes
+// it, otherwise redrawn by ImageIO - a phone's HEIC or HEIF photograph, a TIFF
+// or BMP scan, a picture too large or turned by its file - upright and no
+// larger than any provider reads.
+std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path) {
+	if (std::optional<ModelPicture> kept = picture::as_it_is(path)) return kept;
+	@autoreleasepool {
+		NSString *file = [NSString stringWithUTF8String:path.u8string().c_str()];
+		if (file == nil) return std::nullopt;
+		CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:file], nullptr);
+		if (source == nullptr) return std::nullopt;
+		if (CGImageSourceGetCount(source) == 0) {
+			CFRelease(source);
+			return std::nullopt;
+		}
+		NSDictionary *properties = CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(source, 0, nullptr));
+		const bool hasAlpha = [properties[(id)kCGImagePropertyHasAlpha] boolValue];
+		const double longest = std::max([properties[(id)kCGImagePropertyPixelWidth] doubleValue],
+			[properties[(id)kCGImagePropertyPixelHeight] doubleValue]);
+		const double edge = longest > 0 ? std::min<double>(picture::kRedrawnLongEdge, longest) : picture::kRedrawnLongEdge;
+		NSDictionary *drawing = @{
+			(id)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+			(id)kCGImageSourceCreateThumbnailWithTransform: @YES,
+			(id)kCGImageSourceThumbnailMaxPixelSize: @(edge),
+		};
+		CGImageRef image = CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)drawing);
+		CFRelease(source);
+		if (image == nullptr) return std::nullopt;
+		std::optional<ModelPicture> drawn;
+		if (hasAlpha) {
+			std::optional<std::string> png = encoded_picture(image, CFSTR("public.png"), std::nullopt);
+			if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) drawn = ModelPicture{"image/png", std::move(*png)};
+		}
+		if (drawn.has_value() == false) {
+			CGImageRef paper = hasAlpha ? on_white(image) : CGImageRetain(image);
+			if (paper != nullptr) {
+				std::optional<std::string> jpeg = encoded_picture(paper, CFSTR("public.jpeg"), picture::kRedrawnJpegQuality);
+				if (jpeg.has_value() && jpeg->size() <= picture::kMostBytesAsItIs) drawn = ModelPicture{"image/jpeg", std::move(*jpeg)};
+				CGImageRelease(paper);
+			}
+		}
+		CGImageRelease(image);
+		return drawn;
+	}
+}
 
 // Work on a PDF (D-115) - an annotated or a redacted copy - is PDFium's on
 // every system: PdfExtractorPdfium.cpp writes it on the Mac too.

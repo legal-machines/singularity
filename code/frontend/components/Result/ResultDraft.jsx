@@ -9,7 +9,7 @@ import { fileLine } from "./Result.jsx";
 import styles from "./ResultDraft.module.css";
 
 // The size of a file from the computer, as a file's line says it.
-function sizeOf(bytes) {
+export function sizeOf(bytes) {
 	return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 

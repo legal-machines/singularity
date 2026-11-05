@@ -79,7 +79,16 @@ struct ModelDescriptor {
   // tool), never a silent downgrade to the textual protocol.
   bool supports_native_tools = false;
   bool supports_tool_choice = false;
+  // What the model reads, as the provider reports it (OpenRouter's
+  // `architecture.input_modalities`: "text", "image", "file", "audio"). Empty
+  // where the provider reports none (direct OpenAI and Anthropic today).
+  std::vector<std::string> input_modalities;
 };
+
+// Whether `model` of `provider_id` reads pictures (D-256): what the provider
+// reported, where it did; every model Anthropic serves does; a local model
+// here does not. std::nullopt where nothing says, and the picture is sent.
+std::optional<bool> takes_pictures(const std::string &provider_id, const ModelDescriptor &model);
 
 // The classification heuristic itself, exposed so it can be tested and
 // reasoned about independently of a live provider call. Returns the

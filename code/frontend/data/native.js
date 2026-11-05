@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { namesAll } from "../components/Composer/mentions.js";
+import { plainOf } from "../components/MessageText/markdown.js";
 import { pigmentName, pigments } from "../components/ProjectMark/pigments.js";
 
 import { isEmulation } from "../emulation/emulation.js";
@@ -9,7 +10,7 @@ import { aiUsage, aiWork, expenses, timeEntries } from "./billing.js";
 import { calendarEvents } from "./calendar.js";
 import { ensureDefaultModels } from "./models.js";
 import { projectMail } from "./mail.js";
-import { becomeOrganisation, becomeViewer, becomeViewerRights, chats, inbox, matters, members, organisation, threads, viewerId } from "./workspace.js";
+import { becomeOrganisation, becomeViewer, becomeViewerRights, chats, general, inbox, matters, members, organisation, threads, viewerId } from "./workspace.js";
 
 // The window's native core (the Native API), when Singularity runs this
 // page, and nothing in a plain browser, where the prototype's mock data is all
@@ -789,11 +790,18 @@ export async function readPersonal() {
 		do {
 			isPersonalStale = false;
 			const listed = await api.listPersonalChats().catch(() => null);
+			// The conversations the member cleared here (chat.clearConversation):
+			// what was said up to then is no longer shown.
+			const cleared = typeof api.listClearedConversations == "function" ? await api.listClearedConversations().catch(() => null) : null;
+			const clearedOf = new Map((cleared?.conversations ?? []).map(item => [item.chatId, item.clearedBefore ?? ""]));
+			if (cleared != null) publish({ cleared: Object.fromEntries(clearedOf) });
 			const personal = {};
 			for (const entry of listed?.conversations ?? []) {
 				const chatIds = (entry.chatIds ?? []).length > 0 ? entry.chatIds : [entry.chatId];
 				const read = await Promise.all(chatIds.map(chatId => api.listChatConversation(entry.projectId, chatId).catch(() => null)));
+				const clearedBefore = chatIds.map(chatId => clearedOf.get(chatId) ?? "").filter(Boolean).sort().at(-1) ?? "";
 				const turns = read.flatMap(conversation => conversation?.turns ?? [])
+					.filter(turn => clearedBefore == "" || (turn.createdAt ?? "") > clearedBefore)
 					.sort((first, second) => (first.createdAt ?? "").localeCompare(second.createdAt ?? ""));
 				const viewer = read.find(conversation => conversation?.viewer != null)?.viewer;
 				// What the other wrote is here now: said once, so they see when it
@@ -826,6 +834,35 @@ export async function readPersonal() {
 
 // Opens the member's personal conversation with a person of the firm, made
 // when it is not yet: its project and chat, to write the first message in.
+// A conversation cleared by the member here (the owner, 2026-11-04: "a way to
+// clear the messages of a direct conversation"): its messages up to now leave
+// it on this computer, and an AI colleague answering from here begins afresh;
+// the other member's are theirs (Chat/ConversationClearing). `entry` is the
+// conversation as Messages holds it. Returns its Undo.
+export async function clearConversation(entry) {
+	const api = nativeApp();
+	if (typeof api?.clearConversation != "function") throw new Error("This conversation can't be cleared here.");
+	const personal = entry?.actorId != null ? (snapshot.personal ?? {})[entry.actorId] : null;
+	const chatIds = personal != null ? ((personal.chatIds ?? []).length > 0 ? personal.chatIds : [personal.chatId])
+		: entry?.send?.kind == "chat" && (entry.send.chatId ?? "") != "" ? [entry.send.chatId] : [];
+	if (chatIds.length == 0) throw new Error("This conversation has nothing to clear yet.");
+	const answers = [];
+	for (const chatId of chatIds) answers.push(await api.clearConversation(chatId));
+	publish({ cleared: { ...(snapshot.cleared ?? {}), ...Object.fromEntries(answers.map(answer => [answer.chatId, answer.clearedBefore])) } });
+	await readPersonal();
+	return async () => {
+		for (const [index, chatId] of chatIds.entries()) await api.restoreConversation(chatId, answers[index]?.previouslyClearedBefore ?? null);
+		const restored = { ...(snapshot.cleared ?? {}) };
+		for (const [index, chatId] of chatIds.entries()) {
+			const before = answers[index]?.previouslyClearedBefore ?? null;
+			if (before == null) delete restored[chatId];
+			else restored[chatId] = before;
+		}
+		publish({ cleared: restored });
+		await readPersonal();
+	};
+}
+
 export async function openPersonalChat(actorId) {
 	const opened = await nativeApp().openPersonalChat(actorId);
 	await readPersonal();
@@ -930,6 +967,7 @@ export function realLatestOf(matterId) {
 // or null where none is known - its title, its Matter and when (Recent).
 export function realThreadsLatest() {
 	return (snapshot.threadsLatest ?? [])
+		.filter(message => isListedMatter(message.matterId))
 		.map(message => {
 			const isViewer = viewerActorId != "" && message.authorActorId == viewerActorId;
 			const name = (message.authorName ?? "").trim();
@@ -984,6 +1022,7 @@ function isOthersUnread(chatId, at, authorIsViewer) {
 // Whether that message names the member (@) is said with it.
 export function realUnreadThreads() {
 	return (snapshot.threadsLatest ?? [])
+		.filter(message => isListedMatter(message.matterId))
 		.filter(message => isOthersUnread(message.chatId, message.at, viewerActorId != "" && message.authorActorId == viewerActorId))
 		.map(message => ({ chatId: message.chatId, threadId: `real:${message.chatId}`, matterId: message.matterId, at: message.at,
 			namesViewer: viewerActorId != "" && (message.mentions ?? []).includes(viewerActorId) }));
@@ -1035,9 +1074,22 @@ export async function keepMatterMark(matterId, look) {
 // (2026-10-31: a home folder's walk kept the window without a Matter).
 export async function readMatters() {
 	const api = nativeApp();
+	// This computer's Trash first (project.listTrash, D-247): it deletes what
+	// has stood there 30 days, and what is in it leaves every list here.
+	const trash = typeof api.listMatterTrash == "function" ? await api.listMatterTrash().catch(() => null) : null;
+	const trashed = new Map((trash?.matters ?? []).map(entry => [entry.id, entry]));
 	const listed = await api.listMatters();
-	const list = (listed?.matters ?? listed ?? []).filter(matter => (matter.deletedAt ?? "") == "");
+	const every = (listed?.matters ?? listed ?? []).filter(matter => (matter.deletedAt ?? "") == "");
+	const list = every.filter(matter => trashed.has(matter.id) == false);
 	placeMatters(list);
+	publish({
+		trash: every.filter(matter => trashed.has(matter.id)).map(matter => ({
+			id: matter.id, name: matter.name ?? "A Matter", client: matter.client ?? matter.clientName ?? "",
+			trashedAt: trashed.get(matter.id).trashedAt, deletesAt: trashed.get(matter.id).deletesAt,
+			// Its mark as it stood among the Matters.
+			mark: shownMatterOf(matter),
+		})).sort((first, second) => second.trashedAt.localeCompare(first.trashedAt)),
+	});
 	// One opened here is no longer an arrival, before the search says so again.
 	publish({ arrivals: (snapshot.arrivals ?? []).filter(arrival => list.some(matter => matter.id == arrival.id) == false) });
 	lookForArrivedMatters({ isRoutine: true });
@@ -1626,6 +1678,32 @@ export function readMatterLifeUsage(uiMatterId) {
 	return nativeApp().getUsageSummary("2000-01-01T00:00:00Z", end, matter.realMatterId);
 }
 
+// This computer's Trash of Matters (D-247; the owner, 2026-11-04: "Matters
+// can be cleared away, they go to the Trash and are kept there for 30
+// days"): one in it leaves every list here and comes back whole with Restore;
+// after 30 days, or with Delete now, it is deleted from this computer as
+// deleteMatterHere deletes it. Moving it returns its Undo.
+export function matterTrash() {
+	return snapshot.trash ?? [];
+}
+
+export async function moveMatterToTrash(uiMatterId) {
+	const matter = realMatterOf(uiMatterId);
+	await nativeApp().moveMatterToTrash(matter.realMatterId);
+	await readMatters();
+	return () => restoreMatterFromTrash(matter.realMatterId);
+}
+
+export async function restoreMatterFromTrash(realMatterId) {
+	await nativeApp().restoreMatterFromTrash(realMatterId);
+	await readMatters();
+}
+
+export async function deleteMatterFromTrash(realMatterId) {
+	await nativeApp().deleteMatterFromTrash(realMatterId);
+	await readMatters();
+}
+
 // Deleted from this computer: it stops travelling here and leaves the list;
 // its folder and documents stay where they are, and the others on it keep it.
 export async function deleteMatterHere(uiMatterId) {
@@ -1826,8 +1904,21 @@ function isUnbegun(thread) {
 		&& thread.real?.chatId != openChatId;
 }
 
+// A thread stands in the lists while its Matter is listed here: the firm's
+// own General, or a Matter neither in this computer's Trash nor deleted from
+// it. What is in the Trash leaves every list here (D-247), its threads with
+// it, and they come back with it (2026-11-05: the Inbox could not show a row
+// of a Matter deleted a moment before).
+function isListedMatter(uiMatterId) {
+	return uiMatterId == general.id || matters.some(matter => matter.id == uiMatterId && matter.isReal == true);
+}
+
+function isListed(thread) {
+	return thread.isReal == true && isUnbegun(thread) == false && thread.isArchived != true && isListedMatter(thread.matterId);
+}
+
 export function shownThreads() {
-	return hasNative() ? threads.filter(thread => thread.isReal == true && isUnbegun(thread) == false && thread.isArchived != true) : threads;
+	return hasNative() ? threads.filter(isListed) : threads;
 }
 
 // A Matter's archived threads (D-214), the latest first: readable, and
@@ -1838,8 +1929,7 @@ export function archivedThreads(uiMatterId) {
 
 export function shownInbox() {
 	if (hasNative() == false) return inbox;
-	return inbox.filter(entry => threads.some(thread => thread.id == entry.threadId && thread.isReal == true && isUnbegun(thread) == false
-		&& thread.isArchived != true));
+	return inbox.filter(entry => threads.some(thread => thread.id == entry.threadId && isListed(thread)));
 }
 
 // The member's personal chats. The firm's own are not kept yet, so here they
@@ -1901,8 +1991,10 @@ export function realMatterDocuments() {
 				documentId: document.id,
 				// The seat whose computer first recorded it in the Matter (its operations' own record).
 				addedByActorId: document.addedByActorId || "",
+				// A picture with no words in it is still a picture the AI model sees
+				// (D-256): only a document that cannot be read says so.
 				kind: ["processing", "changed"].includes(state) ? "reading"
-					: ["needs_attention", "unsupported"].includes(state) ? "failed"
+					: ["needs_attention", "unsupported"].includes(state) ? (isPictureFile(document.displayName ?? document.name) ? "ready" : "failed")
 					: state == "unavailable" ? "gone"
 					: draft != null ? "draft" : "ready",
 				sizeBytes: document.sizeBytes ?? null,
@@ -2240,7 +2332,9 @@ export function realConversations() {
 		if (found.some(entry => entry.memberId == memberId)) continue;
 		const conversation = snapshot.firm?.conversations?.[agent.chatId] ?? snapshot.conversations?.[agent.chatId];
 		const documents = snapshot.firm?.documents?.[agent.chatProjectId] ?? snapshot.documents ?? [];
-		const posts = withSending(agent.chatId, conversation != null ? postsOf(conversation, everyColleague, documents) : []);
+		const clearedBefore = snapshot.cleared?.[agent.chatId] ?? "";
+		const posts = withSending(agent.chatId, conversation != null ? postsOf(conversation, everyColleague, documents) : [])
+			.filter(post => clearedBefore == "" || (post.at ?? "") == "" || post.at > clearedBefore);
 		found.push({
 			key: `member:${memberId}`,
 			kind: "member",
@@ -2351,11 +2445,12 @@ export async function postToThread(chatId, text, extras = {}) {
 	// read at once, so the message stands as sent the moment it is kept (the
 	// owner, 2026-11-02: a reply to a colleague stayed "Sending").
 	if (extras.isPersonal == true) readPersonal();
-	// A thread begun from here takes its name from its first message.
+	// A thread begun from here takes its name from its first message's words,
+	// its formatting marks gone (a name is never drawn as markdown).
 	const chat = (snapshot.chats ?? []).find(entry => entry.id == chatId);
 	if (chat != null && ["New chat", "New thread"].includes(chat.title)) {
 		const named = (extras.title ?? "").trim();
-		const words = named != "" ? named : text.replace(/@\S+/g, "").replace(/[\s,]+/g, " ").trim().split(" ").slice(0, 7).join(" ");
+		const words = named != "" ? named : plainOf(text).replace(/@\S+/g, "").replace(/[\s,]+/g, " ").trim().split(" ").slice(0, 7).join(" ");
 		if (words != "") {
 			try {
 				await nativeApp().renameProjectChat(projectId, chatId, chat.revision, words.charAt(0).toUpperCase() + words.slice(1));
@@ -2590,6 +2685,14 @@ export function pictureType(name) {
 	return PICTURE_TYPES[extension] ?? null;
 }
 
+// Whether a file goes to an AI model as a picture (D-256): every kind the
+// window shows, and a phone's HEIC or HEIF photograph or a TIFF scan, which
+// Singularity redraws for the model.
+export function isPictureFile(name) {
+	const extension = (name ?? "").split(".").pop().toLowerCase();
+	return pictureType(name) != null || ["heic", "heif", "tif", "tiff"].includes(extension);
+}
+
 export function personalPicture(projectId, file) {
 	const type = pictureType(file?.name);
 	if (type == null || (file.sizeBytes ?? 0) > MOST_PICTURE_BYTES) return Promise.resolve(null);
@@ -2698,6 +2801,30 @@ export async function addDocumentFromComputer() {
 	await nativeApp().addMatterDocument(snapshot.matterId);
 	await reload();
 	return realDocuments().filter(document => before.has(document.id) == false);
+}
+
+// Files and folders dropped on the open Matter's documents or one of its
+// threads, by where they are on this computer (the window takes a drop
+// itself: Platform/FileDrop): copied into its folder `folder` ("" for the
+// Matter's own), a name already there keeping both, a folder whole. The
+// documents they became, and what could not be added, in words.
+export async function addDroppedToMatter(folder, dropped) {
+	const matterId = snapshot.matterId;
+	if (matterId == null) throw new Error("This Matter is not open on this computer.");
+	const before = new Set(realDocuments().map(document => document.id));
+	const problems = [];
+	for (const item of dropped) {
+		if ((item?.path ?? "") == "") continue;
+		try {
+			if (item.isFolder == true) await nativeApp().addExternalMatterFolder(matterId, folder, item.path);
+			else await nativeApp().addExternalMatterFile(matterId, folder, item.path, false, true);
+		} catch (error) {
+			const name = item.path.split(/[\\/]/).filter(Boolean).at(-1) ?? "A file";
+			problems.push(error?.message ? `${name}: ${error.message}` : `${name} could not be added.`);
+		}
+	}
+	await reload();
+	return { added: realDocuments().filter(document => before.has(document.id) == false), problems };
 }
 
 // A document the lawyer takes out of the Matter, one added by mistake among

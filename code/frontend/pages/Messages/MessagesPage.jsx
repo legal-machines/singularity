@@ -7,10 +7,12 @@ import { ComposerAction, ComposerBox } from "../../components/Composer/ComposerB
 import { useWindowFileDrop } from "../../components/FileDrop/windowDrop.js";
 import { FileKindIcon } from "../../components/FileKind/FileKind.jsx";
 import { FileTile, kindOf, wordOf } from "../../components/FileTile/FileTile.jsx";
+import { DropOverlay } from "../../components/FileDrop/DropOverlay.jsx";
 import { Icon } from "../../components/Icon/Icon.jsx";
 import { MessageText } from "../../components/MessageText/MessageText.jsx";
 import { MaskedDraft, MaskedText, ProviderViewButton } from "../../components/ProviderView/ProviderView.jsx";
 import { useProviderView } from "../../components/ProviderView/providerView.js";
+import { isProtectionOn } from "../../data/masking.js";
 import { plainOf } from "../../components/MessageText/markdown.js";
 import { Menu, useMenu } from "../../components/Menu/Menu.jsx";
 import { useNavigation } from "../../components/Navigation/navigation.js";
@@ -22,10 +24,11 @@ import { sizeWords } from "../../components/Review/Review.jsx";
 import { Count } from "../../components/Status/Status.jsx";
 import { toast } from "../../components/Toast/toast.js";
 import { Typing } from "../../components/Typing/Typing.jsx";
+import { ShareWorkLogDialog, useCanShareWorkLog } from "../../components/WorkLog/ShareWorkLog.jsx";
 import {
-	actorOfPerson, attachDropped, attachFromComputer, attachmentFirstLines, attachmentState, attachPaths, draftLetterReply, hasNative, MOST_ATTACHMENT_BYTES,
+	actorOfPerson, attachDropped, attachFromComputer, clearConversation, attachmentFirstLines, attachmentState, attachPaths, draftLetterReply, hasNative, MOST_ATTACHMENT_BYTES,
 	MOST_ATTACHMENTS, openPersonalChat,
-	openPersonalFile, personalPicture, pictureType, postToThread, protectionProjectOfChat, reactInConversation, showPersonalFile, useRealWork, watchRealChat,
+	isPictureFile, openPersonalFile, personalPicture, pictureType, postToThread, protectionProjectOfChat, reactInConversation, showPersonalFile, useRealWork, watchRealChat,
 } from "../../data/native.js";
 import { viewerId } from "../../data/workspace.js";
 import { findMatter, findMember, firstName, formatClock, formatDay, officeLine, positionOf } from "../words.js";
@@ -140,6 +143,22 @@ function strangerOf(memberId) {
 // What the member has seen of each conversation: its latest item when they
 // last had it open. A conversation met for the first time counts as seen, so
 // only what comes afterwards is new.
+// Whether client data protection is on, asked while `isAsked`: what a picture
+// attached to a reply says before it goes (D-256). Unknown until asked, so the
+// note never shows and then goes for a computer where protection is off.
+function useProtection(isAsked) {
+	const [isOn, setOn] = useState(null);
+	useEffect(() => {
+		if (isAsked == false) return undefined;
+		let isLive = true;
+		isProtectionOn().then(on => isLive && setOn(on));
+		return () => {
+			isLive = false;
+		};
+	}, [isAsked]);
+	return isOn;
+}
+
 function useSeen(conversations, openKey) {
 	const seen = useRef(new Map());
 	for (const entry of conversations) {
@@ -222,6 +241,22 @@ function whenOf(at) {
 
 function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	const headMenu = useMenu();
+	// On a design partner's seat the conversation's work log goes to Legal
+	// Machines on request (D-257).
+	const [isSendingLog, setSendingLog] = useState(false);
+	const canShareWorkLog = useCanShareWorkLog() && entry.send?.kind == "chat" && (entry.send.chatId ?? "") != "" && (entry.send.projectId ?? "") != "";
+	// The conversation cleared for the member, on this computer, with its
+	// Undo; the other member keeps theirs.
+	async function clearHere(conversation) {
+		try {
+			const undo = await clearConversation(conversation);
+			toast(`Your conversation with ${nameOf(conversation)} is cleared. ${isColleagueConversation(conversation) ? `${firstName(findMember(conversation.memberId))} starts afresh.` : "They keep theirs."}`, {
+				action: { label: "Undo", run: () => undo().catch(() => toast("It could not be put back.", { tone: "seal" })) },
+			});
+		} catch (error) {
+			toast(error?.message ?? "The conversation could not be cleared.", { tone: "seal" });
+		}
+	}
 	const scrollRef = useRef(null);
 	// The message the member answers, quoted over the reply; and the files put
 	// into the conversation for the next message, as a messenger has them
@@ -229,6 +264,21 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	const [quote, setQuote] = useState(null);
 	const [pending, setPending] = useState([]);
 	const [isAttaching, setAttaching] = useState(false);
+	// The files being put in, shown at once as tiles - a picture as itself -
+	// each with the mark of its loading over it, never as words alone that read
+	// as if nothing came in (the owner, 2026-11-05).
+	const [placing, setPlacing] = useState([]);
+	function beginPlacing(list) {
+		setPlacing(list);
+		setAttaching(true);
+	}
+	function endPlacing() {
+		setPlacing(list => {
+			for (const file of list) if (file.preview != null) URL.revokeObjectURL(file.preview);
+			return [];
+		});
+		setAttaching(false);
+	}
 	const [isDropping, setDropping] = useState(false);
 	const dragDepth = useRef(0);
 	// What each file put in stands at: read, or still being read. The reply
@@ -299,7 +349,10 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 
 	async function attachFiles(files) {
 		if (files.length == 0 || canAttach == false) return;
-		setAttaching(true);
+		beginPlacing(files.map((file, index) => ({
+			key: `${index}:${file.name}`, name: file.name,
+			preview: pictureType(file.name) != null ? URL.createObjectURL(file) : null,
+		})));
 		try {
 			const place = await placeOfNext();
 			const added = await attachDropped(place.projectId, files);
@@ -308,21 +361,21 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 		} catch (error) {
 			toast(error?.message ?? "The files could not be put into the conversation.", { tone: "seal" });
 		} finally {
-			setAttaching(false);
+			endPlacing();
 		}
 	}
 
-	// The words of putting files in stand only once files were chosen: a
+	// The tiles of putting files in stand only once files were chosen: a
 	// dialog closed with none chosen leaves the reply as it was.
 	async function attachChosen() {
 		if (isAttaching) return;
 		try {
 			const place = await placeOfNext();
-			addPending(await attachFromComputer(place.projectId, () => setAttaching(true)), place.projectId);
+			addPending(await attachFromComputer(place.projectId, () => beginPlacing([{ key: "chosen", name: "", preview: null }])), place.projectId);
 		} catch (error) {
 			toast(error?.message ?? "The file could not be put into the conversation.", { tone: "seal" });
 		} finally {
-			setAttaching(false);
+			endPlacing();
 		}
 	}
 
@@ -356,7 +409,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 		const paths = files.filter(file => file.isFolder != true).map(file => file.path).filter(Boolean);
 		if (paths.length < files.length) toast("A folder can't go into a message. Drop the files in it instead.");
 		if (paths.length == 0 || canAttach == false) return;
-		setAttaching(true);
+		beginPlacing(paths.map(path => ({ key: path, name: path.split(/[\\/]/).pop() ?? path, preview: null })));
 		try {
 			const place = await placeOfNext();
 			const added = await attachPaths(place.projectId, paths);
@@ -369,7 +422,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 		} catch (error) {
 			toast(error?.message ?? "The files could not be put into the conversation.", { tone: "seal" });
 		} finally {
-			setAttaching(false);
+			endPlacing();
 		}
 	}
 
@@ -442,7 +495,16 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 						{ key: "about", label: entry.kind == "mail" ? "Contact" : "Profile", icon: "info", checked: isAbout, onSelect: onAbout },
 						entry.kind == "member" && entry.memberId != null
 							? { key: "page", label: "Open their page", icon: "team", onSelect: () => onOpen({ kind: "profile", memberId: entry.memberId }) } : null,
+						// Cleared for the member, with its Undo (the owner, 2026-11-04).
+						entry.kind == "member" && items.length > 0 && hasNative()
+							? { key: "clear", label: "Clear conversation", icon: "trash", onSelect: () => clearHere(entry) } : null,
+						canShareWorkLog ? { key: "workLog", label: "Send work log to Legal Machines", icon: "send", onSelect: () => setSendingLog(true) } : null,
 					].filter(Boolean)} />
+				) : null}
+				{isSendingLog ? (
+					<ShareWorkLogDialog matterId={entry.send.projectId} chatId={entry.send.chatId} title={nameOf(entry)}
+						messages={items.map(item => ({ author: findMember(item.authorId)?.name ?? "", at: item.at ?? "", text: (item.paragraphs ?? []).join("\n\n") }))}
+						onClose={() => setSendingLog(false)} />
 				) : null}
 			</header>
 			{/* No fade at either edge: the head and the reply box cover what
@@ -473,14 +535,10 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 				}}
 				canAttach={canAttach}
 				isAttaching={isAttaching}
+				placing={placing}
 				onAttach={attachChosen}
 			/>
-			{isDropping ? (
-				<div className={styles.drop} aria-hidden="true">
-					<Icon name="attach" size={24} />
-					<p>Drop to send to {first}</p>
-				</div>
-			) : null}
+			{isDropping ? <DropOverlay words={`Drop to send to ${first}`} /> : null}
 		</section>
 	);
 }
@@ -779,12 +837,18 @@ function Letter({ item, previous }) {
 // files it hands over, and the paperclip beside it chooses more (D-212). To a
 // correspondent it is a letter: the draft opens in Outlook, which sends it
 // (D-079, D-105).
-function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeOfFiles = null, isReading = false, onFileState, onRemovePending, onSent, canAttach = false, isAttaching = false, onAttach }) {
+function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeOfFiles = null, isReading = false, onFileState, onRemovePending, onSent, canAttach = false, isAttaching = false, placing = [], onAttach }) {
 	const [draft, setDraft] = useState("");
 	const [isBusy, setBusy] = useState(false);
 	// The draft as it would go out, before it is sent, while the conversation
 	// is read as an AI provider receives it (D-233).
 	const isProviderView = useProviderView(entry.send?.kind == "chat" ? entry.send.chatId : null);
+	// A picture goes to the AI model as it is: protection masks words, not
+	// pictures, so while it is on the picture says so before it goes, and Send
+	// is the member's consent (D-256). Only an AI colleague's conversation sends
+	// it to a model: one between two people, or a reply drafted in Outlook, does not.
+	const hasPictures = isColleagueConversation(entry) && pending.some(file => isPictureFile(file.name));
+	const isProtected = useProtection(hasPictures);
 	const name = nameOf(entry);
 	const first = name.split(/\s+/)[0];
 
@@ -904,9 +968,10 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 							<div className={styles.attached_list}>
 								{pending.map(file => (
 									<AttachedFile key={file.documentId} projectId={file.projectId ?? placeOfFiles} file={file} onState={onFileState}
+										isUnmasked={hasPictures && isProtected == true && isPictureFile(file.name)}
 										onRemove={() => onRemovePending(file.documentId)} />
 								))}
-								{isAttaching ? <p className={styles.attached_wait}>Putting the files in…</p> : null}
+								{placing.map(file => <PlacingFile key={file.key} file={file} />)}
 							</div>
 						) : null}
 					</>
@@ -925,11 +990,47 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 	);
 }
 
+// The mark of a file's loading, over its picture or its page (the owner,
+// 2026-11-05: the loading mark over the image itself, so it never looks as if
+// nothing came in).
+function Loading({ label }) {
+	return (
+		<span className={styles.attached_busy} role="status" aria-label={label}>
+			<span className={styles.attached_spinner} aria-hidden="true" />
+		</span>
+	);
+}
+
+// A file on its way into the reply: its tile at once - the picture itself,
+// where the window holds it - with the mark of its loading over it.
+function PlacingFile({ file }) {
+	const isNamed = file.name != "";
+	return (
+		<div className={file.preview != null ? `${styles.attached} ${styles.attached_is_picture}` : styles.attached} data-state="placing">
+			<span className={styles.attached_open}>
+				{file.preview != null ? <img className={styles.attached_picture} src={file.preview} alt="" /> : (
+					<>
+						<span className={styles.attached_preview}>
+							<span className={styles.attached_kind}>{isNamed ? <FileKindIcon name={file.name} /> : null}</span>
+						</span>
+						<span className={styles.attached_foot}>
+							{isNamed ? <FileKindIcon name={file.name} size="row" /> : null}
+							<span className={styles.attached_name}>{isNamed ? file.name : "A file"}</span>
+						</span>
+					</>
+				)}
+			</span>
+			<Loading label={isNamed ? `Putting ${file.name} in` : "Putting the file in"} />
+		</div>
+	);
+}
+
 // A file put into the reply, as Codex shows one before it goes (the owner,
 // 2026-11-02): a picture as itself; a document as its first page in small,
-// with its kind and its name under it. While Singularity reads it, the tile
-// says so, and the reply waits for it; one it cannot read says that.
-function AttachedFile({ projectId, file, onState, onRemove }) {
+// with its kind and its name under it. While Singularity reads it, the mark
+// of its loading stands over it, and the reply waits for it; one it cannot
+// read says that.
+function AttachedFile({ projectId, file, onState, isUnmasked = false, onRemove }) {
 	const [found, setFound] = useState({ state: "reading", detail: null });
 	const [picture, setPicture] = useState(null);
 	const [lines, setLines] = useState(null);
@@ -967,10 +1068,13 @@ function AttachedFile({ projectId, file, onState, onRemove }) {
 		};
 	}, [projectId, file.documentId, found.state]);
 
-	const words = found.state == "reading" ? "Reading…" : found.state == "failed" ? "Can't be read" : found.state == "gone" ? "No longer here" : null;
+	// A picture with no words in it is still a picture the AI model sees
+	// (D-256): only a document that cannot be read says so.
+	const shownState = isPictureFile(file.name) && found.state == "failed" ? "ready" : found.state;
+	const words = shownState == "failed" ? "Can't be read" : shownState == "gone" ? "No longer here" : null;
 	const open = () => openPersonalFile(projectId, file.documentId).catch(() => {});
 	return (
-		<div className={isPicture && picture != null ? `${styles.attached} ${styles.attached_is_picture}` : styles.attached} data-state={found.state}>
+		<div className={isPicture && picture != null ? `${styles.attached} ${styles.attached_is_picture}` : styles.attached} data-state={shownState}>
 			<button className={styles.attached_open} type="button" aria-label={`Open ${file.name}`} title={found.detail ?? file.name} onClick={open}>
 				{isPicture && picture != null ? (
 					<img className={styles.attached_picture} src={picture} alt="" />
@@ -993,6 +1097,15 @@ function AttachedFile({ projectId, file, onState, onRemove }) {
 				)}
 				{words != null ? <span className={styles.attached_state}>{words}</span> : null}
 			</button>
+			{found.state == "reading" ? <Loading label={`Reading ${file.name}`} /> : null}
+			{/* While protection is on, a picture says in its own corner that the AI
+			    model sees it as it is, and why on hover (D-256): a plain fact, no
+			    alarm, once it is read. Where the tile shows the picture, at its
+			    foot; otherwise at its head, where nothing else is said. */}
+			{isUnmasked && found.state != "reading" && (words == null || isPicture && picture != null) ? (
+				<span className={styles.attached_badge} data-place={isPicture && picture != null ? "foot" : "head"}
+					data-tooltip="Protection masks words, not pictures.">Not masked</span>
+			) : null}
 			<button className={styles.attached_remove} type="button" aria-label={`Take ${file.name} off`} data-tooltip="Take it off" onClick={onRemove}>
 				<Icon name="close" size={14} />
 			</button>
