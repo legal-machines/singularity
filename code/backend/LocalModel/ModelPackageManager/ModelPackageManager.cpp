@@ -305,8 +305,8 @@ PackageSyncStatus ModelPackageManager::status(const std::string &model_id) const
 void ModelPackageManager::sync_required_models() {
 	try {
 		// A missing model is fetched here only once onboarding is complete with
-		// protection on (D-198). Until then its status is read again from disk,
-		// where it is Available, and the member's own action fetches it.
+		// protection on. Until then its status is read again from disk, where
+		// it is Available, and the member's own action fetches it.
 		const auto &package = require_manifest(kPapinianId);
 		std::error_code error;
 		const bool present = std::filesystem::is_directory(package.installed_path, error) && !error;
@@ -390,8 +390,8 @@ void ModelPackageManager::install(
       if (error.cancelled) throw;
       throw std::runtime_error(kLegalMachinesUnreachable);
     }
-    // A seat with no authenticator app keeps its session, which sets one up
-    // (D-215): the member sets up two-step sign-in, then tries again.
+    // A seat with no authenticator app keeps its session, which sets one
+    // up: the member sets up two-step sign-in, then tries again.
     if (node::is_two_step_setup_refusal(catalog) == true) {
       node::tell_two_step_setup_required();
       throw std::runtime_error(node::kTwoStepSetupFirst);
@@ -664,8 +664,8 @@ void ModelPackageManager::authorize_and_sync(const std::string &password, const 
   }
   token.assign(token.size(), '\0');
   // With the session kept, a missing model downloads now only once onboarding
-  // is complete with protection on (D-198); in onboarding the member's choice
-  // starts it.
+  // is complete with protection on; in onboarding the member's choice starts
+  // it.
   sync_required_models();
 }
 

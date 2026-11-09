@@ -4,10 +4,10 @@ import { DEMO_MEMBER } from "./emulation.js";
 // MOCK DATA - the deal of onboarding's first page
 // (onboarding/entry/conversation.js) in Marlowe Finch LLP's Amsterdam:
 // Halvane Robotics buys 80% of Sablewood Distribution and the seller keeps
-// 20%, fictional US companies under US law (AG-12, D-134). The member at the
-// keyboard is Gabriel Moore, the partner on the deal, who gives Kitsune the
-// deal. Only this frame's copy of the
-// mock data changes; nothing is read from or written to the backend (PROD-2).
+// 20%, fictional US companies under US law. The member at the keyboard is
+// Gabriel Moore, the partner on the deal, who gives Kitsune the deal. Only
+// this frame's copy of the mock data changes; nothing is read from or written
+// to the backend.
 
 export const VIEWER = "m_gabriel";
 export const DD_THREAD = "t_amsterdam_dd";
@@ -51,7 +51,7 @@ export function prepareWorld() {
 }
 
 // The member at the keyboard of onboarding, in the firm as they introduce
-// themselves on its first page (D-162): their name as they type it, their
+// themselves on its first page: their name as they type it, their
 // position, practice and photo. They join the team, and the work of the
 // second page is theirs, given in their name. Until they type a name the
 // firm is Gabriel's, as before.

@@ -17,23 +17,23 @@ nlohmann::json get(const nlohmann::json &params);
 nlohmann::json roles(const nlohmann::json &params);
 nlohmann::json get_run(const nlohmann::json &params);
 nlohmann::json create(const nlohmann::json &params);
-// A colleague of the firm, in no Matter (D-157).
+// A colleague of the firm, in no Matter.
 nlohmann::json hire(const nlohmann::json &params);
 // agent.edit {agentId, name, character?, manner?, goal?, title?, ranksWith?,
 // practice?, area?, answersTo?} -> AgentSummary; agent.archive {agentId,
-// archived} -> AgentSummary; agent.delete {agentId} -> {deleted} (D-214).
+// archived} -> AgentSummary; agent.delete {agentId} -> {deleted}.
 nlohmann::json edit(const nlohmann::json &params);
 // agent.requestEdit {the same as agent.edit} -> AgentSummary: from any of the
 // administrator's computers; one another computer runs changes once that
-// computer takes it (D-219).
+// computer takes it.
 nlohmann::json request_edit(const nlohmann::json &params);
 nlohmann::json archive(const nlohmann::json &params);
 nlohmann::json remove(const nlohmann::json &params);
-// A colleague's memory, as its page shows it, and a note a member lets go of
-// (D-159).
+// A colleague's memory, as its page shows it, and a note a member lets go
+// of.
 nlohmann::json memory(const nlohmann::json &params);
 // The firm's colleagues that other computers of the firm run, as the firm's
-// record holds them (D-203): every computer lists the whole firm's.
+// record holds them: every computer lists the whole firm's.
 nlohmann::json firm_colleagues(const nlohmann::json &params);
 nlohmann::json forget_memory(const nlohmann::json &params);
 nlohmann::json approve(const nlohmann::json &params);
@@ -41,7 +41,7 @@ nlohmann::json decline(const nlohmann::json &params);
 nlohmann::json pause(const nlohmann::json &params);
 nlohmann::json set_model(const nlohmann::json &params);
 // agent.setMemoryModel {agentId, providerId?, modelId?, off?}: what gathers its
-// memory (D-206).
+// memory.
 nlohmann::json set_memory_model(const nlohmann::json &params);
 nlohmann::json resume(const nlohmann::json &params);
 nlohmann::json stop(const nlohmann::json &params);

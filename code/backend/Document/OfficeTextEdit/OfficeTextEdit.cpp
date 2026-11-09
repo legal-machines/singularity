@@ -234,7 +234,7 @@ std::vector<ProseRun> runs_of_line(const std::string &line, bool bold, bool ital
 		}
 		// Underscores are a line to write on before they are a mark: a run of
 		// three or more ("________") is always the blank it draws, and one or two
-		// open emphasis only before a letter or digit - «__» ________ 2026 г. is
+		// open emphasis only before a letter or digit - «__» ________ 2026 … is
 		// a date left blank, not bold text (a live Russian draft lost its blanks
 		// to exactly that, 24 Sep 2026).
 		if (here == '_' && (at == 0 || line[at - 1] != '_')) {
@@ -2786,8 +2786,8 @@ TextEditOutcome apply_wordprocessing_edit(pugi::xml_document &document, const Te
 	// clauses around it, and an old paragraph no line rewrites goes whole, its
 	// paragraph mark with it. Written as one piece of text it would read, once
 	// accepted, as one run-on clause with empty numbered items where the old
-	// ones stood (a Russian claim on 26 Sep 2026: "...расчёт неустойки.7. На
-	// основании изложенного требуем:7.1. В течение ...").
+	// ones stood (a Russian claim on 26 Sep 2026: "...…
+	// …:7.1. …").
 	std::vector<std::string> newLines;
 	std::vector<ParagraphSegment> segments;
 	if (request.kind == TextEditKind::Replace && cellTexts.empty()) {

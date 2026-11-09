@@ -11,13 +11,13 @@
 //
 // A provider's model writes a person or a company as a symbol ([[E5]]) and
 // cannot decline what it never sees; restoration then puts back one writing of
-// the name for every place it stands. A live Russian letter read «Уважаемый(ая)
-// Лебедеву А. И.,» and «С уважением, Зайцевой О. Н.» (24 Sep 2026). Here each
+// the name for every place it stands. A live Russian letter read «…(…)
+// …,» and «…» (24 Sep 2026). Here each
 // restored name takes the case its position asks for - a preposition or a
-// fixed phrase before it, the role noun it stands with («Генеральному
-// директору … Лебедеву А. И.»), a salutation, a signature, an address block -
-// and the words that agree with it («Уважаемый(ая)», «подготовил(а)»,
-// «действующего») follow its gender. Nothing about the person leaves the
+// fixed phrase before it, the role noun it stands with («…
+// …»), a salutation, a signature, an address block -
+// and the words that agree with it («…»,
+// «…») follow its gender. Nothing about the person leaves the
 // device to make that possible, and nothing else in the text is changed.
 namespace singularity::protected_api::papinian::restoration_grammar {
 
@@ -29,8 +29,8 @@ struct RestoredSpan {
 	std::size_t offset = 0;
 	std::size_t length = 0;
 	SpanKind kind = SpanKind::Person;
-	// The fullest writing of the name known locally, in any case («Лебедев
-	// Андрей Игоревич», «Зайцевой О. Н.»); a person is written in its style
+	// The fullest writing of the name known locally, in any case («…
+	// …», «…»); a person is written in its style
 	// (a full name, or initials). Empty: the span's own text.
 	std::string canonical;
 	// Decided by the caller from the fullest writing; Unknown lets the name's

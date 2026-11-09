@@ -1,7 +1,6 @@
-/* Reactions under a message, as a messenger shows them (the owner,
-   2026-11-02, after Telegram): one filled pill per emoji, the emoji and then
-   the faces of who gave it, no border and no seam between the two. The
-   member's own is on the blue of a colleague at work. */
+/* Reactions under a message, as a messenger shows them: one filled pill per
+   emoji, the emoji and then the faces of who gave it, no border and no seam
+   between the two. The member's own is on the blue of a colleague at work. */
 .reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .chip { --reaction-ground: var(--tray); display: inline-flex; align-items: center; height: 30px; background: var(--reaction-ground); border-radius: 15px; transition: background-color 120ms ease-out; }
 .chip:hover { --reaction-ground: var(--sheet-press); }
@@ -10,9 +9,8 @@
 .emoji { align-self: stretch; display: inline-flex; align-items: center; padding: 0 4px 0 9px; border: 0; border-radius: 15px 0 0 15px; background: transparent; font-size: 17px; line-height: 1; cursor: pointer; }
 .people { display: flex; align-items: center; gap: 2px; align-self: stretch; padding: 0 3px 0 0; border: 0; border-radius: 0 15px 15px 0; background: transparent; color: var(--ink-2); cursor: pointer; }
 .emoji:focus-visible, .people:focus-visible, .add:focus-visible { outline: 2px solid var(--ink, #10100d); outline-offset: 2px; }
-/* Who reacted, as round faces with no online dot (the owner, 2026-11-02:
-   "remove the online mark in reactions, and make the people circles"), each
-   ringed in the pill's own colour, which parts it from the one it overlaps. */
+/* Who reacted, as round faces with no online dot, each ringed in the pill's
+   own colour, which parts it from the one it overlaps. */
 .faces { display: inline-flex; align-items: center; }
 .face { display: inline-flex; padding: 2px; border-radius: 50%; background: var(--reaction-ground); transition: background-color 120ms ease-out; }
 .face > * { border-radius: 50%; overflow: hidden; }

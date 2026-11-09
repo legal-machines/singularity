@@ -37,11 +37,11 @@ struct ReviewRunInput {
 	std::string assignmentId;
 	bool isLocalOnly = false;
 	const std::atomic<bool>* cancelled = nullptr;
-	// One part of a larger assignment (D-115), as the colleague's plan gives
-	// it: the document this part works on, the documents it rests on, the
-	// lawyer's whole assignment in their words (`instruction` is then this
-	// part of it) and what the parts before it changed, read back from their
-	// drafts. All empty for a review asked for on its own.
+	// One part of a larger assignment, as the colleague's plan gives it: the
+	// document this part works on, the documents it rests on, the lawyer's
+	// whole assignment in their words (`instruction` is then this part of
+	// it) and what the parts before it changed, read back from their drafts.
+	// All empty for a review asked for on its own.
 	std::string sourceDocumentId;
 	std::vector<std::string> supportingDocumentIds;
 	std::string assignment;
@@ -50,19 +50,19 @@ struct ReviewRunInput {
 	// nothing as it begins.
 	bool isQuiet = false;
 	// A part of an assignment hands in through the assignment's card and its
-	// closing message (D-120): its own message is kept with the version, never
-	// posted, and written by Singularity from what happened, no model asked.
+	// closing message: its own message is kept with the version, never posted,
+	// and written by Singularity from what happened, no model asked.
 	bool isHandedInByAssignment = false;
 	// No Playbook of the firm covers this document: the revision does what the
 	// request asks and nothing besides, with the request as its one position.
 	bool isRequestOnly = false;
 	// The assignment's readings of the Matter's documents, and the drafts it
 	// made so far, which stand for their originals in every check of a value
-	// against its source (D-119). A review asked for on its own reads its own.
+	// against its source. A review asked for on its own reads its own.
 	std::shared_ptr<FactsReading> facts;
 	std::vector<std::string> assignmentDraftIds;
-	// The chat is the member's personal chat with the colleague (D-042), not a
-	// thread of the Matter.
+	// The chat is the member's personal chat with the colleague, not a thread
+	// of the Matter.
 	bool isOwnChat = false;
 	// The colleague took the work on in its talk (ColleagueTalk): the loop does
 	// it, never answers in words instead, and says nothing more as it begins -
@@ -70,7 +70,7 @@ struct ReviewRunInput {
 	bool isTakenOn = false;
 	std::string ackMessageId;
 	// Its words as it took the work on: its closing message carries on from
-	// them (D-168).
+	// them.
 	std::string ackText;
 	// The colleague's own run (its schedule, a change, another's report):
 	// `instruction` is its standing work and why it runs now; nobody wrote to it.
@@ -83,7 +83,7 @@ struct ReviewRunInput {
 	std::string askerStanding;
 	// Told once, when the colleague goes to work - looks something up, or takes
 	// work on - after answering in words was all it did so far: its run is at
-	// work from then on (the owner, 2026-10-26: work mode when it calls tools).
+	// work from then on.
 	std::function<void()> workBegins;
 	// Told the moment its answer in words is posted: it is neither typing nor at
 	// work any more while its run ends.
@@ -93,12 +93,17 @@ struct ReviewRunInput {
 	// from one call to the next and the provider reads what the calls before
 	// kept. Made where the assignment's work begins; unset, each call has its
 	// own. A call of its own renumbered the names, and two turns in a row read
-	// nothing of each other from the cache (2026-10-26). Memory only, for the
-	// assignment alone (AG-SEC-3).
+	// nothing of each other from the cache. Memory only, for the assignment
+	// alone.
 	std::shared_ptr<protected_api::papinian::OperationProtectedSymbolTable> symbols;
+	// What the colleague's talk read with its tools before taking the work on -
+	// documents, passages, threads, earlier messages - as they read: the
+	// client's material its words may carry into the work, which a web search
+	// of the work may not name. Memory only.
+	std::shared_ptr<std::string> talkMaterial;
 	// How long a revision's model thinks: none for a revision the assignment's
 	// turn already chose - two of three such answers, thought at length, came
-	// back empty and were asked again (2026-10-26). The model's own otherwise.
+	// back empty and were asked again. The model's own otherwise.
 	providers::ReasoningEffort revisionEffort = providers::ReasoningEffort::Default;
 };
 
@@ -128,14 +133,14 @@ struct ReviewRunOutput {
 	std::vector<std::string> writtenChanges;
 	// Where each written change stands ("Section 5.2"), in the same order.
 	std::vector<std::string> writtenPlaces;
-	// The comments read back in the draft's margin: "Section 5.2: “…”" (D-117).
+	// The comments read back in the draft's margin: "Section 5.2: “…”".
 	std::vector<std::string> writtenComments;
 	std::vector<std::string> openPoints;
-	// The same calls as the lawyer takes them (D-120): the question, why it
+	// The same calls as the lawyer takes them: the question, why it
 	// matters, where, and the options with the recommendation first.
 	std::vector<AssignmentDecision> decisions;
 	// What the version cost in calls and tokens, and each call asked again
-	// because its answer could not be used, in words (D-119).
+	// because its answer could not be used, in words.
 	int calls = 0;
 	long long inputTokens = 0;
 	long long outputTokens = 0;

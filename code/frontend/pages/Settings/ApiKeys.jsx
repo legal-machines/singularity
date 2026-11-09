@@ -11,15 +11,12 @@ import { protectionDetail, protectionWords, setupOf } from "../../onboarding/tou
 import { Group, Setting } from "./rows.jsx";
 import styles from "./SettingsPage.module.css";
 
-// Settings' API keys (the owner, 2026-11-02: "write about API keys, and lead
-// to a tab inside Settings"): the model accounts the firm's AI colleagues
-// think with, kept here for good (D-134 asks for one on its second slide;
-// 2026-10-29: a lawyer who answered "Later" there had no way to connect one).
-// A key goes to the native side, which checks it with its service before it
-// keeps it, and never comes back to the page (AG-SEC-1). Client data
+// Settings' API keys: the model accounts the firm's AI colleagues think with,
+// kept here for good. A key goes to the native side, which checks it with its
+// service before it keeps it, and never comes back to the page. Client data
 // protection's state stands under them: client data is protected before any
 // of it reaches an external model. Only the firm's administrator connects an
-// account (D-184): a colleague who joined reads what is connected here.
+// account: a colleague who joined reads what is connected here.
 export function ApiKeys() {
 	const setup = useRef(setupOf(window.nativeApp)).current;
 	const [connected, setConnected] = useState([]);
@@ -54,7 +51,7 @@ export function ApiKeys() {
 	const shown = may ? PROVIDERS : PROVIDERS.filter(provider => isConnected(provider, connected));
 	const words = protectionWords(protection);
 	const detail = protectionDetail(protection);
-	// Nothing downloads until someone asks (D-198): a model not here yet is
+	// Nothing downloads until someone asks: a model not here yet is
 	// downloaded from here, unless signing in comes first.
 	const protectionAction = protection?.status == "error" || (protection?.status == "available" && protection?.recovery != "sign_in")
 		? <Button onClick={() => setup.downloadProtection().catch(() => {})}>{protection.status == "error" ? "Try again" : "Download"}</Button>

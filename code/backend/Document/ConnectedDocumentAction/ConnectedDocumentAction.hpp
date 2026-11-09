@@ -436,7 +436,7 @@ struct ConnectedDocumentActionResult {
 // candidate; with a document selection (`selectedDocumentIds`) only selected
 // documents are read - named, unnamed or methodology - and a document outside
 // it is never read, sent or changed. Without either (Relevant sources) every
-// mutation-capable Project document stays a candidate (owner decision BB-18).
+// mutation-capable Project document stays a candidate.
 [[nodiscard]] std::optional<ConnectedDocumentActionPlan> prepare_connected_document_action(
 	const std::string &userInstruction, const matters::Matter &project,
 	std::optional<std::size_t> availableContextWindowTokens = std::nullopt,

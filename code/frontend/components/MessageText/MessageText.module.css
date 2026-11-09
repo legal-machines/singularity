@@ -114,12 +114,16 @@
 	overflow-wrap: anywhere;
 }
 
+/* A table takes the whole width its words have, and scrolls sideways where
+   its columns need more. */
 .tableScroll {
+	width: 100%;
 	max-width: 100%;
 	overflow-x: auto;
 }
 
 .table {
+	width: 100%;
 	border-collapse: collapse;
 	font-size: 0.93em;
 }
@@ -130,6 +134,11 @@
 	text-align: left;
 	vertical-align: top;
 	border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+	/* Words stay whole in a cell: a column is at least its longest word, and
+	   the table scrolls where it cannot fit. Broken anywhere, a criterion's
+	   column shrank to one letter a line beside a long assessment. */
+	overflow-wrap: normal;
+	word-break: normal;
 }
 
 /* The first column stands on the words' own edge. */
@@ -141,4 +150,69 @@
 .table th {
 	font-weight: 600;
 	border-bottom-color: color-mix(in srgb, currentColor 26%, transparent);
+}
+
+/* A web source the words cite: the site's icon and its name, small, set in
+   the line where the words cite it - an instrument, so the hand's grey behind
+   it - and the page it opens. The icon stands in the pill's rounded end, its
+   centre on the end's own. */
+.source {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	height: 1.7em;
+	margin: 0 1px 0 4px;
+	padding: 0 8px 0 3px;
+	font-size: 0.78em;
+	line-height: 1;
+	color: color-mix(in srgb, currentColor 72%, transparent);
+	text-decoration: none;
+	white-space: nowrap;
+	vertical-align: 0.06em;
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	border-radius: 999px;
+}
+
+.source:hover {
+	color: currentColor;
+	background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+.sourceMore {
+	color: color-mix(in srgb, currentColor 60%, transparent);
+}
+
+/* A site's icon, as its browser tab shows it: on the page's own white, as a
+   site draws it to stand, and round. */
+.siteIcon {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	object-fit: cover;
+	background: var(--sheet);
+	border-radius: 50%;
+}
+
+/* Until the icon comes, or where the site has none: its first letter. */
+.siteLetter {
+	display: inline-grid;
+	place-items: center;
+	font-size: 8.5px;
+	font-weight: 600;
+	color: color-mix(in srgb, currentColor 75%, transparent);
+	background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* A symbol Papinian Guard sends where words stood, read as an AI provider
+   receives the message: on the accent's tint, as the Document Lens sets
+   it, and kept whole on its line. */
+.symbol {
+	padding: 1px 4px;
+	font-family: var(--font-code);
+	font-size: 0.9em;
+	color: var(--accent-ink);
+	white-space: nowrap;
+	background: var(--accent-tint);
+	border-radius: 4px;
+	cursor: default;
 }

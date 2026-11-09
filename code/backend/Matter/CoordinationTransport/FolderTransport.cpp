@@ -108,7 +108,7 @@ std::filesystem::path FolderTransport::matter_folder(const std::string& matterId
 
 void FolderTransport::send(const std::string& matterId, const SealedBytes& bytes, const std::vector<std::string>&) {
 	// Every computer that keeps the folder sees the envelope: the seal says whom
-	// it is for, and only they open what is theirs alone (D-123).
+	// it is for, and only they open what is theirs alone.
 	const std::filesystem::path folder = matter_folder(matterId);
 	std::error_code error;
 	std::filesystem::create_directories(folder, error);

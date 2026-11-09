@@ -11,11 +11,11 @@ import { appName } from "./words.js";
 
 import styles from "./pane.module.css";
 
-// The pane in Word, Excel or Outlook (D-105). It is Singularity's only when
-// the person has paired it in Singularity's window; then it finds the Matter
-// of the file Office has open and shows it. `start` says whether Office
-// started the pane: "no_office" when Office's script did not come from
-// Microsoft, "late" when Office did not start it in time.
+// The pane in Word, Excel or Outlook. It is Singularity's only when the
+// person has paired it in Singularity's window; then it finds the Matter of
+// the file Office has open and shows it. `start` says whether Office started
+// the pane: "no_office" when Office's script did not come from Microsoft,
+// "late" when Office did not start it in time.
 export function OfficePane({ host, start = "ready" }) {
 	const [isPaired, setPaired] = useState(isConnected());
 
@@ -49,8 +49,8 @@ function Retry({ words }) {
 	);
 }
 
-// Pairing: the pane asks by itself as it opens (D-191), and the person allows
-// it in Singularity's window, after checking that both show the same code.
+// Pairing: the pane asks by itself as it opens, and the person allows it in
+// Singularity's window, after checking that both show the same code.
 function Pairing({ host, onPaired }) {
 	const [stage, setStage] = useState({ kind: "asking" });
 	// Each round of asking: a press of the button after asking ended begins the next.
@@ -130,7 +130,7 @@ function FilePane({ host }) {
 	if (problem != null) return <p className={styles.problem}>{problem}</p>;
 	if (described == null) return <p className={styles.quiet}>Opening…</p>;
 	const kind = host == "excel" ? "workbook" : host == "powerpoint" ? "presentation" : "document";
-	// The file Singularity opened the application with, to show this pane (D-191).
+	// The file Singularity opened the application with, to show this pane.
 	if (described.kind == "starter") {
 		return <p className={styles.quiet}>{appName(host)} is connected to Singularity. Open a {kind} from one of your Matters, and its Matter opens here.</p>;
 	}

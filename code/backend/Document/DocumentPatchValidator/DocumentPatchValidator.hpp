@@ -6,12 +6,6 @@
 
 namespace singularity::documents {
 
-// The single validation authority a DocumentPatch passes through before any
-// format-specific writer (apply_docx_table_cell_patch(), apply_csv_table_cell_
-// patch()) ever touches a file - phase-24-1-research-document-intelligence-
-// project-actions.md's "Controlled Project actions" numbered checks 1-9
-// (permission, check 10, is ToolBroker's own concern - see DocumentPatchTool).
-//
 // Checks, in order:
 //   1. document identity - patch.document_id matches targetDocument.id;
 //   2. expected version matches targetDocument.version;

@@ -8,11 +8,11 @@ import { Onboarding } from "./onboarding/Onboarding.jsx";
 import { completeOnboarding, firstView, viewOf, waitsForFirm } from "./onboarding/start.js";
 import { recordVersionSeen } from "./data/updates.js";
 
-// The window's first choice (D-133): onboarding until it is complete, then the
-// app. The app is not mounted while onboarding shows, so none of its work
-// (reading the Matter, watching the firm's computers, Office) starts before it.
-// The frame onboarding shows the app at work in is the app's emulation, which
-// never asks the bridge anything (D-134).
+// The window's first choice: onboarding until it is complete, then the app. The
+// app is not mounted while onboarding shows, so none of its work (reading the
+// Matter, watching the firm's computers, Office) starts before it. The frame
+// onboarding shows the app at work in is the app's emulation, which never asks
+// the bridge anything.
 export function Start() {
 	return isEmulation ? <Emulation /> : <Window />;
 }
@@ -27,7 +27,7 @@ function Window() {
 			async (status) => {
 				const next = viewOf(status);
 				// A colleague's new computer that opens still new to the firm waits
-				// for it before the app (D-205).
+				// for it before the app.
 				const isHeld = next == "app" ? await waitsForFirm(window.nativeApp) : false;
 				if (current) setView(isHeld ? "firm" : next);
 			},
@@ -55,8 +55,7 @@ function Window() {
 	}
 	if (view == "onboarding") {
 		// Onboarding is the application too: no find, reload, zoom or other
-		// browser behaviour reaches the member there either (the owner,
-		// 2026-11-01: "cut Ctrl+F and Cmd+F, the browser's search").
+		// browser behaviour reaches the member there either.
 		return (
 			<>
 				<Onboarding

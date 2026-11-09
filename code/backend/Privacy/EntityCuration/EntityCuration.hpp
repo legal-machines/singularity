@@ -10,8 +10,7 @@ namespace singularity::privacy {
 // EntityAmbiguity/ProjectEntity records change outside automatic resolution
 // (EntityResolver.hpp). Every function here represents an explicit human
 // decision and therefore always takes priority over later automatic
-// resolution (PRIVACY_CONTRACT.md: "corrections remain authoritative until
-// explicitly changed") - see EntityResolver.hpp's own use of
+// resolution - see EntityResolver.hpp's own use of
 // locked_aliases/KeptSeparate to respect that. Every function mutates
 // `matter` in place and throws std::runtime_error with a plain-language
 // message on an invalid request; the caller persists the result (see

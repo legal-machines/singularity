@@ -1,12 +1,10 @@
 /* The window's notices (Toaster.jsx): centred over the sheet, just under the
    window's strip, so what a page sets in the strip - a thread's title, its
    Matter and its faces - stays in sight, with an --edge of air between the
-   strip's marks and the notice, as between the window's top and them (the
-   owner, 2026-11-02: "the notification must keep the common margin";
-   2026-11-05: a notice covered a thread's head). Onboarding's own notice
-   (onboarding/entry/Notice.module.css) keeps an --edge below the top, where
-   no head stands. The newest is on top. They stand over the page and never
-   move it; only an Undo in one takes a press. */
+   strip's marks and the notice, as between the window's top and them.
+   Onboarding's own notice (onboarding/entry/Notice.module.css) keeps an
+   --edge below the top, where no head stands. The newest is on top. They
+   stand over the page and never move it; only an Undo in one takes a press. */
 .stack {
 	position: fixed;
 	top: var(--titlebar-height);
@@ -66,10 +64,10 @@
 	--toast-ground: #ae493f;
 }
 
-/* A notice of what is still going on (D-207): graphite while a Matter comes
-   or goes, or this computer waits for another's answer. As a transfer goes
-   on, the sage of what went as asked fills it from the left, as onboarding's
-   download button fills (D-198): filled whole, it is the toast of what came. */
+/* A notice of what is still going on: graphite while a Matter comes or goes, or
+   this computer waits for another's answer. As a transfer goes on, the sage of
+   what went as asked fills it from the left, as onboarding's download button
+   fills: filled whole, it is the toast of what came. */
 .toast[data-tone="working"] {
 	--toast-ground: var(--ink-2);
 }

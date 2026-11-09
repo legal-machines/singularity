@@ -15,12 +15,10 @@
 namespace singularity::chat {
 
 // One pending, not-yet-sent Chat request exactly as the composer currently
-// holds it (phase-23-chat-privacy-preview.md's "On-demand preview": prompt,
-// sources, legal task, model override, Project/Chat). Composition state
-// only - nothing here is persisted by this component, and none of it is a
-// second copy of backend truth: every field is either the user's own unsent
-// input or an explicit reference to something the Phase 21/22 resolvers
-// below own.
+// holds it. Composition state only - nothing here is persisted by this
+// component, and none of it is a second copy of backend truth: every field
+// is either the user's own unsent input or an explicit reference to
+// something the Phase 21/22 resolvers below own.
 struct ChatRequestComposition {
   std::string project_id;
   std::optional<std::string> chat_id;
@@ -51,8 +49,8 @@ struct ChatRequestComposition {
 	bool can_ask_lawyer = false;
 	// Nobody watches this request as it runs: an AI colleague's own work. A
 	// question or a web search to approve keeps its place and the request
-	// returns at once, waiting for the decision there (Beta 1 #14), so it never
-	// holds a thread another piece of work needs.
+	// returns at once, waiting for the decision there, so it never holds a
+	// thread another piece of work needs.
 	bool unattended = false;
 	// An agent's own run in its thread (Agent/AgentProduction): the agent
 	// began it - its schedule, a change it noticed - not a person.
@@ -139,9 +137,9 @@ struct ChatProtectionState {
   bool is_protection_loading = false;
   // Plain-language reason, present only when is_protection_ready == false.
   std::string protection_message;
-  // Why this chat's work stays on this computer, when it does (Beta 1 #44):
-  // "asked", "origin_unconfirmed" or "thread". Then `primary_model` is the
-  // local model it really runs on (none when nothing here can run it) and
+  // Why this chat's work stays on this computer, when it does: "asked",
+  // "origin_unconfirmed" or "thread". Then `primary_model` is the local
+  // model it really runs on (none when nothing here can run it) and
   // `destination` is "local", whatever AI Setup would choose.
   std::optional<std::string> kept_here;
   // Why it stays here, or the sentence a send stops with when nothing here can
@@ -149,9 +147,9 @@ struct ChatProtectionState {
   std::string kept_here_message;
 };
 
-// What a request kept on this computer really runs on (Beta 1 #44): why it is
-// kept here, the local model it runs on (none when this computer has none it
-// may use), and the words for it - why it stays here, or why nothing can run.
+// What a request kept on this computer really runs on: why it is kept here,
+// the local model it runs on (none when this computer has none it may use),
+// and the words for it - why it stays here, or why nothing can run.
 struct KeptHereModel {
   std::string reason;
   std::optional<routing::ModelTarget> model;

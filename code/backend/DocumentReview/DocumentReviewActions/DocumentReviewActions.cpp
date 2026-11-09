@@ -57,8 +57,8 @@ std::string personName(const platform::ActorIdentity& actor) {
 	return "The lawyer";
 }
 
-// A step that wrote a document of the colleague's own (D-141): handed in, with
-// no review of an original behind it.
+// A step that wrote a document of the colleague's own: handed in, with no
+// review of an original behind it.
 bool isWrittenStep(const AssignmentStepRecord& step) {
 	return step.reviewId.empty() == true && step.status == "completed" && step.documentId.empty() == false;
 }
@@ -99,7 +99,7 @@ ReviewBudget readBudget() {
 	text << input.rdbuf();
 	const Json value = Json::parse(text.str(), nullptr, false);
 	if (value.is_object() == false) return budget;
-	// Only a limit this computer chose (D-132); never the "limitUsd" earlier
+	// Only a limit this computer chose; never the "limitUsd" earlier
 	// versions wrote back as their default.
 	if (value.contains("chosenLimitUsd") == true && value.at("chosenLimitUsd").is_number() == true)
 		budget.limitUsd = std::max(value.at("chosenLimitUsd").get<double>(), 0.0);
@@ -341,8 +341,8 @@ std::vector<AssignmentView> viewAssignments(const std::string& projectId, const 
 					state.isAsWritten = decided->isAsWritten;
 				}
 				const std::string number = std::to_string(latest.number);
-				// Plain workflow states, said as a firm says them (D-174): a version
-				// ready for review is no alarm, and only what failed reads as one.
+				// Plain workflow states, said as a firm says them: a version ready
+				// for review is no alarm, and only what failed reads as one.
 				if (latest.state == "accepted") {
 					state.words = "Version " + number + " \xC2\xB7 Approved by " + (state.decidedBy.empty() == true ? std::string("you")
 						: state.decidedBy) + (state.isAsWritten == true ? std::string(", as handed in")
@@ -363,7 +363,7 @@ std::vector<AssignmentView> viewAssignments(const std::string& projectId, const 
 				}
 			} else if (isWrittenStep(step) == true) {
 				// A document the colleague wrote waits for the lawyer as a revised
-				// draft does, until one accepts or returns it (D-143).
+				// draft does, until one accepts or returns it.
 				state.latestVersion = 1;
 				if (step.decisions.empty() == true) {
 					state.state = "ready_for_review";
@@ -390,8 +390,8 @@ std::vector<AssignmentView> viewAssignments(const std::string& projectId, const 
 		if (record.email.state == "drafted") {
 			for (const AssignmentAttachment& attached : record.email.attachments) {
 				// A document a colleague wrote goes only once a lawyer accepted it,
-				// as it was then (D-143); a document of the Matter attached as it
-				// is - the NDA as signed - asks for no acceptance.
+				// as it was then; a document of the Matter attached as it is - the
+				// NDA as signed - asks for no acceptance.
 				if (attached.reviewId.empty() == true) {
 					const AssignmentStepRecord* written = writtenStepOf(matter.assignment_records, attached.documentId);
 					if (written == nullptr) continue;
@@ -432,12 +432,11 @@ std::vector<AssignmentView> viewAssignments(const std::string& projectId, const 
 				}
 			}
 			// An email with no one to send it to is never ready, whatever it carries:
-			// a reply drafted with its recipient blank was called "Ready to send"
-			// (2026-10-26).
+			// a reply drafted with its recipient blank was called "Ready to send".
 			const bool hasRecipient = trimmed(record.email.to).empty() == false;
 			// Nor is one whose sending waits on a decision of the lawyer's still
 			// open: a reply was called "Ready to send once you accept the draft"
-			// while the term it proposes waited on the lawyer (2026-10-26).
+			// while the term it proposes waited on the lawyer.
 			std::size_t openDecisions = 0;
 			for (const AssignmentDecision& decision : record.decisions) {
 				if (decision.isBlocking == true && decision.state == "open") ++openDecisions;
@@ -521,10 +520,10 @@ DocumentReview decide(const DecisionCommand& command) {
 	const DocumentReview current = getReview(command.projectId, command.reviewId);
 	requireDecidable(current);
 
-	// What is accepted is the draft as it is now (D-119): read again, so the
-	// record says whether it is the colleague's version as written or as someone
-	// changed it since in Word, Excel or PowerPoint - and a draft no longer there
-	// is never accepted.
+	// What is accepted is the draft as it is now: read again, so the record says
+	// whether it is the colleague's version as written or as someone changed it
+	// since in Word, Excel or PowerPoint - and a draft no longer there is never
+	// accepted.
 	std::string acceptedSha;
 	bool isAsWritten = true;
 	if (decision == "accept" && current.versions.back().resultRelativePath.empty() == false) {
@@ -598,8 +597,8 @@ int giveBackEarlierVersion(DocumentReview& review) {
 	if (pass.resultDocumentId.empty() == false) return 0;
 	const bool isUnderway = pass.state == "running" || pass.state == "preparing" || pass.state == "producing"
 		|| pass.state == "queued";
-	// A pass that changed nothing gives it back too: it wrote no draft of its own
-	// (2026-10-30).
+	// A pass that changed nothing gives it back too: it wrote no draft of its
+	// own.
 	if (pass.state != "failed" && pass.state != "unchanged" && isUnderway == false) return 0;
 	review.versions.pop_back();
 	ReviewVersion& earlier = review.versions.back();
@@ -791,8 +790,8 @@ std::uint64_t affordableOutputTokens(std::size_t promptCharacters, std::uint64_t
 	// A review asked for the model's whole limit (128,000 tokens for Claude
 	// Sonnet 5.5) was bounded at $1.32 and refused with $1.26 of a $2.00
 	// budget left, though it would have cost $0.08 (a live run, 25 Oct 2026):
-	// the budget held a third of what it said.
-	// No limit chosen: the request asks for all it wants (D-132).
+	// the budget held a third of what it said. No limit chosen: the request
+	// asks for all it wants.
 	if (budget.limitUsd.has_value() == false) return wanted;
 	const long long left = static_cast<long long>(*budget.limitUsd * 1000000.0) - budget.spentMicros;
 	const std::optional<long long> whole = reviewCostBoundMicros(promptCharacters, wanted, inputPricePerToken,

@@ -8,14 +8,10 @@
 
 namespace singularity::matter::coordination::transport::stun {
 
-// How a computer behind a router learns the address the router shows outside
-// for its direct link (D-124): a STUN Binding request (RFC 8489) to a public
-// server, here Google's or Cloudflare's, which the owner allowed, and the
-// address the server says it came from. The server learns this computer's
-// public address and nothing else; nothing of the firm passes through it.
-// Only the Binding request and its success response, with
-// XOR-MAPPED-ADDRESS (or MAPPED-ADDRESS from an older server): no
-// authentication, no relay.
+// The server learns this computer's public address and nothing else; nothing
+// of the firm passes through it. Only the Binding request and its success
+// response, with XOR-MAPPED-ADDRESS (or MAPPED-ADDRESS from an older
+// server): no authentication, no relay.
 
 using Bytes = std::vector<std::uint8_t>;
 using Transaction = std::array<std::uint8_t, 12>;

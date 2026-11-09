@@ -190,7 +190,7 @@ export async function markupBy(personOtherThan) {
 	});
 }
 
-// ---- Excel (D-110) -----------------------------------------------------------------------------
+// ---- Excel -----------------------------------------------------------------------------
 
 // A column's letters from its index from 0: 0 is "A", 26 is "AA".
 export function columnName(index) {
@@ -338,7 +338,7 @@ export async function selectCells(sheetName, address) {
 	}).catch(() => false);
 }
 
-// ---- PowerPoint (D-112) ------------------------------------------------------------------------
+// ---- PowerPoint -------------------------------------------------------------------------------
 
 // The words on one slide, shape by shape as PowerPoint orders them, each line
 // on its own; [] where this PowerPoint does not give a shape's words

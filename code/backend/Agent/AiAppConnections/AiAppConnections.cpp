@@ -384,8 +384,8 @@ AiAppAnswer list_matters_tool(const AiAppRequest &request, const AiAppConnection
 }
 
 // Whether the app may see a colleague: one of a Matter it may see, or one of
-// the whole firm (D-157), which belongs to no Matter - its name, office and
-// state only, to an app the lawyer let see any Matter.
+// the whole firm, which belongs to no Matter - its name, office and state
+// only, to an app the lawyer let see any Matter.
 bool isSeen(const AgentView &view, const std::map<std::string, std::string> &matters) {
 	return matters.count(view.agent.matter_id) > 0 || (view.agent.matter_id.empty() == true && matters.empty() == false);
 }

@@ -37,19 +37,19 @@ std::string fold(std::string_view text) {
 		}
 		if (index + 1 < text.size()) {
 			const unsigned char next = static_cast<unsigned char>(text[index + 1]);
-			if (byte == 0xD0 && next >= 0x90 && next <= 0x9F) {  // А-П
+			if (byte == 0xD0 && next >= 0x90 && next <= 0x9F) {  // …
 				result += static_cast<char>(0xD0);
 				result += static_cast<char>(next + 0x20);
 				++index;
 				continue;
 			}
-			if (byte == 0xD0 && next >= 0xA0 && next <= 0xAF) {  // Р-Я
+			if (byte == 0xD0 && next >= 0xA0 && next <= 0xAF) {  // …
 				result += static_cast<char>(0xD1);
 				result += static_cast<char>(next - 0x20);
 				++index;
 				continue;
 			}
-			if (byte == 0xD0 && next == 0x81) {  // Ё
+			if (byte == 0xD0 && next == 0x81) {  // …
 				result += "\xD1\x91";
 				++index;
 				continue;
@@ -353,52 +353,52 @@ std::string origin_word(FactProvenance::Origin origin) {
 std::string header_role(const std::string &header) {
 	const std::string folded = fold(header);
 	if (folded.empty()) return {};
-	// A shift turns a role word into another: "Unpaid", «Не оплачено».
+	// A shift turns a role word into another: "Unpaid", «…».
 	if (any_word(folded, {"unpaid", "overdue", "outstanding", "remaining", "arrears", "balance", "owed", "owing",
-			"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD*",   // задолжен*
-			"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82*",                           // остат*
-			"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                    // сальдо
-			"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3*",                                   // долг*
-			"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*"}))  // недоплач*
+			"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD*",   // …*
+			"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82*",                           // …*
+			"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                    // …
+			"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3*",                                   // …*
+			"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*"}))  // …*
 		return "BALANCE";
 	if (any_word(folded, {"penalty", "penalties", "late fee", "late charge", "liquidated damages",
-			"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA*",   // неустойк*
-			"\xD0\xBF\xD0\xB5\xD0\xBD\xD0\xB8",                                    // пени
-			"\xD1\x88\xD1\x82\xD1\x80\xD0\xB0\xD1\x84*"}))                          // штраф*
+			"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA*",   // …*
+			"\xD0\xBF\xD0\xB5\xD0\xBD\xD0\xB8",                                    // …
+			"\xD1\x88\xD1\x82\xD1\x80\xD0\xB0\xD1\x84*"}))                          // …*
 		return "PENALTY";
-	if (any_word(folded, {"interest", "\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82\xD1\x8B"}))  // проценты
+	if (any_word(folded, {"interest", "\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82\xD1\x8B"}))  // …
 		return "INTEREST";
 	if (any_word(folded, {"offset", "set-off", "credit memo", "credit note", "discount", "adjustment", "escalation",
-			"\xD0\xB7\xD0\xB0\xD1\x87\xD0\xB5\xD1\x82*", "\xD0\xB7\xD0\xB0\xD1\x87\xD1\x91\xD1\x82*",  // зачет*, зачёт*
-			"\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB4\xD0\xBA*",                           // скидк*
-			"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB0\xD1\x86*"}))  // индексац*
+			"\xD0\xB7\xD0\xB0\xD1\x87\xD0\xB5\xD1\x82*", "\xD0\xB7\xD0\xB0\xD1\x87\xD1\x91\xD1\x82*",  // …*, …*
+			"\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB4\xD0\xBA*",                           // …*
+			"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB0\xD1\x86*"}))  // …*
 		return "ADJUSTMENT";
 	if (any_word(folded, {"paid", "payment", "payments", "received", "receipt", "remitted", "collected",
-			"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*", "\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",  // оплач*, уплач*
-			"\xD0\xBF\xD0\xBE\xD1\x81\xD1\x82\xD1\x83\xD0\xBF*",                   // поступ*
-			"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87\xD0\xB5\xD0\xBD\xD0\xBE"}))   // оплачено
+			"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*", "\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",  // …*, …*
+			"\xD0\xBF\xD0\xBE\xD1\x81\xD1\x82\xD1\x83\xD0\xBF*",                   // …*
+			"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87\xD0\xB5\xD0\xBD\xD0\xBE"}))   // …
 		return "PAID";
 	if (any_word(folded, {"billed", "invoiced", "charged", "accrued", "scheduled", "due", "payable", "invoice amount",
-			"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",                   // начисл*
-			"\xD0\xB2\xD1\x8B\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB*",           // выставл*
-			"\xD0\xBA \xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5"}))          // к оплате
+			"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",                   // …*
+			"\xD0\xB2\xD1\x8B\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB*",           // …*
+			"\xD0\xBA \xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5"}))          // …
 		return "BILLED";
 	if (any_word(folded, {"total", "subtotal", "\xD0\xB8\xD1\x82\xD0\xBE\xD0\xB3*", "\xD0\xB2\xD1\x81\xD0\xB5\xD0\xB3\xD0\xBE"}))
 		return "TOTAL";
 	if (any_word(folded, {"rent", "price", "fee", "fees", "royalty", "royalties", "consideration",
-			"\xD1\x86\xD0\xB5\xD0\xBD*",                                           // цен*
-			"\xD1\x81\xD1\x82\xD0\xBE\xD0\xB8\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82*",   // стоимост*
-			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                   // плат*
-			"\xD0\xB0\xD1\x80\xD0\xB5\xD0\xBD\xD0\xB4*",                           // аренд*
-			"\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB3\xD1\x80\xD0\xB0\xD0\xB6\xD0\xB4*",  // вознагражд*
-			"\xD0\xBE\xD0\xB1\xD1\x8A\xD0\xB5\xD0\xBC*", "\xD0\xBE\xD0\xB1\xD1\x8A\xD1\x91\xD0\xBC*"}))  // объем*, объём*
+			"\xD1\x86\xD0\xB5\xD0\xBD*",                                           // …*
+			"\xD1\x81\xD1\x82\xD0\xBE\xD0\xB8\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82*",   // …*
+			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                   // …*
+			"\xD0\xB0\xD1\x80\xD0\xB5\xD0\xBD\xD0\xB4*",                           // …*
+			"\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB3\xD1\x80\xD0\xB0\xD0\xB6\xD0\xB4*",  // …*
+			"\xD0\xBE\xD0\xB1\xD1\x8A\xD0\xB5\xD0\xBC*", "\xD0\xBE\xD0\xB1\xD1\x8A\xD1\x91\xD0\xBC*"}))  // …*, …*
 		return "PRICE";
-	if (any_word(folded, {"due date", "deadline", "\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA*"}))  // срок*
+	if (any_word(folded, {"due date", "deadline", "\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA*"}))  // …*
 		return "DEADLINE";
 	if (any_word(folded, {"days", "months", "number of", "count", "qty", "quantity",
-			"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9", "\xD0\xB4\xD0\xBD\xD0\xB8",       // дней, дни
-			"\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB8\xD1\x87\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2*",  // количеств*
-			"\xD0\xBA\xD0\xBE\xD0\xBB-\xD0\xB2\xD0\xBE"}))                         // кол-во
+			"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9", "\xD0\xB4\xD0\xBD\xD0\xB8",       // …
+			"\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB8\xD1\x87\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2*",  // …*
+			"\xD0\xBA\xD0\xBE\xD0\xBB-\xD0\xB2\xD0\xBE"}))                         // …
 		return "COUNT";
 	return {};
 }
@@ -421,14 +421,14 @@ std::size_t word_position(const std::string &folded, std::string_view word) {
 
 std::optional<std::string> header_measure(const std::string &header) {
 	const std::string folded = fold(header);
-	// The unit the label counts in is the one it names first: «Минут в месяце»
+	// The unit the label counts in is the one it names first: «…»
 	// is minutes, "Days per month" days (a fake-provider run on the real RU2
 	// register: minutes typed as months, so no downtime could be divided by it).
 	struct Unit { const char *type; std::vector<std::string_view> words; };
 	static const std::vector<Unit> units{
 		{"DURATION(days)", {"days", "day", "\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9", "\xD0\xB4\xD0\xBD\xD0\xB8", "\xD0\xB4\xD0\xBD*"}},
 		{"DURATION(months)", {"months", "\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86*"}},
-		{"DURATION(minutes)", {"minutes", "\xD0\xBC\xD0\xB8\xD0\xBD\xD1\x83\xD1\x82*", "\xD0\xBC\xD0\xB8\xD0\xBD"}},  // минут*, мин
+		{"DURATION(minutes)", {"minutes", "\xD0\xBC\xD0\xB8\xD0\xBD\xD1\x83\xD1\x82*", "\xD0\xBC\xD0\xB8\xD0\xBD"}},  // …*, …
 		{"DURATION(hours)", {"hours", "\xD1\x87\xD0\xB0\xD1\x81*"}}};
 	std::size_t first = std::string::npos;
 	const char *named = nullptr;
@@ -2170,7 +2170,7 @@ std::optional<Band> band_in(const std::string &text, std::size_t from, std::size
 	band.start = from;
 	band.end = to;
 	band.value = figures.back();
-	const bool rangeWords = has_word(between, "to") || has_word(between, "\xD0\xB4\xD0\xBE")  // до
+	const bool rangeWords = has_word(between, "to") || has_word(between, "\xD0\xB4\xD0\xBE")  // …
 		|| between.find('-') != std::string::npos || between.find("\xE2\x80\x93") != std::string::npos
 		|| between.find("\xE2\x80\x94") != std::string::npos;
 	if (figures.size() >= 3 && rangeWords) {
@@ -2179,41 +2179,41 @@ std::optional<Band> band_in(const std::string &text, std::size_t from, std::size
 		return band;
 	}
 	if (ends_with_any(before, {"above", "over", "more than", "exceeding", "in excess of", ">",
-			"\xD1\x81\xD0\xB2\xD1\x8B\xD1\x88\xD0\xB5",                  // свыше
-			"\xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                  // более
-			"\xD1\x81\xD0\xB2\xD0\xB5\xD1\x80\xD1\x85"})) {              // сверх
+			"\xD1\x81\xD0\xB2\xD1\x8B\xD1\x88\xD0\xB5",                  // …
+			"\xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                  // …
+			"\xD1\x81\xD0\xB2\xD0\xB5\xD1\x80\xD1\x85"})) {              // …
 		band.lower = figures[0];
 		band.lower_inclusive = false;
 		return band;
 	}
 	if (ends_with_any(before, {"at least", "not less than", "from", "\xE2\x89\xA5", ">=",
-			"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",  // не менее
-			"\xD0\xBE\xD1\x82"})) {                                      // от
+			"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",  // …
+			"\xD0\xBE\xD1\x82"})) {                                      // …
 		band.lower = figures[0];
 		return band;
 	}
 	if (ends_with_any(before, {"less than", "below", "under", "<",
-			"\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                  // менее
-			"\xD0\xBD\xD0\xB8\xD0\xB6\xD0\xB5"})) {                      // ниже
+			"\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                  // …
+			"\xD0\xBD\xD0\xB8\xD0\xB6\xD0\xB5"})) {                      // …
 		band.upper = figures[0];
 		return band;
 	}
 	if (ends_with_any(before, {"up to", "not more than", "not exceeding", "\xE2\x89\xA4", "<=",
-			"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",  // не более
-			"\xD0\xB4\xD0\xBE"})) {                                      // до
+			"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",  // …
+			"\xD0\xB4\xD0\xBE"})) {                                      // …
 		band.upper = figures[0];
 		band.upper_inclusive = true;
 		return band;
 	}
-	// "X or more: r %", «X и более — r %».
+	// "X or more: r %", «…».
 	const std::string after = fold(text.substr(figures[0].end, figures[1].start - figures[0].end));
 	if (after.find("or more") != std::string::npos || after.find("and above") != std::string::npos
-			|| after.find("\xD0\xB8 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5") != std::string::npos) {  // и более
+			|| after.find("\xD0\xB8 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5") != std::string::npos) {  // …
 		band.lower = figures[0];
 		return band;
 	}
 	if (after.find("or less") != std::string::npos || after.find("and below") != std::string::npos
-			|| after.find("\xD0\xB8 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5") != std::string::npos) {  // и менее
+			|| after.find("\xD0\xB8 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5") != std::string::npos) {  // …
 		band.upper = figures[0];
 		band.upper_inclusive = true;
 		return band;
@@ -2222,8 +2222,8 @@ std::optional<Band> band_in(const std::string &text, std::size_t from, std::size
 }
 
 // A clause that writes its bands rate first, joined by "and": "2% of
-// Purchases up to $1,000,000 and 3.5% of Purchases above $1,000,000", «2 % при
-// объёме до 1 000 000 руб. и 3,5 % свыше 1 000 000 руб.». Each part is a rate
+// Purchases up to $1,000,000 and 3.5% of Purchases above $1,000,000", «2 % …
+// … 1 000 000 … 3,5 % … 1 000 000 …». Each part is a rate
 // and the one threshold after it; nothing unless every part reads so.
 std::vector<Band> rate_first_bands(const std::string &text, std::size_t from, std::size_t to) {
 	std::vector<Band> bands;

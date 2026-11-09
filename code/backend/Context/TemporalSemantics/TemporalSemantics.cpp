@@ -66,9 +66,9 @@ std::string lowered(const std::string &text) {
 			result[index] = static_cast<char>(byte - 'A' + 'a');
 		} else if (byte == 0xD0 && index + 1 < result.size()) {
 			const unsigned char next = static_cast<unsigned char>(result[index + 1]);
-			if (next >= 0x90 && next <= 0x9F) result[index + 1] = static_cast<char>(next + 0x20);            // А-П
-			else if (next >= 0xA0 && next <= 0xAF) { result[index] = static_cast<char>(0xD1); result[index + 1] = static_cast<char>(next - 0x20); } // Р-Я
-			else if (next == 0x81) { result[index] = static_cast<char>(0xD1); result[index + 1] = static_cast<char>(0x91); } // Ё
+			if (next >= 0x90 && next <= 0x9F) result[index + 1] = static_cast<char>(next + 0x20);            // …
+			else if (next >= 0xA0 && next <= 0xAF) { result[index] = static_cast<char>(0xD1); result[index + 1] = static_cast<char>(next - 0x20); } // …
+			else if (next == 0x81) { result[index] = static_cast<char>(0xD1); result[index + 1] = static_cast<char>(0x91); } // …
 			++index;
 		} else if (byte >= 0xC0) {
 			++index;
@@ -91,11 +91,11 @@ unsigned english_month(const std::string &name) {
 	return 0;
 }
 
-// Russian months in any case a date writes them in: марта (of March), март
-// (March), марте (in March) - or cut short, as a register or a letterhead
-// writes them: «15 сент. 2026 г.», «3 янв. 2027 г.», «1 фев 2026».
+// Russian months in any case a date writes them in: … (of March), …
+// (March), … (in March) - or cut short, as a register or a letterhead
+// writes them: «…».
 unsigned russian_month(const std::string &written) {
-	// янв фев февр мар апр июн июл авг сен сент окт ноя нояб дек: the stops a
+	// …: the stops a
 	// month is cut at, and nothing but the month's own letters before them.
 	static const std::pair<const char *, unsigned> abbreviations[] = {{"\xD1\x8F\xD0\xBD\xD0\xB2", 1},
 		{"\xD1\x84\xD0\xB5\xD0\xB2", 2}, {"\xD1\x84\xD0\xB5\xD0\xB2\xD1\x80", 2}, {"\xD0\xBC\xD0\xB0\xD1\x80", 3},
@@ -115,8 +115,7 @@ unsigned russian_month(const std::string &written) {
 		"\xD0\xB8\xD1\x8E\xD0\xBD", "\xD0\xB8\xD1\x8E\xD0\xBB", "\xD0\xB0\xD0\xB2\xD0\xB3\xD1\x83\xD1\x81\xD1\x82",
 		"\xD1\x81\xD0\xB5\xD0\xBD\xD1\x82\xD1\x8F\xD0\xB1\xD1\x80", "\xD0\xBE\xD0\xBA\xD1\x82\xD1\x8F\xD0\xB1\xD1\x80",
 		"\xD0\xBD\xD0\xBE\xD1\x8F\xD0\xB1\xD1\x80", "\xD0\xB4\xD0\xB5\xD0\xBA\xD0\xB0\xD0\xB1\xD1\x80"};
-	// Endings a month name takes: -ь/-я/-е (январь/января/январе), -а/-е
-	// (марта/марте), -я/-й/-е (мая/май/мае).
+	// Endings a month name takes: -… (…), -…
 	static const char *endings[] = {"", "\xD1\x8C", "\xD1\x8F", "\xD0\xB5", "\xD0\xB0", "\xD0\xB9"};
 	for (unsigned index = 0; index < 12; ++index) {
 		const std::string stem = stems[index];
@@ -124,7 +123,7 @@ unsigned russian_month(const std::string &written) {
 		const std::string rest = word.substr(stem.size());
 		for (const char *ending : endings)
 			if (rest == ending) {
-				// "ма" alone is not a month: May is май, мая, мае.
+				// "…" alone is not a month: May is …
 				if (index == 4 && rest.empty()) return 0;
 				return index + 1;
 			}
@@ -159,7 +158,7 @@ const std::vector<Pattern> &patterns() {
 		// July, 2026", "the 15th of March 2026".
 		{std::regex("(\\d{1,2})(?:st|nd|rd|th)? +(?:day +of +|of +)?([a-z]{3,9}\\.?),? +(\\d{4})"), 4},
 		// The day in guillemets, straight or curly quotes: «03», "03", “03”, „03“;
-		// or as its ordinal: «1-го июля 2026 года».
+		// or as its ordinal: «…».
 		{std::regex("(?:\\xC2\\xAB|\"|\\xE2\\x80\\x9C|\\xE2\\x80\\x9E)?(\\d{1,2})(?:\\xC2\\xBB|\"|\\xE2\\x80\\x9D|\\xE2\\x80\\x9C"
 			"|-\\xD0\\xB3\\xD0\\xBE|-\\xD0\\xBE\\xD0\\xB5|-\\xD0\\xB5)? +(" + cyr + "\\.?) +(\\d{4})"), 5},
 		{std::regex("([a-z]{3,9}\\.?),? +(\\d{4})"), 6},
@@ -190,7 +189,7 @@ std::pair<unsigned long, std::size_t> code_point_at(const std::string &text, std
 // Whether a code point goes on a word: a letter or a figure of any script.
 // Spaces and marks never do - a no-break space, «guillemets», “curly quotes”,
 // an en or em dash, a section sign - so "“March 3, 2026”", «15.03.2026» and
-// "Срок—15.03.2026" write their dates as words of their own, as a straight
+// "…" write their dates as words of their own, as a straight
 // quote or a hyphen always did (the last byte of a curly quote once counted as
 // a letter, and each of these went out readable).
 bool continues_word(unsigned long point) {
@@ -218,8 +217,8 @@ bool word_at(const std::string &text, std::size_t offset) {
 }
 
 // Whether a year's end at `after` is closed by what a Russian date writes glued
-// to it: «2026г.», «1983г.р.», «2026г» - the year's word cut short, and nothing
-// of another word after it. «2026года» is written apart, and «2026гарантия» is no date.
+// to it: «…» - the year's word cut short, and nothing
+// of another word after it. «…» is written apart, and «…» is no date.
 bool closed_by_year_word(const std::string &text, std::size_t after) {
 	if (text.compare(after, 2, "\xD0\xB3") != 0) return false;
 	return !word_at(text, after + 2);
@@ -259,7 +258,7 @@ std::optional<TemporalValue> reading(const std::smatch &match, int kind) {
 			return quarter_of(number(2), quarter);
 		}
 		case 10: {
-			// "III квартал 2026" - the word must be a form of «квартал».
+			// "…" - the word must be a form of «…».
 			const std::string word = match[2].str();
 			const std::string quarterWord = "\xD0\xBA\xD0\xB2\xD0\xB0\xD1\x80\xD1\x82\xD0\xB0\xD0\xBB";
 			if (word.compare(0, quarterWord.size(), quarterWord) != 0) return std::nullopt;
@@ -299,7 +298,7 @@ SlashOrder slash_order_of(const std::string &text) {
 		if (first > 12 && first <= 31 && second >= 1 && second <= 12) dayFirst = true;
 		if (second > 12 && second <= 31 && first >= 1 && first <= 12) monthFirst = true;
 	}
-	// A text that states its format: "(MM/DD/YYYY)", "dates are dd/mm/yyyy", «ДД/ММ/ГГГГ».
+	// A text that states its format: "(MM/DD/YYYY)", "dates are dd/mm/yyyy", «…».
 	static const std::regex statedMonthFirst("\\bmm/dd/(?:yyyy|yy)\\b");
 	static const std::regex statedDayFirst("\\bdd/mm/(?:yyyy|yy)\\b|\\xD0\\xB4\\xD0\\xB4/\\xD0\\xBC\\xD0\\xBC/\\xD0\\xB3\\xD0\\xB3");
 	if (std::regex_search(searchable, statedMonthFirst)) monthFirst = true;
@@ -307,7 +306,7 @@ SlashOrder slash_order_of(const std::string &text) {
 	if (monthFirst != dayFirst) return monthFirst ? SlashOrder::MonthFirst : SlashOrder::DayFirst;
 	// Nothing else settles it. How a text writes its other days is no evidence:
 	// a US note is dated "the 1st day of July, 2026" and schedules "03/04/2027";
-	// a Russian letter «от 10.03.2026» quotes a US invoice of "03/04/2026". Either
+	// a Russian letter «…» quotes a US invoice of "03/04/2026". Either
 	// read as day first was an exact wrong date with no doubt on it.
 	return SlashOrder::Unknown;
 }
@@ -370,15 +369,15 @@ std::vector<FoundDate> find_uncached(const std::string &text, SlashOrder order) 
 			const std::smatch &match = *it;
 			const std::size_t offset = static_cast<std::size_t>(match.position(0));
 			const std::size_t length = static_cast<std::size_t>(match.length(0));
-			// A date stands as its own words: "2026" inside "ТЛ-14/2026" or
+			// A date stands as its own words: "2026" inside "…" or
 			// "20260" is not a year of its own.
-			// A day in quotes opens the date itself: «03» марта 2026 г. glued to the
+			// A day in quotes opens the date itself: «03» … 2026 … glued to the
 			// line before it (a heading's city) is still a date.
 			const bool quoted = searchable.compare(offset, 2, "\xC2\xAB") == 0 || searchable[offset] == '"'
 				|| searchable.compare(offset, 3, "\xE2\x80\x9C") == 0 || searchable.compare(offset, 3, "\xE2\x80\x9E") == 0;
 			const bool openBefore = offset == 0 || quoted || !word_before(searchable, offset);
 			const std::size_t after = offset + length;
-			// A year closes at a word's end, at «г.» glued to it, and a day in
+			// A year closes at a word's end, at «…» glued to it, and a day in
 			// figures at the "T" an ISO timestamp writes its time after:
 			// "2026-07-01T10:30:00Z".
 			const bool isoTime = pattern.kind == 0 && after + 1 < searchable.size() && searchable[after] == 't'
@@ -438,7 +437,7 @@ std::optional<TemporalValue> parse(const std::string &text, SlashOrder order) {
 	std::string trimmed = plain_spaces(text);
 	while (!trimmed.empty() && trimmed.front() == ' ') trimmed.erase(trimmed.begin());
 	while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == '.')) trimmed.pop_back();
-	// "г." / "года" after a Russian date belong to it, and so does «г.» glued to its year.
+	// "…" after a Russian date belong to it, and so does «…» glued to its year.
 	for (const std::string &tail : {std::string(" \xD0\xB3"), std::string(" \xD0\xB3\xD0\xBE\xD0\xB4\xD0\xB0"),
 			std::string("\xD0\xB3")})
 		if (trimmed.size() > tail.size() && trimmed.compare(trimmed.size() - tail.size(), tail.size(), tail) == 0
@@ -455,7 +454,7 @@ std::optional<TemporalValue> parse(const std::string &text, SlashOrder order) {
 namespace {
 
 // The shapes a day of the year is written in without its year: 0 "July 1",
-// "Jul. 1st"; 1 "1 July", "1st of July"; 2 «1 июля», «"1" июля».
+// "Jul. 1st"; 1 "1 July", "1st of July"; 2 «…».
 const std::vector<Pattern> &day_of_year_patterns() {
 	const std::string cyr = "(?:[\\xD0\\xD1][\\x80-\\xBF])+";
 	static const std::vector<Pattern> all{

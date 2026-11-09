@@ -533,7 +533,7 @@ StatementBundleResult write_statement_bundle(const std::filesystem::path& destin
   return result;
 }
 
-// ---- The AI work statement (D-252) --------------------------------------------------
+// ---- The AI work statement --------------------------------------------------
 
 namespace {
 
@@ -547,18 +547,21 @@ Json number_or_null(const std::optional<long long>& value) {
 
 // What a request was for, as the bill says it (the window's billWords).
 std::string work_words(const OperationUsageEvidence& operation, const WorkStatementNames& names) {
+  std::string thread;
+  if (operation.chat_id.has_value()) {
+    const auto found = names.threads.find(*operation.chat_id);
+    if (found != names.threads.end() && found->second.empty() == false)
+      thread = "In \xE2\x80\x9C" + found->second + "\xE2\x80\x9D";
+  }
   if (operation.operation_role == "research") return "Web research";
-  if (operation.operation_type == "document_review") return "Document review";
+  // An AI colleague's own calls - its talk, its work - are said by the
+  // thread they worked for; only those of no thread are its document review.
+  if (operation.operation_type == "document_review") return thread.empty() == false ? thread : "Document review";
   if (operation.operation_type == "agent_run") return "Data room watch";
   if (operation.operation_type == "review_table") return "Review table";
   if (operation.operation_type == "context_automation") return "The Matter\xE2\x80\x99s context";
   if (operation.operation_type == "memory_keeping") return "What the Matter remembers";
-  if (operation.chat_id.has_value()) {
-    const auto found = names.threads.find(*operation.chat_id);
-    if (found != names.threads.end() && found->second.empty() == false)
-      return "In \xE2\x80\x9C" + found->second + "\xE2\x80\x9D";
-  }
-  return "A request";
+  return thread.empty() == false ? thread : "A request";
 }
 
 Json call_json(const BilledCall& call) {
@@ -579,7 +582,7 @@ Json call_json(const BilledCall& call) {
               {"costMethodology", text_or_null(call.cost_methodology)},
               {"protection", call.protection_mode.empty() ? std::string("off") : call.protection_mode},
               // Its place in its computer's work record, which the statement's
-              // "record" carries (D-252).
+              // "record" carries.
               {"record", call.record_chain.empty() || !call.record_index
                              ? Json(nullptr)
                              : Json{{"chain", call.record_chain}, {"index", *call.record_index}}},
@@ -1049,7 +1052,7 @@ std::string work_statement_pdf(const Json& file, const std::string& signedName) 
         // signed file, which holds them whole.
         if (call.at("sentSha256").is_string()) evidence += "  sent " + call.at("sentSha256").get<std::string>().substr(0, 12);
         if (call.at("receivedSha256").is_string()) evidence += "  received " + call.at("receivedSha256").get<std::string>().substr(0, 12);
-        // What the provider's own record says, where it was asked (D-252).
+        // What the provider's own record says, where it was asked.
         if (call.contains("confirmation") && call.at("confirmation").is_object() &&
             call.at("confirmation").at("costMicros").is_number_integer() && call.at("confirmation").at("currency").is_string())
           evidence += "  confirmed " + exact_amount(call.at("confirmation").at("costMicros").get<long long>(),

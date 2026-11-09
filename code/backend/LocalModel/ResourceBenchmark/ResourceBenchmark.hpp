@@ -8,10 +8,9 @@
 
 namespace singularity::hardware {
 
-// Real OS-reported resource evidence for one model warm-up/load, not
-// estimated - model-agnostic, so any registered local model's own
-// live_state_provider (see LocalModel/LocalModelRegistry/LocalModelRegistry.hpp) can attach
-// one. See docs/LOCAL_INFERENCE.md.
+// Real OS-reported resource evidence for one model warm-up/load, not estimated -
+// model-agnostic, so any registered local model's own live_state_provider (see
+// LocalModel/LocalModelRegistry/LocalModelRegistry.hpp) can attach one.
 struct ResourceBenchmark {
   double warm_up_ms = 0.0;
   // This process's real peak resident memory at the moment warm-up

@@ -2,9 +2,8 @@
    column; only the folders, visited places or calendar controls scroll.
    Every row's first mark - the firm's mark, an icon, a face, a heading's
    first letter - begins an --edge in, on the line of the traffic lights'
-   close button, and every name on --sidebar-text (UI-23, UI-29). A row's
-   padding is that line less the row's inset and the mark's own margin
-   inside its drawing. */
+   close button, and every name on --sidebar-text. A row's padding is that
+   line less the row's inset and the mark's own margin inside its drawing. */
 .sidebar {
 	--hover-ground: var(--sidebar-hover);
 	--press-ground: var(--sidebar-press);
@@ -16,9 +15,8 @@
 	min-height: 0;
 	/* The member's face ends on the window's foot, as far above the bottom
 	   edge as the traffic lights stand below the top - the face itself, not
-	   its row's ground (the owner, 2026-11-02): the row keeps 7 below the
-	   face, its 6 of padding and 1 as the face stands centred by its lines
-	   of 20 and 18. */
+	   its row's ground: the row keeps 7 below the face, its 6 of padding
+	   and 1 as the face stands centred by its lines of 20 and 18. */
 	padding: 0 var(--sidebar-inset) calc(var(--foot) - 7px);
 	color: var(--ink);
 	background: var(--sidebar-ground);
@@ -59,7 +57,7 @@
 }
 .firm:hover, .firm[aria-expanded="true"] { background: var(--sheet-hover); }
 /* The firm's mark keeps the faces' shape, corners of continuous curvature
-   (G2, Avatar.module.css), never a plain radius (the owner, 2026-11-02). */
+   (G2, Avatar.module.css), never a plain radius. */
 .firm_logo {
 	width: 24px;
 	height: 24px;

@@ -19,12 +19,11 @@ import { useStableGutter } from "../../components/Page/stableGutter.js";
 
 import styles from "./SettingsPage.module.css";
 
-// Singularity's settings on this computer (D-201), laid out as the Inbox is:
-// its title on Inbox's baseline, a line under it, and its rows in groups,
-// each a sign, what it is and its state, and the one thing to do with it.
-// Opened from the member's menu, and with Cmd+, or Ctrl+, (App). Its API
-// keys are a tab of their own, opened from the firm's menu too (the owner,
-// 2026-11-02).
+// Singularity's settings on this computer, laid out as the Inbox is: its
+// title on Inbox's baseline, a line under it, and its rows in groups, each a
+// sign, what it is and its state, and the one thing to do with it. Opened
+// from the member's menu, and with Cmd+, or Ctrl+, (App). Its API keys are a
+// tab of their own, opened from the firm's menu too.
 const TABS = [{ id: "general", label: "General" }, { id: "keys", label: "API keys" }];
 
 export function SettingsPage({ tab = "general" }) {
@@ -33,9 +32,9 @@ export function SettingsPage({ tab = "general" }) {
 	useStableGutter(scrollRef);
 	const headRef = useRef(null);
 	const [isGuideOpen, setGuideOpen] = useState(false);
-	// The seat's password and two-step sign-in (D-215), its app changed and its
-	// recovery codes made anew (D-218); opened on a new app when the member
-	// asked from the notice of a sign-in by a recovery code.
+	// The seat's password and two-step sign-in, its app changed and its
+	// recovery codes made anew; opened on a new app when the member asked from
+	// the notice of a sign-in by a recovery code.
 	const [securing, setSecuring] = useState(() => (takeChangeAsked() ? "replace" : null));
 	const [seatRead, setSeatRead] = useState(0);
 	// Read again once two-step sign-in is set up where Legal Machines asked for it.
@@ -178,8 +177,8 @@ function useOffice(isGuideOpen) {
 	return words;
 }
 
-// The seat signed in here (D-204): a login of the firm's with no person in
-// it, which its member types with the firm's email to sign in elsewhere.
+// The seat signed in here: a login of the firm's with no person in it,
+// which its member types with the firm's email to sign in elsewhere.
 function useSeat() {
 	const [seat, setSeat] = useState(null);
 	useEffect(() => {

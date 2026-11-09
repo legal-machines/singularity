@@ -48,8 +48,8 @@
 	background: #ffffff;
 }
 
-/* The right half: the painting, and over it the app at work once it is ready
-   (D-134). */
+/* The right half: the painting, and over it the app at work once it is
+   ready. */
 .art {
 	position: relative;
 	min-width: 0;
@@ -58,8 +58,8 @@
 	overflow: hidden;
 }
 
-/* Where the page carries the window's caption (Windows, D-049): a strip along
-   the top drags the window, and its buttons stand at the right. */
+/* Where the page carries the window's caption: a strip along the top drags
+   the window, and its buttons stand at the right. */
 .caption {
 	position: fixed;
 	inset: 0 0 auto;
@@ -72,8 +72,8 @@
 /* The buttons keep the painting's distance from the window's edges
    (painting/Painting.module.css, --art-inset, 20px): the close button's cross
    stands 20px from the right edge, and the buttons' middle line runs through
-   the mark's at the painting's top left (the owner, 2026-10-31). A button is
-   32px, its drawing 16px in the middle, the cross 4px inside that. */
+   the mark's at the painting's top left. A button is 32px, its drawing 16px
+   in the middle, the cross 4px inside that. */
 .controls {
 	position: fixed;
 	top: 14px;

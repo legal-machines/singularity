@@ -3,9 +3,9 @@ import { hasNative, shownBillables } from "../../data/native.js";
 import { matters } from "../../data/workspace.js";
 import { findMember } from "../words.js";
 
-// A Matter's bill for the period (D-074): people's time at their rates, the
-// AI colleagues' work on the basis Schedule B agrees, and the disbursements,
-// AI model usage among them at cost. Every amount is in whole cents.
+// A Matter's bill for the period: people's time at their rates, the AI
+// colleagues' work on the basis Schedule B agrees, and the disbursements, AI
+// model usage among them at cost. Every amount is in whole cents.
 
 const cents = amount => Math.round(amount * 100) / 100;
 const sum = (lines, key = "amount") => cents(lines.reduce((total, line) => total + line[key], 0));
@@ -103,9 +103,8 @@ function summary(lines) {
 }
 
 // The open Matters that have anything to bill in the period, and the closed
-// ones that still do.
-// Whether a member leads a Matter's billing: its responsible partner or the
-// lawyer who leads it (D-075).
+// ones that still do. Whether a member leads a Matter's billing: its
+// responsible partner or the lawyer who leads it.
 export function leadsBilling(matterId, memberId) {
 	const books = matterBilling[matterId];
 	return books != null && (books.partnerId == memberId || books.leadId == memberId);

@@ -17,14 +17,12 @@ import styles from "./Matters.module.css";
 import recent from "./Recent.module.css";
 import sidebar from "./Sidebar.module.css";
 
-// The firm's Matters, as Grok Bot lists its bots (the owner, 2026-11-02):
-// each by its mark, which a member sets, its name, and what it said last -
-// who wrote it and their words. They stand in the order the member gives them
-// by dragging (the owner, 2026-11-02: "let the Matters' order be changed by
-// dragging them by hand"), kept on this computer; until then, and for a
-// Matter new since, by name, so the hand finds each where it was (D-047).
-// Closed ones are on the Matters page. A new Matter begins from the place's
-// row pinned under them (D-200).
+// The firm's Matters, as Grok Bot lists its bots: each by its mark, which a
+// member sets, its name, and what it said last - who wrote it and their
+// words. They stand in the order the member gives them by dragging, kept on
+// this computer; until then, and for a Matter new since, by name, so the hand
+// finds each where it was. Closed ones are on the Matters page. A new Matter
+// begins from the place's row pinned under them.
 export function Matters({ state, unread = new Map() }) {
 	const { place, open } = useNavigation();
 	// Read again as the backend says a Matter changed.
@@ -51,7 +49,7 @@ export function Matters({ state, unread = new Map() }) {
 
 	return (
 		<section className={styles.matters} aria-label="Matters">
-			{/* Headed as Recent is (the owner, 2026-11-02). */}
+			{/* Headed as Recent is. */}
 			<div className={`${recent.heading} ${styles.heading}`}><h2>Matters</h2></div>
 			<ul ref={listRef} className={drag.isDragging ? `${styles.list} ${styles.list_dragging}` : styles.list}>
 				{matters.map((matter, index) => (
@@ -65,8 +63,7 @@ export function Matters({ state, unread = new Map() }) {
 						onMove={step => move(matter.id, step)} />
 				))}
 			</ul>
-			{/* A place's row like Inbox's or Team's (the owner, 2026-11-02: "rebuild
-			    this New matter so that it fits the sidebar's design"). */}
+			{/* A place's row like Inbox's or Team's. */}
 			<button className={`${sidebar.tab} ${styles.new}`} type="button" onClick={() => (hasNative() ? setCreating(true) : open({ kind: "matters" }))}>
 				<span className={sidebar.tab_lead}><Icon name="plus" size={18} /></span>
 				<span className={sidebar.tab_text}><span className={sidebar.tab_label}>New matter</span></span>
@@ -126,7 +123,7 @@ function MatterRow({ matter, said, isHere, unread, isFirst, isLast, dragging, on
 					{ key: "mark", label: "Change icon", icon: "edit", onSelect: () => setMarkAnchor(markRef.current) },
 					isFirst ? null : { key: "up", label: "Move up", icon: "up", onSelect: () => onMove(-1) },
 					isLast ? null : { key: "down", label: "Move down", icon: "down", onSelect: () => onMove(1) },
-					// Archived apart from the open Matters, for everyone on it (D-214).
+					// Archived apart from the open Matters, for everyone on it.
 					matter.isReal == true ? { key: "archive", label: "Archive", icon: "closed", onSelect: () => setArchiving(true) } : null,
 				].filter(Boolean)} />
 			) : null}
@@ -199,9 +196,7 @@ function useReorder(listRef, ids, onReorder) {
 		live.current = drag;
 		dragged.current = false;
 
-		// The row goes no further than the first place and the last (the
-		// owner, 2026-11-02: "it must simply not move once it reached the
-		// limits").
+		// The row goes no further than the first place and the last.
 		function offset() {
 			const dy = drag.y - drag.startY + (list.scrollTop - drag.startScroll);
 			return Math.max(-drag.from * drag.pitch, Math.min((ids.length - 1 - drag.from) * drag.pitch, dy));
@@ -295,9 +290,9 @@ function useReorder(listRef, ids, onReorder) {
 	};
 }
 
-// What a Matter said last, as its second line reads (D-200): its author -
-// "You" for the member here, a person or a colleague by first name, no one
-// for a model's answer - and the words, or the files it handed over.
+// What a Matter said last, as its second line reads: its author - "You"
+// for the member here, a person or a colleague by first name, no one for a
+// model's answer - and the words, or the files it handed over.
 function saidIn(matter, state) {
 	if (hasNative()) {
 		const latest = realLatestOf(matter.id);

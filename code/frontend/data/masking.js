@@ -1,10 +1,7 @@
 import { nativeApp } from "./native.js";
 
-// What Papinian Guard masks before an AI provider reads it (the owner,
-// 2026-11-02: "a switch between how a person sees it and how the machine sees
-// it, with what was masked and what it was masked to"; "how the outside AI
-// provider sees it", the draft too, before it is sent; D-233). The previews
-// are this computer's Guard run on the text with the Project's identities;
+// What Papinian Guard masks before an AI provider reads it. The previews are
+// this computer's Guard run on the text with the Project's identities;
 // nothing is sent, and what comes back lives only in this window's memory.
 
 // Each text asked once while the window is open, the latest few hundred kept.
@@ -31,7 +28,7 @@ export function maskText(projectId, text) {
 // Whether client data protection masks what leaves this computer
 // (protectedApi.getPolicy). Protection masks words, not pictures: a picture a
 // member attaches then goes to the AI model as it is, and says so before it
-// goes (D-256). Unknown counts as on, so the note is never missing.
+// goes. Unknown counts as on, so the note is never missing.
 export async function isProtectionOn() {
 	try {
 		const policy = await nativeApp().getProtectedApiPolicy?.();
@@ -70,16 +67,24 @@ export function keptDocumentMask(projectId, documentId) {
 const escaped = text => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // The text as it goes out: its words, and each symbol where its words stood,
-// with the words it stands for.
+// with the words it stands for. A symbol stands whole ([[Org1]]) or as one
+// of its parts - an organisation's name written alone ([[Org1.short]]), a
+// figure in words ([[Amount2.words]]) - and is the same entry either way.
+const SYMBOL_PART = /\.[A-Za-z]+\]\]$/;
+
 export function sentSegments(protectedText, replacements) {
 	const byTag = new Map((replacements ?? []).map(entry => [entry.placeholder, entry]));
 	if (byTag.size == 0 || (protectedText ?? "") == "") return [{ text: protectedText ?? "" }];
-	const pattern = new RegExp([...byTag.keys()].sort((first, second) => second.length - first.length).map(escaped).join("|"), "g");
+	const choices = [...byTag.keys()].sort((first, second) => second.length - first.length).map(tag => {
+		const name = /^\[\[(.+)\]\]$/.exec(tag)?.[1];
+		return name == null ? escaped(tag) : `\\[\\[${escaped(name)}(?:\\.[A-Za-z]+)?\\]\\]`;
+	});
+	const pattern = new RegExp(choices.join("|"), "g");
 	const segments = [];
 	let last = 0;
 	for (const match of protectedText.matchAll(pattern)) {
 		if (match.index > last) segments.push({ text: protectedText.slice(last, match.index) });
-		const entry = byTag.get(match[0]);
+		const entry = byTag.get(match[0]) ?? byTag.get(match[0].replace(SYMBOL_PART, "]]"));
 		segments.push({ tag: match[0], category: entry.category, words: entry.forms?.[0] ?? "" });
 		last = match.index + match[0].length;
 	}

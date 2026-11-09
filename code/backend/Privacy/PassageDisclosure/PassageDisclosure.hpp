@@ -14,7 +14,7 @@
 // operation's sent passages (Routing/RoutingLog SentPassages), its outbound
 // calls, the Project's documents and its Entity Registry - never from a
 // request's restoration mapping, which no longer exists by then and is never
-// kept (docs/STATE_OWNERSHIP.md).
+// kept.
 namespace singularity::privacy::passage_disclosure {
 
 // One passage of the operation, as it left and as the Project has it.

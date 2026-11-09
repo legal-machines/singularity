@@ -59,12 +59,11 @@ struct IntegrityReport {
 //     exactly as the source writes it - or, where the source is a colleague's
 //     own draft, as the Matter's documents write it - never with another legal
 //     form, with no mark of the text around it, and in the capacity they give
-//     it (D-172) - in body, tables, headers and tracked changes alike. A failed
 //     one keeps the draft from being offered for acceptance.
-// Where the parties' own writings come from (D-172). The source, unless it is a
+// Where the parties' own writings come from. The source, unless it is a
 // colleague's own draft: one carried "Coastline Logistics Corp." from version
 // to version while every pleading of the Matter writes "Coastline Logistics,
-// Inc." (2026-10-31). Then the Matter's own documents decide.
+// Inc.". Then the Matter's own documents decide.
 struct PartyAuthority {
 	bool isSourceAuthoritative = true;
 	// The words of each document whose writings of a party are authoritative.

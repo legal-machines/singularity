@@ -4,7 +4,7 @@ import { Icon } from "../Icon/Icon.jsx";
 
 import styles from "./Button.module.css";
 
-// Folio's buttons (DESIGN.md, FOLIO-20). One per meaning:
+// Folio's buttons. One per meaning.
 // - primary, in ink: the one action a view leads with;
 // - seal, in brick: an act that gives a person's key and cannot be undone;
 // - secondary, a white button with a frame: every other action;

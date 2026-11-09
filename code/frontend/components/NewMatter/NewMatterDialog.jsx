@@ -8,25 +8,24 @@ import { Icon } from "../Icon/Icon.jsx";
 import { MarkChooser } from "../ProjectMark/ProjectMark.jsx";
 import { projectColors } from "../ProjectMark/looks.js";
 import { dropNotice, endNotice, notice, toast } from "../Toast/toast.js";
-import { createFirmMatter, hasNative, nativeApp, teamMembers } from "../../data/native.js";
+import { createFirmMatter, hasNative, nativeApp, openHeldMatter, teamMembers } from "../../data/native.js";
 import { viewerId } from "../../data/workspace.js";
 import { Dots } from "../../onboarding/Dots.jsx";
 import { positionOf } from "../../pages/words.js";
 
 import styles from "./NewMatterDialog.module.css";
 
-// A new Matter, as a lawyer opens one (D-211): what the firm calls it, its
-// client, what the work is, the folder its `.lm` stands in beside its
-// documents, and the lawyers of the firm it goes to at once (D-205). Each
-// chosen lawyer's computer asks them to accept it, and it travels sealed to
-// them alone. Opening it goes on after the dialog has gone, as a notice at the
-// window's top (the owner, 2026-11-02): a folder of many documents takes a
-// while, and the member is never held in the dialog for it.
+// A new Matter, as a lawyer opens one: what the firm calls it, its client,
+// what the work is, the folder its `.lm` stands in beside its documents, and
+// the lawyers of the firm it goes to at once. Each chosen lawyer's computer
+// asks them to accept it, and it travels sealed to them alone. Opening it goes
+// on after the dialog has gone, as a notice at the window's top: a folder of
+// many documents takes a while, and the member is never held in the dialog for
+// it.
 //
-// Two steps, as onboarding goes (the owner, 2026-11-02: "share with must be
-// the second stage, as in onboarding"): first the Matter itself, then who it
-// goes to, with the steps' dots at the dialog's foot. Where the firm has no
-// other lawyer, the Matter is the only step.
+// Two steps, as onboarding goes: first the Matter itself, then who it goes to,
+// with the steps' dots at the dialog's foot. Where the firm has no other
+// lawyer, the Matter is the only step.
 const STEPS = ["The Matter", "Share with"];
 
 export function NewMatterDialog({ onClose, onCreated }) {
@@ -42,6 +41,10 @@ export function NewMatterDialog({ onClose, onCreated }) {
 	const [client, setClient] = useState("");
 	const [about, setAbout] = useState("");
 	const [folder, setFolder] = useState(null);
+	// A folder that holds a Matter already, with where that Matter is: its way
+	// back offered in place of a new one.
+	const [held, setHeld] = useState(null);
+	const [isBringing, setBringing] = useState(false);
 	const [chosen, setChosen] = useState([]);
 	const [error, setError] = useState(null);
 	const lawyers = teamMembers().filter(member => member.kind != "ai_colleague" && member.id != viewerId
@@ -55,14 +58,33 @@ export function NewMatterDialog({ onClose, onCreated }) {
 			const picked = await nativeApp().chooseNewMatterFolder();
 			if (picked == null) return;
 			if (picked.holdsMatter == true) {
-				setError(`${picked.name} holds a Matter already. Open it from Matters instead.`);
+				if (picked.heldMatter != null) {
+					setHeld(picked);
+					setError(null);
+				} else setError(`${picked.name} holds a Matter already. Open it from Matters instead.`);
 				return;
 			}
+			setHeld(null);
 			setFolder(picked);
 			setError(null);
 			if (name.trim() == "") setName(picked.name);
 		} catch (reason) {
 			setError(reason?.message ?? "The folder could not be chosen. Try again.");
+		}
+	}
+
+	// The held Matter brought back: restored from the Trash, or opened again
+	// from its folder, and shown.
+	async function bringBack() {
+		if (held == null || isBringing) return;
+		setBringing(true);
+		try {
+			const uiId = await openHeldMatter({ folderToken: held.token, held: held.heldMatter });
+			onClose();
+			onCreated?.(uiId);
+		} catch (reason) {
+			setError(reason?.message ?? "That Matter could not be opened. Try again.");
+			setBringing(false);
 		}
 	}
 
@@ -146,6 +168,7 @@ export function NewMatterDialog({ onClose, onCreated }) {
 								</div>
 								<Button size="small" onClick={chooseFolder}>{folder != null ? "Change" : "Choose"}</Button>
 							</div>
+							{held != null ? <HeldMatter held={held} busy={isBringing} onBring={bringBack} /> : null}
 						</div>
 					) : null}
 				</div>
@@ -171,6 +194,26 @@ export function NewMatterDialog({ onClose, onCreated }) {
 				</ul>
 			)}
 		</Dialog>
+	);
+}
+
+// What a chosen folder holds already, and its way back: a Matter in the
+// Trash is restored, one in the Matters opened, one not in them opened from
+// its folder - never a new Matter over it. "Not in them" is a Matter
+// deleted from this computer or one another computer of the firm made that
+// this one never had, which this computer cannot tell apart: the words say
+// only what is true of both.
+function HeldMatter({ held, busy, onBring }) {
+	const matter = held.heldMatter;
+	const name = matter.name || held.name;
+	const said = matter.state == "trashed" ? { line: `${name} is in the Trash.`, action: "Restore it" }
+		: matter.state == "listed" ? { line: `${name} is in your Matters already.`, action: "Open it" }
+		: { line: `This folder holds ${name}, which isn’t in your Matters on this computer.`, action: "Open it" };
+	return (
+		<div className={styles.held}>
+			<span className={styles.heldLine}>{said.line}</span>
+			<Button size="small" busy={busy} onClick={onBring}>{said.action}</Button>
+		</div>
 	);
 }
 

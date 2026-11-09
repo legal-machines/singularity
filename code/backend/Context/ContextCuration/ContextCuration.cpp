@@ -429,9 +429,6 @@ ContextItem update_item_value(matters::Matter &matter, const std::string &item_i
 	ContextItem &item = require_item(matter, item_id);
 
 	if (item.value != value) {
-		// Capture the value/authority being replaced as a durable revision
-		// BEFORE overwriting it - COLLABORATION_CONTRACT.md's "previous version
-		// and resulting version", never simply discarded.
 		ContextItemRevision revision;
 		revision.id = generate_revision_id();
 		revision.item_id = item.id;

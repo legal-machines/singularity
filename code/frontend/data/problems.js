@@ -1,28 +1,20 @@
-// A problem reported to Legal Machines from Singularity (the owner,
-// 2026-11-05: "a small bug icon for sending bug reports straight to our board
-// ... screenshots, a title, a description, and the technical details by
-// themselves - which build, which device, which page and all else needed for
-// a quick fix"; then "for design partners too", and "mark the design
-// partners' bug reports with the tag 'design partner', so we know which are
-// our internal debug reports and which are design partners', all in one
-// column", D-257). The bug icon shows in a Debug build, Legal Machines' own,
-// and where the seat's firm is a design partner (data/designPartner.js), in
-// any build; the native side sends the report with this computer's sign-in to
-// the board Legal Machines keeps for this version's line
-// (account.reportProblem), which labels a design partner's. The technical
-// details are the build, the computer and the window's state - never a
-// Matter's or a client's name, a document's words, a credential or anything a
-// request said.
+// A problem reported to Legal Machines from Singularity. The bug icon shows
+// in a Debug build, Legal Machines' own, and where the seat's firm is a
+// design partner (data/designPartner.js), in any build; the native side sends
+// the report with this computer's sign-in to the board Legal Machines keeps
+// for this version's line (account.reportProblem), which labels a design
+// partner's. The technical details are the build, the computer and the
+// window's state - never a Matter's or a client's name, a document's words, a
+// credential or anything a request said.
 
 import { useEffect, useState } from "react";
 
 import { useDesignPartner } from "./designPartner.js";
 import { nativeApp } from "./native.js";
 
-// What a report is about, in words a member uses (the owner, 2026-11-05:
-// categories "understandable for an ordinary person"). Each goes by its id;
-// Legal Machines' board labels it in its own, normalised words ("ux" is
-// "UI / UX"), which the mail server's intake keeps.
+// What a report is about, in words a member uses. Each goes by its id;
+// Legal Machines' board labels it in its own, normalised words ("ux" is "UI
+// / UX"), which the mail server's intake keeps.
 export const PROBLEM_CATEGORIES = [
 	{ id: "ux", words: "Hard to use or confusing" },
 	{ id: "visual", words: "How it looks" },
@@ -124,10 +116,8 @@ function pictureOf(file) {
 }
 
 // The version of the Diagnostics Consent in force: a design partner's seat
-// accepts it, by its checkbox, before its first bug report or work log (the
-// owner, 2026-11-05: "before sending, on each seat, a checkbox: a separate
-// consent to sending this data"). Legal Machines' account service keeps the
-// version each seat accepted.
+// accepts it, by its checkbox, before its first bug report or work log.
+// Legal Machines' account service keeps the version each seat accepted.
 export const DIAGNOSTICS_CONSENT_VERSION = "1";
 
 // Sends the report: {number} of its card on the board. With

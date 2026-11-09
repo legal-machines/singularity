@@ -3,17 +3,17 @@
 #include <string>
 #include <vector>
 
-// The organisation as the window reads it (D-019, docs/ORGANISATION.md): its
-// members, people and AI colleagues in one list, the areas they own, the work
-// under way, the decisions waiting on a member, and what each member's record
-// already says. A read model over today's data (Beta 1 #273, D-027): it holds
-// nothing of its own and decides nothing; each fact comes from the domain that
-// owns it (Organisation/OrganisationProduction).
+// The organisation as the window reads it: its members, people and AI
+// colleagues in one list, the areas they own, the work under way, the
+// decisions waiting on a member, and what each member's record already says. A
+// read model over today's data: it holds nothing of its own and decides
+// nothing; each fact comes from the domain that owns it
+// (Organisation/OrganisationProduction).
 namespace singularity::organisation {
 
-// Who is looking (Beta 1 #274): the person at this computer, and what today's
-// code lets that member do. Until roles carry rights (R4, OPEN-2), the person at
-// this computer holds every decision made here.
+// Who is looking: the person at this computer, and what today's code lets that
+// member do. Until roles carry rights, the person at this computer holds every
+// decision made here.
 struct Viewer {
 	std::string member_id;
 	std::string name;
@@ -25,16 +25,16 @@ struct Viewer {
 	// their position and their practice, each empty where they stated none.
 	std::string position;
 	std::string practice;
-	// The photo they show the firm (D-163), a data URL; empty without one.
+	// The photo they show the firm, a data URL; empty without one.
 	std::string photo;
 	bool decides_changes = true;
 	bool answers_questions = true;
 	bool gives_work = true;
 	bool manages_colleagues = true;
 	// Connects the firm's model accounts and sets a colleague's model and
-	// provider: the administrative account's alone (D-184).
+	// provider: the administrative account's alone.
 	bool connects_models = true;
-	// Makes, re-passwords and removes the firm's seats (D-204): the
+	// Makes, re-passwords and removes the firm's seats: the
 	// administrative account's alone.
 	bool manages_seats = true;
 	bool resolves_conflicts = true;
@@ -59,7 +59,7 @@ struct MemberRecord {
 struct Member {
 	// A person's actor id; an AI colleague's agent id.
 	std::string id;
-	// "person" or "ai_colleague": a plain fact, shown as such (PHIL-10).
+	// "person" or "ai_colleague": a plain fact, shown as such.
 	std::string kind;
 	std::string name;
 	bool is_viewer = false;
@@ -73,9 +73,8 @@ struct Member {
 	// The member it answers to today: an AI colleague's responsible lawyer.
 	std::string answers_to;
 	std::string character;
-	// What an AI colleague's character acts out now (Agent/AgentActions
-	// agent_presence, D-013): greet, think, work, wait, explain, listen or
-	// rest. Empty for a person.
+	// What an AI colleague's character acts out now: greet, think, work,
+	// wait, explain, listen or rest. Empty for a person.
 	std::string presence;
 	// Its computer runs it here, or a colleague's computer does.
 	bool runs_here = true;

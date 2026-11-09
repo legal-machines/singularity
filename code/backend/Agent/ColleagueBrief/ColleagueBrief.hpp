@@ -5,10 +5,10 @@
 namespace singularity::agents {
 
 /*
- * What every request of an AI colleague carries before its work (D-101): the
- * firm's one way of professional communication, the same for every colleague
- * (layer 1), and this colleague's role - its standing work, its manner, whom
- * it answers to and what it may do here (layer 2). The Matter, its thread and
+ * What every request of an AI colleague carries before its work: the firm's
+ * one way of professional communication, the same for every colleague (layer
+ * 1), and this colleague's role - its standing work, its manner, whom it
+ * answers to and what it may do here (layer 2). The Matter, its thread and
  * its documents (layer 3), and what actually happened when the work was done
  * (layer 4), come with each request, never here.
  *
@@ -23,8 +23,8 @@ const std::string &professional_communication();
 struct ColleagueRole {
 	std::string name;
 	// The firm it is a member of, as its people name it; may be empty. A
-	// colleague is a member of the whole firm, never of one Matter (the owner,
-	// 2026-10-26): the Matter of a piece of work comes with that work.
+	// colleague is a member of the whole firm, never of one Matter: the Matter
+	// of a piece of work comes with that work.
 	std::string firm;
 	// Its office in the firm (Agent::office): the office it holds, the position
 	// of the firm's scale it ranks with, its practice and its area; each may be
@@ -50,11 +50,11 @@ struct ColleagueRole {
 // Layers 1 and 2, as the request's standing instructions.
 std::string colleague_brief(const ColleagueRole &role);
 
-// Who the colleague is in the firm, as its talk carries it (D-129): its name,
-// its office, rank, practice and area, its manner, whom it answers to, and
-// what it can do and never does - layer 2 only, the firm's long rules
-// travelling with its work. Where it holds no office, its standing work says
-// what it is there for.
+// Who the colleague is in the firm, as its talk carries it: its name, its
+// office, rank, practice and area, its manner, whom it answers to, and what
+// it can do and never does - layer 2 only, the firm's long rules travelling
+// with its work. Where it holds no office, its standing work says what it is
+// there for.
 std::string colleague_identity(const ColleagueRole &role);
 
 } // namespace singularity::agents

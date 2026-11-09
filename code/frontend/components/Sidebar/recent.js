@@ -3,19 +3,17 @@ import { conversationsFor } from "../../pages/Messages/conversations.js";
 import { lastEvent } from "../../pages/threadState.js";
 
 // Recent holds conversations only - a direct message or a thread of any
-// Matter - never a page that was looked at, such as a Matter's (the owner,
-// 2026-11-02: "only direct messages and messages in threads"). Each stands by
-// whichever came last: the member opening it in this window, or something
+// Matter - never a page that was looked at, such as a Matter's. Each stands
+// by whichever came last: the member opening it in this window, or something
 // written in it. The latest three, so the Matters keep the room. Each by a
 // face: a direct message's member, and in a thread whoever wrote in it last,
 // the member here included.
 export const RECENT_MOST = 3;
 
 // Recent cleared, or one conversation taken out of it, without touching the
-// conversations themselves (the owner, 2026-11-04: "a way to remove the
-// Recent list without deleting the chats"): what stood in it then leaves it,
-// and a conversation comes back only once something new happens in it. Kept on
-// this computer, as the Matters' order is (Matters.jsx).
+// conversations themselves: what stood in it then leaves it, and a
+// conversation comes back only once something new happens in it. Kept on this
+// computer, as the Matters' order is (Matters.jsx).
 const CLEARED_KEY = "singularity.recent.cleared";
 const CHANGED = "singularity:recent-changed";
 

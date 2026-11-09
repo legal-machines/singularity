@@ -33,13 +33,11 @@ namespace singularity::agents {
 //
 // An agent the lawyer runs by hand runs only then.
 //
-// Each colleague makes one run at a time, and the colleagues work beside one
-// another, as a firm's members do: a colleague at work on a long piece never
-// keeps another waiting (D-170), up to kMostRunsAtOnce at once on a computer.
+// Each colleague makes one run at a time, and the colleagues work beside one another, as a firm's members do: a
+// colleague at work on a long piece never keeps another waiting, up to kMostRunsAtOnce at once on a computer.
 // Nothing here runs when Singularity is closed, and nothing says it does. Folder watches are begun and ended on this
-// object's own thread, never under a lock another part of Singularity waits
-// on: a permission prompt the system shows for a folder stalls only this
-// thread.
+// object's own thread, never under a lock another part of Singularity waits on: a permission prompt the system shows
+// for a folder stalls only this thread.
 class AgentScheduler {
 public:
 	static AgentScheduler &shared();
@@ -49,8 +47,10 @@ public:
 	bool is_started() const;
 
 	// A check of one agent, as soon as none of its own runs. It also ends a hold
-	// (hold_own_runs) on that agent.
-	void request_check(const std::string &agent_id, const std::string &trigger);
+	// (hold_own_runs) on that agent. `on_a_copy`: what asks for it decided on a
+	// copy of the agent read earlier - as the scheduler's own look does - so the
+	// run is decided again on the agent as it is when it begins.
+	void request_check(const std::string &agent_id, const std::string &trigger, bool on_a_copy = false);
 	// The agent is being set up - made, approved, resumed or given another
 	// folder - and asks for its run itself once it is ready (request_check).
 	// Until then its own timed runs wait, so that run is never made twice, nor
@@ -75,9 +75,17 @@ public:
 	~AgentScheduler();
 
 private:
+	// One run asked for: the colleague, what for, and whether it was decided on a
+	// copy of the agent (request_check). The scheduler's look reads the agents
+	// once and a run may change one before what the look decided begins.
+	struct Due {
+		std::string agent_id;
+		std::string trigger;
+		bool on_a_copy = false;
+	};
 	AgentScheduler() = default;
 	void loop();
-	// Opens the own chat of each colleague that has none yet (D-157).
+	// Opens the own chat of each colleague that has none yet.
 	void open_missing_chats();
 	// Shows this computer's colleagues in each Matter it has come to carry with
 	// the firm's other computers since it last looked (Agent/AgentCard).
@@ -85,8 +93,8 @@ private:
 	void listen();
 	void sync_watchers();
 	void reconcile_interrupted_runs();
-	void execute(const std::string &agent_id, const std::string &trigger);
-	std::deque<std::pair<std::string, std::string>> due_checks();
+	void execute(const Due &due);
+	std::deque<Due> due_checks();
 
 	mutable std::mutex mutex_;
 	std::condition_variable wake_;
@@ -101,16 +109,16 @@ private:
 	bool is_dirty_ = false;
 	// The same, for the listener.
 	bool is_listen_due_ = false;
-	std::deque<std::pair<std::string, std::string>> requested_;
+	std::deque<Due> requested_;
 	// Agents being set up (hold_own_runs), until when their own runs wait.
 	std::map<std::string, std::chrono::steady_clock::time_point> held_;
-	// Agents whose model could not be asked for a cause that clears by itself
-	// (D-169) - the Mac locked, the network down: until when they wait, and how
-	// many times in a row it was so, which doubles the wait.
+	// Agents whose model could not be asked for a cause that clears by itself -
+	// the Mac locked, the network down: until when they wait, and how many
+	// times in a row it was so, which doubles the wait.
 	std::map<std::string, std::pair<std::chrono::steady_clock::time_point, int>> waiting_for_model_;
 	std::map<std::string, std::chrono::steady_clock::time_point> noticed_;
-	// The runs at work now, one at most per colleague (D-170): what each runs
-	// for, and how it is told to stop.
+	// The runs at work now, one at most per colleague: what each runs for,
+	// and how it is told to stop.
 	struct Running {
 		std::string trigger;
 		std::shared_ptr<std::atomic<bool>> cancelled;
@@ -118,7 +126,7 @@ private:
 	std::map<std::string, Running> running_;
 	// What was due for a colleague at work already, or while as many as may
 	// worked: taken up as a run ends, never lost.
-	std::deque<std::pair<std::string, std::string>> later_;
+	std::deque<Due> later_;
 	// The runs' own threads, counted: stop() waits for every one to end.
 	int workers_ = 0;
 	std::condition_variable workers_done_;
@@ -156,8 +164,8 @@ std::optional<std::string> timed_trigger(const Agent &agent, bool is_opening,
 	std::chrono::system_clock::time_point now, std::chrono::system_clock::time_point opened_at);
 
 // A colleague that does tasks and is set to work when asked: it never runs on
-// its own, not even a first time - its work is what it is given (D-097). A
-// watch, even one run by hand, still records its folder first.
+// its own, not even a first time - its work is what it is given. A watch,
+// even one run by hand, still records its folder first.
 bool works_only_when_asked(const Agent &agent);
 
 // Reads "2026-10-11T07:00:00Z"; nothing for anything else.

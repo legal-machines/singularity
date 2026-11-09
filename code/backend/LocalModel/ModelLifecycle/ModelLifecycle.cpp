@@ -21,8 +21,8 @@ void ModelWarmupTracker::run_once() {
     } catch (const std::exception &error) {
       // Why a model would not start, in the developer's trace when it is on
       // (SINGULARITY_TRACE_FILE): a Release build's protection that did not
-      // start said only that it had not (2026-10-29). Never a document's words:
-      // a warm-up reads none.
+      // start said only that it had not. Never a document's words: a warm-up
+      // reads none.
       platform::trace::record("model", "warm_up_failed", {{"reason", std::string(error.what())}});
       std::lock_guard<std::mutex> lock(mutex_);
       status_ = ModelLifecycleStatus{ModelLifecycleState::Error, error.what()};

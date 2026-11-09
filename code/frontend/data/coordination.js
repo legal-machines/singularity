@@ -7,24 +7,24 @@ import { connectRealWork, hasNative, listArrivedMatter, lookForArrivedMatters, m
 import { viewerMay } from "./workspace.js";
 import { endingOf, isWhole, transferNotices } from "./transfers.js";
 
-// The firm's computers (D-123, D-124), as this computer's coordination says:
-// the firm's folder it exchanges through, its own code, the Matters it carries
-// or waits for, the computers that ask to join a Matter carried here and the
-// ones that offer a Matter this computer asked for. Read from the backend
-// again every few seconds while the window shows, since a request or an offer
-// arrives on the engine's own rounds. Nothing here is a second truth (ARCH-2):
-// it is what the backend last said.
+// The firm's computers, as this computer's coordination says: the firm's
+// folder it exchanges through, its own code, the Matters it carries or waits
+// for, the computers that ask to join a Matter carried here and the ones that
+// offer a Matter this computer asked for. Read from the backend again every
+// few seconds while the window shows, since a request or an offer arrives on
+// the engine's own rounds. Nothing here is a second truth: it is what the
+// backend last said.
 
 // Every few seconds while the window shows; less often while it is minimized
 // or behind others, so what waits is there when the lawyer comes back to it.
 const EVERY_MILLISECONDS = 3000;
 const HIDDEN_EVERY_MILLISECONDS = 15000;
 
-// And the firm's computers (D-205): each with its seat and whether a lawyer
-// here checked it, the ones that began a check with this one, the Matters
-// given to this member that wait for an answer, and the dialog about them the
-// window shows, if any. Read with the rest, as the backend last heard them:
-// the window never makes it ask Legal Machines.
+// And the firm's computers: each with its seat and whether a lawyer here
+// checked it, the ones that began a check with this one, the Matters given to
+// this member that wait for an answer, and the dialog about them the window
+// shows, if any. Read with the rest, as the backend last heard them: the
+// window never makes it ask Legal Machines.
 let current = {
 	isRead: false, firmFolder: "", deviceCode: "", matters: [], asking: [], error: null, version: 0,
 	computers: [], checkAsking: [], offers: [], dialog: null,
@@ -41,7 +41,7 @@ const ARRIVAL_MILLISECONDS = 15 * 60 * 1000;
 // Offers already said in a toast, by Matter and computer.
 const told = new Set();
 // What goes on between this computer and the firm's others, said while it goes
-// on (D-207): the notices shown, by key; the transfers still going at the last
+// on: the notices shown, by key; the transfers still going at the last
 // reading; the Matters this window asked to join lately, by when; each
 // Matter's computers, by device, with their members, read again now and then;
 // and the Matters whose arrival a notice already said.
@@ -52,13 +52,12 @@ const ASKED_MILLISECONDS = 60 * 60 * 1000;
 const computersByMatter = new Map();
 const NAMES_MILLISECONDS = 30 * 1000;
 const arrivalSaid = new Set();
-// The Matters the member accepted here (D-205), by Matter: what the offer said
-// of each - its name, bytes and files, the computer it comes from and that
-// computer's member - and when, so its notice stands from the acceptance
-// until it is whole here (the owner, 2026-11-02: a Matter came in half a
-// second, and no notice said how much had come). And the Matters given from
-// this window whose first transfer is not said yet; and each Matter taken
-// here being listed among the member's Matters, once.
+// The Matters the member accepted here, by Matter: what the offer said of each
+// - its name, bytes and files, the computer it comes from and that computer's
+// member - and when, so its notice stands from the acceptance until it is
+// whole here. And the Matters given from this window whose first transfer is
+// not said yet; and each Matter taken here being listed among the member's
+// Matters, once.
 const accepted = new Map();
 const givenHere = new Set();
 const listing = new Map();
@@ -89,7 +88,7 @@ export function isFirmCoordination() {
 }
 
 // When to read again: often while a Matter is on its way or this computer waits
-// for another (D-207), else every few seconds, less while the window is away.
+// for another, else every few seconds, less while the window is away.
 function nextReadIn() {
 	if (shownNotices.size > 0 || watchedTransfers.size > 0 || accepted.size > 0 || arriving.size > 0) return BUSY_MILLISECONDS;
 	return document.visibilityState == "visible" ? EVERY_MILLISECONDS : HIDDEN_EVERY_MILLISECONDS;
@@ -140,8 +139,7 @@ async function read() {
 
 // The computers that ask to join any Matter carried here, each with its
 // member, as that Matter's activity names them (project.sharedActivity:
-// "asking") - not only the Matter the window shows (2026-10-26: a request to
-// join Halden showed nowhere).
+// "asking") - not only the Matter the window shows.
 async function askingHere(matters) {
 	const found = [];
 	for (const link of matters) {
@@ -167,8 +165,8 @@ async function askingHere(matters) {
 	return found;
 }
 
-// The firm's computers and the Matters given to this member (D-205); the
-// offers read every few readings, and only once a computer of the firm is
+// The firm's computers and the Matters given to this member; the offers
+// read every few readings, and only once a computer of the firm is
 // checked here, since none comes from any other.
 const OFFERS_MILLISECONDS = 6000;
 let offersReadAt = 0;
@@ -191,11 +189,9 @@ async function firmRead() {
 
 // Whose a computer of the firm is, as the window can say it: its member's name
 // once the firm's record names who sits in its seat, else the seat's office -
-// before two computers are checked, no name has reached this one (D-205). A
-// computer of the member's own seat is theirs, "your other computer", never
-// named by their office or their name as if someone else's (the owner,
-// 2026-11-05, the only member of a new firm, at his own second computer: "why
-// does he get this, he is the only one in the organisation").
+// before two computers are checked, no name has reached this one. A computer
+// of the member's own seat is theirs, "your other computer", never named by
+// their office or their name as if someone else's.
 export function computerOwner(computer) {
 	const ownSeat = viewerSeatId();
 	if (computer != null && ownSeat != null && (computer.seatId ?? "").toLowerCase() == ownSeat.toLowerCase()) {
@@ -237,8 +233,7 @@ function tellChecks(computers, asking) {
 		});
 	}
 	// The administrator's computer offers the check of a colleague's new
-	// computer by itself, once it signs in (the owner, 2026-11-02: nothing on
-	// the Mac said a check was to be made); a member's computer that no lawyer
+	// computer by itself, once it signs in; a member's computer that no lawyer
 	// checked yet says what it waits for.
 	const isWaited = current.dialog?.kind == "check";
 	for (const computer of computers ?? []) {
@@ -269,12 +264,11 @@ function tellChecks(computers, asking) {
 	}
 }
 
-// A Matter a colleague shares with this member comes by itself (D-253; the
-// owner, 2026-11-05: "since it was shared with me, why didn't it show in the
-// Matters list?"): taking what a colleague of the firm gave this seat, from a
-// computer checked with this one, holds no decision (PHIL-7). It is taken
-// once, its arrival is said with who shares it and how much has come, and
-// it is listed among the member's Matters once whole (D-207).
+// A Matter a colleague shares with this member comes by itself: taking what a
+// colleague of the firm gave this seat, from a computer checked with this
+// one, holds no decision. It is taken once, its arrival is said with who
+// shares it and how much has come, and it is listed among the member's
+// Matters once whole.
 const givenNotices = new Set();
 const taking = new Set();
 
@@ -310,8 +304,8 @@ export function closeFirmDialog() {
 	read();
 }
 
-// The check of one computer of the firm (D-205): begun or gone on with, read
-// as it stands, and ended by the lawyer's word.
+// The check of one computer of the firm: begun or gone on with, read as it
+// stands, and ended by the lawyer's word.
 export function beginComputerCheck(deviceId) {
 	return nativeApp().checkFirmComputer(deviceId);
 }
@@ -346,7 +340,7 @@ export async function giveMatter(projectId, actorId) {
 
 // The member takes a Matter given to them, or leaves it. Taken, the offer's
 // notice goes at once, and the Matter's own stands from now until it is whole
-// here, with how much of it has come (D-207).
+// here, with how much of it has come.
 export async function acceptGivenMatter(offer) {
 	await nativeApp().acceptMatterOffer(offer.matterId, offer.fromDeviceId);
 	arriving.set(offer.matterId, Date.now());
@@ -377,7 +371,7 @@ function tellOffers(matters) {
 			if (told.has(key)) continue;
 			told.add(key);
 			// An offer that says how big the Matter is stands as its notice while
-			// the Matter comes (D-207); only one that says nothing is told here.
+			// the Matter comes; only one that says nothing is told here.
 			if ((offer.bytes ?? 0) > 0) continue;
 			toast(`A computer offers ${matter.name}. Compare its code with your colleague in Matters, then take it.`);
 		}
@@ -385,8 +379,8 @@ function tellOffers(matters) {
 }
 
 // What goes on between this computer and the firm's others, said while it goes
-// on (D-207): each notice the coordination's state calls for, shown or changed
-// in place; each no longer called for, ended - said done when what it told of
+// on: each notice the coordination's state calls for, shown or changed in
+// place; each no longer called for, ended - said done when what it told of
 // came whole, else gone unsaid. A Matter that arrived is listed at once.
 async function tellTransfers(matters, deviceCode) {
 	const names = new Map();
@@ -402,8 +396,7 @@ async function tellTransfers(matters, deviceCode) {
 		if (Date.now() - taken.at > ARRIVAL_MILLISECONDS) accepted.delete(matterId);
 	}
 	// Each Matter by the name the window shows now: the coordination keeps the
-	// one it was shared under (the owner, 2026-11-02: a notice still named
-	// Harbor "Project Harbor - Data Room").
+	// one it was shared under.
 	const named = matters.map(link => ({ ...link, name: matterNameOf(link.matterId) ?? link.name }));
 	const said = transferNotices(named, { deviceCode, names, watched: watchedTransfers, askedHere: new Set(askedHere.keys()),
 		accepted, givenHere });
@@ -506,8 +499,7 @@ async function computersOf(matterId) {
 }
 
 // A Matter whose key was taken here is in the lawyer's folder once its records
-// have come: it is listed among the member's Matters then, by itself (the
-// owner, 2026-11-02: Matters did not show the Matter that had come).
+// have come: it is listed among the member's Matters then, by itself.
 async function lookForArrivals(matters) {
 	if (arriving.size == 0) return;
 	for (const [matterId, since] of [...arriving]) {
@@ -516,7 +508,7 @@ async function lookForArrivals(matters) {
 			continue;
 		}
 		const link = matters.find(matter => matter.matterId == matterId);
-		// Arrived once all of it is here, not when its key was taken (D-207).
+		// Arrived once all of it is here, not when its key was taken.
 		if (isWhole(link) == false) continue;
 		arriving.delete(matterId);
 		const opening = listArrived(link);
@@ -530,8 +522,7 @@ async function lookForArrivals(matters) {
 // A Matter carried here while the window has none open - its key taken
 // elsewhere than this window, the window opened before it came, or the Matter
 // opened by itself once whole - is looked for again, at most every few
-// seconds, so the window shows it without a reload (the owner, 2026-10-26: the
-// Mac's window stayed empty after Amsterdam had come).
+// seconds, so the window shows it without a reload.
 const REBIND_MILLISECONDS = 5000;
 let lastRebind = 0;
 
@@ -582,7 +573,7 @@ export async function joinWithInvitation(invitation) {
 	const waitingBefore = new Set(current.matters.filter(matter => matter.state == "waiting").map(matter => matter.matterId));
 	const status = await nativeApp().joinFirmMatter(invitation.trim());
 	// The Matter this window asked for: until it is let in, a notice says what
-	// it waits for (D-207).
+	// it waits for.
 	for (const matter of status?.matters ?? []) {
 		if (matter.state == "waiting" && waitingBefore.has(matter.matterId) == false) askedHere.set(matter.matterId, Date.now());
 	}
@@ -600,14 +591,11 @@ export async function takeMatter(matterId, deviceId) {
 
 // This module keeps the window's state. While the window runs it is never
 // swapped for a fresh copy, which would start empty: a change to it reloads
-// the window (2026-10-26: a hot swap left the Mac's window with no Matter, so
-// it read nothing and every post was refused).
+// the window.
 if (import.meta.hot) import.meta.hot.decline();
 
 // A Matter's end-to-end link that went wrong is told once, wherever the member
-// is, in its own words (the owner, 2026-11-02: "if there are problems, it
-// should glow red, with an explanation and a notification"); the shield on
-// the faces of its people says it too.
+// is, in its own words; the shield on the faces of its people says it too.
 const toldProblems = new Set();
 function tellLinkProblems(matters) {
 	for (const matter of matters) {

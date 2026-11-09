@@ -86,28 +86,28 @@ std::vector<std::string> head_lines(const std::string &text, std::size_t count) 
 
 // Cue words, English and Russian, lower case. Russian stems allow an ending.
 const std::vector<std::string> kDraftWords{"draft", "drafts", "for discussion"};
-const std::vector<std::string> kDraftStems{"\xD1\x87\xD0\xB5\xD1\x80\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xB8\xD0\xBA"};  // черновик
+const std::vector<std::string> kDraftStems{"\xD1\x87\xD0\xB5\xD1\x80\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xB8\xD0\xBA"};  // …
 
-// «Проект» marks a draft only as the word itself where a title or a name puts
-// it - first («Проект договора аренды»), last («Договор поставки (проект)»),
-// or before the paper it is a draft of («проект соглашения») - never as the
-// stem of «проектных работ» or «инвестиционного проекта», the subject of an
+// «…» marks a draft only as the word itself where a title or a name puts
+// it - first («…»), last («…»),
+// or before the paper it is a draft of («…») - never as the
+// stem of «…» or «…», the subject of an
 // executed design or investment contract.
 bool russian_draft_word(const std::string &lower) {
-	static const std::string project = "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82";  // проект
+	static const std::string project = "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82";  // …
 	static const std::vector<std::string> papers{
-		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xB0",                     // договора
-		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F",       // соглашения
-		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",             // контракта
-		"\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBE\xD0\xBB\xD0\xBD\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD\xD0\xBE\xD0\xB3\xD0\xBE",  // дополнительного
-		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x82\xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB0",             // протокола
-		"\xD1\x80\xD0\xB5\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F",                               // решения
-		"\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",                                                           // акта
-		"\xD1\x83\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xB0",                                         // устава
-		"\xD0\xB4\xD0\xBE\xD0\xBA\xD1\x83\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x82\xD0\xB0",             // документа
-		"\xD0\xB8\xD0\xB7\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB9",             // изменений
-		"\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C\xD0\xBC\xD0\xB0",                                         // письма
-		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBA\xD0\xB0\xD0\xB7\xD0\xB0"};                               // приказа
+		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xB0",                     // …
+		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F",       // …
+		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",             // …
+		"\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBE\xD0\xBB\xD0\xBD\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD\xD0\xBE\xD0\xB3\xD0\xBE",  // …
+		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x82\xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB0",             // …
+		"\xD1\x80\xD0\xB5\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F",                               // …
+		"\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",                                                           // …
+		"\xD1\x83\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xB0",                                         // …
+		"\xD0\xB4\xD0\xBE\xD0\xBA\xD1\x83\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x82\xD0\xB0",             // …
+		"\xD0\xB8\xD0\xB7\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB9",             // …
+		"\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C\xD0\xBC\xD0\xB0",                                         // …
+		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBA\xD0\xB0\xD0\xB7\xD0\xB0"};                               // …
 	std::vector<std::string> words;
 	std::string word;
 	for (std::size_t index = 0; index <= lower.size(); ++index) {
@@ -130,8 +130,8 @@ bool russian_draft_word(const std::string &lower) {
 
 // A signature given, as a text shows one: "/s/ Dana Morgan", "By: Dana Morgan"
 // (never "By: ______" or "By:" with "Name:" under it), a platform's or a
-// qualified electronic signature's mark ("DocuSign Envelope ID", «Подписано
-// электронной подписью», «Документ подписан»), or a «подпись» line that
+// qualified electronic signature's mark ("DocuSign Envelope ID", «…
+// …», «…»), or a «…» line that
 // carries a date or a name and no line left to sign on.
 bool shows_signature(const std::string &lower) {
 	for (std::size_t at = lower.find("/s/"); at != std::string::npos; at = lower.find("/s/", at + 1)) {
@@ -155,12 +155,12 @@ bool shows_signature(const std::string &lower) {
 			|| contains(lower, "signed electronically"))
 		return true;
 	static const std::vector<std::string> russianMarks{
-		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD\xD0\xBE",      // подписано
-		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD",                // подписан
-		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD\xD0\xB0"};     // подписана
+		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD\xD0\xBE",      // …
+		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD",                // …
+		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD0\xB0\xD0\xBD\xD0\xB0"};     // …
 	if (has_any(lower, russianMarks)) return true;
-	// «Подпись: А. В. Смирнова 03.03.2026» - a «подпись» line with a date, and no line to sign on.
-	static const std::string signature = "\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C";  // подпись
+	// «…» - a «…» line with a date, and no line to sign on.
+	static const std::string signature = "\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C";  // …
 	for (std::size_t at = lower.find(signature); at != std::string::npos; at = lower.find(signature, at + 1)) {
 		const std::size_t lineStart = at == 0 ? 0 : (lower.rfind('\n', at - 1) == std::string::npos ? 0 : lower.rfind('\n', at - 1) + 1);
 		const std::size_t lineEnd = std::min(lower.find('\n', at), lower.size());
@@ -171,7 +171,7 @@ bool shows_signature(const std::string &lower) {
 	return false;
 }
 // A text in final form: every line to sign on names its signatory -
-// «____________ / О. В. Смирнов /», "By: ________ Name: Dana Morgan" - and no
+// «…», "By: ________ Name: Dana Morgan" - and no
 // blank is left anywhere: no «___» day, no «/______/» for a name, no [●]. A
 // draft leaves them blank; a text never shows a handwritten signature, so an
 // executed Russian agreement kept in Word reads exactly like this (live Sol
@@ -204,25 +204,25 @@ bool final_form(const std::string &lower) {
 	return lineToSign;
 }
 const std::vector<std::string> kAmendmentWords{"amendment", "side letter", "addendum", "supplement"};
-const std::vector<std::string> kAmendmentStems{"\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBE\xD0\xBB\xD0\xBD\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD", // дополнительн(ое соглашение)
-	"\xD0\xB4\xD0\xBE\xD0\xBF\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD"};                // допсоглашен
+const std::vector<std::string> kAmendmentStems{"\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBE\xD0\xBB\xD0\xBD\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD", // …(…)
+	"\xD0\xB4\xD0\xBE\xD0\xBF\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD"};                // …
 const std::vector<std::string> kBoardWords{"minutes", "board of directors", "resolution", "resolutions", "written consent"};
-const std::vector<std::string> kBoardStems{"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x82\xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBB", // протокол
-	"\xD1\x81\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x82 \xD0\xB4\xD0\xB8\xD1\x80\xD0\xB5\xD0\xBA\xD1\x82\xD0\xBE\xD1\x80\xD0\xBE\xD0\xB2", // совет директоров
-	"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD0\xB5 \xD1\x81\xD0\xBE\xD0\xB1\xD1\x80\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5"};  // общее собрание
+const std::vector<std::string> kBoardStems{"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x82\xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBB", // …
+	"\xD1\x81\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x82 \xD0\xB4\xD0\xB8\xD1\x80\xD0\xB5\xD0\xBA\xD1\x82\xD0\xBE\xD1\x80\xD0\xBE\xD0\xB2", // …
+	"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD0\xB5 \xD1\x81\xD0\xBE\xD0\xB1\xD1\x80\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB5"};  // …
 const std::vector<std::string> kCorrespondenceWords{"letter", "notice", "claim", "demand", "correspondence", "email"};
-const std::vector<std::string> kCorrespondenceStems{"\xD0\xBF\xD1\x80\xD0\xB5\xD1\x82\xD0\xB5\xD0\xBD\xD0\xB7\xD0\xB8", // претензи
-	"\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C\xD0\xBC",                                                                   // письм
-	"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB8",                           // уведомлени
-	"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBF\xD0\xB8\xD1\x81\xD0\xBA"};                                          // переписк
+const std::vector<std::string> kCorrespondenceStems{"\xD0\xBF\xD1\x80\xD0\xB5\xD1\x82\xD0\xB5\xD0\xBD\xD0\xB7\xD0\xB8", // …
+	"\xD0\xBF\xD0\xB8\xD1\x81\xD1\x8C\xD0\xBC",                                                                   // …
+	"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB8",                           // …
+	"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBF\xD0\xB8\xD1\x81\xD0\xBA"};                                          // …
 const std::vector<std::string> kNoteWords{"notes", "note", "memo", "memorandum"};
-const std::vector<std::string> kNoteStems{"\xD0\xB7\xD0\xB0\xD0\xBF\xD0\xB8\xD1\x81\xD0\xBA",                 // записк(а)
-	"\xD0\xB7\xD0\xB0\xD0\xBC\xD0\xB5\xD1\x82\xD0\xBA"};                                                          // заметк(и)
+const std::vector<std::string> kNoteStems{"\xD0\xB7\xD0\xB0\xD0\xBF\xD0\xB8\xD1\x81\xD0\xBA",                 // …(…)
+	"\xD0\xB7\xD0\xB0\xD0\xBC\xD0\xB5\xD1\x82\xD0\xBA"};                                                          // …(…)
 const std::vector<std::string> kRegisterWords{"register", "schedule", "tracker", "log"};
-const std::vector<std::string> kRegisterStems{"\xD1\x80\xD0\xB5\xD0\xB5\xD1\x81\xD1\x82\xD1\x80"};            // реестр
+const std::vector<std::string> kRegisterStems{"\xD1\x80\xD0\xB5\xD0\xB5\xD1\x81\xD1\x82\xD1\x80"};            // …
 const std::vector<std::string> kAgreementWords{"agreement", "contract"};
-const std::vector<std::string> kAgreementStems{"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80",     // договор
-	"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8"};                                  // соглашени
+const std::vector<std::string> kAgreementStems{"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80",     // …
+	"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8"};                                  // …
 
 bool cued(const std::string &text, const std::vector<std::string> &words, const std::vector<std::string> &stems) {
 	return has_any(text, words) || has_any(text, stems, 8);
@@ -233,23 +233,23 @@ Standing standing_of(const std::string &path, const std::string &title, const st
 	const std::string heading = lowered(title);
 	const std::string body = lowered(text);
 	// A heading or opening with blanks still to fill - "No. [●]", «№ [•]»,
-	// «[дата]», ««___» ________ 2026 г.» - is a draft, however its signature
+	// «…», ««___» ________ 2026 …» - is a draft, however its signature
 	// lines look: a draft has lines to sign on too (a live run read Singularity's
 	// own unsigned additional agreement as signed, 24 Sep 2026).
 	const std::string opening = body.substr(0, std::min<std::size_t>(body.size(), 600));
 	const bool blanks = contains(opening, "[\xE2\x97\x8F]") || contains(opening, "[\xE2\x80\xA2]")
 		|| contains(opening, "[__") || contains(opening, "\xC2\xAB___") || contains(opening, "\xC2\xAB__\xC2\xBB")
-		|| contains(opening, "[date") || contains(opening, "[\xD0\xB4\xD0\xB0\xD1\x82\xD0\xB0")   // [дата
-		|| contains(opening, "[\xD0\xBC\xD0\xB5\xD1\x81\xD1\x82\xD0\xBE")                         // [место
-		|| contains(opening, "[\xD0\xB3\xD0\xBE\xD1\x80\xD0\xBE\xD0\xB4");                        // [город
-	// A folder of drafts («Проекты», "Drafts") or the word in a title or a name.
+		|| contains(opening, "[date") || contains(opening, "[\xD0\xB4\xD0\xB0\xD1\x82\xD0\xB0")   // […
+		|| contains(opening, "[\xD0\xBC\xD0\xB5\xD1\x81\xD1\x82\xD0\xBE")                         // […
+		|| contains(opening, "[\xD0\xB3\xD0\xBE\xD1\x80\xD0\xBE\xD0\xB4");                        // […
+	// A folder of drafts («…», "Drafts") or the word in a title or a name.
 	bool draftFolder = false;
 	{
 		std::size_t from = 0;
 		for (std::size_t slash = where.find('/'); slash != std::string::npos; slash = where.find('/', from)) {
 			const std::string folder = where.substr(from, slash - from);
-			if (folder == "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82\xD1\x8B"            // проекты
-					|| folder == "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82")               // проект
+			if (folder == "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82\xD1\x8B"            // …
+					|| folder == "\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB5\xD0\xBA\xD1\x82")               // …
 				draftFolder = true;
 			from = slash + 1;
 		}
@@ -290,8 +290,8 @@ Standing standing_of(const std::string &path, const std::string &title, const st
 	return Standing::Unknown;
 }
 
-// The date of ANOTHER document the text refers to - «к Договору ... № ТЛ-14/2026
-// от «03» марта 2026 г.», «договора ... от 03.03.2026», "to the Master Services
+// The date of ANOTHER document the text refers to - «… № …
+// … «03» … 2026 …», «…», "to the Master Services
 // Agreement dated March 3, 2026" - never dates this one: an amendment, a letter
 // or minutes that name the agreement they concern would otherwise take its
 // date (live Russian run, 24 Sep 2026: minutes of 14.08.2026 dated 03.03.2026).
@@ -303,13 +303,13 @@ bool refers_to_another_document(const std::string &lowerText, std::size_t offset
 	// Its agreement named in a case that points away from this document (Russian),
 	// or after a preposition that does (English).
 	static const std::vector<std::string> obliqueRu{
-		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xB0",           // договора
-		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD1\x83",           // договору
-		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xBE\xD0\xBC",   // договором
-		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F", // соглашения
-		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8E", // соглашению
-		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",   // контракта
-		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD1\x83"};  // контракту
+		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xB0",           // …
+		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD1\x83",           // …
+		"\xD0\xB4\xD0\xBE\xD0\xB3\xD0\xBE\xD0\xB2\xD0\xBE\xD1\x80\xD0\xBE\xD0\xBC",   // …
+		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F", // …
+		"\xD1\x81\xD0\xBE\xD0\xB3\xD0\xBB\xD0\xB0\xD1\x88\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8E", // …
+		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD0\xB0",   // …
+		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD1\x80\xD0\xB0\xD0\xBA\xD1\x82\xD1\x83"};  // …
 	for (const std::string &form : obliqueRu)
 		if (before.find(form) != std::string::npos) return true;
 	for (const std::string &word : {std::string("agreement"), std::string("contract")}) {
@@ -325,15 +325,15 @@ bool refers_to_another_document(const std::string &lowerText, std::size_t offset
 }
 
 // Words that date a document, right before its date: "entered into as of",
-// "dated", "Minutes ... -", «от», «дата».
+// "dated", "Minutes ... -", «…».
 bool dating_cue_before(const std::string &lowerText, std::size_t offset) {
 	if (refers_to_another_document(lowerText, offset)) return false;
 	const std::size_t from = offset > 48 ? offset - 48 : 0;
 	const std::string before = lowerText.substr(from, offset - from);
 	static const std::vector<std::string> cues{"as of", "as at", "dated", "entered into on", "made on", "effective", "date:",
 		"updated", "\xD0\xBE\xD1\x82", "\xD0\xB4\xD0\xB0\xD1\x82\xD0\xB0",
-		"\xD0\xBF\xD0\xBE \xD1\x81\xD0\xBE\xD1\x81\xD1\x82\xD0\xBE\xD1\x8F\xD0\xBD\xD0\xB8\xD1\x8E \xD0\xBD\xD0\xB0", // по состоянию на
-		"\xD0\xBE\xD0\xB1\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xBE"};                           // обновлено
+		"\xD0\xBF\xD0\xBE \xD1\x81\xD0\xBE\xD1\x81\xD1\x82\xD0\xBE\xD1\x8F\xD0\xBD\xD0\xB8\xD1\x8E \xD0\xBD\xD0\xB0", // …
+		"\xD0\xBE\xD0\xB1\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xBE"};                           // …
 	for (const std::string &cue : cues) {
 		const std::size_t at = before.rfind(cue);
 		if (at == std::string::npos) continue;
@@ -372,13 +372,13 @@ std::optional<std::pair<TemporalValue, std::string>> text_date(const std::string
 			if (!date.ambiguous && precise_enough(date.value) && !refers_to_another_document(lowerLine, date.offset))
 				return std::make_pair(date.value, line.substr(date.offset, date.length));
 	}
-	// The line a Russian document is dated on: «г. Москва «03» марта 2026 г.»,
+	// The line a Russian document is dated on: «…» 2026 …»,
 	// the place and then the date, among its first lines.
 	for (const std::string &written : head_lines(text, 6)) {
 		const std::size_t start = written.find_first_not_of(" \t");
 		if (start == std::string::npos) continue;
 		const std::string line = written.substr(start);
-		if (line.rfind("\xD0\xB3.", 0) != 0) continue;   // г.
+		if (line.rfind("\xD0\xB3.", 0) != 0) continue;   // …
 		for (const auto &date : temporal::find(line, order))
 			if (!date.ambiguous && precise_enough(date.value)) return std::make_pair(date.value, line.substr(date.offset, date.length));
 	}
@@ -464,7 +464,6 @@ DocumentDating date_document(const SuppliedDocument &document) {
 	// Its title: the opening lines short enough to be one - never the preamble
 	// ("It supersedes the draft of ..." does not make a signed agreement a draft).
 	// Short enough counts letters, not bytes: a Cyrillic letter is two bytes, and
-	// «ПРОЕКТ. ДОПОЛНИТЕЛЬНОЕ СОГЛАШЕНИЕ № 2 (редакция Поставщика, март 2026 г.)»
 	// is a title.
 	std::string heading;
 	for (const std::string &line : head_lines(document.text, 3)) {
@@ -514,7 +513,7 @@ TemporalContextResult derive(const std::vector<DatedDocument> &documents) {
 	std::vector<Placed> placed;
 	std::vector<Placed> conflicting;
 	// What an undated agreement or amendment is still tells a draft from the
-	// agreement («___» марта 2026 г. dates nothing, and is the mark of a draft).
+	// agreement («___» … 2026 … dates nothing, and is the mark of a draft).
 	std::vector<Placed> undated;
 	for (const DatedDocument &dated : documents) {
 		Placed entry{&dated.document, dated.dating};

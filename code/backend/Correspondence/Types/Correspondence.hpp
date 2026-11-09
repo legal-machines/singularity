@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-// A Matter's correspondence (D-106): the letters filed to it - incoming and
+// A Matter's correspondence: the letters filed to it - incoming and
 // outgoing email, kept apart from the Matter's internal threads - each with
 // the provenance of its filing. Kept in the Matter's own data
 // (MatterRepository, the "correspondence" collection): one letter is one
@@ -17,12 +17,10 @@ struct Party {
 	std::string address;
 };
 
-// A rule of the Matter's correspondence intake (the owner, 2026-11-02: "if
-// letters come to such an account from such a mailbox - that is the basic
-// case; it works only with Outlook connected"; D-228): a letter that reaches
-// `mailbox` from `from` is the Matter's, filed by the rule as Outlook shows it.
-// Both are addresses as LetterRouting compares them: on one line, in lower
-// case. Kept in the Matter's own data, so every computer of it files alike.
+// A rule of the Matter's correspondence intake: a letter that reaches `mailbox`
+// from `from` is the Matter's, filed by the rule as Outlook shows it. Both are
+// addresses as LetterRouting compares them: on one line, in lower case. Kept in
+// the Matter's own data, so every computer of it files alike.
 struct IntakeRule {
 	std::string mailbox;
 	std::string from;
@@ -57,7 +55,7 @@ struct LetterAttachment {
 // Who filed a letter to its Matter, when, from where, and on what evidence.
 struct Filing {
 	// "person": a member's own decision; "rule": a rule of the Matter's intake
-	// matched it as Outlook showed it (IntakeRule, D-228).
+	// matched it as Outlook showed it.
 	std::string by = "person";
 	std::string actor_id;
 	std::string actor_name;

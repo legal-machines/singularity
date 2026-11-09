@@ -7,11 +7,11 @@
 #include <vector>
 
 // The Office applications Singularity opens on this computer as the person
-// connects them (D-191): Word, Excel and PowerPoint with a file of
-// Singularity's own that carries its add-in, so that Singularity's pane opens
-// with the file by itself, and Outlook as it is. Windows finds each
-// application where it registered itself (App Paths); macOS opens it by its
-// bundle identifier; Linux runs no desktop Office.
+// connects them: Word, Excel and PowerPoint with a file of Singularity's own
+// that carries its add-in, so that Singularity's pane opens with the file by
+// itself, and Outlook as it is. Windows finds each application where it
+// registered itself (App Paths); macOS opens it by its bundle identifier;
+// Linux runs no desktop Office.
 namespace singularity::office {
 
 enum class OfficeApp { word, excel, powerpoint, outlook };
@@ -40,6 +40,11 @@ bool is_installed_in(OfficeApp app, const std::filesystem::path &applications);
 // the person's own, on macOS; never on Linux, which runs no desktop Office.
 bool is_installed(OfficeApp app);
 
+// Whether the application has been opened on this computer at least once: on
+// macOS its container then holds the documents' folder where Office finds
+// add-ins, which it makes as it first starts. Always so elsewhere.
+bool has_been_opened(OfficeApp app);
+
 // The program a value of App Paths names, without quotes around it; nothing
 // when no such file is here.
 std::optional<std::filesystem::path> program_at(const std::string &registered);
@@ -55,7 +60,7 @@ bool is_starter_file(const std::filesystem::path &file, const std::filesystem::p
 // Singularity's add-in with its pane shown as the file opens (task pane
 // visibility 1, Office.AutoShowTaskpaneWithDocument). The add-in is named as
 // Microsoft's own sideloading names one registered on this computer: its id,
-// its version, store "developer", store type "Registry" (docs/OFFICE.md).
+// its version, store "developer", store type "Registry".
 std::vector<std::pair<std::string, std::string>> starter_parts(OfficeApp app, const std::string &addin_id,
 	const std::string &version);
 

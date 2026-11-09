@@ -31,10 +31,10 @@ struct EmailDraftOutcome {
 	std::vector<std::string> attached;
 };
 
-// An email draft as a file the lawyer opens in their mail program (D-115): a
-// standard Internet message (RFC 5322, MIME), marked unsent (X-Unsent: 1) so
-// Outlook opens it as a new message to edit and send - Singularity never sends
-// it. Each attachment is read whole into it. The file is then read back -
+// An email draft as a file the lawyer opens in their mail program: a standard
+// Internet message (RFC 5322, MIME), marked unsent (X-Unsent: 1) so Outlook
+// opens it as a new message to edit and send - Singularity never sends it.
+// Each attachment is read whole into it. The file is then read back -
 // recipients, subject, text and every attachment's bytes compared with what
 // was meant - and kept only if all of it reads as meant. `target` must not
 // exist; nothing is left at `target` when the draft could not be proven.

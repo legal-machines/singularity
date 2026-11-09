@@ -1,15 +1,12 @@
 // What this seat's own record says of sending Legal Machines its bug reports
-// and work logs (D-257): whether its firm is one of Legal Machines' design
-// partners (the owner, 2026-11-05: "design partner is a fact of the account on
-// the backend, so the logs and the bugs buttons show in the app, and the
-// backend gives API access, only when they are sent from design partners'
-// seats"), a mark Legal Machines alone sets on the firm; whether this
-// computer keeps and offers work logs, which also needs a build holding Legal
-// Machines' keys for them; and which version of the Diagnostics Consent this
-// seat accepted ("before sending, on each seat, a
-// checkbox: a separate consent to sending this data"), or none. Read from
-// account.ownSeat once a window and again when the window comes back after ten
-// minutes; nothing until read, and where it cannot be read.
+// and work logs: whether its firm is one of Legal Machines' design partners, a
+// mark Legal Machines alone sets on the firm; whether this computer keeps and
+// offers work logs, which also needs a build holding Legal Machines' keys for
+// them; and which version of the Diagnostics Consent this seat accepted
+// ("before sending, on each seat, a checkbox: a separate consent to sending
+// this data"), or none. Read from account.ownSeat once a window and again when
+// the window comes back after ten minutes; nothing until read, and where it
+// cannot be read.
 
 import { useEffect, useState } from "react";
 

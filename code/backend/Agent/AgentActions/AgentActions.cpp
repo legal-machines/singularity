@@ -6,6 +6,7 @@
 #include "Agent/AgentStore/AgentStore.hpp"
 #include "Agent/Types/AgentIdentity.hpp"
 #include "Organisation/Types/FirmOffice.hpp"
+#include "Platform/TextFold/TextFold.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -155,7 +156,7 @@ std::string person_name_now() {
 // The colleagues whose chat could not open at their last try - no Matters
 // folder yet, as onboarding hires its first colleague before the folder is
 // chosen - for the scheduler to try again at each wake until it opens
-// (2026-11-05: "Pasha can't be written to from this computer yet").
+// (its member was told it could not be written to from this computer yet).
 std::mutex &chatless_mutex() {
 	static std::mutex mutex;
 	return mutex;
@@ -219,7 +220,7 @@ Agent::Office checked_office(const Agent::Office &office) {
 	checked.title = trimmed(office.title);
 	checked.practice = trimmed(office.practice);
 	checked.area = trimmed(office.area);
-	// No member it "answers to" (D-223): an AI colleague is set over no one's
+	// No member it "answers to": an AI colleague is set over no one's
 	// shoulder, so none is kept, whatever was asked.
 	checked.answers_to.clear();
 	if (characters_in(checked.title) > kMostNameCharacters) throw AgentRefused("The office's name is longer than 80 characters.");
@@ -282,8 +283,7 @@ std::string agent_presence(const std::string &state, bool is_running, const std:
 	if (state == "running") {
 		if (is_running == false) return "wait";
 		// Answering a message is no work to act out: its conversation says it is
-		// typing (the owner, 2026-10-26: "no work animation when she just
-		// answers my DM").
+		// typing.
 		if (run_stage == "answering") return "rest";
 		// Its answer is out, or its run has ended and only its last record is
 		// being kept: nothing to act out any more.
@@ -369,8 +369,8 @@ constexpr const char *kOnlyTheAdministratorHires = "Only the firm's administrato
 constexpr const char *kOnlyTheAdministratorChoosesModels = "Only the firm's administrator chooses a colleague's model.";
 
 // Only the firm's administrator hires its AI colleagues and chooses their
-// models (D-184): a member's computer is refused, in words that say who does
-// it, whatever asked - the window, another app or a script.
+// models: a member's computer is refused, in words that say who does it,
+// whatever asked - the window, another app or a script.
 void require_administrator(const char *refusal) {
 	std::function<bool()> may;
 	{
@@ -405,9 +405,9 @@ AgentView create_agent(const AgentSettings &settings, const std::string &actor_i
 	// It introduces itself in its thread before its first run.
 	open_thread_for(agent.id);
 	publish_card(agent.id);
-	// The first check records the room as it is; later checks compare with it.
-	// A colleague that does tasks when asked has no room to record: it waits for
-	// the work it is given (D-097).
+	// The first check records the room as it is; later checks compare with it. A
+	// colleague that does tasks when asked has no room to record: it waits for
+	// the work it is given.
 	AgentScheduler::shared().agents_changed();
 	if (works_only_when_asked(agent) == true) AgentScheduler::shared().release_own_runs(agent.id);
 	else AgentScheduler::shared().request_check(agent.id, "first");
@@ -694,10 +694,8 @@ AgentView hire_firm_colleague(const FirmColleagueHire &hire, const std::string &
 	if (characters_in(settings.goal) > kMostGoalCharacters)
 		throw AgentRefused("What the colleague does is longer than 2,000 characters.");
 	const Agent::Office office = checked_office(hire.office);
-	// A colleague's name is how the members name it (@Pasha) and how the window
-	// knows it: two at work under one name would be one to everyone (2026-11-02:
-	// a second Pasha, hired while the first was at work, showed as the same
-	// conversation twice).
+	// A colleague's name is how the members name it (@Kestrel) and how the window knows it:
+	// two at work under one name would be one to everyone.
 	{
 		const auto folded = [](std::string text) {
 			for (char &character : text)
@@ -792,7 +790,7 @@ void adopt_firm_colleagues() {
 			std::optional<Agent> kept = load_agent(colleague.agent_id);
 			// One this computer runs is its own: the record is written from it.
 			if (kept.has_value() == true && kept->is_firm_copy == false) continue;
-			// Let go by the firm (D-214): its copy goes, its chat with it too.
+			// Let go by the firm: its copy goes, its chat with it too.
 			if (colleague.status == "deleted") {
 				if (kept.has_value() == true) {
 					forget_agent(colleague.agent_id, false);
@@ -985,9 +983,13 @@ AgentView resume_agent(const std::string &agent_id) {
 	publish_card(agent_id);
 	AgentScheduler::shared().agents_changed();
 	// What changed while it was paused is checked now, not at the next change;
-	// one set to work when asked takes up the work it is given.
+	// one set to work when asked has no runs of its own to hold, so the work
+	// given it while it was paused begins at once - it waited half a minute
+	// for the hold to lapse (finding f-resumed-part-waits).
 	if (works_only_when_asked(agent) == false)
 		AgentScheduler::shared().request_check(agent_id, agent.last_check_at.has_value() == true ? "catch_up" : "first");
+	else
+		AgentScheduler::shared().release_own_runs(agent_id);
 	return view_of(agent);
 }
 
@@ -1132,12 +1134,12 @@ void publish_card(const std::string &agent_id) {
 			const std::lock_guard<std::mutex> lock(agent_store_mutex());
 			const std::optional<Agent> agent = load_agent(agent_id);
 			// A draft is not the team's until a lawyer approves it; a copy of the
-			// firm's colleague is the card of the computer that runs it (D-213).
+			// firm's colleague is the card of the computer that runs it.
 			if (agent.has_value() == false || agent->status == AgentStatus::Draft || agent->is_firm_copy == true) return;
 			view = view_of(*agent);
 		}
 		// Every Matter it works in shows it to its team: the one it was made for,
-		// in the zero state, and each where it was given work (D-157) - never the
+		// in the zero state, and each where it was given work - never the
 		// member's desk, which is no Matter.
 		std::set<std::string> matterIds;
 		if (view.agent.matter_id.empty() == false) matterIds.insert(view.agent.matter_id);
@@ -1147,13 +1149,13 @@ void publish_card(const std::string &agent_id) {
 				if (work.matter_id.empty() == false) matterIds.insert(work.matter_id);
 		}
 		// And each Matter this computer carries with the firm's other computers:
-		// their lawyers may name it there too (D-157).
+		// their lawyers may name it there too.
 		if (dependencies.carried_matters)
 			for (const std::string &matterId : dependencies.carried_matters()) matterIds.insert(matterId);
 		const std::string desk = dependencies.desk_project ? dependencies.desk_project() : std::string();
 		const std::string device = dependencies.device_id ? dependencies.device_id() : std::string();
 		AgentCard card = card_of(view.agent, view.latest_run, view.state, device, agent_timestamp_now());
-		// Signed by this computer, the one that runs it (D-128).
+		// Signed by this computer, the one that runs it.
 		if (dependencies.device_key && dependencies.sign) {
 			card.host_device_key = dependencies.device_key();
 			card.counter = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1247,16 +1249,53 @@ namespace {
 
 // What a colleague says when work it is given cannot begin at once - it is
 // paused, or at work on other work, or other work was given before it - in
-// its own words; "" when the work begins at once.
-std::string waiting_words(bool is_paused, bool is_at_work, std::size_t waiting_ahead) {
+// its own words; "" when the work begins at once. `current_here` is the start
+// of the work it is at, when that work came in this very thread: it names it,
+// so the member knows what it is on; work of any other thread or Matter is
+// never named here. `is_joined`: the message joined the member's earlier work
+// in line in this thread.
+std::string waiting_words(bool is_paused, bool is_at_work, std::size_t waiting_ahead, const std::string &current_here,
+		bool is_joined) {
 	if (is_paused == true) return "I'm paused at the moment. I'll start on this as soon as I'm resumed.";
+	const std::string onNow = current_here.empty() == true ? std::string() : "I'm still on \u201c" + current_here + "\u201d. ";
+	if (is_joined == true) {
+		if (is_at_work == false) return "I've added this to what you sent before. I'll read them together as soon as I come to it.";
+		return "I've added this to what you sent before. " + onNow + "I'll read them together as soon as I've finished "
+			+ (current_here.empty() == true ? "the work I'm on." : "it.");
+	}
 	const std::size_t ahead = waiting_ahead + (is_at_work == true ? 1 : 0);
 	if (ahead == 0) return std::string();
-	if (ahead == 1 && is_at_work == true) return "I'll start on this as soon as I've finished what I'm working on.";
+	if (ahead == 1 && is_at_work == true) {
+		if (current_here.empty() == false) return onNow + "I'll start on this as soon as I've finished it.";
+		return "I'll start on this as soon as I've finished what I'm working on.";
+	}
 	static const char *const counted[] = {"no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
 	const std::string count = ahead < 10 ? std::string(counted[ahead]) : std::to_string(ahead);
-	return "I have " + count + (ahead == 1 ? " piece" : " pieces") + " of work ahead of this one. I'll start on it as "
+	return onNow + "I have " + count + (ahead == 1 ? " piece" : " pieces") + " of work ahead of this one. I'll start on it as "
 		"soon as I've finished " + (ahead == 1 ? "it." : "them.");
+}
+
+// The start of a piece of work, in one line, as the colleague names it back to
+// the member who gave it: at most about sixty letters, cut at a word.
+std::string start_of(const std::string &instruction) {
+	std::string line;
+	for (const char character : instruction) {
+		if (character == '\n' || character == '\r' || character == '\t') {
+			if (line.empty() == false && line.back() != ' ') line += ' ';
+			continue;
+		}
+		line += character;
+	}
+	line = trimmed(line);
+	std::size_t letters = 0;
+	for (std::size_t index = 0; index < line.size(); ++index) {
+		if ((static_cast<unsigned char>(line[index]) & 0xC0) == 0x80) continue;
+		if (++letters <= 60) continue;
+		std::size_t cut = line.rfind(' ', index);
+		if (cut == std::string::npos || cut < index / 2) cut = index;
+		return trimmed(line.substr(0, cut)) + "\u2026";
+	}
+	return line;
 }
 
 AgentAssignment give_work(const std::string &agent_id, const std::string &matter_id, const std::string &instruction,
@@ -1287,6 +1326,10 @@ AgentAssignment give_work(const std::string &agent_id, const std::string &matter
 	std::optional<Agent> given_to;
 	bool is_paused = false;
 	std::size_t ahead = 0;
+	// The work the colleague is at, named back when it came in this thread; and
+	// whether this message joined the member's earlier work in line here.
+	std::string current_here;
+	bool is_joined = false;
 	{
 		const std::lock_guard<std::mutex> lock(agent_store_mutex());
 		Agent agent = require_agent(agent_id);
@@ -1295,42 +1338,72 @@ AgentAssignment give_work(const std::string &agent_id, const std::string &matter
 		// A message is taken up once, whichever computer reads it first here.
 		if (message_id.empty() == false)
 			for (const AgentAssignment &given : load_assignments(agent_id))
-				if (given.reply_to_message_id == message_id) return given;
-		// Work that reached this computer through a shared folder is taken up only
-		// as its author's (Chat/MessageProvenance) and is work like any other: a
-		// colleague takes all it is given, in the order given (D-158).
-		work.id = new_assignment_id();
-		work.agent_id = agent.id;
-		work.matter_id = where;
-		agent.work_given += 1;
-		work.number = agent.work_given;
-		// Work given by naming the agent reads as said to it, without its name.
-		work.instruction = message_id.empty() == true ? words : words_to_colleague(words, agent.name);
-		work.chat_id = chat_id;
-		work.reply_to_message_id = message_id;
-		work.given_by_actor_id = actor_id;
-		work.given_by_name = given_by;
-		work.given_at = agent_timestamp_now();
-		work.from_shared_folder = from_shared_folder;
-		work.state = "waiting";
-		save_assignment(work);
+				if (given.reply_to_message_id == message_id
+						|| std::find(given.folded_message_ids.begin(), given.folded_message_ids.end(), message_id)
+							!= given.folded_message_ids.end())
+					return given;
 		is_paused = agent.status == AgentStatus::Paused;
-		// Only work still waiting: the work it is doing may still be in its line.
-		for (const AgentAssignment &earlier : load_assignments(agent_id)) {
-			if (earlier.id == work.id || earlier.state != "waiting") continue;
-			if (std::find(agent.waiting_work.begin(), agent.waiting_work.end(), earlier.id) != agent.waiting_work.end()) ++ahead;
+		const std::vector<AgentAssignment> given = load_assignments(agent_id);
+		for (const AgentAssignment &each : given)
+			if (each.state == "working" && chat_id.empty() == false && each.chat_id == chat_id) current_here = start_of(each.instruction);
+		// A later message of the same member in the same thread, while their
+		// earlier work there still waits, joins that work. The colleague reads
+		// them together as it takes the work up, as a person reads what came
+		// while they were busy, and its line grows by no message of one
+		// conversation.
+		if (message_id.empty() == false && chat_id.empty() == false) {
+			for (const AgentAssignment &earlier : given) {
+				if (earlier.state != "waiting" || earlier.chat_id != chat_id || earlier.given_by_actor_id != actor_id
+						|| earlier.from_shared_folder != from_shared_folder || earlier.reply_to_message_id.empty() == true)
+					continue;
+				if (std::find(agent.waiting_work.begin(), agent.waiting_work.end(), earlier.id) == agent.waiting_work.end()) continue;
+				const std::string more = words_to_colleague(words, agent.name);
+				if (characters_in(earlier.instruction) + characters_in(more) + 2 > kAgentMostAssignmentCharacters) break;
+				work = earlier;
+				work.instruction += "\n\n" + more;
+				work.folded_message_ids.push_back(message_id);
+				save_assignment(work);
+				is_joined = true;
+				given_to = agent;
+				break;
+			}
 		}
-		// Its line is not one of its settings: an open edit of the agent stays
-		// current.
-		agent.waiting_work.push_back(work.id);
-		save_agent(agent);
-		given_to = agent;
+		if (is_joined == false) {
+			// Work that reached this computer through a shared folder is taken up only
+			// as its author's (Chat/MessageProvenance) and is work like any other: a
+			// colleague takes all it is given, in the order given.
+			work.id = new_assignment_id();
+			work.agent_id = agent.id;
+			work.matter_id = where;
+			agent.work_given += 1;
+			work.number = agent.work_given;
+			// Work given by naming the agent reads as said to it, without its name.
+			work.instruction = message_id.empty() == true ? words : words_to_colleague(words, agent.name);
+			work.chat_id = chat_id;
+			work.reply_to_message_id = message_id;
+			work.given_by_actor_id = actor_id;
+			work.given_by_name = given_by;
+			work.given_at = agent_timestamp_now();
+			work.from_shared_folder = from_shared_folder;
+			work.state = "waiting";
+			save_assignment(work);
+			// Only work still waiting: the work it is doing may still be in its line.
+			for (const AgentAssignment &earlier : given) {
+				if (earlier.id == work.id || earlier.state != "waiting") continue;
+				if (std::find(agent.waiting_work.begin(), agent.waiting_work.end(), earlier.id) != agent.waiting_work.end()) ++ahead;
+			}
+			// Its line is not one of its settings: an open edit of the agent stays
+			// current.
+			agent.waiting_work.push_back(work.id);
+			save_agent(agent);
+			given_to = agent;
+		}
 	}
 	// Work that cannot begin at once - the colleague at work on another, other
 	// work given before it, the colleague paused - is answered at once in its
 	// thread, before the scheduler is told of it; work that begins at once is
 	// answered as the colleague takes it on.
-	const std::string waiting = waiting_words(is_paused, AgentScheduler::shared().is_executing(agent_id), ahead);
+	const std::string waiting = waiting_words(is_paused, AgentScheduler::shared().is_executing(agent_id), ahead, current_here, is_joined);
 	if (waiting.empty() == false && given_to.has_value() == true) {
 		std::function<std::string(const Agent &, const AgentAssignment &, const std::string &)> say;
 		{
@@ -1354,8 +1427,20 @@ AgentAssignment give_work(const std::string &agent_id, const std::string &matter
 
 std::vector<std::string> take_up_mentions(const MentionMessage &message) {
 	std::vector<std::string> taken;
+	// A colleague's personal chat with a member is theirs alone: a name written
+	// there calls no other colleague into it.
+	std::string chatOwner;
+	if (message.chat_id.empty() == false) {
+		try {
+			const std::lock_guard<std::mutex> lock(agent_store_mutex());
+			for (const Agent &each : load_agents())
+				if (each.chat_id.value_or(std::string()) == message.chat_id) chatOwner = each.id;
+		} catch (const std::exception &) {
+		}
+	}
 	for (const std::string &mention : message.mentions) {
 		if (mention.rfind("agent_", 0) != 0) continue;
+		if (chatOwner.empty() == false && mention != chatOwner) continue;
 		std::optional<Agent> agent;
 		try {
 			const std::lock_guard<std::mutex> lock(agent_store_mutex());
@@ -1363,12 +1448,12 @@ std::vector<std::string> take_up_mentions(const MentionMessage &message) {
 		} catch (const std::exception &) {
 		}
 		// A colleague another computer runs takes it up there; one of the firm
-		// takes it up in whichever Matter it was named (D-157).
+		// takes it up in whichever Matter it was named.
 		if (agent.has_value() == false) continue;
 		if (agent->status != AgentStatus::Active && agent->status != AgentStatus::Paused) continue;
 		// A copy of the firm's colleague answers only the member here, in its own
-		// chat with them: a Matter's threads are the computer's that runs it
-		// (D-213), which would otherwise answer too.
+		// chat with them: a Matter's threads are the computer's that runs it,
+		// which would otherwise answer too.
 		if (agent->is_firm_copy == true && (agent->status != AgentStatus::Active || message.posted_here == false
 				|| agent->chat_id.value_or(std::string()) != message.chat_id)) {
 			continue;
@@ -1381,6 +1466,82 @@ std::vector<std::string> take_up_mentions(const MentionMessage &message) {
 		}
 	}
 	return taken;
+}
+
+std::optional<AgentAssignment> give_back_after_part(const AgentAssignment &ended) {
+	if (ended.state != "done" && ended.state != "failed") return std::nullopt;
+	if (ended.matter_id.empty() == true || ended.chat_id.empty() == true) return std::nullopt;
+	const std::string &lead = ended.given_by_actor_id;
+	// Only a colleague gives a part; work a colleague gave itself ends its round.
+	if (lead.rfind("agent_", 0) != 0 || lead == ended.agent_id) return std::nullopt;
+	// Two parts ending at once give back one piece of work between them.
+	static std::mutex giving;
+	const std::lock_guard<std::mutex> once(giving);
+	std::optional<Agent> giver;
+	// The parts of this round - given in the thread since the giver's work
+	// there was last given back - in the order given.
+	std::vector<std::pair<AgentAssignment, std::string>> round;
+	{
+		const std::lock_guard<std::mutex> lock(agent_store_mutex());
+		giver = load_agent(lead);
+		if (giver.has_value() == false || giver->is_firm_copy == true
+				|| (giver->status != AgentStatus::Active && giver->status != AgentStatus::Paused))
+			return std::nullopt;
+		std::string lastGivenBack;
+		for (const AgentAssignment &own : load_assignments(lead)) {
+			if (own.given_by_actor_id != lead || own.chat_id != ended.chat_id) continue;
+			if (own.state == "waiting" || own.state == "working") return std::nullopt;
+			if (own.given_at > lastGivenBack) lastGivenBack = own.given_at;
+		}
+		for (const Agent &each : load_agents()) {
+			if (each.id == lead) continue;
+			for (const AgentAssignment &part : load_assignments(each.id)) {
+				if (part.given_by_actor_id != lead || part.chat_id != ended.chat_id) continue;
+				if (part.state == "waiting" || part.state == "working") return std::nullopt;
+				if (part.given_at > lastGivenBack) round.emplace_back(part, each.name);
+			}
+		}
+	}
+	std::sort(round.begin(), round.end(), [](const auto &left, const auto &right) { return left.first.given_at < right.first.given_at; });
+	std::string ends;
+	for (const auto &[part, name] : round) {
+		const std::string what = "“" + start_of(part.instruction) + "”";
+		const std::string why = trimmed(part.message);
+		ends += (ends.empty() == true ? "" : "; ") + name + (part.state == "done" ? " finished " + what
+			: part.state == "failed" ? " could not finish " + what + (why.empty() == true ? std::string() : " (" + why + ")")
+			: " was stopped before finishing " + what);
+	}
+	if (ends.empty() == true) ends = "its answer is in the thread";
+	// A full stop after them, unless the last one's quoted words end a sentence.
+	bool isEnded = false;
+	const std::string close = "\u201d";
+	if (ends.size() > close.size() && ends.compare(ends.size() - close.size(), close.size(), close) == 0) {
+		const std::string inner = ends.substr(0, ends.size() - close.size());
+		for (const std::string mark : {".", "?", "!", "\u2026"})
+			if (inner.size() >= mark.size() && inner.compare(inner.size() - mark.size(), mark.size(), mark) == 0) isEnded = true;
+	}
+	ends += isEnded == true ? " " : ". ";
+	const std::string words = round.size() > 1
+		? "The parts you gave in this thread have ended: " + ends + "Read what came of them above, bring them together with your "
+			"own work here, and finish what you were asked."
+		: "The part you gave in this thread has ended: " + ends
+			+ "Read what came of it above, bring it together with your own work here, and finish what you were asked.";
+	return give_work(lead, ended.matter_id, words, lead, giver->name, ended.chat_id, "", false);
+}
+
+std::optional<std::string> why_no_part(const std::string &agent_id) {
+	if (AgentScheduler::shared().is_started() == false) return std::string("no AI colleague works on this computer now");
+	std::optional<Agent> agent;
+	try {
+		const std::lock_guard<std::mutex> lock(agent_store_mutex());
+		agent = load_agent(agent_id);
+	} catch (const std::exception &) {
+	}
+	// A copy of a colleague another computer carries answers only its own chat
+	// here (take_up_mentions).
+	if (agent.has_value() == false || agent->is_firm_copy == true) return std::string("another of the firm's computers carries it");
+	if (agent->status == AgentStatus::Active || agent->status == AgentStatus::Paused) return std::nullopt;
+	return std::string(agent->status == AgentStatus::Stopped ? "it is stopped" : "it is not approved yet");
 }
 
 AgentAssignment withdraw_assignment(const std::string &agent_id, const std::string &assignment_id) {
@@ -1440,7 +1601,80 @@ bool has_work_in_line(const std::string &agent_id, const std::string &chat_id) {
 	return false;
 }
 
-// --- Memory (D-159) -------------------------------------------------------
+namespace {
+
+std::size_t end_work_in_chat(const std::string &chat_id, const std::string &why) {
+	if (chat_id.empty() == true) return 0;
+	std::vector<std::string> inHand;
+	std::vector<std::string> changed;
+	std::size_t ended = 0;
+	{
+		const std::lock_guard<std::mutex> lock(agent_store_mutex());
+		for (Agent agent : load_agents()) {
+			bool isChanged = false;
+			for (AgentAssignment work : load_assignments(agent.id)) {
+				if (work.chat_id != chat_id) continue;
+				if (work.state == "waiting") {
+					work.state = "withdrawn";
+					work.finished_at = agent_timestamp_now();
+					work.message = why;
+					save_assignment(work);
+					agent.waiting_work.erase(std::remove(agent.waiting_work.begin(), agent.waiting_work.end(), work.id),
+						agent.waiting_work.end());
+					isChanged = true;
+					++ended;
+				} else if (work.state == "working") {
+					inHand.push_back(agent.id);
+					++ended;
+				}
+			}
+			if (isChanged == true) {
+				save_changed(agent);
+				changed.push_back(agent.id);
+			}
+		}
+	}
+	// The piece in hand stops as a Stop on its run stops it; the colleague then
+	// takes up its next piece from elsewhere, if any waits.
+	for (const std::string &id : inHand) (void)AgentScheduler::shared().cancel_check(id);
+	for (const std::string &id : changed) publish_card(id);
+	if (inHand.empty() == false || changed.empty() == false) AgentScheduler::shared().agents_changed();
+	return ended;
+}
+
+} // namespace
+
+std::size_t stop_work_in_chat(const std::string &chat_id) {
+	return end_work_in_chat(chat_id, "Stopped in the conversation before it began.");
+}
+
+std::size_t withdraw_work_in_deleted_chat(const std::string &chat_id) {
+	return end_work_in_chat(chat_id, "Its thread was deleted before the work began.");
+}
+
+std::vector<std::string> chats_with_work(const Agent &agent, const std::optional<AgentRun> &latest_run, bool is_running) {
+	std::vector<std::string> chats;
+	const auto keep = [&](const std::string &chat) {
+		if (chat.empty() == false && std::find(chats.begin(), chats.end(), chat) == chats.end()) chats.push_back(chat);
+	};
+	const std::lock_guard<std::mutex> lock(agent_store_mutex());
+	if (is_running == true && latest_run.has_value() == true && latest_run->assignment_id.empty() == false) {
+		try {
+			if (const std::optional<AgentAssignment> work = load_assignment(agent.id, latest_run->assignment_id)) keep(work->chat_id);
+		} catch (const std::exception &) {
+		}
+	}
+	for (const std::string &id : agent.waiting_work) {
+		try {
+			if (const std::optional<AgentAssignment> work = load_assignment(agent.id, id); work.has_value() == true && work->state == "waiting")
+				keep(work->chat_id);
+		} catch (const std::exception &) {
+		}
+	}
+	return chats;
+}
+
+// --- Memory -------------------------------------------------------
 
 namespace {
 
@@ -1535,6 +1769,121 @@ std::string grouped(std::size_t number) {
 	return digits;
 }
 
+// --- The walls between clients ---------------------------------------
+
+// The names that identify each Matter's client, as the application knows them,
+// folded once (Platform/TextFold) for a note to be read against.
+struct ClientNames {
+	std::vector<MatterIdentities> matters;
+};
+
+ClientNames client_names() {
+	ClientNames names;
+	const RunnerDependencies &dependencies = installed();
+	if (!dependencies.matter_identities) return names;
+	try {
+		names.matters = dependencies.matter_identities();
+	} catch (const std::exception &) {
+		return names;
+	}
+	for (MatterIdentities &matter : names.matters) {
+		std::vector<std::string> folded;
+		for (const std::string &name : matter.names) {
+			const std::string one = platform::folded_text(name);
+			if (one.empty() == false) folded.push_back(one);
+		}
+		matter.names = std::move(folded);
+	}
+	return names;
+}
+
+// A letter or a digit in any script: what a name may not run into.
+bool word_point(utf8proc_int32_t point) {
+	const utf8proc_category_t category = utf8proc_category(point);
+	return category >= UTF8PROC_CATEGORY_LU && category <= UTF8PROC_CATEGORY_NO;
+}
+
+// Whether folded words carry a folded name whole, with no letter or digit beside it.
+bool carries_name(const std::string &words, const std::string &name) {
+	for (std::size_t at = words.find(name); at != std::string::npos; at = words.find(name, at + 1)) {
+		bool joined = false;
+		if (at > 0) {
+			std::size_t start = at - 1;
+			while (start > 0 && (static_cast<unsigned char>(words[start]) & 0xC0) == 0x80) --start;
+			utf8proc_int32_t point = -1;
+			utf8proc_iterate(reinterpret_cast<const utf8proc_uint8_t *>(words.data() + start),
+				static_cast<utf8proc_ssize_t>(at - start), &point);
+			joined = point >= 0 && word_point(point);
+		}
+		const std::size_t end = at + name.size();
+		if (joined == false && end < words.size()) {
+			utf8proc_int32_t point = -1;
+			utf8proc_iterate(reinterpret_cast<const utf8proc_uint8_t *>(words.data() + end),
+				static_cast<utf8proc_ssize_t>(words.size() - end), &point);
+			joined = point >= 0 && word_point(point);
+		}
+		if (joined == false) return true;
+	}
+	return false;
+}
+
+// The Matters whose client a note's words name.
+std::set<std::string> matters_named(const std::string &text, const ClientNames &names) {
+	std::set<std::string> named;
+	if (names.matters.empty() == true) return named;
+	const std::string words = platform::folded_text(text);
+	for (const MatterIdentities &matter : names.matters) {
+		for (const std::string &name : matter.names) {
+			if (carries_name(words, name) == true) {
+				named.insert(matter.matter_id);
+				break;
+			}
+		}
+	}
+	return named;
+}
+
+// Where a note is filed: never wider than where it was learned. In a Matter's
+// thread a fact, a decision or a commitment is that Matter's, whatever its
+// label; a rule or a preference may be the firm's or the member's only while
+// it names no client. In a personal chat a note that names exactly one of the
+// member's Matters is that Matter's; any other note about a Matter, or naming
+// a client, is the member's, never the firm's. A note with no place it may be
+// filed is not kept.
+struct Filing {
+	std::string scope;
+	std::string matter_id;
+	std::string matter_name;
+};
+
+std::optional<Filing> filing_of(const KeptMemory &given, const MemoryPlace &place, const std::set<std::string> &named) {
+	const bool lasting = given.kind == "rule" || given.kind == "preference";
+	const bool hasMember = place.person_actor_id.empty() == false;
+	if (place.matter_id.empty() == false) {
+		const Filing matter{"matter", place.matter_id, place.matter_name};
+		if (lasting == false || given.about == "matter" || named.empty() == false) return matter;
+		if (given.about == "person") return hasMember == true ? Filing{"person", "", ""} : matter;
+		return Filing{"firm", "", ""};
+	}
+	std::vector<std::string> theirs;
+	for (const std::string &id : named)
+		if (place.member_matters.count(id) > 0) theirs.push_back(id);
+	if (theirs.size() == 1) return Filing{"matter", theirs.front(), place.member_matters.at(theirs.front())};
+	if (named.empty() == true && given.about == "firm") return Filing{"firm", "", ""};
+	if (hasMember == true) return Filing{"person", "", ""};
+	return std::nullopt;
+}
+
+// Whether every client a note names may be spoken of here: in a Matter's
+// thread only that Matter's, in a personal chat the member's own Matters'.
+bool clients_here(const std::set<std::string> &named, const MemoryPlace &place) {
+	for (const std::string &id : named) {
+		const bool here = place.matter_id.empty() == false ? id == place.matter_id : place.member_matters.count(id) > 0;
+		if (here == false) return false;
+	}
+	return true;
+}
+
 } // namespace
 
 std::vector<MemoryNote> memory_of(const std::string &agent_id) {
@@ -1543,6 +1892,7 @@ std::vector<MemoryNote> memory_of(const std::string &agent_id) {
 }
 
 MemoryDigest memory_digest(const std::string &agent_id, const MemoryPlace &place) {
+	const ClientNames names = client_names();
 	const std::vector<MemoryNote> live = memory_of(agent_id);
 	MemoryDigest digest;
 	std::vector<const MemoryNote *> rules;
@@ -1552,16 +1902,25 @@ MemoryDigest memory_digest(const std::string &agent_id, const MemoryPlace &place
 	std::size_t firmCharacters = 0;
 	for (const MemoryNote &note : live) {
 		bool usable = false;
-		if (note.scope == "firm") {
-			usable = true;
-			firmCharacters += note.text.size();
-		} else if (note.scope == "person") {
-			usable = place.person_actor_id.empty() == false && note.person_actor_id == place.person_actor_id;
-		} else if (note.scope == "matter") {
+		if (note.scope == "firm") firmCharacters += note.text.size();
+		if (note.scope == "matter") {
 			// A Matter's notes where its members are: in its threads, or with a
-			// member of it in their personal chat (ORG-6).
+			// member of it in their personal chat.
 			usable = place.matter_id.empty() == false ? note.matter_id == place.matter_id
 				: place.member_matters.count(note.matter_id) > 0;
+		} else if (note.scope == "firm" || note.scope == "person") {
+			// A note wider than a Matter that names a client - kept before the
+			// walls, or whose client its protection came to know since - is used
+			// only where that client may be spoken of.
+			const bool clientsHere = clients_here(matters_named(note.text, names), place);
+			if (note.scope == "firm") {
+				usable = clientsHere;
+			} else {
+				// A member's notes only with that member; in a Matter's thread, which
+				// every member of it reads, only their rules and preferences.
+				usable = clientsHere && place.person_actor_id.empty() == false && note.person_actor_id == place.person_actor_id
+					&& (place.matter_id.empty() == true || note.kind == "rule" || note.kind == "preference");
+			}
 		}
 		if (usable == false) continue;
 		if (note.kind == "rule") rules.push_back(&note);
@@ -1616,6 +1975,7 @@ void keep_memory(const std::string &agent_id, const MemoryPlace &place, const st
 	const std::vector<std::string> &forgotten_note_ids) {
 	if (kept.empty() == true && forgotten_note_ids.empty() == true) return;
 	const std::string device = memory_device();
+	const ClientNames names = client_names();
 	const std::lock_guard<std::mutex> lock(agent_store_mutex());
 	if (load_agent(agent_id).has_value() == false) return;
 	std::vector<MemoryNote> own = load_own_memory_notes(agent_id, device);
@@ -1626,18 +1986,45 @@ void keep_memory(const std::string &agent_id, const MemoryPlace &place, const st
 		if (found == live.end() || letGo.insert(id).second == false) continue;
 		own.push_back(retirement_of(*found, device));
 	}
+	// What this computer filed wider than its words allow, before the walls: a
+	// note of the firm's or a member's that names exactly one Matter's client is
+	// filed again under that Matter and the wide one let go, so the client's
+	// words leave the firm's record. One naming several stays, used only where
+	// all of them may be spoken of.
+	std::vector<MemoryNote> refiled;
+	for (const MemoryNote &note : live) {
+		if (note.scope == "matter" || note.device_id != device || letGo.count(note.id) > 0) continue;
+		const std::set<std::string> named = matters_named(note.text, names);
+		if (named.size() != 1) continue;
+		const auto matter = std::find_if(names.matters.begin(), names.matters.end(),
+			[&](const MatterIdentities &one) { return one.matter_id == *named.begin(); });
+		MemoryNote moved = note;
+		moved.id = new_memory_note_id();
+		moved.scope = "matter";
+		moved.matter_id = *named.begin();
+		moved.matter_name = matter != names.matters.end() ? matter->matter_name : std::string();
+		moved.person_actor_id.clear();
+		moved.person_name.clear();
+		moved.at = agent_timestamp_now();
+		own.push_back(retirement_of(note, device));
+		letGo.insert(note.id);
+		refiled.push_back(moved);
+	}
 	live.erase(std::remove_if(live.begin(), live.end(), [&](const MemoryNote &note) { return letGo.count(note.id) > 0; }),
 		live.end());
+	for (const MemoryNote &moved : refiled) {
+		own.push_back(moved);
+		live.push_back(moved);
+	}
 	for (const KeptMemory &given : kept) {
+		const std::optional<Filing> filing = filing_of(given, place, matters_named(given.text, names));
+		if (filing.has_value() == false) continue;
 		MemoryNote note;
 		note.kind = given.kind;
-		// "matter" in a personal chat, or "person" with no one named, is the
-		// firm's: never filed where no wall can hold it.
-		note.scope = given.about == "matter" && place.matter_id.empty() == false ? "matter"
-			: given.about == "person" && place.person_actor_id.empty() == false ? "person" : "firm";
+		note.scope = filing->scope;
 		if (note.scope == "matter") {
-			note.matter_id = place.matter_id;
-			note.matter_name = place.matter_name;
+			note.matter_id = filing->matter_id;
+			note.matter_name = filing->matter_name;
 		}
 		if (note.scope == "person") {
 			note.person_actor_id = place.person_actor_id;
@@ -1717,8 +2104,8 @@ std::vector<AgentView> list_agent_views(const std::optional<std::string> &matter
 		const std::lock_guard<std::mutex> lock(agent_store_mutex());
 		agents = load_agents();
 	}
-	// Every colleague is the firm's, and may be named in any Matter (D-157):
-	// asked for a Matter's, it is every one; a draft only where it was proposed.
+	// Every colleague is the firm's, and may be named in any Matter: asked for a
+	// Matter's, it is every one; a draft only where it was proposed.
 	std::vector<AgentView> views;
 	for (const Agent &agent : agents) {
 		if (matter_id.has_value() == true && agent.status == AgentStatus::Draft && agent.matter_id != *matter_id) continue;

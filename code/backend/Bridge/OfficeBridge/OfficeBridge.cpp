@@ -34,6 +34,7 @@ Json status_json(const office::OfficeStatus &status) {
 	return Json{{"supported", status.supported}, {"connected", status.connected}, {"listening", status.listening},
 		{"port", status.port}, {"certificate", status.certificate}, {"certificateEnds", status.certificate_ends},
 		{"documentsRegistered", status.documents_registered}, {"outlookManifest", status.outlook_manifest},
+		{"firstOpening", status.first_opening},
 		{"connectedAt", status.connected_at}, {"problem", status.problem}};
 }
 

@@ -1,7 +1,7 @@
 import styles from "./Status.module.css";
 
-// One status per row (PRODUCT.md, "One status per row"), drawn as a mark and
-// its words, in the order a member reads them:
+// One status per row, drawn as a mark and its words, in the order a member
+// reads them.
 // - yours: it waits for you (a judgment, an answer, an acceptance);
 // - waiting: it waits for someone else;
 // - underway: a member is at work on it;
@@ -9,7 +9,7 @@ import styles from "./Status.module.css";
 // - settled: done, accepted, sent or closed with a conclusion;
 // - due: a deadline near, or a point not checked;
 // - failed: it stopped, and says what can be done - the one state drawn in
-//   the brick that marks a real problem (D-174);
+//   the brick that marks a real problem.
 // - draft: nothing has left the firm.
 // The words always say it; the mark only helps the eye find it.
 export function Status({ kind, children, size = "small" }) {

@@ -12,11 +12,10 @@ namespace singularity::context {
 inline constexpr const char *kMemoryBriefLabel = "Memory";
 
 // Phase 12 (Context - canonical data model and authority). The stable
-// content categories Project Context can hold (phase-12-context-model-
-// authority.md's "What Context can contain") - a closed, named taxonomy
+// content categories Project Context can hold - a closed, named taxonomy
 // rather than a free-form string, so every canonical item/suggestion always
 // has one unambiguous section. Mirrors PapinianGuard::EntityType's own
-// stable-taxonomy-plus-display-name shape (see display_section_name()).
+// stable-taxonomy-plus-display-name shape (see display_section_name).
 enum class ContextSection {
 	Parties,
 	Roles,
@@ -42,12 +41,11 @@ enum class ContextSection {
 [[nodiscard]] ContextSection context_section_from_string(const std::string &value) noexcept;
 [[nodiscard]] std::string display_section_name(ContextSection section);
 
-// Authority over one canonical Context item's current value
-// (phase-12-context-model-authority.md's "Context authority"). Automatic
+// Authority over one canonical Context item's current value. Automatic
 // derivation may freely update its own AutomaticallyDerived value, but never
 // a UserAuthored/UserConfirmed value, and never a Locked one even when
 // re-deriving the identical content - see ContextCuration.cpp's
-// submit_derived_value(), which is the only place this rule is enforced.
+// submit_derived_value, which is the only place this rule is enforced.
 enum class ContextItemAuthority {
 	AutomaticallyDerived,
 	UserConfirmed,
@@ -80,11 +78,10 @@ struct ContextItemSource {
 	std::string chat_operation_id;
 };
 
-// One canonical Project Context fact - stable id/revision/source identity
-// (phase-12-context-model-authority.md's "Canonical Context"). `revision`
-// increments every time `value` actually changes, so later provenance/merge
-// surfaces can tell whether a held reference still points at the current
-// value.
+// One canonical Project Context fact - stable id/revision/source identity.
+// `revision` increments every time `value` actually changes, so later
+// provenance/merge surfaces can tell whether a held reference still points
+// at the current value.
 struct ContextItem {
 	std::string id;
 	ContextSection section = ContextSection::Other;
@@ -96,17 +93,12 @@ struct ContextItem {
 	std::string created_at;
 	std::string updated_at;
 	// Set only when a person directly created or edited this item (Phase 13 -
-	// Context: editing, provenance and entities). Unset for a value that has
-	// only ever been produced by automatic derivation - COLLABORATION_CONTRACT.md's
-	// actorId attribution, scoped to this item rather than a separate audit log.
+	// Context: editing, provenance and entities).
 	std::optional<std::string> updated_by_actor_id;
-	// A stable reference to a Project Entity Registry entry (Privacy/Types/
-	// ProjectEntity.hpp) this item is about - PRIVACY_CONTRACT.md's Registry
-	// "links stable identities ... across Documents, Context, Chats and
-	// relevant Work Product". Never a second identity store: this only holds
-	// the existing entity's id, resolved back through Privacy/EntityRegistry.hpp
-	// whenever the linked identity itself is needed (never copied/duplicated
-	// here). Unset when this item is not about a registered entity.
+	// Never a second identity store: this only holds the existing entity's id,
+	// resolved back through Privacy/EntityRegistry.hpp whenever the linked
+	// identity itself is needed (never copied/duplicated here). Unset when this
+	// item is not about a registered entity.
 	std::optional<std::string> entity_id;
 	// Phase 14 controls are durable backend policy, never frontend labels.
 	// Pinned items are considered before ordinary Context during assembly;
@@ -160,14 +152,11 @@ struct ContextPageState {
 };
 
 // A durable snapshot of a canonical item's value immediately before a human
-// edit replaced it (Phase 13 - Context: editing, provenance and entities;
-// COLLABORATION_CONTRACT.md: a persisted mutation records actorId, timestamp
-// and "previous version and resulting version" so Inspect/advanced history
-// can answer who changed what and when). Append-only, never mutated or
-// deleted - the same durable-record shape ContextSuggestion already uses for
-// suggestion decisions (see its own comment), applied here to direct edits
-// instead of suggestion resolutions. `actor_id`/`created_at` describe the
-// edit that superseded `value`, not who originally authored it.
+// edit replaced it. Append-only, never mutated or deleted - the same
+// durable-record shape ContextSuggestion already uses for suggestion
+// decisions (see its own comment), applied here to direct edits instead of
+// suggestion resolutions. `actor_id`/`created_at` describe the edit that
+// superseded `value`, not who originally authored it.
 struct ContextItemRevision {
 	std::string id;
 	std::string item_id;

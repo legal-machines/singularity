@@ -8,10 +8,9 @@
 
 namespace singularity::documents {
 
-// Format-neutral structural locator (phase-24-1-research-document-intelligence-
-// project-actions.md, "Structural locators"). Binds to a document's identity
-// and, where relevant to its format, the structural path to one piece of
-// content - a table cell, a slide/shape, a sheet cell or a page offset range.
+// Format-neutral structural locator. Binds to a document's identity and, where
+// relevant to its format, the structural path to one piece of content - a table
+// cell, a slide/shape, a sheet cell or a page offset range.
 // document/version/fingerprint identity itself lives on DocumentPatch (the
 // mutation guard), not here, so one locator can be reused to describe a
 // citation without implying a version it was never checked against.

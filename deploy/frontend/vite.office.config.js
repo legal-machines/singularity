@@ -4,10 +4,10 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-// Singularity's pane in Word, Excel and Outlook (code/frontend/office, D-105):
-// one page, served over HTTPS by Singularity on this computer
-// (code/backend/Office/OfficeConnection), with Office's own script and the
-// connection's transport loaded before it as classic scripts.
+// Singularity's pane in Word, Excel and Outlook: one page, served over HTTPS
+// by Singularity on this computer (code/backend/Office/OfficeConnection), with
+// Office's own script and the connection's transport loaded before it as
+// classic scripts.
 const deploymentRoot = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = resolve(deploymentRoot, "../../code/frontend");
 const officeRoot = resolve(frontendRoot, "office");

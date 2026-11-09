@@ -16,9 +16,11 @@
 #include <cerrno>
 #include <cstdint>
 #include <chrono>
+#include <functional>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -42,64 +44,53 @@ using Json = nlohmann::json;
 
 // "chats" here is Chat METADATA only (id/title/createdAt/updatedAt/archived
 // - see MatterChat in Chat/Types/Chat.hpp). Message-level content (currently
-// modeled as MatterTask: one prompt/response exchange, optionally tagged
-// with chat_id) lives in the independent "tasks" collection below, each
-// exchange keyed by its own stable id. This split is required, not
-// incidental: objectById()/makePatch() diff each collection entry as its own
-// unit, so two writers appending different tasks to the same chat_id merge
-// automatically as two independent upserts - neither writer's message is
-// ever compared against, or lost to, the other's. Folding message content
-// into the chat's own JSON record would make the WHOLE Chat (title +
-// messages) one concurrency unit and break that guarantee, contradicting
-// COLLABORATION_CONTRACT.md's append-oriented, stable-message-id merge
-// requirement for Chats. Do not add a messages array to chat_to_json.
-// Phase 10 (Privacy - entities and Project coverage) adds "entities",
-// "entityAmbiguities" and "documentProtection" - the persistent Project
-// Entity Registry and its own local protection preprocessing state
-// (PRIVACY_CONTRACT.md). Each entry already carries its own stable "id"
-// (documentProtection's id is its own document_id - one status per Document),
-// so they collaboratively merge through the exact same per-object diff this
-// makePatch()/applyPatch() already gives every collection above - never a
-// second persistence mechanism.
-// Phase 12 (Context - canonical data model and authority) adds
-// "contextItems" and "contextSuggestions" - canonical Project Context and
-// its distinct suggestion queue. Two independent collections, each entry
-// keyed by its own stable id, merge the same way: an edit to one Context
-// item and a decision on an unrelated suggestion never contend, and even a
-// same-item conflict surfaces as a normal ProjectConflict (COLLABORATION_
-// CONTRACT.md's "Incompatible edits to the same canonical item require a
-// humane review") rather than a special case.
-// Phase 13 (Context - editing, provenance and entities) adds
-// "contextItemRevisions" - the durable "previous version" a direct human
-// edit leaves behind (Context/Types/ProjectContext.hpp's ContextItemRevision).
-// Each revision record is its own append-only, never-updated object with its
-// own stable id, so it merges through this exact same per-object diff too -
-// not a second persistence mechanism, and never itself the subject of a
-// later edit/delete (deletes only ever originate from the baseline side of
-// the diff above, which never happens for a collection this code never
-// removes entries from).
-// "documentEvents" is the data room's journal (Document/Types/DocumentEvent.hpp):
-// what a device noticed happening to the Project's documents. Every event is
-// its own object with its own id, written once and never edited, so two
-// devices' journals merge by union through the same per-object diff. (The
-// journal is bounded, so its oldest events are deleted from the baseline side
-// as new ones are added - an ordinary delete of an object nobody else edits.)
-// "documentReviews" are document reviews (DocumentReview/Types): each review,
-// its versions and the decisions on them one object, written whole, so a
-// decision never merges with a run's state into something nobody wrote.
-// "assignmentRecords" are the assignments colleagues carried out
-// (DocumentReview/Types, D-119): each assignment, its steps and its email one
-// object, written whole, as a review is.
-// "correspondence" is the Matter's letters (Correspondence/Types, D-106):
-// each letter, its attachments and how it was filed one object, written whole.
-// A build that does not know it replays past it and never deletes it.
-// "timeEntries" is the time members recorded on the Matter (Matter/Types/
-// TimeEntry.hpp, D-181): each entry one object, written whole, so two
-// computers' entries merge one by one.
-// "reviewTables" and "reviewRows" are Review Tables (WorkProduct/Types/
-// ReviewTables.hpp): a table's questions and run merge per field; each
-// document's row is written whole as its run answers it, one small object per
-// document, so a table of many documents never rewrites itself whole.
+//   modeled as MatterTask: one prompt/response exchange, optionally tagged with
+//   chat_id) lives in the independent "tasks" collection below, each exchange
+//   keyed by its own stable id. This split is required, not incidental:
+//   objectById/makePatch diff each collection entry as its own unit, so two
+//   writers appending different tasks to the same chat_id merge automatically as
+//   two independent upserts - neither writer's message is ever compared against,
+//   or lost to, the other's. Do not add a messages array to chat_to_json. Phase
+//   10 (Privacy - entities and Project coverage) adds "entities",
+//   "entityAmbiguities" and "documentProtection" - the persistent Project Entity
+//   Registry and its own local protection preprocessing state. Each entry already
+//   carries its own stable "id" (documentProtection's id is its own document_id -
+//   one status per Document), so they collaboratively merge through the exact
+//   same per-object diff this makePatch/applyPatch already gives every collection
+//   above - never a second persistence mechanism. Phase 12 (Context - canonical
+//   data model and authority) adds "contextItems" and "contextSuggestions" -
+//   canonical Project Context and its distinct suggestion queue. Two independent
+//   collections, each entry keyed by its own stable id, merge the same way: an
+//   edit to one Context item and a decision on an unrelated suggestion never
+//   contend, and even a same-item conflict surfaces as a normal ProjectConflict
+//   rather than a special case. Phase 13 (Context - editing, provenance and
+//   entities) adds "contextItemRevisions" - the durable "previous version" a
+//   direct human edit leaves behind (Context/Types/ProjectContext.hpp's
+//   ContextItemRevision). Each revision record is its own append-only,
+//   never-updated object with its own stable id, so it merges through this exact
+//   same per-object diff too - not a second persistence mechanism, and never
+//   itself the subject of a later edit/delete (deletes only ever originate from
+//   the baseline side of the diff above, which never happens for a collection
+//   this code never removes entries from). "documentEvents" is the data room's
+//   journal (Document/Types/DocumentEvent.hpp): what a device noticed happening
+//   to the Project's documents. Every event is its own object with its own id,
+//   written once and never edited, so two devices' journals merge by union
+//   through the same per-object diff. (The journal is bounded, so its oldest
+//   events are deleted from the baseline side as new ones are added - an ordinary
+//   delete of an object nobody else edits.) "documentReviews" are document
+//   reviews (DocumentReview/Types): each review, its versions and the decisions
+//   on them one object, written whole, so a decision never merges with a run's
+//   state into something nobody wrote. "assignmentRecords" are the assignments
+//   colleagues carried out: each assignment, its steps and its email one object,
+//   written whole, as a review is. "correspondence" is the Matter's letters: each
+//   letter, its attachments and how it was filed one object, written whole. A
+//   build that does not know it replays past it and never deletes it.
+//   "timeEntries" is the time members recorded on the Matter: each entry one
+//   object, written whole, so two computers' entries merge one by one.
+//   "reviewTables" and "reviewRows" are Review Tables (WorkProduct/Types/
+//   ReviewTables.hpp): a table's questions and run merge per field; each
+//   document's row is written whole as its run answers it, one small object per
+//   document, so a table of many documents never rewrites itself whole.
 const char *collectionNames[] = {"documents", "notes", "issues", "workProductTypes", "workProducts",
 	"workProductRevisions", "consiliumConfigurations", "chats",
     "tasks", "entities", "entityAmbiguities", "documentProtection", "contextItems", "contextSuggestions",
@@ -121,7 +112,7 @@ const char *collectionNames[] = {"documents", "notes", "issues", "workProductTyp
 const char *fieldNames[] = {
     "name", "description", "instructions", "appearance", "memoryDocumentDigests",
     "aiSetupOverrides", "updatedAt", "observationLedger", "writtenFileAnchors", "archivedAt", "archivedBy",
-    // The Matter's correspondence intake (D-228): its rules, a single list.
+    // The Matter's correspondence intake: its rules, a single list.
     "correspondenceIntake"};
 
 // How two writers' changes to the same object of a collection combine (see
@@ -198,7 +189,7 @@ void atomicReplace(const std::filesystem::path &source, const std::filesystem::p
     throw std::runtime_error("Unable to replace Project data: " + *failure);
 }
 
-Json readJson(const std::filesystem::path &path) {
+std::ifstream openProjectFile(const std::filesystem::path &path) {
   std::ifstream file(path, std::ios::binary);
   if (file.is_open() == false) {
     // A file this process may not read is not damaged data: the two are
@@ -207,7 +198,19 @@ Json readJson(const std::filesystem::path &path) {
       throw ProjectDataAccessDenied("Singularity is not allowed to read this Project's data: " + path.string());
     throw std::runtime_error("Unable to read Project data: " + path.string());
   }
+  return file;
+}
+
+Json readJson(const std::filesystem::path &path) {
+  std::ifstream file = openProjectFile(path);
   return Json::parse(file);
+}
+
+std::string readBytes(const std::filesystem::path &path) {
+  std::ifstream file = openProjectFile(path);
+  std::string bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  if (file.bad()) throw std::runtime_error("Unable to read Project data: " + path.string());
+  return bytes;
 }
 
 // A full disk is told apart from every other write failure, and the free-space
@@ -225,7 +228,7 @@ void requireFreeSpace(const std::filesystem::path &directory, std::uintmax_t byt
 // On macOS a barrier is enough for that order and costs far less than a full
 // flush of the drive's cache, which every save of an operation would pay.
 // Windows writes the file's buffers through (FlushFileBuffers) before the
-// rename, as the other platforms do (Beta 1 #143).
+// rename, as the other platforms do.
 void syncFile(const std::filesystem::path &path) {
 #if !defined(_WIN32)
   const int descriptor = ::open(path.c_str(), O_RDONLY);
@@ -245,9 +248,9 @@ void syncFile(const std::filesystem::path &path) {
 #endif
 }
 
-// The new name on the disk too, once a file is renamed into place: without it
-// a power loss can leave the folder as it was before the rename, the saved step
-// gone (Beta 1 #143). NTFS commits a rename in its own journal.
+// The new name on the disk too, once a file is renamed into place: without it a
+// power loss can leave the folder as it was before the rename, the saved step
+// gone. NTFS commits a rename in its own journal.
 void syncDirectory(const std::filesystem::path &directory) {
 #if !defined(_WIN32)
   const int descriptor = ::open(directory.c_str(), O_RDONLY);
@@ -388,11 +391,11 @@ bool isPatchEmpty(const Json &patch) {
 }
 
 // A save that changes nothing but the times things were changed changes
-// nothing: written, it would be an operation every computer of a shared
-// Matter takes. A protection pass that wrote the same status again each second
-// filled a shared Matter with some 760 such operations in 35 minutes, each
-// carried to the firm's other computer (2026-10-25). A new or removed object
-// is a change; so is any field other than updatedAt.
+// nothing: written, it would be an operation every computer of a shared Matter
+// takes. A protection pass that wrote the same status again each second filled
+// a shared Matter with some 760 such operations in 35 minutes, each carried to
+// the firm's other computer. A new or removed object is a change; so is any
+// field other than updatedAt.
 bool isTimestampOnly(const Json &patch) {
   for (const auto &[field, change] : patch.at("fields").items()) {
     static_cast<void>(change);
@@ -614,6 +617,11 @@ void applyPatch(ReplayState &state, const Json &patch, const std::string &operat
   }
 }
 
+std::function<void()> &afterBaseChecked() {
+  static std::function<void()> told;
+  return told;
+}
+
 struct StoredOperation {
   std::filesystem::path path;
   Json value;
@@ -621,13 +629,13 @@ struct StoredOperation {
 
 // Every operation file of a Project, each read and parsed exactly once, in
 // replay order (previousVersion, then timestamp and operation id). A copy of
-// the same operation (a sync client's duplicate) is replayed once.
-// An operation file that cannot be read as an operation - half brought in by a
+// the same operation (a sync client's duplicate) is replayed once. An
+// operation file that cannot be read as an operation - half brought in by a
 // sync client, cut short by a crash, damaged - is left exactly where it is and
 // not replayed: the Project opens without it, and the file is read again once
-// it changes (Beta 1 #143, D-032). It is never moved or deleted: in a shared
-// Matter the same file may be whole on another member's computer, and a
-// rename or a removal would travel there. Lost access is reported as itself.
+// it changes. It is never moved or deleted: in a shared Matter the same file
+// may be whole on another member's computer, and a rename or a removal would
+// travel there. Lost access is reported as itself.
 std::optional<Json> readOperationFile(const std::filesystem::path &path) {
   try {
     Json value = readJson(path);
@@ -706,20 +714,19 @@ bool isHiddenBySystem(const std::filesystem::path &folder) {
 #endif
 }
 
-// Recursively collects directories under root that might be Project
-// folders - root itself plus every descendant up to kMaxDiscoveryDepth,
-// per "автоматическое обнаружение выполняется внутри этих директорий"
-// (phase-03-project-data-collaboration.md). Never descends into a Project's
-// own .lm/.lm.migrating-* data, and skips dot-prefixed folders (.git, OS
-// metadata, ...) and folders the system hides as neither a candidate nor a
-// place Projects are expected to live. Each folder is opened on its own: one
-// that cannot be read (permission, a macOS privacy-protected folder, a
-// disconnected network mount) is passed over alone, and the walk goes on.
-// 2026-10-30: the walk of a Mac's home stopped at its 20th folder, the Photo
-// Booth Library ("Operation not permitted"), and found no Matter; walking its
-// hidden Library as well took 4.2 s over 54,000 folders, against 0.2 s.
-// A symlinked folder is a candidate, never walked into.
-// The person's home folder, as the system names it; nullopt when unset.
+// Recursively collects directories under root that might be Project folders -
+// root itself plus every descendant up to kMaxDiscoveryDepth, per "…". Never
+// descends into a Project's own .lm/.lm.migrating-* data, and skips
+// dot-prefixed folders (.git, OS metadata, ...) and folders the system hides
+// as neither a candidate nor a place Projects are expected to live. Each
+// folder is opened on its own: one that cannot be read (permission, a macOS
+// privacy-protected folder, a disconnected network mount) is passed over
+// alone, and the walk goes on. 2026-10-30: the walk of a Mac's home stopped
+// at its 20th folder, the Photo Booth Library ("Operation not permitted"),
+// and found no Matter; walking its hidden Library as well took 4.2 s over
+// 54,000 folders, against 0.2 s. A symlinked folder is a candidate, never
+// walked into. The person's home folder, as the system names it; nullopt when
+// unset.
 std::optional<std::filesystem::path> homeFolder() {
 #if defined(_WIN32)
   const wchar_t *home = ::_wgetenv(L"USERPROFILE");
@@ -736,9 +743,9 @@ std::optional<std::filesystem::path> homeFolder() {
 // A folder that holds no Matter and is passed over by its name: the home
 // folder's media folders, which macOS guards - a walk into Music or Movies asks
 // the person for their media library and waits for the answer, so the window
-// listed no Matter for minutes (2026-10-31) - the system's packages (an app, a
-// photo or music library) and a developer's node_modules. A "Music" folder
-// inside a folder the lawyer chose is theirs, and is searched.
+// listed no Matter for minutes - the system's packages (an app, a photo or
+// music library) and a developer's node_modules. A "Music" folder inside a
+// folder the lawyer chose is theirs, and is searched.
 bool isNeverAMatterFolder(const std::filesystem::path &folder, const std::optional<std::filesystem::path> &home) {
   const std::string name = folder.filename().u8string();
   if (name == "node_modules") return true;
@@ -835,11 +842,11 @@ void copyWithoutProjectData(const std::filesystem::path &source, const std::file
   }
 }
 
-// MIG-1/MIG-2. A Project folder is shared, and the two devices sharing it will
-// not always run the same build of Singularity. This build writes what its own
-// structs can express; anything a NEWER build wrote that these structs cannot
-// hold would otherwise be diffed away and the deletion replicated through the
-// operation log - a newer device's work destroyed by an older one, silently.
+// A Project folder is shared, and the two devices sharing it will not always run
+// the same build of Singularity. This build writes what its own structs can
+// express; anything a NEWER build wrote that these structs cannot hold would
+// otherwise be diffed away and the deletion replicated through the operation log
+// - a newer device's work destroyed by an older one, silently.
 //
 // The two cases are separated exactly, without guessing: `representable` is
 // this build's own round-trip of the loaded baseline, so
@@ -849,14 +856,11 @@ void copyWithoutProjectData(const std::filesystem::path &source, const std::file
 //     saved, was genuinely removed by this build: that removal is honoured.
 // Nothing is resurrected and nothing unknown is lost.
 //
-// MIG-3. At every depth, not only a record's own keys (2026-10-29: a step's
-// "decisions", written by a newer build on one computer, vanished when an
-// older build on the other saved an unrelated task - the record's "steps" key
-// was known, so the older build's own steps replaced the stored ones whole).
-// A part this build left as it was is written back as stored, verbatim; inside
-// a part it changed, a key it cannot represent is carried forward, and the
-// elements of a list are matched by their "id", else their "number", else by
-// place when the list kept its length - never guessed otherwise.
+// At every depth, not only a record's own keys. A part this build left as it was
+// is written back as stored, verbatim; inside a part it changed, a key it cannot
+// represent is carried forward, and the elements of a list are matched by their
+// "id", else their "number", else by place when the list kept its length - never
+// guessed otherwise.
 bool identifiedBy(const Json &array, const char *identity) {
 	if (!array.is_array() || array.empty()) return false;
 	std::set<std::string> seen;
@@ -1121,8 +1125,7 @@ void saveProjectOperation(matters::Matter &project, const platform::ActorIdentit
 	project.storage_baseline->project_path = priorBaseline->project_path;
 	// What was written, by its place in the Matter's folder: whoever carries the
 	// Matter to the firm's other computers sends it at once, without walking the
-	// folder first (the owner, 2026-10-26: a message on the office network is to
-	// show almost at once).
+	// folder first.
 	platform::events::publish("matter.changed",
 		Json{{"projectId", project.id}, {"paths", Json::array({".lm/Operations/" + operationId + ".json"})}});
 }
@@ -1174,9 +1177,9 @@ std::optional<std::map<std::string, FileStamp>> operationStamps(const std::files
   for (std::filesystem::directory_iterator entry(operations, error), end; entry != end; entry.increment(error)) {
     if (error) return std::nullopt;
     if (entry->is_regular_file(error) == false || entry->path().extension() != ".json") continue;
-    // The size and time the listing itself gave: on Windows no call per file,
-    // on macOS and Linux one. Asked by path, two calls per file cost about 90 ms
-    // on each read of a Matter of 2,050 operations (2026-10-26).
+    // The size and time the listing itself gave: on Windows no call per file, on
+    // macOS and Linux one. Asked by path, two calls per file cost about 90 ms on
+    // each read of a Matter of 2,050 operations.
     const std::uintmax_t size = entry->file_size(error);
     if (error) return std::nullopt;
     const std::filesystem::file_time_type modified = entry->last_write_time(error);
@@ -1207,7 +1210,7 @@ struct ReplayedProject {
   std::map<std::string, std::tuple<std::string, std::string, std::string>> provenance;
   std::optional<OperationOrder> lastOrder;
   long long operationCount = 0;
-  // Operation files not replayed because they could not be read (D-032).
+  // Operation files not replayed because they could not be read.
   std::vector<std::string> unreadableOperations;
   ProjectRecord record;
 };
@@ -1294,12 +1297,17 @@ ReplayedProject replayFromDisk(const std::filesystem::path &projectPath) {
   }
   const std::filesystem::path basePath = dataPath / "State" / "Base.json";
   const std::string expectedBaseHash = manifest.value("baseHash", std::string());
-  if (expectedBaseHash.empty() == true || platform::sha256_hex_digest_of_file(basePath) != expectedBaseHash) {
+  // Read once: the bytes checked are the bytes parsed. Checked and then read
+  // again, a Base a sync client put down in between was taken for the
+  // Project's.
+  const std::string baseBytes = readBytes(basePath);
+  if (expectedBaseHash.empty() == true || platform::sha256_hex_digest(baseBytes) != expectedBaseHash) {
     throw std::runtime_error(
         "This Project's saved state does not match its recorded checksum. Restore .lm from a backup.");
   }
+  if (afterBaseChecked()) afterBaseChecked()();
   ReplayedProject project;
-  project.baseState = readJson(basePath);
+  project.baseState = Json::parse(baseBytes);
   project.projectId = project.baseState.value("id", std::string());
   if (project.projectId != manifest.value("projectId", std::string())) {
     throw std::runtime_error("Project identity does not match its .lm state.");
@@ -1330,6 +1338,7 @@ ReplayedProject replayFromDisk(const std::filesystem::path &projectPath) {
     project.operationIds.insert(stored.value.value("operationId", std::string()));
     replayOperation(project, stored.value);
   }
+  std::sort(project.unreadableOperations.begin(), project.unreadableOperations.end());
   if (!project.unreadableOperations.empty())
     platform::trace::record("persist", "project.unreadable_operations",
         {{"count", std::to_string(project.unreadableOperations.size())}});
@@ -1337,12 +1346,24 @@ ReplayedProject replayFromDisk(const std::filesystem::path &projectPath) {
   return project;
 }
 
+// The steps a read of a Project replayed that a later read of the same
+// Project, on the same Base, could not replay again - a file a sync client is
+// rewriting in place, or has taken away for a moment - and since when.
+struct MissingSteps {
+  FileStamp base;
+  std::set<std::string> operationIds;
+  std::chrono::steady_clock::time_point since;
+};
+
 struct ProjectCache {
   std::mutex mutex;
   std::map<std::string, ReplayedProject> projects;
   // The Matters the last search of the member's folders found: kept beside
   // the listed ones, so the next search reads only what changed in them.
   std::set<std::string> found;
+  std::map<std::string, MissingSteps> missing;
+  // A sync client rewrites a small file in well under it.
+  std::chrono::milliseconds unreadableStepWindow = std::chrono::minutes(2);
 };
 
 ProjectCache &projectCache() {
@@ -1360,13 +1381,14 @@ bool replayNewOperations(ReplayedProject &kept, const std::filesystem::path &pro
     if (found == current.end() || found->second != stamp) return false;
   }
   std::vector<Json> fresh;
+  std::vector<std::string> unreadable;
   const std::filesystem::path operations = project_data_path(projectPath) / "Operations";
   for (const auto &[name, stamp] : current) {
     static_cast<void>(stamp);
     if (kept.operationFiles.count(name) != 0) continue;
     std::optional<Json> read = readOperationFile(operations / std::filesystem::u8path(name));
     if (!read) {
-      kept.unreadableOperations.push_back(name);
+      unreadable.push_back(name);
       continue;
     }
     Json value = std::move(*read);
@@ -1387,8 +1409,14 @@ bool replayNewOperations(ReplayedProject &kept, const std::filesystem::path &pro
     if (!operationId.empty()) kept.operationIds.insert(operationId);
   }
   replayedOut = fresh.size();
+  // A file read is kept by its size and time; one that could not be read is
+  // not, so every later load reads it again whatever its size and time say:
+  // a sync client may finish a file without changing either.
   kept.operationFiles = current;
-  buildRecord(kept, projectPath);
+  for (const std::string &name : unreadable) kept.operationFiles.erase(name);
+  kept.unreadableOperations = std::move(unreadable);
+  if (fresh.empty() == false) buildRecord(kept, projectPath);
+  else kept.record.unreadable_operations = kept.unreadableOperations;
   return true;
 }
 
@@ -1446,6 +1474,9 @@ ProjectRecord load_project(const std::filesystem::path &projectPath) {
   ProjectCache &cache = projectCache();
   const std::string key = dataPath.u8string();
   std::unique_lock<std::mutex> lock(cache.mutex);
+  // The steps the last read of this Project replayed, on the same Base: a
+  // complete read replays every one of them again, or is refused for a while.
+  std::set<std::string> replayedBefore;
   const auto kept = cache.projects.find(key);
   if (kept != cache.projects.end() && kept->second.manifest == *manifestStamp && kept->second.base == *baseStamp) {
     if (kept->second.operationFiles == *operationFiles) {
@@ -1464,23 +1495,37 @@ ProjectRecord load_project(const std::filesystem::path &projectPath) {
     } catch (const std::exception &) {
       // Whatever went wrong, the complete load below decides what to report.
     }
+    replayedBefore = std::move(kept->second.operationIds);
     cache.projects.erase(kept);
   } else if (kept != cache.projects.end()) {
+    if (kept->second.base == *baseStamp) replayedBefore = std::move(kept->second.operationIds);
     cache.projects.erase(kept);
+  }
+  const auto missing = cache.missing.find(key);
+  if (missing != cache.missing.end()) {
+    // A read refused a moment ago still knows what it should replay.
+    if (missing->second.base != *baseStamp) cache.missing.erase(missing);
+    else if (replayedBefore.empty()) replayedBefore = missing->second.operationIds;
   }
 
   // A complete replay reads every operation file of the Project and takes
   // seconds for a large one: it runs outside the cache's lock, so a read of
   // any other Project - kept, under the store's own lock - never waits behind
-  // it (2026-11-02: a message to a colleague stood 30 seconds behind the
-  // search of the member's folders replaying fifteen Matters). Two replays of
-  // one Project at once read the same files; the later one kept is as good.
+  // it. Two replays of one Project at once read the same files; the later one
+  // kept is as good. The stamps were taken before the files are read, so they
+  // are never newer than what is read: a file that changes during the read
+  // makes the next load read again. Only a file that cannot be read is not
+  // kept by its stamp.
   lock.unlock();
   countProjectAccess(projectPath, ProjectAccess::FullReplay);
   ReplayedProject replayed = replayFromDisk(projectPath);
   replayed.manifest = *manifestStamp;
   replayed.base = *baseStamp;
   replayed.operationFiles = *operationFiles;
+  for (const std::string &name : replayed.unreadableOperations) replayed.operationFiles.erase(name);
+  std::size_t lost = 0;
+  for (const std::string &operationId : replayedBefore)
+    if (replayed.operationIds.count(operationId) == 0) ++lost;
   span.add("path", "full");
   span.add("operations", replayed.operationCount);
   span.add("snapshotBytes", replayed.record.project.storage_baseline->snapshot.size());
@@ -1491,6 +1536,21 @@ ProjectRecord load_project(const std::filesystem::path &projectPath) {
   // keep_only_projects().
   ProjectRecord record = replayed.record;
   lock.lock();
+  if (lost > 0) {
+    // A step this computer read is unreadable or gone now: read without it,
+    // the Matter would lose what that step holds - its threads among them -
+    // and a list would come back short.
+    const auto now = std::chrono::steady_clock::now();
+    const auto [entry, isNew] = cache.missing.try_emplace(key);
+    if (isNew) entry->second = {*baseStamp, std::move(replayedBefore), now};
+    if (now - entry->second.since < cache.unreadableStepWindow) {
+      platform::trace::record("persist", "project.steps_missing", {{"count", std::to_string(lost)}});
+      throw std::runtime_error(
+          "Part of this Project's saved data can't be read just now. Singularity reads it again by itself.");
+    }
+    platform::trace::record("persist", "project.opened_without_steps", {{"count", std::to_string(lost)}});
+  }
+  cache.missing.erase(key);
   cache.projects.insert_or_assign(key, std::move(replayed));
   return record;
 }
@@ -1500,6 +1560,7 @@ void forget_kept_projects_for_testing() {
   const std::lock_guard<std::mutex> lock(cache.mutex);
   cache.projects.clear();
   cache.found.clear();
+  cache.missing.clear();
 }
 
 void keep_only_projects(const std::vector<std::filesystem::path> &projectPaths) {
@@ -1510,6 +1571,10 @@ void keep_only_projects(const std::vector<std::filesystem::path> &projectPaths) 
   for (auto kept = cache.projects.begin(); kept != cache.projects.end();) {
     if (listed.count(kept->first) == 0 && cache.found.count(kept->first) == 0) kept = cache.projects.erase(kept);
     else ++kept;
+  }
+  for (auto missing = cache.missing.begin(); missing != cache.missing.end();) {
+    if (listed.count(missing->first) == 0 && cache.found.count(missing->first) == 0) missing = cache.missing.erase(missing);
+    else ++missing;
   }
 }
 
@@ -1661,11 +1726,10 @@ std::vector<ProjectSummary> summarize_project_folders(const std::vector<std::fil
   }
 
   // Two (or more) authorised locations sharing one Project id are a real
-  // copy/shared-drive duplicate (COLLABORATION_CONTRACT.md), not one
-  // location that "moved" - never deduplicated away, and explicitly marked
-  // on every one of those entries so a caller cannot mistake any single one
-  // of them for the sole canonical location without inspecting the rest of
-  // this result.
+  // copy/shared-drive duplicate, not one location that "moved" - never
+  // deduplicated away, and explicitly marked on every one of those entries
+  // so a caller cannot mistake any single one of them for the sole
+  // canonical location without inspecting the rest of this result.
   std::map<std::string, int> idCounts;
   for (const ProjectSummary &summary : result) {
     if (summary.id.empty() == true) continue;
@@ -1730,6 +1794,18 @@ void remove_project_data(const std::filesystem::path &projectPath) {
 
 void set_available_space_for_testing(std::optional<std::uintmax_t> bytes) {
   platform::available_space_override_for_testing() = bytes;
+}
+
+void set_after_base_checked_for_testing(std::function<void()> told) {
+  afterBaseChecked() = std::move(told);
+}
+
+std::chrono::milliseconds set_unreadable_step_window_for_testing(std::chrono::milliseconds window) {
+  ProjectCache &cache = projectCache();
+  const std::lock_guard<std::mutex> lock(cache.mutex);
+  const std::chrono::milliseconds replaced = cache.unreadableStepWindow;
+  cache.unreadableStepWindow = window;
+  return replaced;
 }
 
 } // namespace singularity::persistence

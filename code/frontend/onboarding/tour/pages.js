@@ -1,20 +1,18 @@
-// Onboarding after sign-in (D-134): one key thing a slide, as Apple's
-// onboarding explains a product (the owner's reference, 2026-10-28), and with
-// it the one thing that needs setting up for it here - told about AI
-// colleagues, the member connects the models they think with. The app shows
-// the thing on the right, itself at work on the deal of the first page
-// (emulation/scenes.js), one action a slide.
-//
+// Onboarding after sign-in: one key thing a slide, as Apple's onboarding
+// explains a product, and with it the one thing that needs setting up for it
+// here - told about AI colleagues, the member connects the models they think
+// with. The app shows the thing on the right, itself at work on the deal of
+// the first page (emulation/scenes.js), one action a slide.
 import { PROTECTION_TEST } from "../legal.js";
 
 // A slide is data: its scene, its words and its ask (tour/Tour.jsx). Adding a
 // slide is adding an entry here and, where it needs one, a scene and an ask.
 // A slide without a scene shows its `preview` (tour/SetupPreview.jsx).
 //
-// The order tells the firm first (AG-18): who works in it, how work moves and
-// the member's own AI colleague; then what happens to its files and client
-// data on this computer (D-195); then where work lives, the apps, and what the
-// computer itself will ask.
+// The order tells the firm first: who works in it, how work moves and the
+// member's own AI colleague; then what happens to its files and client data on
+// this computer; then where work lives, the apps, and what the computer itself
+// will ask.
 export const PAGES = [
 	{
 		id: "team", scene: "team", ask: "role",
@@ -31,8 +29,8 @@ export const PAGES = [
 		action: "Connect a model", skip: "Set up later",
 		setupTitle: "Connect your model account.",
 		setupLine: "Choose a service your colleagues can work with. It bills your account for what they use.",
-		// Said at the foot of the slide, with the Terms of Use it points to
-		// (the owner, 2026-11-01, D-189).
+		// Said at the foot of the slide, with the Terms of Use it points
+		// to.
 		disclaimer: "Illustrative example. Generative AI results can differ each time and depend in part on the AI model used.",
 	},
 	{
@@ -43,21 +41,21 @@ export const PAGES = [
 		setupTitle: "Hire your first colleague.",
 		setupLine: "Start with a name and a face. They join the whole firm, not one Matter.",
 	},
-	// What Singularity does to a firm's files around an AI colleague's work (the
-	// owner, 2026-11-01, D-195), shown on the right with one clause of the deal:
-	// each is what the code does today, never a plan (PROD-2).
+	// What Singularity does to a firm's files around an AI colleague's work,
+	// shown on the right with one clause of the deal: each is what the code does
+	// today, never a plan.
 	{
 		id: "preparation", preview: "preparation", next: true,
 		title: "Read as Word shows it.",
 		line: "Singularity reads each document as Word does, and checks every change a colleague makes.",
 		action: "Continue",
 	},
-	// Client data protection (D-195): what it does, that its model comes from
-	// Legal Machines, how large it is and that it runs only on this computer.
-	// The dated test's figures stand in the footnote, never as promises, with
-	// links to its published results and to the Software License Agreement
-	// (the owner, 2026-11-01, D-198). A size, a date, a range and Legal
-	// Machines' name each stay on one line: non-breaking spaces.
+	// Client data protection: what it does, that its model comes from Legal
+	// Machines, how large it is and that it runs only on this computer. The
+	// dated test's figures stand in the footnote, never as promises, with
+	// links to its published results and to the Software License Agreement. A
+	// size, a date, a range and Legal Machines' name each stay on one line:
+	// non-breaking spaces.
 	{
 		id: "protection", preview: "protection", ask: "protection",
 		title: "Masked here. Restored here.",
@@ -80,9 +78,9 @@ export const PAGES = [
 		setupTitle: "Keep your Matters together.",
 		setupLine: "Choose how work travels between your firm’s computers.",
 	},
-	// TEMPORARY until Legal Machines' developer certificates exist (the owner,
-	// 2026-11-01): remove this entry, and its words below, once macOS
-	// notarises Singularity and Windows knows its publisher. Never on Linux.
+	// TEMPORARY until Legal Machines' developer certificates exist: remove
+	// this entry, and its words below, once macOS notarises Singularity and
+	// Windows knows its publisher. Never on Linux.
 	{
 		id: "certificates", preview: "certificates", next: true, temporary: true,
 		title: "Certificates on the way.",
@@ -94,11 +92,8 @@ export const PAGES = [
 		action: "Continue",
 	},
 	// What the computer itself must allow, asked here, before the work that
-	// needs it, and checked (the owner, 2026-11-04: "a person could not connect
-	// Office because the app forgot to ask in advance for the permissions it
-	// needs; all of this must be asked by us in advance, and we must check that
-	// it was given"). One press asks for each in turn, with the system's own
-	// question; each says what came of it (Platform/SystemPermissions).
+	// needs it, and checked. One press asks for each in turn, with the system's
+	// own question; each says what came of it (Platform/SystemPermissions).
 	{
 		id: "permissions", preview: "permissions", ask: "permissions",
 		title: "Your computer asks first.",
@@ -119,8 +114,7 @@ export const PAGES = [
 		setupTitle: "Allow access.",
 		setupLine: "Your computer asks once for each. Choose Allow.",
 	},
-	// Office last, once the computer allows what it needs (the owner,
-	// 2026-11-04: "swap Certificates on the way and connecting the add-in").
+	// Office last, once the computer allows what it needs.
 	{
 		id: "apps", ask: "apps",
 		title: "Your work. Connected.",
@@ -145,19 +139,15 @@ export function platformOf() {
 	return name.startsWith("Mac") ? "darwin" : name.startsWith("Win") ? "win32" : "linux";
 }
 
-// The slides a member is shown. The firm's AI colleagues and the model
-// accounts they think with are the firm's, set up by its administrative
-// account (the owner, 2026-10-31: "a new employee logging in on a new device
-// must not get the right to configure the provider or to create an AI
-// colleague"; D-184). A colleague who joins is told so and goes on; the
-// administrator is shown every slide, as before. A slide whose words belong to
-// other systems (certificates, permissions) is left out where it has none, and
-// Linux, where Word, Excel, PowerPoint and Outlook do not run, has no apps slide.
-// `missingPermissions` are the keys of what this computer does not allow yet,
-// as it said before the slides (null until it says): the slide that asks
-// names only those, and is not shown at all when none is missing (the owner,
-// 2026-11-05: "if some permission is already given, there is no need to ask
-// about it at all", D-249).
+// The slides a member is shown. The firm's AI colleagues and the model accounts
+// they think with are the firm's, set up by its administrative account. A
+// colleague who joins is told so and goes on; the administrator is shown every
+// slide, as before. A slide whose words belong to other systems (certificates,
+// permissions) is left out where it has none, and Linux, where Word, Excel,
+// PowerPoint and Outlook do not run, has no apps slide. `missingPermissions` are
+// the keys of what this computer does not allow yet, as it said before the slides
+// (null until it says): the slide that asks names only those, and is not shown at
+// all when none is missing.
 export function pagesFor({ isMember = false, platform = platformOf(), missingPermissions = null } = {}) {
 	const pages = PAGES
 		.filter(page => !page.lines || page.lines[platform])
@@ -172,9 +162,9 @@ export function pagesFor({ isMember = false, platform = platformOf(), missingPer
 	return pages
 		.filter(page => page.ask !== "colleague")
 		.map(page => {
-			// Who a colleague is, the firm says (D-209): its administrator gave
-			// their name, role and photo with their seat, and their computer takes
-			// them from the firm's record.
+			// Who a colleague is, the firm says: its administrator gave their
+			// name, role and photo with their seat, and their computer takes them
+			// from the firm's record.
 			if (page.ask === "role") {
 				return {
 					...page,

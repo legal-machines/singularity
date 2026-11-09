@@ -1,7 +1,7 @@
-// What the window shows first (D-133): onboarding until it is complete, then
-// the app. In the app the bridge decides: onboarding.getStatus reads the same
-// record the native side sized the window by. In a browser, with no bridge,
-// the app shows; `?onboarding` in the address previews onboarding.
+// What the window shows first: onboarding until it is complete, then the app.
+// In the app the bridge decides: onboarding.getStatus reads the same record
+// the native side sized the window by. In a browser, with no bridge, the app
+// shows; `?onboarding` in the address previews onboarding.
 export function firstView(nativeApp, search = "") {
 	if (typeof nativeApp?.getOnboardingStatus == "function") return "asking";
 	return new URLSearchParams(search).has("onboarding") ? "onboarding" : "app";
@@ -14,8 +14,8 @@ export function viewOf(status) {
 }
 
 // Whether the window opens on the page where a colleague's new computer waits
-// for the firm (D-205): a member signed in whose seat's profile has not come,
-// with no computer of the firm checked and no Matter carried here yet.
+// for the firm: a member signed in whose seat's profile has not come, with no
+// computer of the firm checked and no Matter carried here yet.
 export async function waitsForFirm(nativeApp) {
 	try {
 		return (await isWithFirm(nativeApp)) == false;

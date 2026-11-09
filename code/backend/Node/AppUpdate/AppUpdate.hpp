@@ -12,16 +12,14 @@
 
 namespace singularity::node::update {
 
-// Singularity's new versions come from Legal Machines' own site (the owner,
-// 2026-11-02, on going public: "do all of this"). The site names the latest
-// version for this computer's system and processor; Legal Machines' release
-// key signs what it names - the version, the installer's name, its size and
-// its SHA-256 - so whoever holds the site alone can never hand a firm another
-// program. Singularity asks when it opens, every few hours and when the
-// member asks. From 0.1.1 on it installs what it finds itself (D-261; the
-// owner, 2026-11-05: "make it so that from version 0.1.1 everything is
-// automatic"): it downloads the new version into its own Updates folder,
-// keeps it only if it is exactly the one signed, readies it to install
+// Singularity's new versions come from Legal Machines' own site. The site
+// names the latest version for this computer's system and processor; Legal
+// Machines' release key signs what it names - the version, the installer's
+// name, its size and its SHA-256 - so whoever holds the site alone can never
+// hand a firm another program. Singularity asks when it opens, every few
+// hours and when the member asks. From 0.1.1 on it installs what it finds
+// itself: it downloads the new version into its own Updates folder, keeps it
+// only if it is exactly the one signed, readies it to install
 // (Platform/UpdateInstall), and installs it as Singularity ends - when the
 // member asks to restart, or the next time Singularity closes - never in the
 // middle of anyone's work. Where it cannot install itself, it says why and

@@ -1,7 +1,7 @@
 import { ensureDefaultModels } from "../../data/models.js";
 import { emulatedFirm } from "../entry/account.js";
 
-// What onboarding's pages set up in the app (D-134), through the bridge: the
+// What onboarding's pages set up in the app, through the bridge: the
 // member's name and own office, the model accounts the AI colleagues think
 // with, and the protection model's state. In a browser preview a stand-in
 // answers, and nothing is kept.
@@ -12,11 +12,11 @@ export function setupOf(nativeApp) {
 			viewer: async () => (await nativeApp.getOrganisation())?.viewer ?? null,
 			// The name first: the office is written into the member's record of
 			// every Matter here, and the record carries the name the member gives.
-			// A photo they chose or took away goes the same way (D-163); one they
-			// left as it was is not written again.
-			// The firm's name is kept beside the member's: the one this computer
-			// keeps for an installation nobody signed in to stays as it was (a
-			// whole-product test's firm among them, account.js).
+			// A photo they chose or took away goes the same way; one they left as
+			// it was is not written again. The firm's name is kept beside the
+			// member's: the one this computer keeps for an installation nobody
+			// signed in to stays as it was (a whole-product test's firm among
+			// them, account.js).
 			saveRole: async (name, position, practice, photo) => {
 				const known = typeof nativeApp.getOrganisation == "function" ? await nativeApp.getOrganisation().catch(() => null) : null;
 				const firm = known?.viewer?.organisationName || emulatedFirm();
@@ -30,14 +30,13 @@ export function setupOf(nativeApp) {
 			// cuts their photo from it (data/photos.js). Null when they cancel.
 			choosePhoto: async () => (typeof nativeApp.chooseOwnPhoto == "function" ? (await nativeApp.chooseOwnPhoto())?.picture ?? null : null),
 			// The model accounts the backend keeps (providers.list): the AI setup's
-			// capabilities name roles, not accounts (2026-10-29: a connected
-			// account read as not connected after a reload).
+			// capabilities name roles, not accounts.
 			providers: async () => {
 				const listed = await nativeApp.listProviders();
 				return Array.isArray(listed) ? listed : listed?.providers ?? [];
 			},
 			// A connected account gives the firm's colleagues their default models
-			// for the roles not set yet (data/models.js, D-138).
+			// for the roles not set yet.
 			connect: async (provider, key) => {
 				const connected = await nativeApp.configureProvider(provider.id, key, provider.baseUrl, provider.displayName);
 				await ensureDefaultModels(nativeApp).catch(() => []);
@@ -46,7 +45,7 @@ export function setupOf(nativeApp) {
 			protection: () => nativeApp.getPapinianModelStatus(),
 			// The protection model's download, started only by the member: its
 			// button in onboarding, or Download and Try again where its state
-			// shows (D-198). It answers once the model runs, or fails.
+			// shows. It answers once the model runs, or fails.
 			downloadProtection: () => nativeApp.syncLocalModels("papinian-ner"),
 			// Whether this computer masks what leaves it (protectedApi.getPolicy):
 			// "off" sends requests as written; "standard" and "custom" mask.
@@ -63,7 +62,7 @@ export function setupOf(nativeApp) {
 				});
 			},
 			// The folder the firm's computers share, where their Matters travel
-			// sealed between them (D-123): the one set, and choosing one.
+			// sealed between them: the one set, and choosing one.
 			firmFolder: async () => (await nativeApp.getCoordination?.())?.firmFolder ?? null,
 			chooseFirmFolder: async () => {
 				const folder = await nativeApp.chooseFolder();
@@ -71,16 +70,16 @@ export function setupOf(nativeApp) {
 				await nativeApp.useFirmFolder(folder);
 				return folder;
 			},
-			// Word, Excel, PowerPoint and Outlook as Office itself reports them
-			// (office.getStatus, office.listClients, D-105): this computer's add-in,
-			// the panes allowed, and the requests waiting with their codes.
+			// Word, Excel, PowerPoint and Outlook as Office itself reports them:
+			// this computer's add-in, the panes allowed, and the requests waiting
+			// with their codes.
 			officeStatus: () => nativeApp.getOfficeStatus(),
 			officeClients: () => nativeApp.listOfficeClients(),
 			connectOffice: () => nativeApp.connectOffice(),
 			// The application being connected, opened by Singularity itself: Word,
 			// Excel and PowerPoint with a file of its own whose pane opens and asks
-			// to connect by itself (office.openApp, D-191). A bridge without it
-			// opens nothing, and says no problem.
+			// to connect by itself. A bridge without it opens nothing, and says no
+			// problem.
 			openOfficeApp: app => (typeof nativeApp.openOfficeApp == "function"
 				? nativeApp.openOfficeApp(app)
 				: Promise.resolve({ app, opened: false, problem: "" })),
@@ -95,8 +94,8 @@ export function setupOf(nativeApp) {
 				: []),
 			askPermission: key => nativeApp.askSystemPermission(key),
 			openPermissionSettings: key => nativeApp.openSystemPermissionSettings(key),
-			// The first AI colleague, the whole firm's, never one Matter's
-			// (agent.hire, D-157): its face, name, role, position and field.
+			// The first AI colleague, the whole firm's, never one Matter's:
+			// its face, name, role, position and field.
 			hireColleague: ({ name, species, role, position, area }) => nativeApp.hireColleague({
 				name: name.trim(),
 				character: species,
@@ -180,8 +179,8 @@ export function setupOf(nativeApp) {
 	};
 }
 
-// The protection model's state in a few words (UI-28), from the backend's own
-// status (papinian.getModelStatus), with the thing it speaks of as `subject`.
+// The protection model's state in a few words, from the backend's own status
+// (papinian.getModelStatus), with the thing it speaks of as `subject`.
 export function protectionWords(status, subject = "Client data protection") {
 	switch (status?.status) {
 		case "ready":
@@ -197,15 +196,14 @@ export function protectionWords(status, subject = "Client data protection") {
 			return `${subject} is installing.`;
 		case "checking_server":
 			return `${subject} is on its way.`;
-		// Nothing downloads until the member asks (D-198).
+		// Nothing downloads until the member asks.
 		case "available":
 			return `${subject} is not on this computer yet.`;
 		case "authorization_required":
 			return `${subject} waits for sign-in.`;
 		case "error":
 			// A model on this computer that would not start is not one that did
-			// not arrive (2026-10-29: a Release build's failed start read "did not
-			// download" over a model fully installed).
+			// not arrive.
 			return status.recovery == "retry_load"
 				? `${subject} did not start on this computer.`
 				: `${subject} did not download.`;
@@ -231,8 +229,8 @@ export function protectionMoving(status) {
 	return ["checking_server", "downloading", "verifying", "installing"].includes(status?.status);
 }
 
-// How much of its button the protection model's download fills, in percent
-// (D-198): the bytes while they come, all of it once they are being checked,
+// How much of its button the protection model's download fills, in percent:
+// the bytes while they come, all of it once they are being checked,
 // installed and started.
 export function protectionFill(status) {
 	switch (status?.status) {
@@ -249,7 +247,7 @@ export function protectionFill(status) {
 	}
 }
 
-// The button's words while the protection model comes: one line (UI-28).
+// The button's words while the protection model comes: one line.
 export function downloadWords(status) {
 	switch (status?.status) {
 		case "downloading":

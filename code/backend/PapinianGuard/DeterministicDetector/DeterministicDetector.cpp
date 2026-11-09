@@ -44,7 +44,7 @@ std::vector<Match> find_money_symbol_matches(const std::string &text) {
     std::size_t search_from = 0;
     std::size_t marker_pos;
     while ((marker_pos = text.find(marker, search_from)) != std::string::npos) {
-      // "$B$3", "Параметры!$B$3": the anchor before a row number in a formula's
+      // "$B$3", "…": the anchor before a row number in a formula's
       // absolute reference, not an amount - a column's letters stand between it
       // and another anchor or a sheet name. "US$3" is still money.
       if (marker == "$") {
@@ -115,7 +115,7 @@ std::vector<Match> find_url_matches(const std::string &text) {
 std::vector<Match> find_code_identifier_matches(const std::string &text);
 
 // Where a phone's extension written at text[at] ends - "ext. 214", "x0188",
-// «доб. 123», "extension 4410" - or `at` when none is written there. A bare
+// «…», "extension 4410" - or `at` when none is written there. A bare
 // "x" is an extension only where `bare_x` says the text allows one: after a
 // phone, or inside brackets ("Controller (x0188)"); "2 x 100" is arithmetic.
 std::size_t phone_extension_end(const std::string &text, std::size_t at, bool bare_x) {
@@ -149,7 +149,7 @@ std::size_t phone_extension_end(const std::string &text, std::size_t at, bool ba
 }
 
 // Phones: an international number with its extension, and an extension
-// written alone - "Controller (x0188)", "ext. 214", «доб. 123» - which dials
+// written alone - "Controller (x0188)", "ext. 214", «…» - which dials
 // one person as surely as the number does.
 std::vector<Match> find_phone_matches(const std::string &text, const std::regex &pattern, const std::string &label) {
   std::vector<Match> matches = find_regex_matches(text, pattern, label);
@@ -188,7 +188,7 @@ std::vector<Match> find_phone_matches(const std::string &text, const std::regex 
 // The shapes a US or a Russian document writes its own numbers in, which the
 // international "+1 ..." / "+7 ..." shape misses: "(201) 555-0132",
 // "201-555-0132", "8 (495) 555-31-08"; an SSN "123-45-6789", an EIN
-// "93-2748816", a card "4111 1111 1111 1111", an IBAN, a СНИЛС "123-456-789
+// "93-2748816", a card "4111 1111 1111 1111", an IBAN, a … "123-456-789
 // 00", a register number "7702-418856-03". Each is found whole, so no part of
 // it is left readable beside a mask.
 
@@ -213,7 +213,7 @@ std::string lowered_line_at(const std::string &text, std::size_t position) {
 }
 
 // Whether the line a number stands on, or the one before it, says it is a
-// phone: "Tel.", "Phone:", "Fax", "Mobile", "T:", «тел.», «факс», «моб.» - or
+// phone: "Tel.", "Phone:", "Fax", "Mobile", "T:", «…» - or
 // writes an e-mail address beside it, as a letterhead or a signature block does.
 bool phone_context(const std::string &text, std::size_t position) {
   static const std::string_view cues[] = {"tel", "tel.", "telephone", "phone", "phones", "fax", "mobile", "cell", "mob",
@@ -356,7 +356,7 @@ std::vector<Match> find_digit_group_identifiers(const std::string &text, const s
       if (character != ' ') compact.push_back(character);
     if (iban_valid(compact)) add(static_cast<std::size_t>(it->position()), static_cast<std::size_t>(it->position() + it->length()));
   }
-  // A СНИЛС: "123-456-789 00".
+  // A …: "123-456-789 00".
   static const std::regex snils(R"(\b\d{3}-\d{3}-\d{3}[ \-]\d{2}\b)");
   for (std::sregex_iterator it(text.begin(), text.end(), snils), end; it != end; ++it)
     add(static_cast<std::size_t>(it->position()), static_cast<std::size_t>(it->position() + it->length()));
@@ -396,12 +396,12 @@ std::vector<Match> find_category_matches(const std::string &text, Category categ
   static const std::regex identifier_pattern(
       R"(\b(?:[A-Za-z]{1,4}[/\-]\d{2,6}[/\-]\d{2,6}(?:[/\-]\d{1,6})?|\d{6,20})\b)");
   // A SWIFT/BIC code in wire instructions ("SWIFT COBADEFFXXX", "BIC:
-  // CHASUS33", "SWIFT-код: SABRRUMM"): 8 or 11 capitals and digits, which no
-  // other identifier shape covers, while the Russian БИК is a run of digits
+  // CHASUS33", "SWIFT-…: SABRRUMM"): 8 or 11 capitals and digits, which no
+  // other identifier shape covers, while the Russian … is a run of digits
   // the pattern above already masks. Only after the word SWIFT or BIC, and
   // only in capitals, so "a SWIFT transfer" keeps its ordinary words.
   static const std::regex swift_pattern(
-      R"(\b(?:SWIFT|Swift|swift|BIC|bic)(?:\s*/\s*(?:SWIFT|BIC))?(?:\s*-?\s*(?:code|Code|CODE|код))?)"
+      "\\b(?:SWIFT|Swift|swift|BIC|bic)(?:\\s*/\\s*(?:SWIFT|BIC))?(?:\\s*-?\\s*(?:code|Code|CODE|\320\272\320\276\320\264))?"
       R"(\s*(?:\((?:SWIFT|BIC)\))?\s*[:#\-]?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b)");
 
   switch (category) {
@@ -494,8 +494,8 @@ bool starts_with_at(const std::string &text, std::size_t position, std::string_v
   return text.compare(position, literal.size(), literal) == 0;
 }
 
-// Letters, digits and inner hyphens from `position`: "Тверская-Ямская", "1-я",
-// "12А", and with `slash` also "5/2".
+// Letters, digits and inner hyphens from `position`: "…",
+// "…", and with `slash` also "5/2".
 std::size_t word_run_end(const std::string &text, std::size_t position, bool slash) {
   for (;;) {
     const CodePoint point = code_point_at(text, position);
@@ -516,8 +516,8 @@ std::size_t word_run_end(const std::string &text, std::size_t position, bool sla
 
 // Calls `found(start)` at every position that begins a word - the text's
 // start, or a code point that follows no letter or digit - and records the
-// span it returns. A marker is only a marker as a whole word: "наш." does
-// not hold "ш.", and "ТИП" does not hold "ИП".
+// span it returns. A marker is only a marker as a whole word: "…" does
+// not hold "…", and "…" does not hold "…".
 template <typename Find>
 std::vector<Match> find_at_word_starts(const std::string &text, const char *label, Find found) {
   std::vector<Match> matches;
@@ -545,12 +545,12 @@ std::vector<Match> find_at_word_starts(const std::string &text, const char *labe
   return matches;
 }
 
-// One word of a street's name: "Садовая", "8", "1-я", "Тверская-Ямская", an
-// abbreviated "Б." or the connector "им.". A name needs one capitalised word,
-// so "пл. 50 кв. м" (an area) is not a street.
+// One word of a street's name: "…", "8", "…", an
+// abbreviated "…" or the connector "…". A name needs one capitalised word,
+// so "…" (an area) is not a street.
 std::optional<std::size_t> street_word_end(const std::string &text, std::size_t position,
                                            bool &capitalised) {
-  static constexpr std::string_view connector = "им.";
+  static constexpr std::string_view connector = "\320\270\320\274.";
   if (starts_with_at(text, position, connector)) return position + connector.size();
   const CodePoint first = code_point_at(text, position);
   if (!is_upper(first) && !is_digit(first)) return std::nullopt;
@@ -560,12 +560,12 @@ std::optional<std::size_t> street_word_end(const std::string &text, std::size_t 
   return end;
 }
 
-// The house, building, flat or office after a street: ", д. 5", " корп. 2",
-// ", кв. 12", "стр. 1А", "лит. Б". Its number starts with a digit or a capital.
+// The house, building, flat or office after a street: "…",
+// "…". Its number starts with a digit or a capital.
 std::optional<std::size_t> house_part_end(const std::string &text, std::size_t position) {
   static constexpr std::string_view markers[] = {
-      "д.", "дом", "корп.", "корпус", "к.", "стр.", "строение", "кв.", "квартира",
-      "оф.", "офис", "пом.", "помещение", "лит.", "литера",
+      "\320\264.", "\320\264\320\276\320\274", "\320\272\320\276\321\200\320\277.", "\320\272\320\276\321\200\320\277\321\203\321\201", "\320\272.", "\321\201\321\202\321\200.", "\321\201\321\202\321\200\320\276\320\265\320\275\320\270\320\265", "\320\272\320\262.", "\320\272\320\262\320\260\321\200\321\202\320\270\321\200\320\260",
+      "\320\276\321\204.", "\320\276\321\204\320\270\321\201", "\320\277\320\276\320\274.", "\320\277\320\276\320\274\320\265\321\211\320\265\320\275\320\270\320\265", "\320\273\320\270\321\202.", "\320\273\320\270\321\202\320\265\321\200\320\260",
   };
   std::size_t cursor = skip_spaces(text, position);
   if (cursor < text.size() && text[cursor] == ',') cursor = skip_spaces(text, cursor + 1);
@@ -573,7 +573,7 @@ std::optional<std::size_t> house_part_end(const std::string &text, std::size_t p
   for (const std::string_view marker : markers) {
     if (!starts_with_at(text, cursor, marker)) continue;
     std::size_t valueStart = cursor + marker.size();
-    // A whole word must end where it is written: "дома" is not "дом".
+    // A whole word must end where it is written: "…" is not "…".
     if (marker.back() != '.' && is_word(code_point_at(text, valueStart))) continue;
     valueStart = skip_spaces(text, valueStart);
     const CodePoint first = code_point_at(text, valueStart);
@@ -584,12 +584,12 @@ std::optional<std::size_t> house_part_end(const std::string &text, std::size_t p
 }
 
 // A Russian street address as it is usually written: a street marker, the
-// street's name, then the house, building and flat - "ул. Садовая, д. 5, кв.
+// street's name, then the house, building and flat - "… 5, …
 // 12". The semantic model finds the city in such an address but sends the
 // street and the flat in clear, and nothing else here knew their shape. The
 // whole run is one value, marker included; the postcode is already masked as
-// a number, and the city by the model. "пр." (also "приказ"), "пл." (also an
-// area) and "проспект" (also a securities prospectus) count only with a house
+// a number, and the city by the model. "…" (also "…"), "…" (also an
+// area) and "…" (also a securities prospectus) count only with a house
 // number after them.
 std::optional<std::pair<std::size_t, std::size_t>> russian_address_at(const std::string &text,
                                                                        std::size_t start) {
@@ -598,12 +598,12 @@ std::optional<std::pair<std::size_t, std::size_t>> russian_address_at(const std:
     bool needs_house;
   };
   static constexpr StreetMarker markers[] = {
-      {"ул.", false},      {"Ул.", false},      {"улица", false},    {"Улица", false},
-      {"пр-т", false},     {"пр-кт", false},    {"просп.", false},   {"проспект", true},
-      {"Проспект", true},  {"пр.", true},       {"пер.", false},     {"переулок", false},
-      {"Переулок", false}, {"ш.", false},       {"шоссе", false},    {"б-р", false},
-      {"бульвар", false},  {"Бульвар", false},  {"наб.", false},     {"набережная", false},
-      {"Набережная", false}, {"пл.", true},
+      {"\321\203\320\273.", false},      {"\320\243\320\273.", false},      {"\321\203\320\273\320\270\321\206\320\260", false},    {"\320\243\320\273\320\270\321\206\320\260", false},
+      {"\320\277\321\200-\321\202", false},     {"\320\277\321\200-\320\272\321\202", false},    {"\320\277\321\200\320\276\321\201\320\277.", false},   {"\320\277\321\200\320\276\321\201\320\277\320\265\320\272\321\202", true},
+      {"\320\237\321\200\320\276\321\201\320\277\320\265\320\272\321\202", true},  {"\320\277\321\200.", true},       {"\320\277\320\265\321\200.", false},     {"\320\277\320\265\321\200\320\265\321\203\320\273\320\276\320\272", false},
+      {"\320\237\320\265\321\200\320\265\321\203\320\273\320\276\320\272", false}, {"\321\210.", false},       {"\321\210\320\276\321\201\321\201\320\265", false},    {"\320\261-\321\200", false},
+      {"\320\261\321\203\320\273\321\214\320\262\320\260\321\200", false},  {"\320\221\321\203\320\273\321\214\320\262\320\260\321\200", false},  {"\320\275\320\260\320\261.", false},     {"\320\275\320\260\320\261\320\265\321\200\320\265\320\266\320\275\320\260\321\217", false},
+      {"\320\235\320\260\320\261\320\265\321\200\320\265\320\266\320\275\320\260\321\217", false}, {"\320\277\320\273.", true},
   };
   for (const StreetMarker &marker : markers) {
     if (!starts_with_at(text, start, marker.text)) continue;
@@ -634,14 +634,14 @@ std::optional<std::pair<std::size_t, std::size_t>> russian_address_at(const std:
 }
 
 // The same address with the street's name before its kind, as a document
-// often writes it: "Невский проспект, дом 28", "Тверская улица, д. 7",
-// "Ленинградское шоссе, д. 39, стр. 1". Only with a house number after it:
-// "Невский проспект" alone is a street anyone may name.
+// often writes it: "…",
+// "…". Only with a house number after it:
+// "…" alone is a street anyone may name.
 std::optional<std::pair<std::size_t, std::size_t>> russian_named_street_at(const std::string &text,
                                                                            std::size_t start) {
   static constexpr std::string_view kinds[] = {
-      "проспект", "улица", "переулок", "шоссе", "бульвар", "набережная", "площадь", "проезд",
-      "пр-т", "пр-кт", "просп.", "пр.", "ул.", "пер.", "ш.", "б-р", "наб.", "пл.",
+      "\320\277\321\200\320\276\321\201\320\277\320\265\320\272\321\202", "\321\203\320\273\320\270\321\206\320\260", "\320\277\320\265\321\200\320\265\321\203\320\273\320\276\320\272", "\321\210\320\276\321\201\321\201\320\265", "\320\261\321\203\320\273\321\214\320\262\320\260\321\200", "\320\275\320\260\320\261\320\265\321\200\320\265\320\266\320\275\320\260\321\217", "\320\277\320\273\320\276\321\211\320\260\320\264\321\214", "\320\277\321\200\320\276\320\265\320\267\320\264",
+      "\320\277\321\200-\321\202", "\320\277\321\200-\320\272\321\202", "\320\277\321\200\320\276\321\201\320\277.", "\320\277\321\200.", "\321\203\320\273.", "\320\277\320\265\321\200.", "\321\210.", "\320\261-\321\200", "\320\275\320\260\320\261.", "\320\277\320\273.",
   };
   bool capitalised = false;
   std::size_t cursor = start;
@@ -905,7 +905,7 @@ std::optional<std::pair<std::size_t, std::size_t>> english_mailbox_at(const std:
 }
 
 // A name word: a capital followed by small letters, hyphenated parts allowed
-// ("Римский-Корсаков"). An all-capitals word ("ООО") is not a name.
+// ("…"). An all-capitals word ("…") is not a name.
 std::optional<std::size_t> name_word_end(const std::string &text, std::size_t position) {
   const CodePoint first = code_point_at(text, position);
   if (!is_upper(first)) return std::nullopt;
@@ -930,7 +930,7 @@ std::optional<std::size_t> name_word_end(const std::string &text, std::size_t po
   return cursor;
 }
 
-// One or two initials: "А.И.", "А. И.", "А.".
+// One or two initials: "…".
 std::optional<std::size_t> initials_end(const std::string &text, std::size_t position) {
   std::optional<std::size_t> end;
   std::size_t cursor = position;
@@ -945,14 +945,14 @@ std::optional<std::size_t> initials_end(const std::string &text, std::size_t pos
   return end;
 }
 
-// The person named after «ИП» (an individual entrepreneur): "ИП Медведев
-// Алексей Игоревич", "ИП Медведев А.И.", "ИП А.И. Медведев". The semantic
+// The person named after «…» (an individual entrepreneur): "…
+// …", "…". The semantic
 // model reliably takes the first name and patronymic and leaves the surname
-// right after "ИП" in clear. The span is the name alone, so "ИП" stays
+// right after "…" in clear. The span is the name alone, so "…" stays
 // readable and says what kind of party this is.
 std::optional<std::pair<std::size_t, std::size_t>> entrepreneur_name_at(const std::string &text,
                                                                         std::size_t start) {
-  static constexpr std::string_view marker = "ИП";
+  static constexpr std::string_view marker = "\320\230\320\237";
   if (!starts_with_at(text, start, marker)) return std::nullopt;
   const std::size_t afterMarker = start + marker.size();
   const std::size_t nameStart = skip_spaces(text, afterMarker);
@@ -995,11 +995,11 @@ std::vector<Match> find_shape_matches(const std::string &text) {
 
 // A reference-style identifier in any script: capitals, perhaps with a few
 // figures after them, then two or three groups of figures joined by hyphens or
-// slashes - "З-082/26", "СП-121/26", "ТЛ-14/2026", "А40-12345/2026". The same
+// slashes - "…". The same
 // shape as identifier_pattern's first form, which reads Latin letters only: a
 // Russian claims register (24 Sep 2026) sent four application numbers such as
-// "З-082/26" in clear where the semantic model found the other four.
-// Where a code's letter part ends: "/П", "/B", "-А" - a slash or a hyphen, one
+// "…" in clear where the semantic model found the other four.
+// Where a code's letter part ends: "…", "/B", "…" - a slash or a hyphen, one
 // to three capitals, and nothing of a word after them. `position` itself when
 // none stands there.
 std::size_t code_letter_suffix_end(const std::string &text, std::size_t position) {
@@ -1054,7 +1054,7 @@ std::vector<Match> find_code_identifier_matches(const std::string &text) {
       widest = std::max(widest, digits);
       ++groups;
     }
-    // A code closed by a letter part - "ФП-044/П", "ИТ-112/25-А": one group
+    // A code closed by a letter part - "…": one group
     // of figures and its letters are the code as much as two groups are.
     if (groups >= 1) {
       const std::size_t suffixEnd = code_letter_suffix_end(text, cursor);
@@ -1063,7 +1063,7 @@ std::vector<Match> find_code_identifier_matches(const std::string &text) {
         ++groups;
       }
     }
-    // One group is a code where a number's sign stands before it ("№ ФП-044"),
+    // One group is a code where a number's sign stands before it ("…"),
     // or where it has four figures or more after capitals: "Invoice AMS-44871",
     // "KR-OPT-2291". A short one - "COVID-19", "Covid-19", "B-52" - is a name.
     const bool oneGroup = groups == 1 && (after_number_sign(text, start) || (letters >= 2 && widest >= 4));
@@ -1081,12 +1081,12 @@ std::vector<Match> find_code_identifier_matches(const std::string &text) {
 // "Purchase price ($m)" is the most sensitive number of a deal; "Row 10" and
 // "12 months" are nobody's secret. The words that say what a number is are
 // data, in English and Russian: an entry ending in '*' is a stem that every
-// form beginning with it matches ("стоимост*": стоимость, стоимости,
-// стоимостью), any other entry the whole word. Words are compared in lower
-// case, "ё" as "е".
+// form beginning with it matches ("…": …,
+// …), any other entry the whole word. Words are compared in lower
+// case, "…" as "…".
 
 // Money named before a number or in a label: "purchase price of 12", "Fees",
-// "Exposure", "Стоимость услуг, ₽", "Сумма убытков", "Итого".
+// "Exposure", "…".
 constexpr std::string_view kMoneyWords[] = {
     "price", "prices", "priced", "pricing", "cost", "costs", "fee", "fees", "amount", "amounts", "payment",
     "payments", "pay", "pays", "paid", "payable", "repayment", "prepayment", "consideration", "salary", "salaries",
@@ -1098,43 +1098,43 @@ constexpr std::string_view kMoneyWords[] = {
     "balances", "capital", "proceeds", "dividend", "dividends", "expense", "expenses", "expenditure", "charge",
     "charges", "reimbursement", "settlement", "award", "funding", "investment", "cash", "cap", "caps", "liability",
     "liabilities", "premium", "premiums", "tax", "taxes", "tariff", "tariffs", "worth", "vat", "gst", "cam",
-    "insurance", "utilities", "arrears", "ндс", "коммунальн*",
+    "insurance", "utilities", "arrears", "\320\275\320\264\321\201", "\320\272\320\276\320\274\320\274\321\203\320\275\320\260\320\273\321\214\320\275*",
     // What is owed, awarded, bought or billed: "owes 12", "a judgment of 12", "invoiced 12".
     // Never a record's own name ("Claim 12", "Invoice 12345"), which may number it, nor "owes",
     // which counts things as often ("owes 12 x 100 units").
     "judgment", "judgments", "judgement", "judgements", "verdict", "claimed",
     "purchased", "invoiced", "billed", "refund", "refunds", "reimbursed",
-    "уплат*", "перечисл*", "возмещ*", "взнос*", "взыскива*", "присужд*",
-    "цена", "цены", "цене", "цену", "ценой", "ценою", "цен", "ценам", "ценами", "ценах", "стоимост*", "сумм*",
-    "оплат*", "плата", "платы", "плате", "плату", "платой", "платою", "платам", "платами", "платах", "платеж*",
-    "платн*", "выплат*", "вознагражден*", "неустойк*", "штраф*", "пени", "пеня", "пеней", "убыт*", "ущерб*",
-    "компенсац*", "задолженност*", "долг", "долга", "долгу", "долгом", "долге", "долги", "долгов", "выручк*",
-    "прибыл*", "доход*", "расход*", "затрат*", "бюджет*", "аванс*", "депозит*", "залог*", "кредит*", "займ*",
-    "заем", "аренд*", "роялти", "комисси*", "гонорар*", "зарплат*", "заработн*", "оклад*", "преми*", "лимит*",
-    "предел*", "итог", "итого", "итогов*", "остат*", "требовани*", "взыскан*", "размер*", "капитал*",
-    "дивиденд*", "налог*", "тариф*",
+    "\321\203\320\277\320\273\320\260\321\202*", "\320\277\320\265\321\200\320\265\321\207\320\270\321\201\320\273*", "\320\262\320\276\320\267\320\274\320\265\321\211*", "\320\262\320\267\320\275\320\276\321\201*", "\320\262\320\267\321\213\321\201\320\272\320\270\320\262\320\260*", "\320\277\321\200\320\270\321\201\321\203\320\266\320\264*",
+    "\321\206\320\265\320\275\320\260", "\321\206\320\265\320\275\321\213", "\321\206\320\265\320\275\320\265", "\321\206\320\265\320\275\321\203", "\321\206\320\265\320\275\320\276\320\271", "\321\206\320\265\320\275\320\276\321\216", "\321\206\320\265\320\275", "\321\206\320\265\320\275\320\260\320\274", "\321\206\320\265\320\275\320\260\320\274\320\270", "\321\206\320\265\320\275\320\260\321\205", "\321\201\321\202\320\276\320\270\320\274\320\276\321\201\321\202*", "\321\201\321\203\320\274\320\274*",
+    "\320\276\320\277\320\273\320\260\321\202*", "\320\277\320\273\320\260\321\202\320\260", "\320\277\320\273\320\260\321\202\321\213", "\320\277\320\273\320\260\321\202\320\265", "\320\277\320\273\320\260\321\202\321\203", "\320\277\320\273\320\260\321\202\320\276\320\271", "\320\277\320\273\320\260\321\202\320\276\321\216", "\320\277\320\273\320\260\321\202\320\260\320\274", "\320\277\320\273\320\260\321\202\320\260\320\274\320\270", "\320\277\320\273\320\260\321\202\320\260\321\205", "\320\277\320\273\320\260\321\202\320\265\320\266*",
+    "\320\277\320\273\320\260\321\202\320\275*", "\320\262\321\213\320\277\320\273\320\260\321\202*", "\320\262\320\276\320\267\320\275\320\260\320\263\321\200\320\260\320\266\320\264\320\265\320\275*", "\320\275\320\265\321\203\321\201\321\202\320\276\320\271\320\272*", "\321\210\321\202\321\200\320\260\321\204*", "\320\277\320\265\320\275\320\270", "\320\277\320\265\320\275\321\217", "\320\277\320\265\320\275\320\265\320\271", "\321\203\320\261\321\213\321\202*", "\321\203\321\211\320\265\321\200\320\261*",
+    "\320\272\320\276\320\274\320\277\320\265\320\275\321\201\320\260\321\206*", "\320\267\320\260\320\264\320\276\320\273\320\266\320\265\320\275\320\275\320\276\321\201\321\202*", "\320\264\320\276\320\273\320\263", "\320\264\320\276\320\273\320\263\320\260", "\320\264\320\276\320\273\320\263\321\203", "\320\264\320\276\320\273\320\263\320\276\320\274", "\320\264\320\276\320\273\320\263\320\265", "\320\264\320\276\320\273\320\263\320\270", "\320\264\320\276\320\273\320\263\320\276\320\262", "\320\262\321\213\321\200\321\203\321\207\320\272*",
+    "\320\277\321\200\320\270\320\261\321\213\320\273*", "\320\264\320\276\321\205\320\276\320\264*", "\321\200\320\260\321\201\321\205\320\276\320\264*", "\320\267\320\260\321\202\321\200\320\260\321\202*", "\320\261\321\216\320\264\320\266\320\265\321\202*", "\320\260\320\262\320\260\320\275\321\201*", "\320\264\320\265\320\277\320\276\320\267\320\270\321\202*", "\320\267\320\260\320\273\320\276\320\263*", "\320\272\321\200\320\265\320\264\320\270\321\202*", "\320\267\320\260\320\271\320\274*",
+    "\320\267\320\260\320\265\320\274", "\320\260\321\200\320\265\320\275\320\264*", "\321\200\320\276\321\217\320\273\321\202\320\270", "\320\272\320\276\320\274\320\270\321\201\321\201\320\270*", "\320\263\320\276\320\275\320\276\321\200\320\260\321\200*", "\320\267\320\260\321\200\320\277\320\273\320\260\321\202*", "\320\267\320\260\321\200\320\260\320\261\320\276\321\202\320\275*", "\320\276\320\272\320\273\320\260\320\264*", "\320\277\321\200\320\265\320\274\320\270*", "\320\273\320\270\320\274\320\270\321\202*",
+    "\320\277\321\200\320\265\320\264\320\265\320\273*", "\320\270\321\202\320\276\320\263", "\320\270\321\202\320\276\320\263\320\276", "\320\270\321\202\320\276\320\263\320\276\320\262*", "\320\276\321\201\321\202\320\260\321\202*", "\321\202\321\200\320\265\320\261\320\276\320\262\320\260\320\275\320\270*", "\320\262\320\267\321\213\321\201\320\272\320\260\320\275*", "\321\200\320\260\320\267\320\274\320\265\321\200*", "\320\272\320\260\320\277\320\270\321\202\320\260\320\273*",
+    "\320\264\320\270\320\262\320\270\320\264\320\265\320\275\320\264*", "\320\275\320\260\320\273\320\276\320\263*", "\321\202\320\260\321\200\320\270\321\204*",
 };
 
 // A financial ratio a company keeps confidential, named in a label: "Gross
-// margin", "Ownership %", "Adjusted EBITDA margin", "IRR", "Доля участия".
+// margin", "Ownership %", "Adjusted EBITDA margin", "IRR", "…".
 constexpr std::string_view kRatioWords[] = {
     "margin", "margins", "ownership", "owned", "stake", "stakes", "shareholding", "shareholdings", "equity", "irr",
     "roi", "roe", "roic", "roa", "moic", "wacc", "cagr", "yield", "yields", "interest", "coupon", "dilution",
     "discount", "markup", "mark-up",
-    "марж*", "рентабельност*", "доля", "доли", "долю", "долей", "долям", "долями", "долях", "владени*", "ставк*",
-    "доходност*", "дисконт*", "процентн*", "наценк*", "скидк*",
+    "\320\274\320\260\321\200\320\266*", "\321\200\320\265\320\275\321\202\320\260\320\261\320\265\320\273\321\214\320\275\320\276\321\201\321\202*", "\320\264\320\276\320\273\321\217", "\320\264\320\276\320\273\320\270", "\320\264\320\276\320\273\321\216", "\320\264\320\276\320\273\320\265\320\271", "\320\264\320\276\320\273\321\217\320\274", "\320\264\320\276\320\273\321\217\320\274\320\270", "\320\264\320\276\320\273\321\217\321\205", "\320\262\320\273\320\260\320\264\320\265\320\275\320\270*", "\321\201\321\202\320\260\320\262\320\272*",
+    "\320\264\320\276\321\205\320\276\320\264\320\275\320\276\321\201\321\202*", "\320\264\320\270\321\201\320\272\320\276\320\275\321\202*", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\275*", "\320\275\320\260\321\206\320\265\320\275\320\272*", "\321\201\320\272\320\270\320\264\320\272*",
 };
 
 // A party's holding named in a label or after a count: "Shares", "Units",
-// "Membership Interests", «Количество акций», «паев».
+// "Membership Interests", «…».
 constexpr std::string_view kHoldingWords[] = {
     "share", "shares", "units", "membership", "stock", "stockholding", "interests", "options", "warrants", "rsus",
     "rsu",
-    "акци*", "пай", "паи", "паев", "паёв", "пая", "паю", "паем", "паями", "паях", "облигаци*",
+    "\320\260\320\272\321\206\320\270*", "\320\277\320\260\320\271", "\320\277\320\260\320\270", "\320\277\320\260\320\265\320\262", "\320\277\320\260\321\221\320\262", "\320\277\320\260\321\217", "\320\277\320\260\321\216", "\320\277\320\260\320\265\320\274", "\320\277\320\260\321\217\320\274\320\270", "\320\277\320\260\321\217\321\205", "\320\276\320\261\320\273\320\270\320\263\320\260\321\206\320\270*",
 };
 
 // An identifier named before its number or in a label: "Account suffix 12",
-// "ИНН 7710482917", "паспорт 45 18" ("р/с" and "к/с": see
+// "…" ("…" and "…": see
 // account_abbreviation_before()).
 constexpr std::string_view kIdentifierWords[] = {
     "account", "accounts", "acct", "iban", "swift", "bic", "routing", "aba", "suffix", "passport", "passports", "ssn",
@@ -1142,25 +1142,24 @@ constexpr std::string_view kIdentifierWords[] = {
     // A vehicle's, a patient's, a driver's: "VIN 1HGCM82633A004352", "Medicare MBI 1EG4-TE5-MK73",
     // "Driver's license D1234567", "NPI 1234567893", "MRN 00482211".
     "vin", "mbi", "hicn", "npi", "mrn", "dl", "license", "licence",
-    "инн", "огрн", "огрнип", "кпп", "бик", "окпо", "октмо", "окато", "снилс", "паспорт*", "серия", "серии",
-    "номер", "номера", "номеру", "номером", "номере", "счет", "счета", "счету", "счетом", "счете", "счетов",
-    "лицев*", "расчетн*", "корреспондентск*", "идентификатор*", "регистрационн*",
+    "\320\270\320\275\320\275", "\320\276\320\263\321\200\320\275", "\320\276\320\263\321\200\320\275\320\270\320\277", "\320\272\320\277\320\277", "\320\261\320\270\320\272", "\320\276\320\272\320\277\320\276", "\320\276\320\272\321\202\320\274\320\276", "\320\276\320\272\320\260\321\202\320\276", "\321\201\320\275\320\270\320\273\321\201", "\320\277\320\260\321\201\320\277\320\276\321\200\321\202*", "\321\201\320\265\321\200\320\270\321\217", "\321\201\320\265\321\200\320\270\320\270",
+    "\320\275\320\276\320\274\320\265\321\200", "\320\275\320\276\320\274\320\265\321\200\320\260", "\320\275\320\276\320\274\320\265\321\200\321\203", "\320\275\320\276\320\274\320\265\321\200\320\276\320\274", "\320\275\320\276\320\274\320\265\321\200\320\265", "\321\201\321\207\320\265\321\202", "\321\201\321\207\320\265\321\202\320\260", "\321\201\321\207\320\265\321\202\321\203", "\321\201\321\207\320\265\321\202\320\276\320\274", "\321\201\321\207\320\265\321\202\320\265", "\321\201\321\207\320\265\321\202\320\276\320\262",
+    "\320\273\320\270\321\206\320\265\320\262*", "\321\200\320\260\321\201\321\207\320\265\321\202\320\275*", "\320\272\320\276\321\200\321\200\320\265\321\201\320\277\320\276\320\275\320\264\320\265\320\275\321\202\321\201\320\272*", "\320\270\320\264\320\265\320\275\321\202\320\270\321\204\320\270\320\272\320\260\321\202\320\276\321\200*", "\321\200\320\265\320\263\320\270\321\201\321\202\321\200\320\260\321\206\320\270\320\276\320\275\320\275*",
 };
 
 // A record a code identifies: "employee ID", "staff number", "policy No.",
-// "табельный номер".
 constexpr std::string_view kRecordWords[] = {
     "employee", "employees", "staff", "personnel", "member", "badge", "customer", "client", "account", "policy",
     "claim", "case", "file", "matter", "order", "invoice", "contract", "patient", "student", "vehicle", "loan",
-    "табельный", "табельного", "сотрудника", "работника", "клиента", "полиса", "счета", "договора", "заявки",
-    "претензии", "дела", "пропуска", "удостоверения",
+    "\321\202\320\260\320\261\320\265\320\273\321\214\320\275\321\213\320\271", "\321\202\320\260\320\261\320\265\320\273\321\214\320\275\320\276\320\263\320\276", "\321\201\320\276\321\202\321\200\321\203\320\264\320\275\320\270\320\272\320\260", "\321\200\320\260\320\261\320\276\321\202\320\275\320\270\320\272\320\260", "\320\272\320\273\320\270\320\265\320\275\321\202\320\260", "\320\277\320\276\320\273\320\270\321\201\320\260", "\321\201\321\207\320\265\321\202\320\260", "\320\264\320\276\320\263\320\276\320\262\320\276\321\200\320\260", "\320\267\320\260\321\217\320\262\320\272\320\270",
+    "\320\277\321\200\320\265\321\202\320\265\320\275\320\267\320\270\320\270", "\320\264\320\265\320\273\320\260", "\320\277\321\200\320\276\320\277\321\203\321\201\320\272\320\260", "\321\203\320\264\320\276\321\201\321\202\320\276\320\262\320\265\321\200\320\265\320\275\320\270\321\217",
 };
 
-// What names a record's code after the record: "No.", "number", "code", "номер".
-constexpr std::string_view kCodeSigns[] = {"no", "nr", "number", "num", "code", "номер", "код"};
+// What names a record's code after the record: "No.", "number", "code", "…".
+constexpr std::string_view kCodeSigns[] = {"no", "nr", "number", "num", "code", "\320\275\320\276\320\274\320\265\321\200", "\320\272\320\276\320\264"};
 
 // A place in a document or a sheet, written before its number: "Row 10",
-// "Section 12", "п. 9.4", "ст. 401", "Приложение № 2".
+// "Section 12", "…".
 constexpr std::string_view kStructureWords[] = {
     "row", "rows", "column", "columns", "col", "cols", "cell", "cells", "line", "lines", "page", "pages", "p", "pp",
     "section", "sections", "sec", "article", "articles", "art", "clause", "clauses", "paragraph", "paragraphs",
@@ -1171,58 +1170,57 @@ constexpr std::string_view kStructureWords[] = {
     "sheet", "sheets", "slide", "slides", "question", "questions", "title", "titles", "volume", "vol", "level",
     "levels", "stage", "stages", "phase", "phases", "round", "rounds", "tier", "tiers", "version", "ver", "draft",
     "edition",
-    "п", "пп", "подп", "пункт*", "подпункт*", "ст", "статья", "статьи", "статье", "статью", "статьей", "статьею",
-    "статей", "статьям", "статьями", "статьях", "раздел*", "подраздел*", "глава", "главы", "главе", "главу",
-    "главой", "глав", "главам", "главами", "главах", "ч", "часть", "части", "частью", "частей", "частям", "частями",
-    "частях", "абз", "абзац*", "приложени*", "строк*", "столбец", "столбца", "столбцу", "столбцом", "столбце",
-    "столбцы", "столбцов", "лист", "листа", "листе", "листу", "листом", "листы", "листов", "страниц*", "стр",
-    "таблиц*", "рис", "рисун*", "примечани*", "сноск*", "шаг", "шага", "шаге", "этап*", "вопрос*", "том", "тома",
-    "томе", "уровень", "уровн*", "раунд*", "верси*", "редакци*", "позици*", "ячейк*",
+    "\320\277", "\320\277\320\277", "\320\277\320\276\320\264\320\277", "\320\277\321\203\320\275\320\272\321\202*", "\320\277\320\276\320\264\320\277\321\203\320\275\320\272\321\202*", "\321\201\321\202", "\321\201\321\202\320\260\321\202\321\214\321\217", "\321\201\321\202\320\260\321\202\321\214\320\270", "\321\201\321\202\320\260\321\202\321\214\320\265", "\321\201\321\202\320\260\321\202\321\214\321\216", "\321\201\321\202\320\260\321\202\321\214\320\265\320\271", "\321\201\321\202\320\260\321\202\321\214\320\265\321\216",
+    "\321\201\321\202\320\260\321\202\320\265\320\271", "\321\201\321\202\320\260\321\202\321\214\321\217\320\274", "\321\201\321\202\320\260\321\202\321\214\321\217\320\274\320\270", "\321\201\321\202\320\260\321\202\321\214\321\217\321\205", "\321\200\320\260\320\267\320\264\320\265\320\273*", "\320\277\320\276\320\264\321\200\320\260\320\267\320\264\320\265\320\273*", "\320\263\320\273\320\260\320\262\320\260", "\320\263\320\273\320\260\320\262\321\213", "\320\263\320\273\320\260\320\262\320\265", "\320\263\320\273\320\260\320\262\321\203",
+    "\320\263\320\273\320\260\320\262\320\276\320\271", "\320\263\320\273\320\260\320\262", "\320\263\320\273\320\260\320\262\320\260\320\274", "\320\263\320\273\320\260\320\262\320\260\320\274\320\270", "\320\263\320\273\320\260\320\262\320\260\321\205", "\321\207", "\321\207\320\260\321\201\321\202\321\214", "\321\207\320\260\321\201\321\202\320\270", "\321\207\320\260\321\201\321\202\321\214\321\216", "\321\207\320\260\321\201\321\202\320\265\320\271", "\321\207\320\260\321\201\321\202\321\217\320\274", "\321\207\320\260\321\201\321\202\321\217\320\274\320\270",
+    "\321\207\320\260\321\201\321\202\321\217\321\205", "\320\260\320\261\320\267", "\320\260\320\261\320\267\320\260\321\206*", "\320\277\321\200\320\270\320\273\320\276\320\266\320\265\320\275\320\270*", "\321\201\321\202\321\200\320\276\320\272*", "\321\201\321\202\320\276\320\273\320\261\320\265\321\206", "\321\201\321\202\320\276\320\273\320\261\321\206\320\260", "\321\201\321\202\320\276\320\273\320\261\321\206\321\203", "\321\201\321\202\320\276\320\273\320\261\321\206\320\276\320\274", "\321\201\321\202\320\276\320\273\320\261\321\206\320\265",
+    "\321\201\321\202\320\276\320\273\320\261\321\206\321\213", "\321\201\321\202\320\276\320\273\320\261\321\206\320\276\320\262", "\320\273\320\270\321\201\321\202", "\320\273\320\270\321\201\321\202\320\260", "\320\273\320\270\321\201\321\202\320\265", "\320\273\320\270\321\201\321\202\321\203", "\320\273\320\270\321\201\321\202\320\276\320\274", "\320\273\320\270\321\201\321\202\321\213", "\320\273\320\270\321\201\321\202\320\276\320\262", "\321\201\321\202\321\200\320\260\320\275\320\270\321\206*", "\321\201\321\202\321\200",
+    "\321\202\320\260\320\261\320\273\320\270\321\206*", "\321\200\320\270\321\201", "\321\200\320\270\321\201\321\203\320\275*", "\320\277\321\200\320\270\320\274\320\265\321\207\320\260\320\275\320\270*", "\321\201\320\275\320\276\321\201\320\272*", "\321\210\320\260\320\263", "\321\210\320\260\320\263\320\260", "\321\210\320\260\320\263\320\265", "\321\215\321\202\320\260\320\277*", "\320\262\320\276\320\277\321\200\320\276\321\201*", "\321\202\320\276\320\274", "\321\202\320\276\320\274\320\260",
+    "\321\202\320\276\320\274\320\265", "\321\203\321\200\320\276\320\262\320\265\320\275\321\214", "\321\203\321\200\320\276\320\262\320\275*", "\321\200\320\260\321\203\320\275\320\264*", "\320\262\320\265\321\200\321\201\320\270*", "\321\200\320\265\320\264\320\260\320\272\321\206\320\270*", "\320\277\320\276\320\267\320\270\321\206\320\270*", "\321\217\321\207\320\265\320\271\320\272*",
 };
 
-// A length of time after a number: "12 months", "60 days", "12 месяцев".
+// A length of time after a number: "12 months", "60 days", "…".
 constexpr std::string_view kTimeUnits[] = {
     "second", "seconds", "sec", "secs", "minute", "minutes", "min", "mins", "hour", "hours", "hr", "hrs", "day",
     "days", "week", "weeks", "wk", "wks", "month", "months", "mo", "mos", "year", "years", "yr", "yrs", "quarter",
     "quarters", "decade", "decades",
-    "секунд*", "минут*", "час", "часа", "часов", "часам", "часами", "часах", "часу", "сутки", "суток", "сут",
-    "день", "дня", "дней", "дням", "днями", "днях", "дн", "недел*", "месяц*", "мес", "квартал*", "год", "года",
-    "году", "годом", "годам", "годами", "годах", "лет", "полугод*",
+    "\321\201\320\265\320\272\321\203\320\275\320\264*", "\320\274\320\270\320\275\321\203\321\202*", "\321\207\320\260\321\201", "\321\207\320\260\321\201\320\260", "\321\207\320\260\321\201\320\276\320\262", "\321\207\320\260\321\201\320\260\320\274", "\321\207\320\260\321\201\320\260\320\274\320\270", "\321\207\320\260\321\201\320\260\321\205", "\321\207\320\260\321\201\321\203", "\321\201\321\203\321\202\320\272\320\270", "\321\201\321\203\321\202\320\276\320\272", "\321\201\321\203\321\202",
+    "\320\264\320\265\320\275\321\214", "\320\264\320\275\321\217", "\320\264\320\275\320\265\320\271", "\320\264\320\275\321\217\320\274", "\320\264\320\275\321\217\320\274\320\270", "\320\264\320\275\321\217\321\205", "\320\264\320\275", "\320\275\320\265\320\264\320\265\320\273*", "\320\274\320\265\321\201\321\217\321\206*", "\320\274\320\265\321\201", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273*", "\320\263\320\276\320\264", "\320\263\320\276\320\264\320\260",
+    "\320\263\320\276\320\264\321\203", "\320\263\320\276\320\264\320\276\320\274", "\320\263\320\276\320\264\320\260\320\274", "\320\263\320\276\320\264\320\260\320\274\320\270", "\320\263\320\276\320\264\320\260\321\205", "\320\273\320\265\321\202", "\320\277\320\276\320\273\321\203\320\263\320\276\320\264*",
 };
 
 // What may stand between a number and its unit of time: "10 business days",
-// "5 рабочих дней".
 constexpr std::string_view kTimeQualifiers[] = {
     "business", "calendar", "working", "banking", "consecutive", "full", "additional", "rolling", "trading",
-    "рабоч*", "календарн*", "банковск*", "полн*", "последовательн*", "дополнительн*",
+    "\321\200\320\260\320\261\320\276\321\207*", "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275*", "\320\261\320\260\320\275\320\272\320\276\320\262\321\201\320\272*", "\320\277\320\276\320\273\320\275*", "\320\277\320\276\321\201\320\273\320\265\320\264\320\276\320\262\320\260\321\202\320\265\320\273\321\214\320\275*", "\320\264\320\276\320\277\320\276\320\273\320\275\320\270\321\202\320\265\320\273\321\214\320\275*",
 };
 
-// A count of things after a number: "3 copies", "2 экземпляра", "12 pages".
+// A count of things after a number: "3 copies", "…", "12 pages".
 constexpr std::string_view kCountUnits[] = {
     "copy", "copies", "pcs", "piece", "pieces", "item", "items", "page", "pages", "times", "counterpart",
     "counterparts", "original", "originals",
-    "шт", "штук*", "экземпляр*", "копия", "копии", "копий", "копиях", "копиями", "страниц*", "лист", "листа",
-    "листах", "листов", "раз", "раза",
+    "\321\210\321\202", "\321\210\321\202\321\203\320\272*", "\321\215\320\272\320\267\320\265\320\274\320\277\320\273\321\217\321\200*", "\320\272\320\276\320\277\320\270\321\217", "\320\272\320\276\320\277\320\270\320\270", "\320\272\320\276\320\277\320\270\320\271", "\320\272\320\276\320\277\320\270\321\217\321\205", "\320\272\320\276\320\277\320\270\321\217\320\274\320\270", "\321\201\321\202\321\200\320\260\320\275\320\270\321\206*", "\320\273\320\270\321\201\321\202", "\320\273\320\270\321\201\321\202\320\260",
+    "\320\273\320\270\321\201\321\202\320\260\321\205", "\320\273\320\270\321\201\321\202\320\276\320\262", "\321\200\320\260\320\267", "\321\200\320\260\320\267\320\260",
 };
 
 // A plain scalar, named before a number or in a label: "a probability of 0.64",
-// "Weighting factor", "коэффициент 1,5".
+// "Weighting factor", "…".
 constexpr std::string_view kScalarWords[] = {
     "factor", "factors", "coefficient", "coefficients", "multiplier", "weight", "weighting", "probability",
     "likelihood", "score", "scores", "rating", "ratings", "index", "count", "quantity", "qty", "headcount",
-    "коэффициент*", "множител*", "вероятност*", "балл*", "рейтинг*", "индекс*", "количеств*", "кол-во", "число",
-    "числа", "численност*",
+    "\320\272\320\276\321\215\321\204\321\204\320\270\321\206\320\270\320\265\320\275\321\202*", "\320\274\320\275\320\276\320\266\320\270\321\202\320\265\320\273*", "\320\262\320\265\321\200\320\276\321\217\321\202\320\275\320\276\321\201\321\202*", "\320\261\320\260\320\273\320\273*", "\321\200\320\265\320\271\321\202\320\270\320\275\320\263*", "\320\270\320\275\320\264\320\265\320\272\321\201*", "\320\272\320\276\320\273\320\270\321\207\320\265\321\201\321\202\320\262*", "\320\272\320\276\320\273-\320\262\320\276", "\321\207\320\270\321\201\320\273\320\276",
+    "\321\207\320\270\321\201\320\273\320\260", "\321\207\320\270\321\201\320\273\320\265\320\275\320\275\320\276\321\201\321\202*",
 };
 
 // What joins a scalar's name to its number: "probability of 0.64".
-constexpr std::string_view kScalarLinks[] = {"of", "is", "at", "equals", "равен", "равна", "равно", "составляет"};
+constexpr std::string_view kScalarLinks[] = {"of", "is", "at", "equals", "\321\200\320\260\320\262\320\265\320\275", "\321\200\320\260\320\262\320\275\320\260", "\321\200\320\260\320\262\320\275\320\276", "\321\201\320\276\321\201\321\202\320\260\320\262\320\273\321\217\320\265\321\202"};
 
-// A currency after a number: "12 dollars", "2 064 рубля".
+// A currency after a number: "12 dollars", "…".
 constexpr std::string_view kCurrencyWords[] = {
     "dollar", "dollars", "euro", "euros", "pound", "pounds", "sterling", "ruble", "rubles", "rouble", "roubles",
     "yen", "yuan", "renminbi", "franc", "francs", "cent", "cents",
-    "руб", "рубл*", "коп", "копе*", "доллар*", "долл", "евро", "юан*", "фунт*", "франк*", "иен*", "цент", "цента",
-    "центов", "тенге", "гривн*",
+    "\321\200\321\203\320\261", "\321\200\321\203\320\261\320\273*", "\320\272\320\276\320\277", "\320\272\320\276\320\277\320\265*", "\320\264\320\276\320\273\320\273\320\260\321\200*", "\320\264\320\276\320\273\320\273", "\320\265\320\262\321\200\320\276", "\321\216\320\260\320\275*", "\321\204\321\203\320\275\321\202*", "\321\204\321\200\320\260\320\275\320\272*", "\320\270\320\265\320\275*", "\321\206\320\265\320\275\321\202", "\321\206\320\265\320\275\321\202\320\260",
+    "\321\206\320\265\320\275\321\202\320\276\320\262", "\321\202\320\265\320\275\320\263\320\265", "\320\263\321\200\320\270\320\262\320\275*",
 };
 
 // A currency's code, before a number or after it: "USD 12", "12 EUR".
@@ -1231,11 +1229,11 @@ constexpr std::string_view kCurrencyCodes[] = {
     "czk", "huf", "inr", "krw", "sgd", "hkd", "aed", "sar", "kzt", "uah", "byn", "zar", "brl", "mxn", "ils",
 };
 
-// A scale after a number: "12 million", "3,45 млн", "250 тыс.".
+// A scale after a number: "12 million", "…".
 constexpr std::string_view kScaleWords[] = {
     "thousand", "thousands", "million", "millions", "billion", "billions", "trillion", "trillions", "mn", "mln",
     "bn", "tn",
-    "тыс", "тысяч*", "млн", "миллион*", "млрд", "миллиард*", "трлн", "триллион*",
+    "\321\202\321\213\321\201", "\321\202\321\213\321\201\321\217\321\207*", "\320\274\320\273\320\275", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275*", "\320\274\320\273\321\200\320\264", "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264*", "\321\202\321\200\320\273\320\275", "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275*",
 };
 
 // A scale written glued to its number that says money by itself: "250k". The
@@ -1246,67 +1244,66 @@ constexpr std::string_view kGluedScales[] = {"k"};
 // "USD 12mm". Alone "12m" may be twelve months and "9B" a clause.
 constexpr std::string_view kScaleSuffixes[] = {"k", "m", "mm", "b", "bn", "mn", "mln", "tn"};
 
-// A percentage after a number: "15 %", "15 percent", "15 процентов", "10 bps".
-constexpr std::string_view kPercentWords[] = {"percent", "percentage", "percentages", "pct", "bps", "bp", "процент*", "проц"};
+// A percentage after a number: "15 %", "15 percent", "…", "10 bps".
+constexpr std::string_view kPercentWords[] = {"percent", "percentage", "percentages", "pct", "bps", "bp", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202*", "\320\277\321\200\320\276\321\206"};
 
-// Number words restating an amount in brackets: "50 000 000 (пятидесяти
-// миллионов) рублей", "1,000 (one thousand) dollars".
+// Number words restating an amount in brackets: "50 000 000 (…
+// …) …", "1,000 (one thousand) dollars".
 constexpr std::string_view kNumberWords[] = {
     "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
     "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty",
     "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "hundreds", "thousand", "thousands", "million",
     "millions", "billion", "billions", "trillion", "and", "point",
-    "нол*", "нул*", "один", "одн*", "два", "две", "двух", "двум", "двумя", "три", "трех", "трем", "тремя", "четыр*",
-    "пят*", "шест*", "сем*", "восем*", "восьм*", "девят*", "десят*", "одиннадц*", "двенадц*", "тринадц*",
-    "четырнадц*", "пятнадц*", "шестнадц*", "семнадц*", "восемнадц*", "девятнадц*", "двадцат*", "тридцат*",
-    "сорок*", "девяност*", "сто", "ста", "стам", "стами", "стах", "сот*", "двест*", "трист*", "четырест*",
-    "тысяч*", "тыс", "миллион*", "млн", "миллиард*", "млрд", "триллион*", "полтор*", "полутор*", "целых", "целая",
-    "десятых", "сотых", "тысячных",
+    "\320\275\320\276\320\273*", "\320\275\321\203\320\273*", "\320\276\320\264\320\270\320\275", "\320\276\320\264\320\275*", "\320\264\320\262\320\260", "\320\264\320\262\320\265", "\320\264\320\262\321\203\321\205", "\320\264\320\262\321\203\320\274", "\320\264\320\262\321\203\320\274\321\217", "\321\202\321\200\320\270", "\321\202\321\200\320\265\321\205", "\321\202\321\200\320\265\320\274", "\321\202\321\200\320\265\320\274\321\217", "\321\207\320\265\321\202\321\213\321\200*",
+    "\320\277\321\217\321\202*", "\321\210\320\265\321\201\321\202*", "\321\201\320\265\320\274*", "\320\262\320\276\321\201\320\265\320\274*", "\320\262\320\276\321\201\321\214\320\274*", "\320\264\320\265\320\262\321\217\321\202*", "\320\264\320\265\321\201\321\217\321\202*", "\320\276\320\264\320\270\320\275\320\275\320\260\320\264\321\206*", "\320\264\320\262\320\265\320\275\320\260\320\264\321\206*", "\321\202\321\200\320\270\320\275\320\260\320\264\321\206*",
+    "\321\207\320\265\321\202\321\213\321\200\320\275\320\260\320\264\321\206*", "\320\277\321\217\321\202\320\275\320\260\320\264\321\206*", "\321\210\320\265\321\201\321\202\320\275\320\260\320\264\321\206*", "\321\201\320\265\320\274\320\275\320\260\320\264\321\206*", "\320\262\320\276\321\201\320\265\320\274\320\275\320\260\320\264\321\206*", "\320\264\320\265\320\262\321\217\321\202\320\275\320\260\320\264\321\206*", "\320\264\320\262\320\260\320\264\321\206\320\260\321\202*", "\321\202\321\200\320\270\320\264\321\206\320\260\321\202*",
+    "\321\201\320\276\321\200\320\276\320\272*", "\320\264\320\265\320\262\321\217\320\275\320\276\321\201\321\202*", "\321\201\321\202\320\276", "\321\201\321\202\320\260", "\321\201\321\202\320\260\320\274", "\321\201\321\202\320\260\320\274\320\270", "\321\201\321\202\320\260\321\205", "\321\201\320\276\321\202*", "\320\264\320\262\320\265\321\201\321\202*", "\321\202\321\200\320\270\321\201\321\202*", "\321\207\320\265\321\202\321\213\321\200\320\265\321\201\321\202*",
+    "\321\202\321\213\321\201\321\217\321\207*", "\321\202\321\213\321\201", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275*", "\320\274\320\273\320\275", "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264*", "\320\274\320\273\321\200\320\264", "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275*", "\320\277\320\276\320\273\321\202\320\276\321\200*", "\320\277\320\276\320\273\321\203\321\202\320\276\321\200*", "\321\206\320\265\320\273\321\213\321\205", "\321\206\320\265\320\273\320\260\321\217",
+    "\320\264\320\265\321\201\321\217\321\202\321\213\321\205", "\321\201\320\276\321\202\321\213\321\205", "\321\202\321\213\321\201\321\217\321\207\320\275\321\213\321\205",
 };
 
-// A month, before or after a number: "March 2026", "15 марта".
+// A month, before or after a number: "March 2026", "…".
 constexpr std::string_view kMonthWords[] = {
     "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
     "december", "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
-    "январ*", "феврал*", "март", "марта", "марте", "марту", "апрел*", "май", "мая", "мае", "маю", "июн*", "июл*",
-    "август*", "сентябр*", "октябр*", "ноябр*", "декабр*",
+    "\321\217\320\275\320\262\320\260\321\200*", "\321\204\320\265\320\262\321\200\320\260\320\273*", "\320\274\320\260\321\200\321\202", "\320\274\320\260\321\200\321\202\320\260", "\320\274\320\260\321\200\321\202\320\265", "\320\274\320\260\321\200\321\202\321\203", "\320\260\320\277\321\200\320\265\320\273*", "\320\274\320\260\320\271", "\320\274\320\260\321\217", "\320\274\320\260\320\265", "\320\274\320\260\321\216", "\320\270\321\216\320\275*", "\320\270\321\216\320\273*",
+    "\320\260\320\262\320\263\321\203\321\201\321\202*", "\321\201\320\265\320\275\321\202\321\217\320\261\321\200*", "\320\276\320\272\321\202\321\217\320\261\321\200*", "\320\275\320\276\321\217\320\261\321\200*", "\320\264\320\265\320\272\320\260\320\261\321\200*",
 };
 
-// A year's mark after a number of a thousand or more: "2026 г.", "в 2026 году".
-constexpr std::string_view kYearMarks[] = {"г", "гг", "год", "года", "году", "годом", "годе"};
+// A year's mark after a number of a thousand or more: "…".
+constexpr std::string_view kYearMarks[] = {"\320\263", "\320\263\320\263", "\320\263\320\276\320\264", "\320\263\320\276\320\264\320\260", "\320\263\320\276\320\264\321\203", "\320\263\320\276\320\264\320\276\320\274", "\320\263\320\276\320\264\320\265"};
 
 // A period before a year: "FY 2026", "fiscal 2026".
 constexpr std::string_view kPeriodWords[] = {"fy", "cy", "fiscal"};
 
-// An ordinal's ending, glued to its number or after a hyphen: "5th", "2-й".
+// An ordinal's ending, glued to its number or after a hyphen: "5th", "…".
 constexpr std::string_view kOrdinalEndings[] = {
-    "st", "nd", "rd", "th", "й", "я", "е", "го", "ый", "ой", "ая", "ое", "ого", "ому", "ым", "ом", "ми", "х",
+    "st", "nd", "rd", "th", "\320\271", "\321\217", "\320\265", "\320\263\320\276", "\321\213\320\271", "\320\276\320\271", "\320\260\321\217", "\320\276\320\265", "\320\276\320\263\320\276", "\320\276\320\274\321\203", "\321\213\320\274", "\320\276\320\274", "\320\274\320\270", "\321\205",
 };
 
-// A statute named by its title: "Закона о персональных данных", "the Law on
+// A statute named by its title: "…", "the Law on
 // Personal Data".
-constexpr std::string_view kStatuteWords[] = {"закон", "закона", "закону", "законом", "законе", "law", "act", "code"};
+constexpr std::string_view kStatuteWords[] = {"\320\267\320\260\320\272\320\276\320\275", "\320\267\320\260\320\272\320\276\320\275\320\260", "\320\267\320\260\320\272\320\276\320\275\321\203", "\320\267\320\260\320\272\320\276\320\275\320\276\320\274", "\320\267\320\260\320\272\320\276\320\275\320\265", "law", "act", "code"};
 
-// A statute's number is public law, not a document's identifier: "№ 152-ФЗ",
-// "№ 87-ФЗ", "Federal Law No. 115-FZ".
-constexpr std::string_view kStatuteSuffixes[] = {"фз", "фкз", "fz", "fkz"};
+// A statute's number is public law, not a document's identifier: "…",
+// "…", "Federal Law No. 115-FZ".
+constexpr std::string_view kStatuteSuffixes[] = {"\321\204\320\267", "\321\204\320\272\320\267", "fz", "fkz"};
 
 // "No.", "Nr." - a number's sign before it, like "№" and "#".
 constexpr std::string_view kNumberSigns[] = {"no", "nr", "nos"};
 
 // What joins two numbers of one kind: "Sections 5 and 12", "rows 1-12 of 17",
-// "пп. 9.4 и 9.5".
 constexpr std::string_view kNumberConnectors[] = {
-    "to", "and", "or", "through", "thru", "of", "и", "или", "по", "до", "из", "от",
+    "to", "and", "or", "through", "thru", "of", "\320\270", "\320\270\320\273\320\270", "\320\277\320\276", "\320\264\320\276", "\320\270\320\267", "\320\276\321\202",
 };
 
 // What a reference to a place in a document may carry besides it: "Section 12
-// of the Agreement", "разделом 10 Договора", "ст. 401 ГК РФ".
+// of the Agreement", "… 10 …", "… 401 …".
 constexpr std::string_view kReferenceWords[] = {
     "of", "the", "this", "to", "in", "under", "new", "such", "said", "same", "existing", "amended", "following",
-    "foregoing", "preceding", "agreement", "contract", "lease", "deed", "amendment", "договор*", "соглашени*",
-    "контракт*", "настоящ*", "к", "в", "по", "гк", "гпк", "апк", "нк", "тк", "ук", "упк", "коап", "жк", "ск", "зк",
-    "бк", "рф", "кодекс*",
+    "foregoing", "preceding", "agreement", "contract", "lease", "deed", "amendment", "\320\264\320\276\320\263\320\276\320\262\320\276\321\200*", "\321\201\320\276\320\263\320\273\320\260\321\210\320\265\320\275\320\270*",
+    "\320\272\320\276\320\275\321\202\321\200\320\260\320\272\321\202*", "\320\275\320\260\321\201\321\202\320\276\321\217\321\211*", "\320\272", "\320\262", "\320\277\320\276", "\320\263\320\272", "\320\263\320\277\320\272", "\320\260\320\277\320\272", "\320\275\320\272", "\321\202\320\272", "\321\203\320\272", "\321\203\320\277\320\272", "\320\272\320\276\320\260\320\277", "\320\266\320\272", "\321\201\320\272", "\320\267\320\272",
+    "\320\261\320\272", "\321\200\321\204", "\320\272\320\276\320\264\320\265\320\272\321\201*",
 };
 
 template <std::size_t N>
@@ -1349,7 +1346,7 @@ std::pair<std::size_t, CodePoint> code_point_before(const std::string &text, std
   return {start, point};
 }
 
-// A word in lower case, "ё" as "е".
+// A word in lower case, "…" as "…".
 std::string lowered_word(std::string_view word) {
   std::string result;
   result.reserve(word.size());
@@ -1517,7 +1514,7 @@ std::size_t row_cells_start(const std::string &text, std::size_t lineStart, std:
 }
 
 // Where the line that opens a passage of the workbook reading has its span of
-// rows - 'Sheet "Реестр", rows 14-17 of 17; header row 3: ...', 'Sheet
+// rows - 'Sheet "…", rows 14-17 of 17; header row 3: ...', 'Sheet
 // "Assumptions" (hidden sheet), rows 1-4' - or npos when the line opens none.
 std::size_t passage_rows_at(std::string_view line) {
   const std::size_t sheet = line.find("Sheet \"");
@@ -1535,8 +1532,8 @@ bool opens_passage(std::string_view line) { return passage_rows_at(line) != std:
 
 // Whether the number starting at `position` is written glued to a word before
 // it, as the number of a code or a reference: after letters ("B10", "E80",
-// "H1", "ИНН7710482917"), after letters and a hyphen, slash, underscore or
-// dollar sign ("СП-087", "ТЛ-14", "$B$3"), or after a phone's plus ("+7").
+// "H1", "…"), after letters and a hyphen, slash, underscore or
+// dollar sign ("…", "$B$3"), or after a phone's plus ("+7").
 // "US$3" is money, not a code.
 bool glued_before(const std::string &text, std::size_t position) {
   if (position == 0) return false;
@@ -1609,7 +1606,6 @@ bool reads_as_cell_reference(const std::string &text, std::size_t position) {
 
 // The code a glued number is written in: back over the letters, digits and
 // inner hyphens, slashes, underscores and dollar signs, and on to their end -
-// "СП-087/26", "ИНН7710482917", "р/с40702810400020004817".
 std::pair<std::size_t, std::size_t> code_bounds(const std::string &text, std::size_t start, std::size_t end) {
   const auto codeCharacter = [](const CodePoint &point) {
     return point.length > 0 && (is_letter_or_mark(point) || is_digit(point));
@@ -1644,7 +1640,7 @@ std::pair<std::size_t, std::size_t> code_bounds(const std::string &text, std::si
   return {start, end};
 }
 
-// A word (letters, with an inner hyphen or apostrophe: "earn-out", "кол-во"),
+// A word (letters, with an inner hyphen or apostrophe: "earn-out", "…"),
 // a number (digits with what joins them) or any other single mark.
 struct Lexeme {
   enum class Kind { Word, Number, Mark };
@@ -1795,7 +1791,7 @@ NumberShape number_shape(std::string_view core) {
 }
 
 // The value a number's first run of digits makes, for telling a year from a
-// count ("2026 год", "2 года").
+// count ("…").
 std::uint64_t leading_value(std::string_view core) {
   std::uint64_t number = 0;
   for (std::size_t index = 0; index < core.size() && index < 15 && is_ascii_digit(core[index]); ++index)
@@ -1997,7 +1993,7 @@ NumberMeaning label_meaning(const std::vector<Lexeme> &items, std::size_t from, 
   for (std::size_t index = from; index < to; ++index) {
     const Lexeme &item = items[index];
     if (item.kind == Lexeme::Kind::Word) {
-      // "Policy No.", "Staff number", "Табельный номер": a record's code.
+      // "Policy No.", "Staff number", "…": a record's code.
       if (is_cue(item.text, kCodeSigns) && index > from && items[index - 1].kind == Lexeme::Kind::Word
           && is_cue(items[index - 1].text, kRecordWords))
         identifier = true;
@@ -2031,7 +2027,7 @@ NumberMeaning label_meaning(const std::string &text, std::size_t start, std::siz
 }
 
 // Whether items[index] ends a clause: ";", "!", "?", "|", or a full stop that
-// is not an abbreviation's ("п.", "руб.", "No.", "Inc.").
+// is not an abbreviation's ("…", "No.", "Inc.").
 bool ends_clause(const std::vector<Lexeme> &items, std::size_t index) {
   const Lexeme &item = items[index];
   if (item.kind != Lexeme::Kind::Mark) return false;
@@ -2047,7 +2043,7 @@ bool ends_clause(const std::vector<Lexeme> &items, std::size_t index) {
 }
 
 // Whether items[index] says "per cent" in any of its forms: "%" aside, "15
-// percent", "15 per cent", "10 bps", "10 basis points", "15 процентов", "2 п.п.".
+// percent", "15 per cent", "10 bps", "10 basis points", "15 …", "2 …".
 bool is_percent_at(const std::vector<Lexeme> &items, std::size_t index) {
   const Lexeme &item = items[index];
   if (item.kind != Lexeme::Kind::Word) return false;
@@ -2057,8 +2053,8 @@ bool is_percent_at(const std::vector<Lexeme> &items, std::size_t index) {
   };
   if (item.text == "per" && nextIs(1, "cent")) return true;
   if (item.text == "basis" && (nextIs(1, "points") || nextIs(1, "point"))) return true;
-  return (item.text == "п" || item.text == "б") && index + 3 < items.size() && items[index + 1].mark(".")
-      && nextIs(2, "п") && items[index + 3].mark(".");
+  return (item.text == "\320\277" || item.text == "\320\261") && index + 3 < items.size() && items[index + 1].mark(".")
+      && nextIs(2, "\320\277") && items[index + 3].mark(".");
 }
 
 // What the words right after a number say of it.
@@ -2074,7 +2070,7 @@ AfterCue as_ratio() { return AfterCue{true, NumberMeaning::Unknown, true}; }
 
 // An opening bracket after a number: the workbook reading's note - "(shown in
 // $)", "(shown in ₽)", "(shown as a percentage)" - or the amount restated in
-// words, with or before its unit: "(пятидесяти миллионов) рублей", "(one
+// words, with or before its unit: "…", "(one
 // thousand dollars)", "(twelve) months".
 AfterCue bracket_cue(const std::vector<Lexeme> &after, std::size_t open) {
   std::size_t index = open + 1;
@@ -2107,7 +2103,7 @@ AfterCue bracket_cue(const std::vector<Lexeme> &after, std::size_t open) {
   if (is_cue(unit.text, kCurrencyWords) || is_cue(unit.text, kCurrencyCodes) || is_cue(unit.text, kScaleWords))
     return decided(NumberMeaning::Money);
   if (is_percent_at(after, index + 1)) return as_ratio();
-  // "15 (пятнадцати) рабочих дней", "10 (ten) business days".
+  // "…", "10 (ten) business days".
   const bool qualified = is_cue(unit.text, kTimeQualifiers) && index + 2 < after.size()
       && after[index + 2].kind == Lexeme::Kind::Word && is_cue(after[index + 2].text, kTimeUnits);
   if (qualified || is_cue(unit.text, kTimeUnits) || is_cue(unit.text, kCountUnits))
@@ -2116,9 +2112,9 @@ AfterCue bracket_cue(const std::vector<Lexeme> &after, std::size_t open) {
 }
 
 // What the words right after a number say of it: a currency or a scale makes
-// it money ("12 million", "12 рублей", "$" after it); a unit of time or a count
+// it money ("12 million", "…", "$" after it); a unit of time or a count
 // makes it structure ("12 months", "3 copies"); a month or a year's mark makes
-// it part of a date ("15 марта", "2026 г."); "%" makes it a percentage.
+// it part of a date ("…"); "%" makes it a percentage.
 AfterCue after_cue(const std::vector<Lexeme> &after, std::size_t numberEnd, bool bracketed, std::uint64_t value) {
   std::size_t index = 0;
   // "sixty (60) days": past the bracket the number is written in.
@@ -2138,16 +2134,16 @@ AfterCue after_cue(const std::vector<Lexeme> &after, std::size_t numberEnd, bool
     }
     if (is_cue(word, kCurrencyWords) || is_cue(word, kCurrencyCodes) || is_cue(word, kScaleWords))
       return decided(NumberMeaning::Money);
-    // "12 р.", roubles.
-    if (word == "р" && index + 1 < after.size() && after[index + 1].mark(".") && after[index + 1].start == next.end)
+    // "…", roubles.
+    if (word == "\321\200" && index + 1 < after.size() && after[index + 1].mark(".") && after[index + 1].start == next.end)
       return decided(NumberMeaning::Money);
     if (is_percent_at(after, index)) return as_ratio();
     if (is_cue(word, kMonthWords)) return decided(NumberMeaning::DatePart);
     if (value >= 1000 && is_cue(word, kYearMarks)) return decided(NumberMeaning::DatePart);
-    // "3,600 shares", «1 200 акций»: a holding. "Units" after a number counts
+    // "3,600 shares", «…»: a holding. "Units" after a number counts
     // goods as often, so only a label says it is a holding.
     if (word == "shares" || word == "\xD0\xB0\xD0\xBA\xD1\x86\xD0\xB8\xD0\xB9" || word == "\xD0\xB0\xD0\xBA\xD1\x86\xD0\xB8\xD0\xB8"
-        || word == "\xD0\xBF\xD0\xB0\xD0\xB5\xD0\xB2" || word == "\xD0\xBF\xD0\xB0\xD1\x91\xD0\xB2")  // акций акции паев паёв
+        || word == "\xD0\xBF\xD0\xB0\xD0\xB5\xD0\xB2" || word == "\xD0\xBF\xD0\xB0\xD1\x91\xD0\xB2")  // …
       return decided(NumberMeaning::Holding);
     std::size_t unit = index;
     if (is_cue(word, kTimeQualifiers) && index + 1 < after.size() && after[index + 1].kind == Lexeme::Kind::Word)
@@ -2158,7 +2154,7 @@ AfterCue after_cue(const std::vector<Lexeme> &after, std::size_t numberEnd, bool
   if (next.kind != Lexeme::Kind::Mark) return {};
   if (next.text == "%" || next.text == "\xE2\x80\xB0" || next.text == "\xC3\x97") return as_ratio();
   if (is_currency_mark(next)) return decided(NumberMeaning::Money);
-  // "12-month", "2-й", and a statute's number, "152-ФЗ".
+  // "12-month", "…", and a statute's number, "…".
   if (next.text == "-" && glued && index + 1 < after.size() && after[index + 1].start == next.end
       && after[index + 1].kind == Lexeme::Kind::Word
       && (is_cue(after[index + 1].text, kTimeUnits) || is_cue(after[index + 1].text, kOrdinalEndings)
@@ -2168,7 +2164,7 @@ AfterCue after_cue(const std::vector<Lexeme> &after, std::size_t numberEnd, bool
   return {};
 }
 
-// "р/с", "к/с", "л/с" (a Russian bank's settlement, correspondent and personal
+// "…" (a Russian bank's settlement, correspondent and personal
 // accounts) and "a/c", right before a number, a colon after them or not.
 bool account_abbreviation_before(const std::vector<Lexeme> &before) {
   std::size_t count = before.size();
@@ -2176,17 +2172,17 @@ bool account_abbreviation_before(const std::vector<Lexeme> &before) {
   if (count < 3) return false;
   const Lexeme &last = before[count - 1];
   const Lexeme &first = before[count - 3];
-  return (last.word("с") || last.word("c")) && before[count - 2].mark("/")
-      && (first.word("р") || first.word("к") || first.word("л") || first.word("a"));
+  return (last.word("\321\201") || last.word("c")) && before[count - 2].mark("/")
+      && (first.word("\321\200") || first.word("\320\272") || first.word("\320\273") || first.word("a"));
 }
 
 // The label a number is given as the value of - "Purchase price: 12", "Gross
-// margin = 0.64", "Итого — 19052" - read back from the mark to where its
+// margin = 0.64", "… — 19052" - read back from the mark to where its
 // clause begins, eight words at most.
 NumberMeaning label_pair(const std::vector<Lexeme> &before, std::size_t numberStart) {
   if (before.empty()) return NumberMeaning::Unknown;
   const Lexeme &mark = before.back();
-  // A dash sets a label apart only with a space on each side: "Итого — 19052",
+  // A dash sets a label apart only with a space on each side: "…",
   // never the range in "16–18.05".
   const bool dash = mark.mark("-") || mark.mark("\xE2\x80\x94") || mark.mark("\xE2\x80\x93");
   const bool spaced = before.size() >= 2 && before[before.size() - 2].end < mark.start && mark.end < numberStart;
@@ -2201,20 +2197,20 @@ NumberMeaning label_pair(const std::vector<Lexeme> &before, std::size_t numberSt
 }
 
 // Words that stand between a noun and the number it is the amount of: "price
-// of 12", "the fee is 12", "стоимость составляет 12", "не более 12".
+// of 12", "the fee is 12", "… 12", "… 12".
 constexpr std::string_view kQuantityLinks[] = {
     "of", "is", "was", "are", "were", "be", "been", "being", "shall", "will", "would", "should", "may", "must",
     "equal", "equals", "to", "at", "in", "the", "a", "an", "not", "less", "more", "than", "no", "up", "by", "for",
     "with", "and", "or", "amounting", "totaling", "totalling", "exceed", "exceeds", "exceeding", "over", "under",
     "approximately", "about", "around", "only", "its", "their", "set", "fixed", "agreed", "per",
-    "в", "во", "на", "по", "до", "от", "из", "за", "с", "со", "к", "не", "ни", "менее", "более", "свыше", "около",
-    "примерно", "составля*", "составил*", "составит", "равн*", "это", "его", "ее", "их", "и", "или", "а", "также",
+    "\320\262", "\320\262\320\276", "\320\275\320\260", "\320\277\320\276", "\320\264\320\276", "\320\276\321\202", "\320\270\320\267", "\320\267\320\260", "\321\201", "\321\201\320\276", "\320\272", "\320\275\320\265", "\320\275\320\270", "\320\274\320\265\320\275\320\265\320\265", "\320\261\320\276\320\273\320\265\320\265", "\321\201\320\262\321\213\321\210\320\265", "\320\276\320\272\320\276\320\273\320\276",
+    "\320\277\321\200\320\270\320\274\320\265\321\200\320\275\320\276", "\321\201\320\276\321\201\321\202\320\260\320\262\320\273\321\217*", "\321\201\320\276\321\201\321\202\320\260\320\262\320\270\320\273*", "\321\201\320\276\321\201\321\202\320\260\320\262\320\270\321\202", "\321\200\320\260\320\262\320\275*", "\321\215\321\202\320\276", "\320\265\320\263\320\276", "\320\265\320\265", "\320\270\321\205", "\320\270", "\320\270\320\273\320\270", "\320\260", "\321\202\320\260\320\272\320\266\320\265",
 };
 
 // The noun a number is the amount of, earlier in its clause: "purchase price
-// of 12", "the purchase price for the Shares is 12", "стоимость услуг
-// составляет 12", "в размере 12". A noun right before a number is what the
-// number belongs to - "file 20260", "убытки от инцидента 18.05" (the incident's
+// of 12", "the purchase price for the Shares is 12", "…
+// … 12", "… 12". A noun right before a number is what the
+// number belongs to - "file 20260", "…" (the incident's
 // date) - so the word right before it must be a linking word or the cue
 // itself, and past a linking word one other word at most may stand between.
 NumberMeaning clause_cue(const std::vector<Lexeme> &before) {
@@ -2241,7 +2237,7 @@ NumberMeaning clause_cue(const std::vector<Lexeme> &before) {
 // "2)", "(3)", "8.1.", "## 3.".
 bool is_list_number(const std::string &text, std::size_t windowStart, std::size_t start,
                     const std::vector<Lexeme> &after, std::size_t end) {
-  // A clause numbered in running text: "…/2026. 1. Экспедитор несёт…", "; 2) the
+  // A clause numbered in running text: "…", "; 2) the
   // Vendor…" - after a sentence's end, before its own full stop and a capital.
   std::size_t before = start;
   while (before > windowStart && (text[before - 1] == ' ' || text[before - 1] == '\t')) --before;
@@ -2293,7 +2289,7 @@ NumberMeaning prose_meaning(const std::string &text, std::size_t start, std::siz
   if (is_list_number(text, windowStart, start, after, end)) return NumberMeaning::Generic;
 
   // A place in a document, whatever is written after its number: "Section 12",
-  // "Section 9B", "Article 12(a)", "п. 9.4", "§ 5".
+  // "Section 9B", "Article 12(a)", "…", "§ 5".
   if (const Lexeme *previous = back(0)) {
     if (previous->mark("\xC2\xA7") || previous->mark("\xC2\xB6") || wordAt(0, kStructureWords)
         || (previous->mark(".") && wordAt(1, kStructureWords) && back(1)->end == previous->start))
@@ -2317,14 +2313,14 @@ NumberMeaning prose_meaning(const std::string &text, std::size_t start, std::siz
     if (is_currency_mark(*previous) || (previous->kind == Lexeme::Kind::Word && is_cue(previous->text, kCurrencyCodes)))
       return NumberMeaning::Money;
     // A number's sign - "№ 12", "No. 12", "# 12": the number of an identifier,
-    // unless it numbers a part of a document ("Приложение № 2", "Section No. 5").
+    // unless it numbers a part of a document ("…", "Section No. 5").
     std::size_t sign = count;
     if (previous->mark("\xE2\x84\x96") || previous->mark("#")) sign = 0;
     else if (previous->mark(".") && wordAt(1, kNumberSigns) && back(1)->end == previous->start) sign = 1;
     else if (previous->word("no") && text[previous->start] == 'N') sign = 0;
     if (sign < count) return wordAt(sign + 1, kStructureWords) ? NumberMeaning::Generic : NumberMeaning::Identifier;
-    // An identifier named right before it: "ИНН 7710482917", "Account suffix
-    // 12", "р/с 40702810400020004817".
+    // An identifier named right before it: "…", "Account suffix
+    // 12", "… 40702810400020004817".
     if (wordAt(0, kIdentifierWords)) return NumberMeaning::Identifier;
     if ((previous->mark(":") || previous->mark(".") || previous->mark("-")) && wordAt(1, kIdentifierWords))
       return NumberMeaning::Identifier;
@@ -2346,24 +2342,24 @@ NumberMeaning prose_meaning(const std::string &text, std::size_t start, std::siz
     if (previous->kind == Lexeme::Kind::Number && back(1) != nullptr && (back(1)->word("h") || back(1)->word("q"))
         && back(1)->end == previous->start)
       return NumberMeaning::DatePart;
-    // A plain scalar: "a probability of 0.64", "коэффициент 1,5".
+    // A plain scalar: "a probability of 0.64", "…".
     if (wordAt(0, kScalarWords)) return NumberMeaning::Generic;
     if ((previous->mark(":") || previous->mark("=") || wordAt(0, kScalarLinks)) && wordAt(1, kScalarWords))
       return NumberMeaning::Generic;
     // One of a run of numbers of one kind: "Sections 5 and 12", "rows 1-12 of
-    // 17", "пп. 9.4 и 9.5", "fees of 12 and 15".
+    // 17", "… 9.4 … 9.5", "fees of 12 and 15".
     const bool connector = wordAt(0, kNumberConnectors) || previous->mark("-") || previous->mark(",")
         || previous->mark("&") || previous->mark("\xE2\x80\x93") || previous->mark("\xE2\x80\x94");
     if (depth < 3 && connector && back(1) != nullptr && back(1)->kind == Lexeme::Kind::Number) {
       const NumberMeaning run = meaning_of(text, back(1)->start, back(1)->end, line, depth + 1);
       if (run == NumberMeaning::Generic || run == NumberMeaning::Money) return run;
     }
-    // A group of an identifier written in parts: "паспорт 45 18".
+    // A group of an identifier written in parts: "…".
     if (depth < 3 && previous->kind == Lexeme::Kind::Number && start == previous->end + 1 && text[previous->end] == ' '
         && meaning_of(text, previous->start, previous->end, line, depth + 1) == NumberMeaning::Identifier)
       return NumberMeaning::Identifier;
   }
-  // A label it is the value of: "Purchase price: 12", "Итого — 19052".
+  // A label it is the value of: "Purchase price: 12", "…".
   const NumberMeaning label = label_pair(before, start);
   if (label != NumberMeaning::Unknown) return label;
   // Money or an identifier named earlier in its clause.
@@ -2444,14 +2440,14 @@ bool blank_cell(const std::string &text, const std::pair<std::size_t, std::size_
   return true;
 }
 
-// A header that numbers the rows: "№", "No.", "#", "№ п/п", "N".
+// A header that numbers the rows: "№", "No.", "#", "…", "N".
 bool numbers_the_rows(const std::string &text, const std::pair<std::size_t, std::size_t> &header) {
   const std::vector<Lexeme> items = lexemes(text, header.first, header.second);
   if (items.empty()) return false;
   for (const Lexeme &item : items) {
     if (item.mark("\xE2\x84\x96") || item.mark("#") || item.mark(".") || item.mark("/")) continue;
-    if (item.kind == Lexeme::Kind::Word && (item.text == "no" || item.text == "n" || item.text == "nr" || item.text == "п"
-                                            || item.text == "пп" || item.text == "num"))
+    if (item.kind == Lexeme::Kind::Word && (item.text == "no" || item.text == "n" || item.text == "nr" || item.text == "\320\277"
+                                            || item.text == "\320\277\320\277" || item.text == "num"))
       continue;
     return false;
   }
@@ -2460,7 +2456,7 @@ bool numbers_the_rows(const std::string &text, const std::pair<std::size_t, std:
 
 // The header of the table a tab-separated line belongs to: its first row, when
 // that row is a header - two or more cells, and every cell that holds anything
-// holds words ("Наименование | Кол-во | Итого, ₽", "Item | Amount ($)"). Read
+// holds words ("…", "Item | Amount ($)"). Read
 // back line by line while the lines are the table's rows; nothing for the
 // header row itself, a line of one cell, or a table whose first row is data.
 std::optional<std::pair<std::size_t, std::size_t>> table_header_line(const std::string &text, std::size_t lineStart,
@@ -2538,8 +2534,8 @@ bool row_number_cell(const std::string &text, const TableCell &cell, std::size_t
 
 // A number in a cell of such a table: judged by the words right after it in
 // its cell, by the words of its own cell, then by its column's header - what a
-// document's table says of every figure under it: "18 400 000" under «Итого,
-// ₽» is money, "3" under «Кол-во» a count however its row is labelled, "1"
+// document's table says of every figure under it: "18 400 000" under «…,
+// ₽» is money, "3" under «…» a count however its row is labelled, "1"
 // under "№" the row's own number - and only under a header that says nothing,
 // by its row's label (the row's first cell of words before it). Nothing when
 // the table has no header row: the line is read as the words it is.
@@ -2583,14 +2579,14 @@ NumberMeaning meaning_of(const std::string &text, std::size_t start, std::size_t
   // A phone's country code, which the phone's own pattern protects.
   if (first > 0 && text[first - 1] == '+') return NumberMeaning::Unknown;
   // Part of a cell reference - "B10", "E80", "$B$3": a place, never a value.
-  // A number glued to any other code ("MR-20417", "СП-087") is that code's,
+  // A number glued to any other code ("MR-20417", "…") is that code's,
   // which the code rules protect as a whole (find_labelled_codes()).
   if (glued_before(text, first)) return cell_reference_shape(text, first) ? NumberMeaning::Generic : NumberMeaning::Unknown;
   const std::size_t lineStart = line_start_of(text, first);
   if (inside_formula(text, lineStart, first)) return NumberMeaning::Generic;
-  // "от 02.07", "on 7/2": a day written without its year.
+  // "…", "on 7/2": a day written without its year.
   if (yearless_day(text, first, last - first)) return NumberMeaning::DatePart;
-  // «п/п № 3318»: a payment order's number, not a list's row.
+  // «…»: a payment order's number, not a list's row.
   if (after_number_sign(text, first)) {
     std::size_t cursor = first;
     while (cursor > 0 && (text[cursor - 1] == ' ' || (cursor >= 2 && text.compare(cursor - 2, 2, "\xC2\xA0") == 0)))
@@ -2598,7 +2594,7 @@ NumberMeaning meaning_of(const std::string &text, std::size_t start, std::size_t
     if (cursor >= 3 && text.compare(cursor - 3, 3, "\xE2\x84\x96") == 0) {
       cursor -= 3;
       while (cursor > 0 && text[cursor - 1] == ' ') --cursor;
-      static const std::string paymentOrder = "\xD0\xBF/\xD0\xBF";  // п/п
+      static const std::string paymentOrder = "\xD0\xBF/\xD0\xBF";  // …
       if (cursor >= paymentOrder.size() && text.compare(cursor - paymentOrder.size(), paymentOrder.size(), paymentOrder) == 0
           && (cursor == paymentOrder.size() || !is_letter_or_mark(code_point_before(text, cursor - paymentOrder.size()).second)))
         return NumberMeaning::Identifier;
@@ -2606,7 +2602,7 @@ NumberMeaning meaning_of(const std::string &text, std::size_t start, std::size_t
   }
   switch (number_shape(core)) {
     case NumberShape::Date:
-      // "Договор № 15/03/2026", "Invoice No. 2026-03-15": a document's number
+      // "…", "Invoice No. 2026-03-15": a document's number
       // written like a date is that number, and it comes back as written.
       if (after_number_sign(text, first)) return NumberMeaning::Identifier;
       return NumberMeaning::DatePart;
@@ -2614,7 +2610,7 @@ NumberMeaning meaning_of(const std::string &text, std::size_t start, std::size_t
       return NumberMeaning::DatePart;
     case NumberShape::Clause:
       // "№ 73.5474.935": after its sign a number written like a clause's is a
-      // document's number; "п. 9.4" and "Section 18.2" stay structure.
+      // document's number; "…" and "Section 18.2" stay structure.
       if (after_number_sign(text, first)) return NumberMeaning::Identifier;
       return NumberMeaning::Generic;
     default:
@@ -2648,8 +2644,8 @@ NumberMeaning meaning_of(const std::string &text, std::size_t start, std::size_t
 
 // A sensitive number's whole writing: its sign, a currency sign or code right
 // before it, and the scale, the number words in brackets and the currency
-// after it - "-2619052", "$ 12", "12 million", "50 000 000 (пятидесяти
-// миллионов) рублей", "3,45 млн ₽".
+// after it - "-2619052", "$ 12", "12 million", "50 000 000 (…
+// …) …", "3,45 … ₽".
 std::pair<std::size_t, std::size_t> amount_bounds(const std::string &text, std::size_t start, std::size_t end) {
   if (start > 0 && text[start - 1] == '-' && (start < 2 || !is_word(code_point_before(text, start - 1).second)))
     --start;
@@ -2674,12 +2670,12 @@ std::pair<std::size_t, std::size_t> amount_bounds(const std::string &text, std::
     const bool glued = next.start == end;
     if (next.kind == Lexeme::Kind::Word
         && (is_cue(next.text, kScaleWords) || is_cue(next.text, kCurrencyWords) || is_cue(next.text, kCurrencyCodes)
-            || (glued && is_cue(next.text, kScaleSuffixes)) || next.text == "р")) {
-      if (next.text == "р" && !(index + 1 < after.size() && after[index + 1].mark(".") && after[index + 1].start == next.end))
+            || (glued && is_cue(next.text, kScaleSuffixes)) || next.text == "\321\200")) {
+      if (next.text == "\321\200" && !(index + 1 < after.size() && after[index + 1].mark(".") && after[index + 1].start == next.end))
         break;
       end = next.end;
       ++index;
-      // The full stop of "руб." stays outside: it may also end the sentence,
+      // The full stop of "…" stays outside: it may also end the sentence,
       // and a symbol that swallowed it comes back with the model's own after it.
       if (index < after.size() && after[index].mark(".") && after[index].start == end) break;
       continue;
@@ -2709,7 +2705,7 @@ std::pair<std::size_t, std::size_t> amount_bounds(const std::string &text, std::
 
 // Whether the code at text[start, end) is labelled an identifier: by the words
 // right before it - "employee ID MR-20417", "staff number EMP-00931",
-// "табельный номер ТН-118", "policy No. PL-1234" - or, as a cell's whole value
+// "…", "policy No. PL-1234" - or, as a cell's whole value
 // in a row of the workbook reading, by its row's label or its column's header
 // ("A4 = Employee ID | B4 = MR-20417").
 bool labelled_as_identifier(const std::string &text, std::size_t start, std::size_t end) {
@@ -2754,7 +2750,7 @@ bool labelled_as_identifier(const std::string &text, std::size_t start, std::siz
 }
 
 // A record's code - capitals, then groups of figures after a hyphen or a slash:
-// "MR-20417", "EMP-00931", "ТН-118" - wherever the text labels it an
+// "MR-20417", "EMP-00931", "…" - wherever the text labels it an
 // identifier (labelled_as_identifier()), whether or not the semantic model
 // tagged it. An unseen matter (24 Sep 2026) sent an employee's ID readable in
 // a workbook and in a complaint's prose. A cell reference - letters and figures
@@ -2835,7 +2831,7 @@ namespace {
 // Every number of `text` whose own context makes it money, a financial ratio
 // or an identifier (number_meaning()), found however short it is and whether or
 // not the semantic model tagged it: "B15 = 12 (shown in $)", "Gross margin |
-// 0.64 (shown as a percentage)", "протокол № 7".
+// 0.64 (shown as a percentage)", "… № 7".
 std::vector<Match> find_meaningful_numbers(const std::string &text, bool money, bool identifiers) {
   std::vector<Match> matches;
   if (!money && !identifiers) return matches;
@@ -2866,7 +2862,7 @@ std::vector<Match> find_meaningful_numbers(const std::string &text, bool money, 
       matches.push_back(Match{start, end - start, std::string(holding_label), text.substr(start, end - start)});
     } else if (identifiers && meaning == NumberMeaning::Identifier) {
       // After its sign a document's number is the whole code it is written
-      // as: "Требование № 14/ИТ", "invoice No. 4471/B", "№ 12-3/7" - never its
+      // as: "…", "invoice No. 4471/B", "№ 12-3/7" - never its
       // first figures with the rest left readable.
       std::size_t codeEnd = end;
       if (after_number_sign(text, start)) {
@@ -2877,7 +2873,7 @@ std::vector<Match> find_meaningful_numbers(const std::string &text, bool money, 
         if (is_word(code_point_at(text, codeEnd))) codeEnd = end;
       }
       position = std::max(position, codeEnd);
-      // One identifier written in groups is one value: "паспорт 45 18".
+      // One identifier written in groups is one value: "…".
       Match *previous = matches.empty() ? nullptr : &matches.back();
       if (previous != nullptr && previous->label == identifierLabel && previous->start + previous->length + 1 == start
           && text[start - 1] == ' ') {
@@ -2951,7 +2947,7 @@ std::vector<Match> detect(const std::string &text, const Policy &policy) {
   }
 
   // The numbers whose own context makes them money or an identifier, however
-  // short: "B15 = 12 (shown in $)" under "Purchase price ($m)", "протокол № 7".
+  // short: "B15 = 12 (shown in $)" under "Purchase price ($m)", "…".
   const std::vector<Category> categories = effective_categories(policy);
   const auto active = [&](Category category) {
     return std::find(categories.begin(), categories.end(), category) != categories.end();
@@ -2969,7 +2965,7 @@ std::vector<Match> detect(const std::string &text, const Policy &policy) {
   int priority = 2;
   for (const auto category : categories) {
     for (auto &match : find_category_matches(text, category)) {
-      // A number found glued to letters ("ИНН7710482917", "СП-087654") is
+      // A number found glued to letters ("…") is
       // that whole code: a number is only ever matched again where it stands
       // whole (stands_as_whole_number()).
       if (!match.value.empty() && is_ascii_digit(match.value.front()) && glued_before(text, match.start)
@@ -3011,7 +3007,7 @@ std::pair<std::size_t, std::size_t> quantity_span(const std::string &text, std::
   if (start >= end || end > text.size()) return {start, end};
   auto [spanStart, spanEnd] = amount_bounds(text, start, end);
   // A percent sign or word after the number: "3%", "0,1 %", "5 percent",
-  // "0,2 процента". Only where nothing but a space stands between them.
+  // "…". Only where nothing but a space stands between them.
   if (spanEnd == end) {
     std::size_t cursor = end;
     if (cursor < text.size() && text[cursor] == ' ') ++cursor;
@@ -3078,7 +3074,7 @@ std::optional<std::pair<std::size_t, std::size_t>> table_column_header(const std
 bool after_date_cue(const std::string &text, std::size_t start) {
   static const std::string_view cues[] = {"\xD0\xBE\xD1\x82", "\xD1\x81", "\xD0\xB4\xD0\xBE", "\xD0\xBF\xD0\xBE",
       "\xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5", "\xD0\xBD\xD0\xB0", "on", "by", "dated",
-      "from", "until", "till", "effective", "of"};  // от с до по позднее на
+      "from", "until", "till", "effective", "of"};  // …
   std::size_t cursor = std::min(start, text.size());
   while (cursor > 0 && text[cursor - 1] == ' ') --cursor;
   std::size_t from = cursor;
@@ -3184,16 +3180,16 @@ bool names_only_structure(const std::string &text, std::size_t start, std::size_
         number = true;
         break;
       case Lexeme::Kind::Word:
-        // A clause's letter, glued to its number: "Section 9A", "Раздел 9А", "12bis".
+        // A clause's letter, glued to its number: "Section 9A", "…", "12bis".
         if (index > 0 && items[index - 1].kind == Lexeme::Kind::Number && items[index - 1].end == item.start
             && letters(item.text) <= 3)
           break;
         if (subPart(index)) break;
-        // A statute's title after its name: "статьёй 19 Закона о персональных
-        // данных", "Article 6 of the Law on Personal Data" - public law.
+        // A statute's title after its name: "… 19 …
+        // …", "Article 6 of the Law on Personal Data" - public law.
         if (statuteTitle) break;
         if (index + 1 < items.size() && is_cue(item.text, kStatuteWords)
-            && (items[index + 1].word("о") || items[index + 1].word("об") || items[index + 1].word("on")
+            && (items[index + 1].word("\320\276") || items[index + 1].word("\320\276\320\261") || items[index + 1].word("on")
                 || items[index + 1].word("of"))) {
           statuteTitle = true;
           break;

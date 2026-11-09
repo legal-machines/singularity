@@ -31,11 +31,9 @@ import { callWords, evidenceText, exactCostText, minutesFrom, requestDetailWords
 
 import styles from "./RealBill.module.css";
 
-// A real Matter's bill (D-181), a month at a time, as a firm reads a pre-bill
-// (the owner, 2026-11-05: "rebuild the billing page so it works
-// professionally and as conveniently as possible for lawyers"): what the month
-// came to in one sentence, the time as a ledger, the AI model use as a
-// disbursement at its cost, and who worked how long. A person's time is what
+// A real Matter's bill, a month at a time, as a firm reads a pre-bill: what
+// the month came to in one sentence, the time as a ledger, the AI model use as
+// a disbursement at its cost, and who worked how long. A person's time is what
 // they recorded, never inferred; the AI work is never estimated here; and
 // where nothing is recorded, the page says so instead of showing sample rows.
 // The time reads by day, as a pre-bill does, or by member, as a partner
@@ -53,7 +51,7 @@ export function RealMatterBill({ matter }) {
 	}, [matter.id]);
 
 	// The month's OpenRouter costs confirmed by OpenRouter's own record, once a
-	// minute at most, and the bill read again when one was (D-252).
+	// minute at most, and the bill read again when one was.
 	const [confirmations, setConfirmations] = useState(0);
 	useEffect(() => {
 		let isCurrent = true;
@@ -321,10 +319,10 @@ function People({ entries }) {
 // ---- The AI work ----------------------------------------------------------------------
 
 // The AI model use as the bill charges it: a disbursement at the cost its
-// providers charged, with no markup (D-075). One press away, the work by whose
-// it was - each AI colleague's, each member's own, Singularity's upkeep of the
+// providers charged, with no markup. One press away, the work by whose it was
+// - each AI colleague's, each member's own, Singularity's upkeep of the
 // Matter's context - and under each, its requests; under each request, the
-// evidence its cost rests on, which the firm can send its client (D-252).
+// evidence its cost rests on, which the firm can send its client.
 function Disbursements({ work, usage, matter, month, monthName }) {
 	const [isOpen, setOpen] = useState(false);
 	const [openWorker, setOpenWorker] = useState(null);

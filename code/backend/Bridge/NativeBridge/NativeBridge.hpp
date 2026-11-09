@@ -29,10 +29,9 @@ public:
 	                          const std::string &json_params);
 
 	// A call that arrives by another carrier than the window: Singularity's
-	// Office connection (Office/OfficeConnection, docs/NATIVE_TRANSPORT.md).
-	// The same handler table, the same pools and the same error envelope as a
-	// window call (TRN-4); a method that needs the window is refused (TRN-3).
-	// Never throws.
+	// Office connection. The same handler table, the same pools and the same
+	// error envelope as a window call; a method that needs the window is
+	// refused. Never throws.
 	struct CarriedAnswer {
 		// 0 resolved, 1 rejected, as the window resolves a call.
 		int status = 0;

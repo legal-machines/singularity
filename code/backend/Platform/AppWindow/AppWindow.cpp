@@ -600,9 +600,8 @@ void install_drag_region(
 
 #if defined(_WIN32)
 // Names WebView2's data folder to webview before the window's webview is made:
-// this computer's application data, never the roaming profile
-// (Platform/WebViewData, D-040). False when the folder cannot be readied;
-// webview's own choice then stands.
+// this computer's application data, never the roaming profile. False when the
+// folder cannot be readied; webview's own choice then stands.
 bool name_web_view_data_folder() {
   const auto folder = singularity::platform::ready_web_view_data_directory();
   if (folder.empty()) return false;
@@ -774,7 +773,7 @@ public:
 #if defined(_WIN32)
 
   /*
-   * The caption in the page (D-049).
+   * The caption in the page.
    *
    * Windows draws no caption strip above the page. The window keeps its
    * standard style, so Snap, Win+arrows, Alt+Space and the taskbar treat it
@@ -909,11 +908,11 @@ public:
 
   /*
    * Singularity opens in the middle of the screen it is on, above the
-   * taskbar (the owner, 2026-10-31). The frame a person sees, without the
-   * invisible borders Windows keeps around a window for resizing, is
-   * centred in its monitor's work area. A window larger than that area keeps
-   * its top left corner inside it, so its header stays in reach. A maximized
-   * or minimized window stays where Windows put it.
+   * taskbar. The frame a person sees, without the invisible borders Windows
+   * keeps around a window for resizing, is centred in its monitor's work
+   * area. A window larger than that area keeps its top left corner inside
+   * it, so its header stays in reach. A maximized or minimized window stays
+   * where Windows put it.
    */
   void center_on_screen() {
     HWND window = native_window;
@@ -1333,12 +1332,12 @@ public:
 #if defined(__linux__)
 
   /*
-   * Singularity opens in the middle of the screen it is on (the owner,
-   * 2026-10-31). GTK centres a window as it shows it, once asked to
-   * (use_integrated_titlebar shows it again at its final size); a window
-   * already on screen is moved to the middle of its monitor's work area for
-   * its new size. Where the display server places windows itself, as on
-   * Wayland, a move is a request it may ignore.
+   * Singularity opens in the middle of the screen it is on. GTK centres a
+   * window as it shows it, once asked to (use_integrated_titlebar shows it
+   * again at its final size); a window already on screen is moved to the
+   * middle of its monitor's work area for its new size. Where the display
+   * server places windows itself, as on Wayland, a move is a request it may
+   * ignore.
    */
   void center_on_screen() {
     auto native_window = view.window();
@@ -1687,9 +1686,9 @@ void AppWindow::set_initial_size(
 #endif
 
   // Every size the application gives its window is centred on the screen,
-  // the first one included: the window opens in the middle (the owner,
-  // 2026-10-31), and a later, larger one stays inside the visible display
-  // instead of growing off its right and bottom edges.
+  // the first one included: the window opens in the middle, and a later,
+  // larger one stays inside the visible display instead of growing off
+  // its right and bottom edges.
   impl_->center_on_screen();
 
 #endif
@@ -2258,9 +2257,32 @@ void AppWindow::use_integrated_titlebar() {
       GTK_HEADER_BAR(
           gtk_header_bar_new());
 
+  /*
+   * The window's name - what a taskbar and a window switcher show - is the
+   * header bar's title: gtk_window_set_titlebar copies it into the window and
+   * keeps it there (notify::title). The bar itself shows no words: an empty
+   * custom title stands in its label's place. A title of "" here named the
+   * window nothing.
+   */
+  const gchar* name =
+      gtk_window_get_title(
+          window);
+
   gtk_header_bar_set_title(
       header,
-      "");
+      name != nullptr && name[0] != '\0' ? name : NATIVE_APP_DISPLAY_NAME);
+
+  GtkWidget* nameless =
+      gtk_box_new(
+          GTK_ORIENTATION_HORIZONTAL,
+          0);
+
+  gtk_widget_show(
+      nameless);
+
+  gtk_header_bar_set_custom_title(
+      header,
+      nameless);
 
   gtk_header_bar_set_has_subtitle(
       header,

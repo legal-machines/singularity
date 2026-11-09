@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-// Where a letter belongs (D-106), told from evidence, strongest first:
+// Where a letter belongs, told from evidence, strongest first.
 //   - the letter itself is filed already (its Internet Message-ID);
 //   - a letter of the same conversation is filed (the provider's own
 //     conversation id, never an equal subject);
@@ -49,8 +49,7 @@ struct MatterEvidence {
 };
 
 struct Suggestion {
-	// "filed", "rule" (one Matter's intake files it, D-228), "suggested",
-	// "ambiguous" or "unfiled".
+	// "filed", "rule", "suggested", "ambiguous" or "unfiled".
 	std::string outcome;
 	// The Matters in the order of their evidence, strongest first.
 	std::vector<MatterEvidence> matters;
@@ -59,7 +58,7 @@ struct Suggestion {
 Suggestion suggest_among(const std::vector<matters::Matter> &matters, const MessageFacts &facts);
 
 // The rule of the Matter's intake a letter answers to - the account it reached
-// and the mailbox it came from, each exactly - or null (D-228).
+// and the mailbox it came from, each exactly - or null.
 const IntakeRule *intake_rule_for(const matters::Matter &matter, const MessageFacts &facts);
 
 // Text on one line, its runs of spaces as one, at most `most` bytes, cut
@@ -78,7 +77,7 @@ std::string day_of(const std::string &moment);
 // The letter filed in the Matter with this Internet Message-ID, or null.
 const Letter *letter_with_message_id(const matters::Matter &matter, const std::string &internet_message_id);
 
-// ---- An email a member puts in the Matter's folder (D-180) ---------------------
+// ---- An email a member puts in the Matter's folder ---------------------
 
 // An email file as it was read (an .eml): its headers as they stand, words
 // decoded, and its plain text and attachments.

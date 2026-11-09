@@ -711,7 +711,7 @@ OpAnswer evaluate_deadline(const std::vector<Operand> &operands, const OpOptions
 	if (date == nullptr || !period) return failed(Code::DependencyFailed, date == nullptr ? 1 : 2);
 	if (period->unit == DurationUnit::BusinessDay) return shift(std::move(answer), *date, *period, operands, 2, options, context);
 	// A calendar period: its last day, then rolled per the calendar's rule
-	// (C3 §2; ГК РФ ст. 193, a following-business-day clause). A period
+	// (C3 §2; … 193, a following-business-day clause). A period
 	// counted back ("thirteen days before") never rolls forward past the
 	// count: its closed last day moves, if at all, to the business day before.
 	const bool countedBack = period->amount.sign() < 0;
@@ -1104,8 +1104,8 @@ bool counts_business_days(const std::string &text) {
 	folded.reserve(text.size());
 	for (const char character : text) folded.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(character))));
 	for (const char *cue : {"business day", "banking day", "working day", "business-day", "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87"
-			/* рабоч */, "\xD0\xA0\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87" /* Рабоч */, "\xD0\xB1\xD0\xB0\xD0\xBD\xD0\xBA\xD0\xBE\xD0\xB2\xD1\x81\xD0\xBA"
-			/* банковск */})
+			/* … */, "\xD0\xA0\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87" /* … */, "\xD0\xB1\xD0\xB0\xD0\xBD\xD0\xBA\xD0\xBE\xD0\xB2\xD1\x81\xD0\xBA"
+			/* … */})
 		if (folded.find(cue) != std::string::npos) return true;
 	return false;
 }

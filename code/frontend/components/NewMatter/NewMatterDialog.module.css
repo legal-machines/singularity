@@ -1,7 +1,7 @@
-/* The New Matter dialog (D-211), in two steps (the owner, 2026-11-02): its
-   fields one under another and the folder it stands in, a group with a quiet
-   label over it; then the lawyers it goes to. No frames and no rules: the
-   space between groups says where one ends. */
+/* The New Matter dialog, in two steps: its fields one under another and the
+   folder it stands in, a group with a quiet label over it; then the lawyers
+   it goes to. No frames and no rules: the space between groups says where
+   one ends. */
 
 /* The steps' dots at the dialog's foot, before its buttons, as onboarding's. */
 nav.steps {
@@ -136,4 +136,19 @@ nav.steps {
 .named > :last-child {
 	flex: 1;
 	min-width: 0;
+}
+
+/* A folder that holds a Matter already: one quiet line with its way back,
+   under the folder it is in. */
+.held {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 8px;
+}
+
+.heldLine {
+	font: var(--type-small);
+	color: var(--ink-3);
 }

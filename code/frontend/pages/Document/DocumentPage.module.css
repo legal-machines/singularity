@@ -164,9 +164,9 @@
 	margin-top: 26px;
 }
 
-/* The lawyer's decision on the version waiting (D-119): the one action it
-   leads with, the return beside it, a line of what each does, and the
-   return's comments under them. */
+/* The lawyer's decision on the version waiting: the one action it leads
+   with, the return beside it, a line of what each does, and the return's
+   comments under them. */
 .decide {
 	display: flex;
 	flex-direction: column;

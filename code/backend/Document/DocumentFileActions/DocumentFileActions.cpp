@@ -254,7 +254,7 @@ std::string free_name_in(const std::filesystem::path& folder, const std::string&
 } // namespace
 
 matters::Matter add_external_file(const std::string& matter_id, const std::string& destination_folder_relative_path,
-		const std::string& source_absolute_path, bool move_source, bool keep_both) {
+		const std::string& source_absolute_path, bool move_source, bool keep_both, bool reads_in_background) {
 	std::error_code source_error;
 	if (std::filesystem::is_regular_file(source_absolute_path, source_error) == false) {
 		throw std::runtime_error("That file could not be found.");
@@ -315,7 +315,11 @@ matters::Matter add_external_file(const std::string& matter_id, const std::strin
 		}
 	}
 
-	matter::detect_affected_paths(matter_id, {destination_absolute.string()});
+	const matters::Matter listed = matter::detect_affected_paths(matter_id, {destination_absolute.string()});
+	if (reads_in_background == true) {
+		matter::read_documents_in_background(matter_id);
+		return listed;
+	}
 	return matter::process_project_documents(matter_id);
 }
 

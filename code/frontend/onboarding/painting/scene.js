@@ -37,7 +37,7 @@ export const OBJECTS = [
   { id: 'furPouch', x: 1578, y: 1008, height: 415, depth: .9, parent: 'petitioner', pivot: [.5,0] },
   // One complete transparent figure, in the same native rig as the visitors.
   // Onboarding sways the Kitsune from its ankles, its body one solid from paws
-  // to ears (the owner, 2026-10-26: "it bends strangely at the belly").
+  // to ears.
   { id: 'kitsune', x: 1835, y: 1007, height: 710, depth: .94, pivot: [.48,.95], bend: [.88,.97], head: [.22,1,.34,.40], neck: [.43,.335], arm: [.05,.76,.40,.65], joint: [.59,.38], responseScale: .45, phase: 1.3 },
   { id: 'basketWoman', x: 670, y: 960, height: 715, depth: .85, pivot: [.32,.94], head: [.43,.78,.35,.43], neck: [.58,.4], phase: 3.2 },
   { id: 'stool', x: 2673, y: 1221, width: 235, depth: .65 },
@@ -101,8 +101,8 @@ export function poses(seconds, reactions = {}, still = false, objects = OBJECTS)
       case 'handHat': tilt=1.6*engage-1.2*answer; break;
       // Onboarding's Kitsune leans into the talk from its ankles and nods
       // along, its body staying one solid: no bend at the belly or hips, and
-      // its paws keep the book still (the owner, 2026-10-26). Every extra
-      // motion closes on the loop, so the loop joins seamlessly.
+      // its paws keep the book still. Every extra motion closes on the loop,
+      // so the loop joins seamlessly.
       case 'kitsune': {
         const nod=Math.sin(t/LOOP*Math.PI*2*8), sway=Math.sin(t/LOOP*Math.PI*2*3+1.3);
         tilt=-2*engage+.8*answer+.9*sway+.3*rock; head=1.8*engage-1.8*read+.7*nod; arm=0; break;

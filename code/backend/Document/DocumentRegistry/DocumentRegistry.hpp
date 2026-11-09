@@ -41,13 +41,7 @@ struct ReconcileOutcome {
 	bool changed = false;
 
 	// Every real physical folder's Project-relative path (POSIX-style
-	// separators), including one holding no files at all. This is Matter's
-	// own transient read-model projection of physical hierarchy
-	// (matters::Matter::folder_paths carries it onward - see that field's own
-	// comment for why folders are a recomputed projection, never a persisted/
-	// versioned object): Sec.12 of phase-08-documents-filesystem-states.md
-	// requires the real folder tree, including empty folders, not a hierarchy
-	// merely inferred from where documents happen to live.
+	// separators), including one holding no files at all.
 	std::vector<std::string> folder_paths;
 };
 
@@ -117,11 +111,6 @@ struct ObservedFile {
 // deliberately NOT what runs on every steady-state matter.listDocuments call
 // once a watcher is already active for this Matter.
 //
-// Leaves matter.documents entirely untouched (ok == false) when the Project
-// folder itself cannot currently be listed at all (permission lost,
-// unmounted, ...): phase-08-documents-filesystem-states.md Sec.8 requires a
-// temporary access failure never read as "the Project is empty." A Matter
-// with no directory_path yet is not an error (ok == true, changed == false)
 // - it simply has nothing to scan.
 [[nodiscard]] ReconcileOutcome detect_filesystem_changes(matters::Matter& matter);
 
@@ -247,13 +236,7 @@ bool process_pending_documents(const std::filesystem::path& workspace_path, matt
 [[nodiscard]] ReconcileOutcome reconcile(const std::filesystem::path& workspace_path, matters::Matter& matter);
 
 // True when `relative_path`, resolved against `project_root`, stays strictly
-// within it. A persisted Document's relative_path must never be trusted to
-// build a filesystem path without this check first: `.lm` state can in
-// principle be hand-edited, corrupted, or (once shared-Project sync exists)
-// written by another device, and a malformed/malicious relative_path must
-// never let Singularity read, hash or extract content from outside the Project
-// folder - Sec.19 (Security and path safety) of
-// phase-08-documents-filesystem-states.md.
+// within it.
 [[nodiscard]] bool is_relative_path_safe(const std::filesystem::path& project_root, const std::string& relative_path);
 
 // Test-only instrumentation (correction item 2): counts real

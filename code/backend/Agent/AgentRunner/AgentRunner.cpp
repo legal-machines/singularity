@@ -858,7 +858,7 @@ AgentRun run_agent_check(const Agent &agent, const std::string &run_id, const st
 AgentRun run_agent_assignment(const Agent &agent, const AgentAssignment &assignment, const std::string &run_id,
 	const RunnerDependencies &dependencies, const std::atomic<bool> *cancelled) {
 	// Where the work was given: the Matter of the thread it came in, or the
-	// colleague's own chat (D-157). A colleague of the firm works in any Matter.
+	// colleague's own chat. A colleague of the firm works in any Matter.
 	const std::string where = assignment.matter_id.empty() == false ? assignment.matter_id : home_project_of(agent, dependencies);
 	AgentRun run;
 	run.id = run_id;
@@ -867,8 +867,8 @@ AgentRun run_agent_assignment(const Agent &agent, const AgentAssignment &assignm
 	run.trigger = "assignment";
 	run.assignment_id = assignment.id;
 	run.status = "running";
-	// Work given as a message is answered first (its talk, D-129): the run is
-	// answering in its chat until the colleague takes work on.
+	// Work given as a message is answered first: the run is answering in its
+	// chat until the colleague takes work on.
 	run.stage = "answering";
 	run.answering_chat_id = assignment.chat_id.empty() == false ? assignment.chat_id : agent.chat_id.value_or(std::string());
 	run.started_at = agent_timestamp_now();

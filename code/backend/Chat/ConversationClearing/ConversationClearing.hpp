@@ -5,8 +5,7 @@
 #include <optional>
 #include <string>
 
-// A personal conversation cleared by the member at this computer (the owner,
-// 2026-11-04: "a way to clear the messages of a direct conversation"): the
+// A personal conversation cleared by the member at this computer: the
 // messages up to that moment leave the member's view here, and none of them
 // goes into an AI colleague's request made from here any more, so the
 // colleague answers as from a conversation begun afresh. The other member's

@@ -14,16 +14,15 @@
 
 namespace singularity::hardware {
 
-// What the adaptive scheduler needs to know about a model's own architecture
-// to pick an execution strategy without the scheduler itself ever having to
-// special-case a specific model (see docs/LOCAL_INFERENCE.md; generic scheduler
-// vs. architecture-specific strategy, dense vs. MoE separation). A future
-// dense/MoE local model (Qwen/Llama/Mistral/Gemma-class) enters through
-// this same generic shape - a new registration with these fields filled in
-// truthfully, never a scheduler/UI rewrite. Every field is a real, known
-// fact about the model's own package/runtime - never a benchmarked or
-// estimated figure, and every optional field that does not apply to a
-// given architecture_kind is left unset rather than guessed.
+// What the adaptive scheduler needs to know about a model's own architecture to
+// pick an execution strategy without the scheduler itself ever having to
+// special-case a specific model. A future dense/MoE local model
+// (Qwen/Llama/Mistral/Gemma-class) enters through this same generic shape - a
+// new registration with these fields filled in truthfully, never a scheduler/UI
+// rewrite. Every field is a real, known fact about the model's own
+// package/runtime - never a benchmarked or estimated figure, and every optional
+// field that does not apply to a given architecture_kind is left unset rather
+// than guessed.
 enum class ModelArchitectureKind {
   // The honest default: no registration has classified this model's
   // architecture (yet, or at all - an unrecognized package format). A

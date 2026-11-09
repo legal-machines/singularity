@@ -139,7 +139,7 @@ struct RequestMappingEntry {
 
 	// This person's surname written on its own, met in this operation after the
 	// full name: "Hale" after "Victor Hale", "Ms. Morgan" after "Dana Morgan",
-	// "Громову" after "И. Громов". The same person, so the same symbol - but
+	// "…" after "…". The same person, so the same symbol - but
 	// kept apart from surface_forms, and out of every_form(), because it counts
 	// only as a whole word: "Hale" is not inside "Haley", nor "Rich" inside
 	// "Richard". It is replaced, and the leak check looks for it, only there.
@@ -149,7 +149,7 @@ struct RequestMappingEntry {
 	// without its legal form and the words any company's name has -
 	// "Meadowbrook" of "Meadowbrook Industrial Partners LLC", in prose, in a file
 	// name ("Lease - Meadowbrook Cold Storage.docx") or in a journal record - or
-	// the name it gives in quotes, «СтройИнвест» of ООО «СтройИнвест». The same
+	// the name it gives in quotes, «…» of …. The same
 	// organisation, so the same symbol, sent as its short part ([[E3.short]]) and
 	// written back as it was written, so a file named with it is still found by
 	// that name. Like a surname alone, kept out of every_form() and matched only
@@ -169,8 +169,8 @@ struct RequestMappingEntry {
 
 	// The value this row stands for, when its writing reads as one: an amount,
 	// a rate, a date, a plain quantity. One value is one row however it is
-	// written - "18 400 000 (восемнадцать миллионов четыреста тысяч) рублей",
-	// "18 400 000 рублей" and a workbook's "18400000 (shown in ₽)" are one
+	// written - "…",
+	// "…" and a workbook's "18400000 (shown in ₽)" are one
 	// symbol in prose, Word and Excel alike. `value_key` is its
 	// semantic::value_key; both empty for a name or a code. Request-scoped.
 	std::optional<semantic::Value> value;
@@ -182,8 +182,8 @@ struct RequestMappingEntry {
 	std::string honorific;
 
 	// A Russian person's gender as the sources' sentences show it where the
-	// name alone does not: «Генеральному директору Лебедеву А. И.» is a man -
-	// a woman there would be «Лебедевой» - though «Лебедеву А. И.» alone could
+	// name alone does not: «…» is a man -
+	// a woman there would be «…» - though «…» alone could
 	// be either. Unknown when nothing shows it. Request-scoped.
 	context::russian_names::Gender gender = context::russian_names::Gender::Unknown;
 
@@ -257,8 +257,8 @@ struct OperationProtectedSymbolTable {
 	// an identity (recorded_value_names_identity).
 	std::map<std::string, std::set<std::string>> project_entity_curated_aliases;
 	// The symbol each Project identity stands under in every request and
-	// document of the Project (privacy::project_entity_symbols, D-235): its
-	// row takes it here, and a value of no identity is numbered past them.
+	// document of the Project: its row takes it here, and a value of no
+	// identity is numbered past them.
 	std::map<std::string, std::string> project_entity_symbols;
 	std::vector<RequestMappingEntry> mapping;
 	// Raw local-model detections, keyed by the EXACT leaf text they were
@@ -308,19 +308,19 @@ struct OperationProtectedSymbolTable {
 	mutable std::vector<AliasPatternRecord> alias_scanner_patterns;
 	mutable std::size_t alias_scanner_signature = static_cast<std::size_t>(-1);
 	// And one for surnames: every writing of a person row's surname ("Hale";
-	// "Громов", "Громова", "Громову"...) with the rows it can name, and the
+	// "…") with the rows it can name, and the
 	// first letter of each row's given name, which tells Victor Hale from Maria
 	// Hale. Kept row by row: reading passage after passage derives again only a
 	// row that is new or has been written another way since. A Russian
-	// surname's writings are the ones its bearer's gender takes: «Кузнецовой»
-	// is never Дмитрий Кузнецов, «Кузнецовым» never Анна Кузнецова.
+	// surname's writings are the ones its bearer's gender takes: «…»
+	// is never … never …
 	struct SurnameRecord {
 		std::size_t signature = static_cast<std::size_t>(-1);
 		std::string initial;
 		std::vector<std::string> forms;
-		// The given name written out ("Marcus", "Андрей"), and the first letter
+		// The given name written out ("Marcus", "…"), and the first letter
 		// of every name before the surname in order - the given name's, then a
-		// middle name's or a patronymic's ("А", "И" for Андрей Игоревич).
+		// middle name's or a patronymic's ("…" for …).
 		std::string given;
 		std::vector<std::string> initials;
 	};

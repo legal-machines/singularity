@@ -18,9 +18,8 @@ import thread from "../Thread/ThreadView.module.css";
 import styles from "./MailPage.module.css";
 
 // A message from the member's Outlook, filed to a project because its sender
-// is a contact recorded on it (the owner, 2026-10-24). It reads as a letter:
-// who wrote and to whom, the words and the files. A reply goes back to the
-// sender through Outlook.
+// is a contact recorded on it. It reads as a letter: who wrote and to whom,
+// the words and the files. A reply goes back to the sender through Outlook.
 export function MailPage() {
 	const { place, open } = useNavigation();
 	const message = findMail(place.mailId);

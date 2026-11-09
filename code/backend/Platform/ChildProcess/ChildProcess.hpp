@@ -46,10 +46,7 @@ struct ChildProcessResourceUsage {
 //     owning process disappears for any reason - a crash, SIGKILL or
 //     TerminateProcess, a closed terminal - none of which run cleanup code.
 //     POSIX launches it through a small guard supervisor that watches a
-//     pipe only the owner holds; Windows places it in a kill-on-close Job
-//     Object only the owner holds a handle to.
 //  2. It is isolated from the terminal's interrupt. A user's Ctrl-C reaches
-//     only the owner's cooperative cancellation, never the child (its own
 //     process group on POSIX; a new process group without a console on
 //     Windows).
 //  3. It inherits nothing but its redirected standard streams.
@@ -71,9 +68,6 @@ public:
 	// Windows, together with anything it started). Idempotent.
 	void terminate(std::chrono::milliseconds grace = std::chrono::milliseconds(1000)) noexcept;
 	ChildProcessResourceUsage resource_usage() const noexcept;
-	// Why an exited child stopped, in plain language, where the platform
-	// reports it to the owner ("a library it needs is missing", "exit code
-	// 3"); std::nullopt while running or when unknown.
 	std::optional<std::string> exit_reason() const;
 
 	struct State;

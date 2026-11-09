@@ -27,10 +27,10 @@ inline constexpr WindowSize kOnboardingWindowSize{1080, 720};
 // settings already record completion) or immediately after
 // onboarding.complete transitions the running window.
 inline constexpr WindowSize kMainWindowInitialSize{1440, 960};
-// The least content size (D-035), 5:3: what a Full HD+ 16:10 laptop at
-// Windows' default 150% scale (1280 x 800 logical) leaves below the taskbar
-// and the title bar is about 1280 x 729, so it fits that laptop, every
-// MacBook and every common PC screen.
+// The least content size, 5:3: what a Full HD+ 16:10 laptop at Windows'
+// default 150% scale (1280 x 800 logical) leaves below the taskbar and the
+// title bar is about 1280 x 729, so it fits that laptop, every MacBook and
+// every common PC screen.
 inline constexpr WindowSize kMainWindowMinimumSize{1200, 720};
 
 } // namespace singularity::app

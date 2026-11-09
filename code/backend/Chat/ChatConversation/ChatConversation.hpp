@@ -123,13 +123,6 @@ struct ChatEvidenceCoverageRange {
   std::size_t end_row = 0;
 };
 
-// One real Evidence Objective the reviewer's own model declared and
-// inspected (Document/ConnectedDocumentAction.hpp's EvidenceObjective,
-// projected from the draft's persisted checkpoint) - phase-26-chat-
-// inspector-workflows.md's own "Evidence coverage must use real Evidence
-// Objectives / inspected ranges." coverage_mode is "targeted" or
-// "exhaustive" and stays semantically distinct; nothing here is a computed
-// completeness ratio.
 struct ChatEvidenceObjective {
   std::string id;
   std::string description;
@@ -328,11 +321,23 @@ struct ChatConversation {
 // reattachment step. Throws for a Project or Chat that no longer exists.
 ChatConversation conversation(const std::string &project_id, const std::string &chat_id);
 
-// A thread's latest message as a list of Matters shows it (D-200): who wrote
-// it and its words in one line. It is the last message the thread shows: a
-// person's message, an AI colleague's, or a model's answer to a person's own
-// request - never a deleted message, a closing or reopening, a request still
-// running or one that ended without an answer.
+// Puts every other member's messages on this computer's clock. A message's
+// time is its writer's clock; when it reached each member, that member's
+// (MatterTask::received). From the two between this member and each other -
+// when this member's messages reached them, and theirs reached here - it
+// finds how far that member's clock runs from this one's, and moves their
+// messages by it: a computer whose clock is hours ahead or behind no longer
+// puts its messages after, or before, everyone else's. From one of the two
+// alone, only what cannot be is mended: a message never reached anyone before
+// it was written. Less than two minutes apart, nothing moves. `viewer` is the
+// member at this computer.
+void align_member_clocks(std::vector<ChatTurn> &turns, const std::string &viewer);
+
+// A thread's latest message as a list of Matters shows it: who wrote it and
+// its words in one line. It is the last message the thread shows: a person's
+// message, an AI colleague's, or a model's answer to a person's own request
+// - never a deleted message, a closing or reopening, a request still running
+// or one that ended without an answer.
 struct ChatLatestMessage {
   std::string chat_id;
   std::string task_id;

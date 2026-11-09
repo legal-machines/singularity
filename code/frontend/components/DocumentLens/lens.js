@@ -1,8 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 // The one document the window shows over everything, as written and as an AI
-// provider receives it (DocumentLens.jsx, D-233): { projectId, documentId,
-// name }, or null.
+// provider receives it: { projectId, documentId, name }, or null.
 let shown = null;
 const listeners = new Set();
 

@@ -71,8 +71,6 @@ PreparedChatRequest prepare_chat_request(const ChatRequestComposition &compositi
 	if (setup.primary_model) {
 		request_params["providerId"] = setup.primary_model->provider_id;
 		request_params["modelId"] = setup.primary_model->model_id;
-		// SET-1: where this model actually came from - the Node default, a
-		// Project or Chat override, or a genuine one-time choice for this send.
 		// The task used to record "operation_override" for every request,
 		// whatever the person had actually configured, which made a Project's
 		// own AI Setup unprovable from its own operation records.

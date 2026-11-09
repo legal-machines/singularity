@@ -184,7 +184,31 @@ std::function<std::string()> &own_photo_source() {
 	return source;
 }
 
+std::function<std::string()> &own_organisation_source() {
+	static std::function<std::string()> source;
+	return source;
+}
+
 } // namespace
+
+void set_own_organisation_source(std::function<std::string()> source) {
+	const std::lock_guard<std::mutex> lock(own_office_mutex());
+	own_organisation_source() = std::move(source);
+}
+
+std::string own_organisation_id() {
+	std::function<std::string()> source;
+	{
+		const std::lock_guard<std::mutex> lock(own_office_mutex());
+		source = own_organisation_source();
+	}
+	if (!source) return std::string();
+	try {
+		return source();
+	} catch (const std::exception &) {
+		return std::string();
+	}
+}
 
 void set_own_photo_source(std::function<std::string()> source) {
 	const std::lock_guard<std::mutex> lock(own_office_mutex());
@@ -409,12 +433,17 @@ void record_member(const std::filesystem::path &project_folder, const std::strin
 		// Once a day is enough to say who works on the Matter: the record is not
 		// rewritten every time it is opened.
 		const bool isSameDay = lastSeen.size() >= 10 && now.size() >= 10 && lastSeen.compare(0, 10, now, 0, 10) == 0;
-		// Their photo travels as their office does (D-163), and a changed one is
-		// written at once.
+		// Their photo travels as their office does, and a changed one is written
+		// at once.
 		const std::string photo = own_photo();
+		// The organisation they are signed in to, by Legal Machines' id: who is
+		// of one firm is told by it, never by the name; a changed one is written
+		// at once.
+		const std::string organisationId = own_organisation_id();
 		if (!isNewDevice && isKeyStated && isSameDay && text_of(record, "name") == name
-				&& text_of(record, "organisation") == organisation && text_of(record, "position") == office.position
-				&& text_of(record, "practice") == office.practice && text_of(record, "photo") == photo) return;
+				&& text_of(record, "organisation") == organisation && text_of(record, "organisationId") == organisationId
+				&& text_of(record, "position") == office.position && text_of(record, "practice") == office.practice
+				&& text_of(record, "photo") == photo) return;
 		const std::string firstSeen = text_of(record, "firstSeenAt");
 		Json written{
 			{"format", "singularity-member"}, {"formatVersion", 1},
@@ -424,6 +453,7 @@ void record_member(const std::filesystem::path &project_folder, const std::strin
 			{"lastSeenAt", now},
 		};
 		if (!photo.empty()) written["photo"] = photo;
+		if (!organisationId.empty()) written["organisationId"] = organisationId;
 		write_json(path, written, platform::StagedCommitMode::ReplaceExisting);
 	} catch (const std::exception &) {
 	}
@@ -476,6 +506,7 @@ std::vector<SharedMember> load_members(const std::filesystem::path &project_fold
 		if (fileName != member_file_name(member.actor_id)) continue;
 		member.name = text_of(*record, "name");
 		member.organisation = text_of(*record, "organisation");
+		member.organisation_id = text_of(*record, "organisationId");
 		member.position = text_of(*record, "position");
 		member.practice = text_of(*record, "practice");
 		const std::string photo = text_of(*record, "photo");

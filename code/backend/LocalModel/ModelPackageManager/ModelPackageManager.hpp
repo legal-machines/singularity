@@ -14,8 +14,8 @@
 namespace singularity::local_models {
 
 // The request that ends this computer's session at Legal Machines when the
-// person signs out (D-026): the session's own headers, nothing else. None for
-// a computer that holds no session. Pure, so what leaves is checked by a test.
+// person signs out: the session's own headers, nothing else. None for a
+// computer that holds no session. Pure, so what leaves is checked by a test.
 struct SessionEndRequest {
   std::string url;
   std::vector<platform::HttpHeader> headers;
@@ -49,9 +49,8 @@ struct PackageSyncStatus {
   std::string version;
   // Populated only during PackageSyncState::Downloading, from real bytes
   // already received against the pinned archive size - never a
-  // fabricated figure (see DESIGN_SYSTEM.md's "Never fake percentage").
-  // 0-99; Verifying/Installing leave this unset again since no further
-  // per-byte signal exists past the download itself.
+  // fabricated figure. 0-99; Verifying/Installing leave this unset again
+  // since no further per-byte signal exists past the download itself.
   std::optional<int> progress_percent;
   // The bytes of the package that have arrived, and how many it has in all:
   // set while it downloads, and - the download then being whole - while it is
@@ -75,10 +74,10 @@ inline const char *papinian_recovery_for(PackageSyncState state, bool has_sessio
 }
 
 // Whether Singularity fetches a missing protection model by itself, at
-// sign-in or at launch: only once onboarding is complete and protection is on
-// (the owner, 2026-11-01, D-198). In onboarding the member's own choice and
-// button fetch it (localModels.sync); with protection off nothing downloads
-// until someone asks. An installed model is still checked, and repaired.
+// sign-in or at launch: only once onboarding is complete and protection is
+// on. In onboarding the member's own choice and button fetch it
+// (localModels.sync); with protection off nothing downloads until someone
+// asks. An installed model is still checked, and repaired.
 inline bool papinian_fetched_by_itself(bool onboarding_completed, bool protection_on) {
   return onboarding_completed == true && protection_on == true;
 }
@@ -124,12 +123,12 @@ public:
   // The headers a request of this computer's session carries to Legal
   // Machines (its bearer and whose it is), as the downloads send them; empty
   // without a session. For the account's own requests, such as inviting a
-  // colleague (Bridge/AccountBridge, D-136); never shown or kept elsewhere.
+  // colleague; never shown or kept elsewhere.
   std::vector<platform::HttpHeader> session_headers() const;
   // Signing out: asks Legal Machines to end this computer's session, then
   // forgets it here whatever the answer, so a sign-out never fails for the
-  // network (D-026). An installed package stays installed; one that is not
-  // says it needs a sign-in again.
+  // network. An installed package stays installed; one that is not says it
+  // needs a sign-in again.
   void forget_session();
 	// Installs any catalogue model. Passing an existing artifact is the
 	// production "Use downloaded file" path: it receives the exact same size,

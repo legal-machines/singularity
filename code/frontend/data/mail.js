@@ -1,8 +1,8 @@
-// MOCK DATA - mail from the member's Outlook (the owner, 2026-10-24). A
-// message from a contact recorded on a project is filed to that project and
-// comes to the Inbox under the project's band; any other message stays in
-// Outlook. Fictional throughout (AG-12): the people, the companies and the
-// addresses, on the reserved .example domain.
+// MOCK DATA - mail from the member's Outlook. A message from a contact
+// recorded on a project is filed to that project and comes to the Inbox
+// under the project's band; any other message stays in Outlook. Fictional
+// throughout: the people, the companies and the addresses, on the reserved
+// .example domain.
 
 // The people outside the firm recorded on each project, with what they are
 // to it, written to follow a comma.

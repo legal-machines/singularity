@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-// Filing letters to their Matters (D-106), the smallest correct version: a
-// member files a letter from their mail client, on the evidence Singularity
-// shows them (Correspondence/LetterRouting). Nothing is filed by guess, and
+// Filing letters to their Matters, the smallest correct version: a member
+// files a letter from their mail client, on the evidence Singularity shows
+// them (Correspondence/LetterRouting). Nothing is filed by guess, and
 // nothing is sent. A filed letter is the Matter's, seen by its members on
 // every computer that opens it.
 namespace singularity::correspondence {
@@ -29,7 +29,7 @@ Suggestion suggest(const MessageFacts &facts);
 // again there is the one already filed; a letter filed in another Matter is
 // refused (it is moved instead). A letter not yet sent or received (no
 // Message-ID) is refused. Filed `by_rule`, it is filed by a rule of the
-// Matter's intake, which must answer to it here and now (D-228).
+// Matter's intake, which must answer to it here and now.
 Letter file_letter(const std::string &matter_id, const MessageFacts &facts, const std::vector<std::string> &evidence,
 	const std::string &filed_from, bool by_rule = false);
 
@@ -42,20 +42,20 @@ void unfile_letter(const std::string &matter_id, const std::string &letter_id);
 
 // Files each email a member put in the Matter's folder that was sent or
 // received (an .eml with a Message-ID, never a draft marked unsent) as one of
-// its letters, from "folder" (D-180): its id made from its Message-ID, so the
-// same email filed on two computers is one letter; one filed here already, or
-// in another Matter here, is left as it is. Its attachments are listed, never
-// saved: they are the Matter's documents only when a person saves them
-// (D-106). The letters it filed.
+// its letters, from "folder": its id made from its Message-ID, so the same
+// email filed on two computers is one letter; one filed here already, or in
+// another Matter here, is left as it is. Its attachments are listed, never
+// saved: they are the Matter's documents only when a person saves them. The
+// letters it filed.
 std::vector<Letter> file_folder_letters(const std::string &matter_id);
 
 // The Matter's letters, the latest first: the emails in its folder filed first.
 std::vector<Letter> letters_of(const std::string &matter_id);
 
-// A reply to a letter filed to the Matter (D-105), as the member's mail app
-// opens it to edit and send: to whoever wrote it - or, for one the firm sent,
-// to whom it went first - with "Re: " before its subject once, and the
-// member's words. Its address is empty where the letter names none.
+// A reply to a letter filed to the Matter, as the member's mail app opens it
+// to edit and send: to whoever wrote it - or, for one the firm sent, to whom
+// it went first - with "Re: " before its subject once, and the member's
+// words. Its address is empty where the letter names none.
 struct ReplyDraft {
 	std::string to;
 	std::string subject;
@@ -63,8 +63,8 @@ struct ReplyDraft {
 };
 ReplyDraft reply_draft(const Letter &letter, const std::string &text);
 
-// A reply that hands over files (D-105, D-115): the reply_draft() above as an
-// unsent email (X-Unsent: 1) with the Matter's documents attached, written to
+// A reply that hands over files: the reply_draft above as an unsent email
+// (X-Unsent: 1) with the Matter's documents attached, written to
 // Singularity's own folder on this computer - never the Matter's, so nothing
 // of a draft reaches the firm's other computers - for the member's mail app
 // to open, edit and send. Singularity never sends it. Drafts a week old are

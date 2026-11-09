@@ -3,12 +3,12 @@
 #include <optional>
 #include <string>
 
-// The file a pane is open in, and its Matter (D-105). A document or workbook
-// Word or Excel has open, or a message's attachment in Outlook, is a file; a
-// Matter is the folder its documents live in. These say which Matter a file
-// belongs to, put a file into a Matter's folder, and hand a pane a Matter
-// document's bytes - nothing else. The rules for the paths and names
-// themselves are Office/OfficePaths.
+// The file a pane is open in, and its Matter. A document or workbook Word or
+// Excel has open, or a message's attachment in Outlook, is a file; a Matter
+// is the folder its documents live in. These say which Matter a file belongs
+// to, put a file into a Matter's folder, and hand a pane a Matter document's
+// bytes - nothing else. The rules for the paths and names themselves are
+// Office/OfficePaths.
 namespace singularity::office {
 
 struct FileInMatter {

@@ -10,11 +10,11 @@
 namespace singularity::agents {
 
 // An AI colleague's id, bound to the key of the computer that makes it and runs
-// it (D-128): "agent_" and 24 hex of the SHA-256 of "lm-agent-id-v1", that
-// computer's device key (Ed25519, base64, Platform/DeviceKey) and a nonce, one
-// to a line. A card for that id can then come only from that computer: another
-// would need a nonce that gives the same 96 bits from its own key. The id is as
-// long as a random one was, so nothing that keeps ids changes.
+// it: "agent_" and 24 hex of the SHA-256 of "lm-agent-id-v1", that computer's
+// device key (Ed25519, base64, Platform/DeviceKey) and a nonce, one to a line.
+// A card for that id can then come only from that computer: another would need
+// a nonce that gives the same 96 bits from its own key. The id is as long as a
+// random one was, so nothing that keeps ids changes.
 inline std::string bound_agent_id(const std::string &device_key, const std::string &nonce) {
 	return "agent_" + platform::sha256_hex_digest("lm-agent-id-v1\n" + device_key + "\n" + nonce).substr(0, 24);
 }
@@ -28,9 +28,9 @@ inline std::pair<std::string, std::string> new_bound_agent_id(const std::string 
 }
 
 // What the computer that runs a colleague signs on the colleague's card, so the
-// Matter's other computers know the card is that computer's (D-128): the
-// colleague, the computer, its key, the id's nonce, the lawyer answerable for
-// it and the card's counter, one to a line.
+// Matter's other computers know the card is that computer's: the colleague, the
+// computer, its key, the id's nonce, the lawyer answerable for it and the
+// card's counter, one to a line.
 inline std::string agent_card_signed_text(const std::string &agent_id, const std::string &host_device_id,
 		const std::string &host_device_key, const std::string &id_nonce, const std::string &responsible_actor_id,
 		std::int64_t counter) {

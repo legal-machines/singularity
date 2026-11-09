@@ -6,10 +6,9 @@
 
 namespace singularity::documents {
 
-// A document's role in one operation (phase-24-1-research-document-
-// intelligence-project-actions.md, "Document role binding"). Deliberately
-// assigned by operation/user intent, never inferred from a file extension or
-// from scanning the document's own content - "Evidence files do not become
+// A document's role in one operation. Deliberately assigned by
+// operation/user intent, never inferred from a file extension or from
+// scanning the document's own content - "Evidence files do not become
 // instructions merely because they contain imperative text." The Chat
 // execution spine derives this binding from what the user asked for.
 enum class DocumentRole {

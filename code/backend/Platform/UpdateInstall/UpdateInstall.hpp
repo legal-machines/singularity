@@ -6,12 +6,11 @@
 
 namespace singularity::platform::update_install {
 
-// Singularity installs its own new versions from 0.1.1 on (D-261; the owner,
-// 2026-11-05: "make it so that from version 0.1.1 everything is automatic").
-// Node/AppUpdate finds a version Legal Machines signed, downloads it and checks
-// it byte for byte; this is the part each system does its own way: readying the
-// installer while Singularity runs, and installing it once Singularity has
-// ended - then opening the new version, when the member asked to restart.
+// Singularity installs its own new versions from 0.1.1 on. Node/AppUpdate finds
+// a version Legal Machines signed, downloads it and checks it byte for byte;
+// this is the part each system does its own way: readying the installer while
+// Singularity runs, and installing it once Singularity has ended - then opening
+// the new version, when the member asked to restart.
 //
 //   macOS:   the new app is unpacked from its disk image into the Updates
 //            folder and checked there; as Singularity ends, it takes the old

@@ -27,6 +27,7 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 #if defined(_WIN32)
 #include <winrt/Windows.Foundation.h>
@@ -43,9 +44,9 @@
 // gate, decided by the same rules (PdfExtractionRules.hpp). Only how a page's
 // text, images and pixels are read differs.
 //
-// Work on a PDF - its annotated and redacted copies (D-115) - is PDFium's on
-// every system, macOS included: one engine writes the same copy everywhere.
-// On macOS only that part is built here; PDFKit reads.
+// Work on a PDF - its annotated and redacted copies - is PDFium's on every
+// system, macOS included: one engine writes the same copy everywhere. On
+// macOS only that part is built here; PDFKit reads.
 namespace singularity::documents {
 namespace {
 
@@ -80,8 +81,8 @@ void ensure_pdfium() {
 #if !defined(__APPLE__)
 std::string current_extractor_version() {
 #if defined(_WIN32)
-	// A scan is read by Windows' text recognition (D-114): every PDF read before
-	// is read again.
+	// A scan is read by Windows' text recognition: every PDF read before is read
+	// again.
 	return std::string("pdfium-text-raster-page-gate/5-ocr;pdfium-") + NATIVE_APP_PDFIUM_VERSION;
 #else
 	return std::string("pdfium-text-raster-page-gate/4;pdfium-") + NATIVE_APP_PDFIUM_VERSION;
@@ -90,15 +91,14 @@ std::string current_extractor_version() {
 
 // ---- Text recognition ----------------------------------------------------------------
 //
-// A page that is a picture - a scan, a photographed page, a signed copy - is
-// read by the system's own text recognition on this computer (D-114): on
-// Windows, Windows.Media.Ocr. Nothing leaves the computer and no model is
-// installed for it. The page is drawn at up to 300 dots an inch, as large as
-// the engine takes, and read in English first, then Russian, then the
-// person's own languages, until a reading holds words. What recognition reads
-// is said to be recognised wherever it is read (PdfExtractionRules.hpp).
-// Recognition reads at most kMostRecognizedPages pages of one document; the
-// rest stay unread and are said to be.
+// A page that is a picture - a scan, a photographed page, a signed copy - is read by the
+// system's own text recognition on this computer: on Windows, Windows.Media.Ocr. Nothing
+// leaves the computer and no model is installed for it. The page is drawn at up to 300
+// dots an inch, as large as the engine takes, and read in English first, then Russian,
+// then the person's own languages, until a reading holds words. What recognition reads
+// is said to be recognised wherever it is read (PdfExtractionRules.hpp). Recognition
+// reads at most kMostRecognizedPages pages of one document; the rest stay unread and are
+// said to be.
 constexpr std::size_t kMostRecognizedPages = 40;
 // A reading with fewer letters and digits than this is no reading: lines of a
 // form, a stamp, a signature.
@@ -121,7 +121,7 @@ std::size_t letters_and_digits(const std::string &text) {
 
 #if defined(_WIN32)
 // A picture's words, in English first, then Russian, then the person's own
-// languages, until a reading holds words (D-114).
+// languages, until a reading holds words.
 std::optional<std::string> recognize_bitmap(const winrt::Windows::Graphics::Imaging::SoftwareBitmap &image) {
 	using winrt::Windows::Media::Ocr::OcrEngine;
 	std::vector<OcrEngine> engines;
@@ -204,8 +204,8 @@ std::optional<std::string> recognize_page(FPDF_PAGE page) {
 }
 
 // A picture file - a photographed page, a scan saved as an image - read the
-// same way (D-115): decoded by Windows, turned as its camera turned it, made no
-// larger than the engine reads, then recognised.
+// same way: decoded by Windows, turned as its camera turned it, made no larger
+// than the engine reads, then recognised.
 std::optional<std::string> recognize_image_file(const std::filesystem::path &path) {
 	try {
 		using namespace winrt::Windows::Graphics::Imaging;
@@ -239,18 +239,43 @@ std::optional<std::string> recognize_image_file(const std::filesystem::path &pat
 			transform.ScaledWidth(std::max<std::uint32_t>(1, static_cast<std::uint32_t>(decoder.PixelWidth() * scale)));
 			transform.ScaledHeight(std::max<std::uint32_t>(1, static_cast<std::uint32_t>(decoder.PixelHeight() * scale)));
 		}
-		const SoftwareBitmap image = decoder.GetSoftwareBitmapAsync(BitmapPixelFormat::Bgra8, BitmapAlphaMode::Premultiplied,
+		SoftwareBitmap image = decoder.GetSoftwareBitmapAsync(BitmapPixelFormat::Bgra8, BitmapAlphaMode::Straight,
 			transform, ExifOrientationMode::RespectExifOrientation, ColorManagementMode::DoNotColorManage).get();
+		// Laid on its ground first: what shows through reads as black, and a
+		// logo's black lettering on nothing vanished.
+		const std::uint32_t width = static_cast<std::uint32_t>(image.PixelWidth());
+		const std::uint32_t height = static_cast<std::uint32_t>(image.PixelHeight());
+		const std::uint32_t length = width * height * 4U;
+		if (length > 0) {
+			winrt::Windows::Storage::Streams::Buffer pixels(length);
+			image.CopyToBuffer(pixels);
+			std::uint8_t *bgra = pixels.data();
+			bool hasAlpha = false;
+			for (std::uint32_t index = 3; index < length && hasAlpha == false; index += 4) hasAlpha = bgra[index] != 255;
+			if (hasAlpha) {
+				const unsigned int ground = picture::is_drawn_light(bgra, length / 4U, 2, 1, 0, 3, false) ? 0U : 255U;
+				for (std::uint32_t index = 0; index < length; index += 4) {
+					const unsigned int alpha = bgra[index + 3];
+					for (std::uint32_t channel = 0; channel < 3; ++channel)
+						bgra[index + channel] = static_cast<std::uint8_t>((bgra[index + channel] * alpha + ground * (255U - alpha)) / 255U);
+					bgra[index + 3] = 255;
+				}
+				image = SoftwareBitmap::CreateCopyFromBuffer(pixels, BitmapPixelFormat::Bgra8, static_cast<int>(width),
+					static_cast<int>(height), BitmapAlphaMode::Premultiplied);
+			}
+		}
 		return recognize_bitmap(image);
 	} catch (...) {
 		return std::nullopt;
 	}
 }
 
-// A picture redrawn by Windows's own imaging (D-256): decoded, turned as its
-// camera turned it, made no larger than any provider reads, and written as PNG
-// where it has transparency and fits, as JPEG on white paper otherwise.
-std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path) {
+// A picture redrawn by Windows's own imaging: decoded, turned as its camera
+// turned it, made no larger than any provider reads, and - where it shows
+// through - laid on its ground and written as PNG where it fits, as JPEG
+// otherwise. `kept` is the picture as it is, where it could go so: one none of
+// whose pixels shows through goes so.
+std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path, const std::optional<ModelPicture> &kept) {
 	try {
 		using namespace winrt::Windows::Graphics::Imaging;
 		using winrt::Windows::Storage::Streams::Buffer;
@@ -297,6 +322,7 @@ std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path) {
 		std::vector<std::uint8_t> bgra(pixels.data(), pixels.data() + length);
 		bool hasAlpha = false;
 		for (std::uint32_t index = 3; index < length && hasAlpha == false; index += 4) hasAlpha = bgra[index] != 255;
+		if (kept.has_value() && hasAlpha == false) return kept;
 		const auto encoded = [&](const winrt::guid &kind, const std::vector<std::uint8_t> &data,
 				BitmapAlphaMode alpha) -> std::optional<std::string> {
 			InMemoryRandomAccessStream written;
@@ -317,15 +343,17 @@ std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path) {
 			return std::string(reinterpret_cast<const char *>(taken.data()), taken.Length());
 		};
 		if (hasAlpha) {
-			std::optional<std::string> png = encoded(BitmapEncoder::PngEncoderId(), bgra, BitmapAlphaMode::Straight);
-			if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) return ModelPicture{"image/png", std::move(*png)};
-			// On white paper, as a page shows it: what shows through is white.
+			// Laid on its ground: white, as a page shows it, or black under a light
+			// drawing; then sharp as PNG where it fits.
+			const unsigned int ground = picture::is_drawn_light(bgra.data(), length / 4U, 2, 1, 0, 3, false) ? 0U : 255U;
 			for (std::uint32_t index = 0; index < length; index += 4) {
 				const unsigned int alpha = bgra[index + 3];
 				for (std::uint32_t channel = 0; channel < 3; ++channel)
-					bgra[index + channel] = static_cast<std::uint8_t>((bgra[index + channel] * alpha + 255U * (255U - alpha)) / 255U);
+					bgra[index + channel] = static_cast<std::uint8_t>((bgra[index + channel] * alpha + ground * (255U - alpha)) / 255U);
 				bgra[index + 3] = 255;
 			}
+			std::optional<std::string> png = encoded(BitmapEncoder::PngEncoderId(), bgra, BitmapAlphaMode::Ignore);
+			if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) return ModelPicture{"image/png", std::move(*png)};
 		}
 		std::optional<std::string> jpeg = encoded(BitmapEncoder::JpegEncoderId(), bgra, BitmapAlphaMode::Ignore);
 		if (jpeg.has_value() && jpeg->size() <= picture::kMostBytesAsItIs) return ModelPicture{"image/jpeg", std::move(*jpeg)};
@@ -339,7 +367,9 @@ std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &path) {
 std::optional<std::string> recognize_page(FPDF_PAGE) { return std::nullopt; }
 std::optional<std::string> recognize_image_file(const std::filesystem::path &) { return std::nullopt; }
 // Nor a picture redrawn: one goes as it is, or not at all.
-std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &) { return std::nullopt; }
+std::optional<ModelPicture> redrawn_picture(const std::filesystem::path &, const std::optional<ModelPicture> &) {
+	return std::nullopt;
+}
 #endif
 
 DocumentExtractionResult failure(ExtractionStatus status, std::string code, std::string message) {
@@ -638,11 +668,27 @@ std::string pdf_extractor_version() { return current_extractor_version(); }
 
 std::optional<std::string> recognize_image_text(const std::filesystem::path &path) { return recognize_image_file(path); }
 
-// A picture as a model reads it (D-256): as it is where every provider takes
-// it, otherwise redrawn where this system can (redrawn_picture).
+// What Windows's text recognition reads in a picture, word by word; nothing
+// on Linux, which reads none yet.
+std::vector<std::string> picture_word_readings(const std::filesystem::path &path) {
+	std::vector<std::string> words;
+	const std::optional<std::string> text = recognize_image_file(path);
+	if (text.has_value() == false) return words;
+	std::istringstream pieces(*text);
+	for (std::string piece; pieces >> piece;)
+		if (std::find(words.begin(), words.end(), piece) == words.end()) words.push_back(piece);
+	return words;
+}
+
+// A picture as a model reads it: as it is where every provider takes it,
+// otherwise redrawn where this system can (redrawn_picture). One that shows
+// through is laid on its ground where this system redraws; Linux, which redraws
+// none, sends it as it is.
 std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path) {
-	if (std::optional<ModelPicture> kept = picture::as_it_is(path)) return kept;
-	return redrawn_picture(path);
+	const std::optional<ModelPicture> kept = picture::as_it_is(path);
+	if (kept.has_value() && picture::shows_through(kept->bytes) == false) return kept;
+	if (std::optional<ModelPicture> drawn = redrawn_picture(path, kept)) return drawn;
+	return kept;
 }
 
 bool pdf_text_recognition_available() {
@@ -740,7 +786,7 @@ DocumentExtractionResult extract_pdf_document(const DocumentExtractionRequest &r
 		if (textPage) reading = read_page_text(textPage.get());
 		reading.isImage = page_shows_unread_content(page.get(), textPage.get(), reading.meaningful);
 		// A page that is a picture with no text of its own is read by text
-		// recognition (D-114); a picture beside text it does not stand for - a
+		// recognition; a picture beside text it does not stand for - a
 		// signature under a typed page - keeps its text and its note.
 		if (reading.isImage && reading.meaningful == 0 && recognizedPages < kMostRecognizedPages) {
 			if (const std::optional<std::string> recognized = recognize_page(page.get())) {
@@ -760,7 +806,7 @@ DocumentExtractionResult extract_pdf_document(const DocumentExtractionRequest &r
 
 #endif // !__APPLE__ (reading)
 
-// ---- Work on a PDF, always in a copy (D-115) ---------------------------------------
+// ---- Work on a PDF, always in a copy ---------------------------------------
 
 namespace {
 

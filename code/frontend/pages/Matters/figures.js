@@ -6,11 +6,10 @@ import { readAllTime, timeOfMatter, usageOnBill, useTime } from "../../data/time
 import { documents, threads } from "../../data/workspace.js";
 
 // What a Matter holds and what its work came to, beside its name on the
-// Matters page (the owner, 2026-11-02: "how many files, how many threads, how
-// much money people made and how much the AI colleagues"): its files, its
-// threads, its people's billable time - in money where the firm keeps their
-// rates, in hours where it does not yet - and what its AI colleagues' models
-// cost, as Usage counts it. A figure of nothing is not shown.
+// Matters page: its files, its threads, its people's billable time - in money
+// where the firm keeps their rates, in hours where it does not yet - and what
+// its AI colleagues' models cost, as Usage counts it. A figure of nothing is
+// not shown.
 
 // The Matters' time and model usage, read once the page opens: the time from
 // each Matter's own record (data/time.js), the usage from Usage.

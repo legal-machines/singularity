@@ -7,13 +7,13 @@
 namespace singularity::document_intelligence {
 
 // The facts the documents of one Matter share, checked against each other on
-// the lawyer's computer (D-119): a price in a tracker against the schedule of
-// the agreement it tracks, a figure on a slide against the notes of the call
-// that settled it, a period an email states against the draft it sends, a
-// clause a tracker cites against the agreement's own numbering. The check
-// reads the real values, so it holds where Papinian Guard keeps them from the
-// model; and it reads every value, so a fact no one looked at is never taken
-// as correct: a value the check ties to no source is unverified, and says so.
+// the lawyer's computer: a price in a tracker against the schedule of the
+// agreement it tracks, a figure on a slide against the notes of the call that
+// settled it, a period an email states against the draft it sends, a clause a
+// tracker cites against the agreement's own numbering. The check reads the
+// real values, so it holds where Papinian Guard keeps them from the model;
+// and it reads every value, so a fact no one looked at is never taken as
+// correct: a value the check ties to no source is unverified, and says so.
 //
 // Nothing here reads a file or calls a model. A document is given as its
 // statements - its clauses, its table's rows, its cells, its slides' lines -
@@ -72,7 +72,7 @@ struct Statement {
 	std::string standing = "source";
 	// For a Word agreement's words, whether they are agreed: "agreed" where no
 	// tracked change is open in them, else which open changes they hold or would
-	// lose, and whose (D-119). Empty for any other document.
+	// lose, and whose. Empty for any other document.
 	std::string stand;
 	// A cell Excel calculates: what it shows follows from other cells, so it is
 	// neither checked nor cited.

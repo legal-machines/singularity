@@ -36,10 +36,10 @@ export function PostReview({ post, thread, onReturn }) {
 
 // The files a message hands over, a person's or a colleague's alike, as the
 // same tiles: a press opens the document over the window, as written and as
-// an AI provider receives it (D-233); a colleague's revised draft says how
-// many tracked changes it carries, and saves as a copy; any other file is
-// shown where it is on this computer. `projectId` is the project the files
-// are in, the open Matter's when not given.
+// an AI provider receives it; a colleague's revised draft says how many
+// tracked changes it carries, and saves as a copy; any other file is shown
+// where it is on this computer. `projectId` is the project the files are
+// in, the open Matter's when not given.
 export function RealFiles({ files, notChecked = null, projectId = null }) {
 	return (
 		<div className={styles.files}>
@@ -56,8 +56,8 @@ export function RealFiles({ files, notChecked = null, projectId = null }) {
 						line={line}
 						size={sizeWords(file.sizeBytes)}
 						isOld={isSuperseded}
-						// Over the window, as written and as an AI provider receives it
-						// (D-233); its own application opens it from there.
+						// Over the window, as written and as an AI provider receives
+						// it; its own application opens it from there.
 						onOpen={() => openDocumentLens({ projectId: projectId ?? openMatterRealId(), documentId: file.documentId, name: file.name })}
 						onDownload={found != null
 							? async () => {
@@ -116,7 +116,7 @@ function VersionBlock({ review, version, onReturn, isFileShown = true }) {
 	const document = version.resultDocumentId ? realDocument(version.resultDocumentId) : null;
 	const isSuperseded = version.state == "superseded";
 	// The version that waits for the lawyer: the latest, or the one before it
-	// when the latest changed nothing (D-102).
+	// when the latest changed nothing.
 	const waiting = [...review.versions].reverse().find(entry => entry.state == "ready_for_review") ?? null;
 	const isWaiting = waiting?.number == version.number && (latest?.number == version.number || latest?.state == "unchanged");
 
@@ -180,18 +180,15 @@ export function resultDocumentIdsOf(assignment) {
 	return ids;
 }
 
-// What a colleague's work handed in (D-120), under the message in which it
-// says it has finished (the owner, 2026-11-02: "she must attach the file to
-// the new message; I'll open it and look later - without this Luddism of
-// accept, don't accept; cut it out"; D-239): each document it wrote or
-// revised, and the email it drafted, as the files any message hands over,
-// opened over the window as written and as an AI provider receives it. No
-// verdict is asked of the member. Its reasoning is one press away; how the
-// work was done is the message's menu's (D-238).
+// What a colleague's work handed in, under the message in which it says it
+// has finished: each document it wrote or revised, and the email it
+// drafted, as the files any message hands over, opened over the window as
+// written and as an AI provider receives it. No verdict is asked of the
+// member. Its reasoning stands in the document it wrote, each change with
+// why it was made, never under the message; how the work was done is the
+// message's menu's.
 export function AssignmentBlock({ assignment }) {
-	const [isShowingWhy, setShowingWhy] = useState(false);
 	const email = assignment.email ?? {};
-	const reasons = reasonsOf(assignment);
 	const files = [];
 	for (const step of assignment.steps ?? []) {
 		const review = reviewById(step.reviewId);
@@ -204,21 +201,13 @@ export function AssignmentBlock({ assignment }) {
 	if (email.isWanted && email.documentId && files.some(file => file.documentId == email.documentId) == false)
 		files.push({ documentId: email.documentId, name: email.name || "Email.eml", sizeBytes: null });
 
-	// Nothing handed in yet and no reasoning: no card, and no room for one
-	// under the message (the owner, 2026-11-02: "extra space here").
-	if (files.length == 0 && reasons.length == 0) return null;
+	// Nothing handed in yet: no card, and no room for one under the
+	// message.
+	if (files.length == 0) return null;
 
 	return (
 		<div className={styles.assignment}>
-			{files.length > 0 ? <RealFiles files={files} /> : null}
-			{reasons.length > 0 ? (
-				<div className={styles.links}>
-					<button className={styles.link} type="button" aria-expanded={isShowingWhy} onClick={() => setShowingWhy(!isShowingWhy)}>
-						{isShowingWhy ? "Hide reasoning and sources" : "Reasoning and sources"}
-					</button>
-				</div>
-			) : null}
-			{isShowingWhy ? <Reasons reasons={reasons} /> : null}
+			<RealFiles files={files} />
 		</div>
 	);
 }
@@ -232,39 +221,6 @@ export function placeOnce(place) {
 	if (kept.length == parts.length) return place ?? "";
 	if (kept.length == 1) return kept[0];
 	return `${kept.slice(0, -1).join(", ")} and ${kept.at(-1)}`;
-}
-
-// The reasoning behind a result, one step away (D-174): each change the draft
-// holds with the clause it is in and why it was made, and what the colleague
-// left open - the record's own words, never the conversation's.
-function reasonsOf(assignment) {
-	const reasons = [];
-	for (const step of assignment.steps ?? []) {
-		const review = reviewById(step.reviewId);
-		const version = review?.versions.find(entry => entry.number == (step.latestVersion || step.version)) ?? review?.versions.at(-1);
-		const name = step.label || stemWords(step.sourceName);
-		for (const change of version?.result?.changes ?? []) {
-			if (change.writeState != "written" || !change.explanation) continue;
-			reasons.push({ key: `${step.number}-${change.blockId}-${reasons.length}`, place: change.clauseNumber ? `Section ${change.clauseNumber}` : name, words: change.explanation });
-		}
-		for (const point of step.remaining ?? []) {
-			reasons.push({ key: `${step.number}-left-${reasons.length}`, place: "Open", words: point });
-		}
-	}
-	return reasons;
-}
-
-function Reasons({ reasons }) {
-	return (
-		<dl className={styles.details}>
-			{reasons.map(reason => (
-				<div key={reason.key} className={styles.detail}>
-					<dt>{reason.place}</dt>
-					<dd>{reason.words}</dd>
-				</div>
-			))}
-		</dl>
-	);
 }
 
 export function AssignmentDetails({ assignment }) {
@@ -291,11 +247,11 @@ export function AssignmentDetails({ assignment }) {
 	);
 }
 
-// The decisions a colleague's message puts to the lawyer (D-120), under it:
-// each question, why it matters, where it applies, and the lawyer's options,
-// the colleague's recommendation first - or the lawyer's own words. An answer
-// is recorded once, with who gave it, and goes to the colleague as the
-// lawyer's word in the thread.
+// The decisions a colleague's message puts to the lawyer, under it: each
+// question, why it matters, where it applies, and the lawyer's options, the
+// colleague's recommendation first - or the lawyer's own words. An answer is
+// recorded once, with who gave it, and goes to the colleague as the lawyer's
+// word in the thread.
 export function DecisionList({ items }) {
 	return (
 		<ul className={styles.decisions} aria-label="Decisions for you">
@@ -304,8 +260,8 @@ export function DecisionList({ items }) {
 	);
 }
 
-// One decision, said once (D-174): what is to be decided, why it matters, the
-// choices with the colleague's recommendation marked on its own choice and its
+// One decision, said once: what is to be decided, why it matters, the choices
+// with the colleague's recommendation marked on its own choice and its
 // reasoning beside it, the member's own instruction, what happens once they
 // answer, and where it applies. A recommendation is never shown as a choice
 // already taken: every choice looks the same until the member takes one.
@@ -410,7 +366,7 @@ export function ReviewDetails({ review, version, result }) {
 	const changes = result.changes ?? [];
 	const matched = changes.filter(change => change.check == "verified" || change.check == "relocated").length;
 	// The colleague's message, written after the draft from what it holds and
-	// checked against it (D-101): how it came to be, and what it took.
+	// checked against it: how it came to be, and what it took.
 	const handIn = preparation.handIn ?? null;
 	const message = handIn?.attempts ?? [];
 	const messageIn = message.reduce((sum, attempt) => sum + (attempt.inputTokens ?? 0), 0);

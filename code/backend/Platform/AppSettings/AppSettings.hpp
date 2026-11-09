@@ -57,10 +57,10 @@ struct AccountResume {
   // frontend for the API calls that keep it fresh.
   std::optional<std::string> contact_email_masked;
   bool contact_email_verified = false;
-  // The firm's own email in full, as its member typed it to sign in (D-204):
-  // every seat of the firm signs in with it, and the administrator hands it
-  // to a colleague with their seat. It is the organisation's role mailbox,
-  // never a person's (the licence asks for one).
+  // The firm's own email in full, as its member typed it to sign in: every
+  // seat of the firm signs in with it, and the administrator hands it to a
+  // colleague with their seat. It is the organisation's role mailbox, never
+  // a person's (the licence asks for one).
   std::optional<std::string> organisation_email;
   // The signed-in person as the Legal Machines account names them, and
   // their firm - display-only, refreshed on sign-in like the rest of this.
@@ -112,9 +112,8 @@ enum class NodeSetupStep {
 const char *to_string(NodeSetupStep step);
 NodeSetupStep node_setup_step_from_string(const std::string &value);
 
-// One Node-default AI Setup role assignment (Phase 06,
-// AI_SETUP_CONTRACT.md), stored as plain strings so this settings type never
-// depends on the Routing domain - `role` is one of
+// One Node-default AI Setup role assignment, stored as plain strings so this
+// settings type never depends on the Routing domain - `role` is one of
 // routing::to_string(AiSetupRole), validated at the Bridge boundary
 // (Bridge/NodeBridge/NodeBridge.cpp). Covers all five Beta 1 roles,
 // including Reasoning - see LocalNodeSetup::role_assignments below.
@@ -223,9 +222,9 @@ struct AppSettings {
   std::vector<std::string> dismissed_notice_ids;
 	std::vector<ProjectActionPreference> project_action_preferences;
   // The seats that finished onboarding on this computer, each as
-  // "organisationId/seatId" (D-250): identifiers only, kept when one signs
-  // out, so a seat that signs in here again goes straight back to work rather
-  // than through onboarding once more.
+  // "organisationId/seatId": identifiers only, kept when one signs out, so a
+  // seat that signs in here again goes straight back to work rather than
+  // through onboarding once more.
   std::vector<std::string> onboarded_seats;
 };
 
@@ -238,16 +237,16 @@ inline std::string onboarded_seat_key(const std::string &organisation_id, const 
 // save_app_settings(); callers must not assume it already exists.
 std::filesystem::path app_settings_directory();
 
-// This computer's own records, which no other computer may share even when
-// the same person uses both (D-040): its signing key (`Device Key/`), the
-// colleagues' computers confirmed here (`Trusted Devices.json`), operations'
-// authority (`Operation Authority/`), durable pauses (`Pauses/`) and, on
-// Windows, the provider credentials and this computer's Legal Machines
-// session (`credentials/`). On macOS and Linux this is the settings folder
-// itself. On Windows it is the folder of this computer's application data,
-// %LOCALAPPDATA%\<display name> (Platform/AppPaths application_data_directory()),
-// never the roaming %APPDATA%, which follows a roaming profile to every
-// computer. Created lazily, like the settings folder.
+// This computer's own records, which no other computer may share even when the
+// same person uses both: its signing key (`Device Key/`), the colleagues'
+// computers confirmed here (`Trusted Devices.json`), operations' authority
+// (`Operation Authority/`), durable pauses (`Pauses/`) and, on Windows, the
+// provider credentials and this computer's Legal Machines session
+// (`credentials/`). On macOS and Linux this is the settings folder itself. On
+// Windows it is the folder of this computer's application data,
+// %LOCALAPPDATA%\<display name> (Platform/AppPaths application_data_directory),
+// never the roaming %APPDATA%, which follows a roaming profile to every computer.
+// Created lazily, like the settings folder.
 std::filesystem::path computer_records_directory();
 
 // Full path to the settings JSON file inside app_settings_directory().
@@ -302,12 +301,12 @@ void save_app_settings(const AppSettings &settings);
 // As save_app_settings, and the recovery copy then holds these settings too,
 // and an unreadable file kept beside them goes: what the settings held before
 // stays in no file. For a change that must leave no copy behind, such as
-// signing out, after which no file of this computer's still names the account
-// (the owner, 2026-11-05: "local account data should no longer be there").
+// signing out, after which no file of this computer's still names the
+// account.
 void save_app_settings_leaving_no_copy(const AppSettings &settings);
 
 // A connected model account as settings.json writes it, and read back: what
-// one of the firm's computers hands another with the account's key (D-210).
+// one of the firm's computers hands another with the account's key.
 nlohmann::json connected_provider_json(const ConnectedProvider &provider);
 ConnectedProvider connected_provider_of(const nlohmann::json &value);
 

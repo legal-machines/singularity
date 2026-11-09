@@ -11,11 +11,11 @@
 
 namespace singularity::matter::coordination::transport {
 
-// The firm's own folder as a transport (D-124): any folder its computers keep
-// in step with the firm's own storage - OneDrive or SharePoint, Dropbox,
-// Google Drive, iCloud Drive, a NAS. Nothing passes through Legal Machines,
-// and the storage's owner sees only names that mean nothing, sizes the seal
-// pads, and times.
+// The firm's own folder as a transport: any folder its computers keep in step
+// with the firm's own storage - OneDrive or SharePoint, Dropbox, Google Drive,
+// iCloud Drive, a NAS. Nothing passes through Legal Machines, and the
+// storage's owner sees only names that mean nothing, sizes the seal pads, and
+// times.
 // - A Matter's envelopes stand in a folder of their own, named by a hash of
 //   the Matter's id, never by the id or the Matter's name.
 // - Each envelope is one file named by its id ("<id>.lme"): written whole
@@ -38,8 +38,8 @@ public:
 	bool reaches_every_computer() const override { return true; }
 
 	// Takes away the Matter's envelopes older than `age`: a computer away
-	// longer than that is sent the Matter whole by one that has it (D-123).
-	// Returns how many files were removed.
+	// longer than that is sent the Matter whole by one that has it. Returns
+	// how many files were removed.
 	std::size_t remove_older_than(const std::string& matterId, std::chrono::hours age);
 
 	// The folder a Matter's envelopes stand in.

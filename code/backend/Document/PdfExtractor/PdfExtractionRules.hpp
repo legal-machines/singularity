@@ -238,7 +238,7 @@ inline void assemble_reading(const std::vector<PageReading> &pages, DocumentExtr
 			if (!pages[index].text.empty()) pageText += "\n\n" + pages[index].text;
 			++runIndex;
 		} else if (pages[index].isRecognized) {
-			// Where the model meets a recognised page, it is told so (D-114).
+			// Where the model meets a recognised page, it is told so.
 			pageText = "[" + recognized_pages_sentence({{number, number}}) + "]\n\n" + pages[index].text;
 		} else {
 			pageText = pages[index].text;

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { isEmulation } from "../../emulation/emulation.js";
+import { pixelsOf } from "./cssLength.js";
 
 // On macOS the window keeps a native strip along its top that drags it
 // (MacOSChrome); every control of the page inside that strip is handed to the
@@ -10,11 +11,10 @@ import { isEmulation } from "../../emulation/emulation.js";
 // in the strip. Windows and Linux need nothing: there the page marks its drag
 // areas itself (CSS app-region). `layout` names anything else that moves the
 // strip's controls, such as the sidebar shown or hidden; they are measured
-// again once its movement has settled.
-// Measures the strip's controls again now and once a notice's arrival has
-// settled: a notice of the window (Toaster) comes down into the strip, and
-// its Undo must be pressed, not drag the window (the owner, 2026-11-02:
-// "Undo in the notifications doesn't work").
+// again once its movement has settled. Measures the strip's controls again
+// now and once a notice's arrival has settled: a notice of the window
+// (Toaster) comes down into the strip, and its Undo must be pressed, not drag
+// the window.
 let remeasure = () => {};
 
 export function remeasureTitlebarControls() {
@@ -26,7 +26,7 @@ export function useNativeTitlebarControls(place, layout) {
 		if (isEmulation || window.nativeApp?.platform != "darwin" || window.nativeApp?.setTitlebarControls == null) return undefined;
 
 		function report() {
-			const band = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--titlebar-height")) || 60;
+			const band = pixelsOf(document.body, "--titlebar-height") || 60;
 			// A control the page only keeps the room of - hidden, its copy
 			// travelling in the strip (MovingHead) - is none.
 			const controls = [...document.querySelectorAll("button, input, textarea, select, a")]

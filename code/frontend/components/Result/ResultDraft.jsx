@@ -14,8 +14,8 @@ export function sizeOf(bytes) {
 }
 
 // What a member hands in with a message while writing it, the same for a
-// person as for an AI colleague (the owner, 2026-10-24): its files, what was
-// not checked, and the answers to a question it asks.
+// person as for an AI colleague: its files, what was not checked, and the
+// answers to a question it asks.
 export function useResultDraft() {
 	const [files, setFiles] = useState([]);
 	const [notChecked, setNotChecked] = useState("");

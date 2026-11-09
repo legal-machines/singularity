@@ -27,10 +27,10 @@ std::string reviewInstructions(const ReviewTask& task, PreparationMode mode) {
 	// The word defined as an agreement defines its terms: Papinian Guard reads a
 	// term the text defines in quotes as a term, never a name. Undefined, it took
 	// "Playbook" for a legal entity and these rules read "how far it is from the
-	// [[Org19]]" - and four of five answers came back empty (2026-10-26).
+	// [[Org19]]" - and four of five answers came back empty.
 	text += "The firm writes its positions on an agreement in a playbook (the \"Playbook\").\n\n";
 	// A document no Playbook of the firm covers is revised as the lawyer asks,
-	// with the request as its one position (D-115).
+	// with the request as its one position.
 	const bool isRequestOnly = task.playbookName.empty() == true;
 	if (isRequestOnly == true) {
 		text += "You are revising an agreement for the firm as the lawyer asks.\n\n";
@@ -90,10 +90,10 @@ std::string reviewInstructions(const ReviewTask& task, PreparationMode mode) {
 		"come from whose pending change. Each clause is shown as it would read with them accepted; the line under it says "
 		"what is pending and how the clause read before. The words that line names are already in the clause as shown, not "
 		"in addition to it. Write a rewrite from the clause as shown.\n";
-	// A figure that follows from the material's values is the computer's to
-	// work out: a lease revision asked the lawyer to "arrange calculation of the
+	// A figure that follows from the material's values is the computer's to work
+	// out: a lease revision asked the lawyer to "arrange calculation of the
 	// allowance maximum" because its values were protected symbols, and wrote
-	// "$95 multiplied by the number of RSF" into the draft (2026-10-30).
+	// "$95 multiplied by the number of RSF" into the draft.
 	text += "7. Never invent a clause, a fact, an authority or a citation. Never say you reviewed what the material does "
 		"not hold: an exhibit or a Section the agreement refers to but does not contain goes under \"unresolved\" with "
 		"kind \"missing_document\" or \"unresolved_reference\". A figure that follows from values the material states - an "
@@ -110,7 +110,7 @@ std::string reviewInstructions(const ReviewTask& task, PreparationMode mode) {
 	text += "8. Where the Playbook does not decide a point, or the lawyer must choose, say so under \"unresolved\" with "
 		"kind \"needs_lawyer\".\n";
 	// The message in the thread is written once the draft is made, from what it
-	// holds (D-101): the summary here is the review's own view, for its record.
+	// holds: the summary here is the review's own view, for its record.
 	text += "9. Write for the lawyer who asked as a colleague writes: call them \"you\", never \"the lawyer\", in plain "
 		"words. The summary is your view of the agreement for the review's record, in two or three sentences: how far it "
 		"is from the Playbook and what crosses a red line. It is not your message in the thread: you write that once the "
@@ -121,7 +121,7 @@ std::string reviewInstructions(const ReviewTask& task, PreparationMode mode) {
 		"recommend first with \"recommended\" true when you recommend one, and never an \"other\" choice; set \"blocks\" "
 		"true only when the draft should not be accepted or sent before it is answered. For any other kind, \"why\" is "
 		"empty, \"options\" empty and both flags false.\n";
-	// Margin comments go to whoever the mark-up is sent to (D-117).
+	// Margin comments go to whoever the mark-up is sent to.
 	text += "10. A comment in the agreement's margin goes in \"comments\", with the clause it sits on: Singularity writes it "
 		"into the draft as a Word comment of yours, which the other side reads when the draft is sent. Write it to them, as "
 		"counsel writes a margin note - the reason for your change, or your answer to their comment on that clause - and "
@@ -184,7 +184,7 @@ std::string reviewRequest(const ReviewTask& task) {
 		const std::string version = std::to_string(task.version);
 		const std::string previous = std::to_string(task.version - 1);
 		// What the lawyer read is the draft as Word holds it, which is not always
-		// what was proposed (D-102).
+		// what was proposed.
 		text += "\nYou are now writing version " + version + " of your review. Version " + previous + ", the one the "
 			"lawyer has read, proposed these changes:\n" + neutralizedMaterial(task.previousChanges) + "\n"
 			"Where a change has \"inTheDraft\", version " + previous + "'s draft does not read as proposed: that is how the "
@@ -225,8 +225,8 @@ std::string supportingMaterial(const ReviewTask& task) {
 
 }
 
-// What a clean copy changes against the version the Matter held before it
-// (D-111): data, as the agreement's own words are, named by the clauses' ids.
+// What a clean copy changes against the version the Matter held before it:
+// data, as the agreement's own words are, named by the clauses' ids.
 std::string changesMaterial(const ReviewTask& task) {
 
 	if (task.comparedWith.empty() == true) return std::string();

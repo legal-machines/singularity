@@ -12,8 +12,8 @@ import { QrCode } from "../../onboarding/entry/QrCode.jsx";
 
 import styles from "./SettingsPage.module.css";
 
-// A seat's own sign-in security (D-215): whether two-step sign-in is on, read
-// from Legal Machines; null while it is read or where it cannot be.
+// A seat's own sign-in security: whether two-step sign-in is on, read from
+// Legal Machines; null while it is read or where it cannot be.
 export function useOwnSeat(again) {
 	const [seat, setSeat] = useState(null);
 	useEffect(() => {
@@ -133,21 +133,19 @@ const FLOWS = {
 	codes: { steps: ["confirm", "codes"], label: "Making new recovery codes" },
 };
 
-// Two-step sign-in set from Settings as onboarding sets it (the owner,
-// 2026-11-02: "copy adding 2FA from onboarding's logic - split into steps -
-// and its design"; "it must also be possible to reset 2FA by the rules
-// everyone keeps", D-218). Turned on ("on"): the authenticator's QR code and
-// its key in groups of four that copies itself when pressed; then the six
-// digits the app shows, in onboarding's own six cells; then the recovery
-// codes, kept by printing, saving or copying them before the member may say
-// they did. A new app ("replace") and new recovery codes ("codes") first ask
-// the member to confirm it is them - their password and a code the app shows
-// or a recovery code, so that a lost phone is no lock - and then go on the
-// same way. The current app keeps working until the new one's code is right,
-// and the codes the member had stop once new ones are made.
+// Two-step sign-in set from Settings as onboarding sets it. Turned on ("on"):
+// the authenticator's QR code and its key in groups of four that copies itself
+// when pressed; then the six digits the app shows, in onboarding's own six
+// cells; then the recovery codes, kept by printing, saving or copying them
+// before the member may say they did. A new app ("replace") and new recovery
+// codes ("codes") first ask the member to confirm it is them - their password
+// and a code the app shows or a recovery code, so that a lost phone is no lock
+// - and then go on the same way. The current app keeps working until the new
+// one's code is right, and the codes the member had stop once new ones are
+// made.
 //
-// `isNeeded`: Legal Machines asked for it before anything else (D-215), and the
-// first step says so.
+// `isNeeded`: Legal Machines asked for it before anything else, and the first
+// step says so.
 export function TwoStepDialog({ mode = "on", isNeeded = false, onClose, onDone }) {
 	const flow = FLOWS[mode] ?? FLOWS.on;
 	const [at, setAt] = useState(0);
@@ -392,9 +390,9 @@ export function TwoStepDialog({ mode = "on", isNeeded = false, onClose, onDone }
 	);
 }
 
-// The setup Legal Machines asks for before anything else (D-215), wherever the
-// member is when it is met (data/twoStep.js): the same steps as Settings'.
-// Closed before two steps are on, it is put off and waits as a notice.
+// The setup Legal Machines asks for before anything else, wherever the member
+// is when it is met (data/twoStep.js): the same steps as Settings'. Closed
+// before two steps are on, it is put off and waits as a notice.
 export function TwoStepSetupHost() {
 	const setup = useTwoStepSetup();
 	const isDone = useRef(false);

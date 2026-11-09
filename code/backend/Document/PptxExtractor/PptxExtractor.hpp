@@ -7,10 +7,10 @@ namespace singularity::documents {
 
 // Extracts a PPTX package entirely in memory, the same safety posture as
 // DocxExtractor.cpp: only the DrawingML parts needed for visible slide text
-// and tables are read; embedded media, animations and external resources
-// are never resolved. PPTX is a required golden-path methodology source
-// (phase-24-1-research-document-intelligence-project-actions.md) but never a
-// patch target in Phase 24.1C - there is no apply_pptx_*_patch function here.
+// and tables are read; embedded media, animations and external resources are
+// never resolved. PPTX is a required golden-path methodology source but never
+// a patch target in Phase 24.1C - there is no apply_pptx_*_patch function
+// here.
 
 [[nodiscard]] DocumentExtractionResult extract_pptx_document(const DocumentExtractionRequest &request);
 [[nodiscard]] const char *pptx_extractor_version() noexcept;

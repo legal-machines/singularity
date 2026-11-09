@@ -9,9 +9,9 @@ import styles from "./Calendar.module.css";
 
 const LANE = 24;
 
-// The month (D-076): six weeks, each day with its events in lanes; a bar runs
-// across the days it covers, a timed event is its dot, its hour and its
-// title; what does not fit is "N more".
+// The month: six weeks, each day with its events in lanes; a bar runs across
+// the days it covers, a timed event is its dot, its hour and its title; what
+// does not fit is "N more".
 export function MonthView({ date, weekends, instances, calendarsById, today, nowMoment, onPickDay, onCreateDay, onOpenEvent, onMore }) {
 	const bodyRef = useRef(null);
 	const [rowHeight, setRowHeight] = useState(110);

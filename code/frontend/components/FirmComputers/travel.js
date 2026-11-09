@@ -1,15 +1,14 @@
-// Whether a Matter travels between the firm's computers (D-137), in words: end
-// to end encrypted with whose computers, whether one of them is connected now,
-// and when something sealed last came from one. Only what the backend
-// established is said (UI-4): the time of this computer's own last round is
-// never offered as a sign of the others.
+// Whether a Matter travels between the firm's computers, in words: end to end
+// encrypted with whose computers, whether one of them is connected now, and
+// when something sealed last came from one. Only what the backend established
+// is said: the time of this computer's own last round is never offered as a
+// sign of the others.
 
 // The Matter's other computers, each with whose it is: every computer its
 // members' records state, but this one, one still asking to join and one the
 // person here revoked; then any computer connected or heard from that no record
 // names yet. Read from the records, so a member's computer is named before it
-// is next heard from (2026-10-29: after a restart, Marcus's line named only
-// Dana's computer, though Priya's held the Matter too).
+// is next heard from.
 export function travelComputers(members, link) {
 	const owners = {};
 	const devices = [];

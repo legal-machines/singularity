@@ -10,11 +10,9 @@
 
 namespace singularity::chat {
 
-// Phase 22's narrow pre-execution resolution boundary
-// (phase-22-chat-tasks-ai-setup.md's "Operation setup / one-time
-// override"). Input for one prospective Chat operation - never a real send:
-// this resolves what a real operation *would* use, exactly the boundary
-// Phase 24 execution consumes.
+// Phase 22's narrow pre-execution resolution boundary. Input for one
+// prospective Chat operation - never a real send: this resolves what a real
+// operation *would* use, exactly the boundary Phase 24 execution consumes.
 struct OperationSetupRequest {
   std::string project_id;
   std::optional<std::string> chat_id;
@@ -58,11 +56,10 @@ struct OperationSetup {
   std::optional<routing::ModelTarget> primary_model;
   routing::AiSetupSource primary_model_source;
   // Every Beta 1 role's effective assignment - Node default -> Project
-  // override -> Chat override -> this one optional one-time override
-  // (AI_SETUP_CONTRACT.md's "Inheritance"), in
-  // routing::all_ai_setup_roles() order. A non-primary role's source is
-  // never OperationOverride - the one-time override only ever touches
-  // primary_result_role.
+  // override -> Chat override -> this one optional one-time override,
+  // in routing::all_ai_setup_roles order. A non-primary role's source
+  // is never OperationOverride - the one-time override only ever
+  // touches primary_result_role.
   std::vector<ResolvedOperationRole> effective_roles;
   bool one_time_override_applied = false;
 };

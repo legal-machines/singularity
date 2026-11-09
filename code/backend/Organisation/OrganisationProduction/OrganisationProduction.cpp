@@ -151,8 +151,8 @@ std::string set_own_photo(const std::string &photo) {
 
 namespace {
 
-// When this computer last took its own seat's profile from the firm's record
-// (D-209), so one profile is taken once and a profile this computer wrote is
+// When this computer last took its own seat's profile from the firm's
+// record, so one profile is taken once and a profile this computer wrote is
 // never taken back as news.
 std::filesystem::path profile_taken_path() {
 	return platform::app_settings_directory() / "Member Profile.json";
@@ -231,7 +231,7 @@ void adopt_own_profile() {
 	// The administrator's own profile is theirs alone to write: said to the
 	// firm's record once when it holds none, so the firm's other computers know
 	// who the administrator is. A member's waits for the one the administrator
-	// wrote, which their computer then takes as its own (D-209).
+	// wrote, which their computer then takes as its own.
 	if (profile.has_value() == false) {
 		if (is_administrator() == true) publish_own_profile();
 		return;
@@ -304,10 +304,10 @@ void adopt_firm_ai_setup() {
 SeatProfile save_profile_of_seat(const SeatProfile &wanted) {
 	const std::string seat = own_seat();
 	const bool isOwn = seat.empty() == false && seat_id_of(wanted.seat_id) == seat;
-	if (is_administrator() == false && isOwn == false) {
-		throw std::invalid_argument("Only the firm's administrator changes a colleague's profile.");
-	}
-	// A profile's words change here, never where its colleague stands (D-214).
+	// The firm's administrator alone writes who sits in a seat, the member's
+	// own included.
+	if (is_administrator() == false) throw std::invalid_argument("Only the firm's administrator changes a profile.");
+	// A profile's words change here, never where its colleague stands.
 	SeatProfile edited = wanted;
 	try {
 		const std::optional<SeatProfile> known = seat_profile(seat_id_of(wanted.seat_id));
@@ -360,8 +360,8 @@ matter::FirmTeam firm_team_with_profiles() {
 		const std::string actor = "seat:" + profile.seat_id;
 		auto found = std::find_if(team.people.begin(), team.people.end(),
 			[&actor](const matter::FirmPerson &person) { return person.member.actor_id == actor; });
-		// Removed from the firm (D-214): no longer of its team, whatever Matter
-		// still names them; their words stay where they wrote them.
+		// Removed from the firm: no longer of its team, whatever Matter still
+		// names them; their words stay where they wrote them.
 		if (profile.state == "removed") {
 			if (found != team.people.end()) found->is_removed = true;
 			continue;
@@ -437,7 +437,7 @@ Viewer viewer() {
 	// account's own name takes its place below.
 	viewer.organisation_name = identity.organisation_name.value_or("");
 	// The firm's AI colleagues and its model accounts are set up by its
-	// administrative account; a colleague who joined does neither (D-184).
+	// administrative account; a colleague who joined does neither.
 	const bool isAdministrator = is_administrator();
 	viewer.manages_colleagues = isAdministrator;
 	viewer.connects_models = isAdministrator;

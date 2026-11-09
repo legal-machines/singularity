@@ -231,11 +231,10 @@ Json dismiss_notice(const Json &params) {
 
 // Replaces (or clears) exactly one role's entry in setup.role_assignments -
 // role_assignments is the single canonical Node default AI Setup store for
-// every Beta 1 role, including Reasoning (Phase 06, AI_SETUP_CONTRACT.md);
-// there must never be two independently writable persisted sources of truth
-// for Reasoning. Both the legacy `defaultModel` patch and the canonical
-// `roleAssignments` patch below funnel every Reasoning write through this
-// one function.
+// every Beta 1 role, including Reasoning; there must never be two
+// independently writable persisted sources of truth for Reasoning. Both the
+// legacy `defaultModel` patch and the canonical `roleAssignments` patch
+// below funnel every Reasoning write through this one function.
 void set_role_assignment(platform::LocalNodeSetup &setup, const std::string &role,
                          std::optional<platform::RoleModelAssignment> assignment) {
   auto &assignments = setup.role_assignments;
@@ -274,7 +273,7 @@ Json save_local_setup(const Json &params) {
   // default for that role" (Unassigned), never a delete of anything else.
   // Each entry this save changes is validated against Routing::AiSetup's
   // real role-compatibility rules before it is saved; one kept as it was is
-  // not checked again (Beta 1 #41, routing::accept_assignment_set).
+  // not checked again.
   if (params.contains("roleAssignments")) {
     std::vector<routing::RoleAssignmentEntry> previous;
     for (const platform::RoleModelAssignment &kept : setup.role_assignments)
@@ -467,7 +466,7 @@ nlohmann::json complete_onboarding(const nlohmann::json &) {
   settings.local_node_setup.completed = true;
   settings.local_node_setup.next_step = platform::NodeSetupStep::Ready;
   // The seat that finished it here is not asked through it again on this
-  // computer (D-250), even after it signs out and back in.
+  // computer, even after it signs out and back in.
   if (settings.account.has_value() == true) {
     const std::string seat = platform::onboarded_seat_key(settings.account->organisation_id, settings.account->seat_id);
     if (std::find(settings.onboarded_seats.begin(), settings.onboarded_seats.end(), seat) == settings.onboarded_seats.end()) {
@@ -479,13 +478,13 @@ nlohmann::json complete_onboarding(const nlohmann::json &) {
 }
 
 // The name and firm of the person who works on this computer, written in
-// Settings. An empty name clears it; the firm without a name means nothing.
-// A member signed in is known here by their account (Platform/ActorIdentity),
+// Settings. An empty name clears it; the firm without a name means nothing. A
+// member signed in is known here by their account (Platform/ActorIdentity),
 // and Legal Machines names no person for an organisation's seat: the name they
 // give is their account's on this computer too, so their member record in
-// every Matter and every message they write carry it (onboarding's first page,
-// D-134). A later sign-in to the same seat keeps it (AccountBridge
-// save_account); one that names the person replaces it.
+// every Matter and every message they write carry it. A later sign-in to the
+// same seat keeps it (AccountBridge save_account); one that names the person
+// replaces it.
 nlohmann::json save_person(const nlohmann::json &params) {
   const auto text = [&](const char *key) -> std::optional<std::string> {
     if (!params.contains(key) || !params.at(key).is_string()) return std::nullopt;

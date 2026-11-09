@@ -4,10 +4,10 @@ import { at, barsOf, clock, laidOut, minuteOf, minutesBetween, MINUTES_IN_DAY, w
 
 import styles from "./Calendar.module.css";
 
-// The days of a day, week or four-day view, hour by hour (D-076), as Google
-// Calendar lays them: the days' heads, the all-day bars, and the hours with
-// their events side by side where they overlap. A press on an empty hour, or
-// a drag across hours, creates an event there; an event moves when dragged,
+// The days of a day, week or four-day view, hour by hour, as Google Calendar
+// lays them: the days' heads, the all-day bars, and the hours with their
+// events side by side where they overlap. A press on an empty hour, or a
+// drag across hours, creates an event there; an event moves when dragged,
 // takes a new end when its lower edge is dragged, and opens when pressed.
 export const HOUR = 48;
 const SNAP = 15;

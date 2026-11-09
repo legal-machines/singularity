@@ -29,10 +29,9 @@ function desktopClassicScript() {
 	};
 }
 
-// The AI colleagues' motion manifest (public/characters-v4/manifest.json, D-220)
-// as a classic script beside the page, which sets
-// window.__singularityCharacterMotion: the packaged window opens the page from
-// disk, where WebView2 refuses fetch() of a file, but a script runs
+// The AI colleagues' motion manifest as a classic script beside the page, which
+// sets window.__singularityCharacterMotion: the packaged window opens the page
+// from disk, where WebView2 refuses fetch of a file, but a script runs
 // (components/Avatar/life.js). The motion package's own files stay as shipped.
 const charactersManifest = resolve(frontendRoot, "public/characters-v4/manifest.json");
 const CHARACTER_MANIFEST_SCRIPT = "characters-v4-manifest.js";
@@ -54,12 +53,12 @@ function characterManifestScript() {
 
 // Onboarding's living painting's parts (code/frontend/onboarding/painting/parts)
 // as a classic script beside the page, painting/parts.js, which sets
-// window.__singularityPaintingParts to each part's WebP bytes in base64. On
-// disk (file://) WebView2 counts each file as an origin of its own, so a part
-// the page drew from its file tainted the canvas and WebGL refused it: on
-// Windows the painting stood still as its poster (2026-11-04). Bytes the page
-// holds itself never taint (onboarding/painting/artwork.js). The parts' files
-// are not copied beside the page as well.
+// window.__singularityPaintingParts to each part's WebP bytes in base64. On disk
+// (file://) WebView2 counts each file as an origin of its own, so a part the
+// page drew from its file tainted the canvas and WebGL refused it: on Windows
+// the painting stood still as its poster. Bytes the page holds itself never
+// taint (onboarding/painting/artwork.js). The parts' files are not copied beside
+// the page as well.
 const paintingParts = resolve(frontendRoot, "onboarding/painting/parts");
 const PAINTING_PARTS_SCRIPT = "painting/parts.js";
 function paintingPartsScript() {
@@ -122,12 +121,12 @@ export default defineConfig({
 				replacement: resolve(deploymentRoot, "node_modules/react"),
 			},
 			// Roboto, the client's one typeface, bundled so it is the same on
-			// every system (UI-27).
+			// every system.
 			{
 				find: "@fontsource-variable/roboto",
 				replacement: resolve(deploymentRoot, "node_modules/@fontsource-variable/roboto"),
 			},
-			// IBM Plex Mono, for codes a member reads out or compares (UI-27).
+			// IBM Plex Mono, for codes a member reads out or compares.
 			{
 				find: "@fontsource/ibm-plex-mono",
 				replacement: resolve(deploymentRoot, "node_modules/@fontsource/ibm-plex-mono"),

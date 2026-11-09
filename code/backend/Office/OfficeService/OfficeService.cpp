@@ -54,6 +54,23 @@ constexpr const char *kAppVersion = NATIVE_APP_VERSION;
 constexpr const char *kAppVersion = "0.1.0";
 #endif
 
+#if defined(__APPLE__)
+// What is said when Word, Excel and PowerPoint were never opened on this Mac:
+// Office makes the folder it finds add-ins in as it first starts.
+constexpr const char *kOpenFirst = "Open Word once, so Office makes the folder it finds add-ins in. Singularity adds its "
+	"add-in by itself as soon as Word has opened.";
+#else
+constexpr const char *kOpenFirst = "";
+#endif
+
+// Whether Word, Excel or PowerPoint is installed here and was opened once.
+bool documents_app_opened() {
+	for (const OfficeApp app : {OfficeApp::word, OfficeApp::excel, OfficeApp::powerpoint}) {
+		if (is_installed(app) && has_been_opened(app)) return true;
+	}
+	return false;
+}
+
 struct State {
 	std::mutex mutex;
 	Carrier carrier;
@@ -202,6 +219,10 @@ OfficeStatus office_status() {
 	const std::lock_guard<std::mutex> lock(kept.mutex);
 	status.listening = kept.server && kept.server->is_listening();
 	status.problem = kept.problem;
+	// Its add-in is in Office when one of their panes reached Singularity, though
+	// this version's copy could not be placed.
+	if (!status.documents_registered) status.documents_registered = has_document_pane(kept.paired()->clients());
+	if (*kOpenFirst != '\0' && kept.problem == kOpenFirst) status.first_opening = documents_app_opened() ? "opened" : "waiting";
 	return status;
 }
 
@@ -244,7 +265,14 @@ OfficeStatus connect_office() {
 #else
 			constexpr const char *kNotPlaced = "Word, Excel and PowerPoint could not be told about Singularity's add-in.";
 #endif
-			if (problem.empty() && !registered) problem = kNotPlaced;
+			// A pane of Word, Excel or PowerPoint that reached Singularity already
+			// shows its add-in is there, placed by this version or an earlier one,
+			// and it opens today's panes: macOS keeping a new copy out of their
+			// folders is then no failure, and this computer is connected.
+			const bool hasPane = has_document_pane(kept.paired()->clients());
+			// Never opened here, Office has no folder for it yet: the person opens
+			// Word once, and Connect finishes then (first_opening).
+			if (problem.empty() && !registered && !hasPane) problem = *kOpenFirst != '\0' && !documents_app_opened() ? kOpenFirst : kNotPlaced;
 			if (problem.empty() || registered) write_connection(true, now_utc());
 		}
 	} catch (const std::exception &error) {

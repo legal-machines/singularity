@@ -106,10 +106,10 @@ inline void forget_passage_bytes(Registry &kept, const NotedCalls &noted) {
 	kept.passageBytes -= noted.passageBytes <= kept.passageBytes ? noted.passageBytes : kept.passageBytes;
 }
 
-// Where each model call that left is written into this computer's work record
-// (D-252, Usage/WorkRecord): installed once by the app, which then gives the
-// call its place there (record_chain, record_index). None in a test that
-// installs none, so a call is then noted as it was.
+// Where each model call that left is written into this computer's work
+// record: installed once by the app, which then gives the call its place
+// there (record_chain, record_index). None in a test that installs none, so a
+// call is then noted as it was.
 inline std::function<void(protected_api::papinian::OutboundCall &)> &work_record_sink() {
 	static std::function<void(protected_api::papinian::OutboundCall &)> sink;
 	return sink;

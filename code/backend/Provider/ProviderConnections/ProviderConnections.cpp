@@ -46,9 +46,7 @@ std::vector<ProviderConnection> refresh_provider_connections() {
   }
   // Each account is asked over the network with no lock held: one provider
   // slow to answer, or a connection that dropped, waits out its own timeout
-  // alone, never with every save and read of the app behind it (2026-11-02:
-  // two accounts asked under the lock while the Mac's connection faltered held
-  // it 30 seconds each, and an archived Matter waited a minute).
+  // alone, never with every save and read of the app behind it.
   std::vector<ProviderConnection> result;
   std::map<std::string, std::vector<ModelDescriptor>> fresh;
   for (auto &provider : connected) {
@@ -143,11 +141,11 @@ std::vector<ProviderConnection> disconnect_provider_connection(const std::string
     configured.erase(std::remove_if(configured.begin(), configured.end(),
         [&](const auto &item) { return item.id == provider_id; }), configured.end());
     // role_assignments is the single canonical Node default AI Setup store
-    // for every Beta 1 role, including Reasoning (Phase 06,
-    // AI_SETUP_CONTRACT.md) - a disconnected provider's own models cannot
-    // remain assigned to any role. Update it first; default_model below is
-    // only ever a derived compatibility mirror of its own Reasoning entry,
-    // never an independent thing to clear separately.
+    // for every Beta 1 role, including Reasoning - a disconnected
+    // provider's own models cannot remain assigned to any role. Update it
+    // first; default_model below is only ever a derived compatibility
+    // mirror of its own Reasoning entry, never an independent thing to
+    // clear separately.
     auto &role_assignments = settings.local_node_setup.role_assignments;
     role_assignments.erase(
         std::remove_if(role_assignments.begin(), role_assignments.end(),

@@ -1854,17 +1854,17 @@ namespace {
 // A sentence that leaves its conclusion open - the gate's only reading of the
 // words, a closed list in the two languages Singularity answers in.
 bool leaves_open(const std::string &sentence) {
-	// Case in every script (utf8proc): "Не установлено" reads as "не установлено".
+	// Case in every script (utf8proc): "…" reads as "…".
 	const std::string folded = singularity::platform::folded_text(sentence);
 	static const std::vector<std::string> open{"not establish", "cannot be determined", "can't be determined",
 		"not determined", "cannot determine", "cannot be confirmed", "not confirmed", "cannot confirm", "not verified",
 		"unverified", "cannot be calculated", "not calculated", "cannot calculate", "do not state", "does not state",
 		"not stated", "unable to determine", "unable to confirm", "remains unresolved", "not resolved", "not quantif",
-		"\xD0\xBD\xD0\xB5 \xD1\x83\xD1\x81\xD1\x82\xD0\xB0\xD0\xBD\xD0\xBE\xD0\xB2",    // не установ
-		"\xD0\xBD\xD0\xB5 \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB",    // не определ
-		"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4",  // невозможно опред
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB4\xD1\x82\xD0\xB2\xD0\xB5\xD1\x80\xD0\xB6\xD0\xB4",  // не подтвержд
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBD"};  // не проверен
+		"\xD0\xBD\xD0\xB5 \xD1\x83\xD1\x81\xD1\x82\xD0\xB0\xD0\xBD\xD0\xBE\xD0\xB2",    // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB",    // …
+		"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4",  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB4\xD1\x82\xD0\xB2\xD0\xB5\xD1\x80\xD0\xB6\xD0\xB4",  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBD"};  // …
 	return std::any_of(open.begin(), open.end(), [&](const std::string &word) { return folded.find(word) != std::string::npos; });
 }
 
@@ -1888,7 +1888,7 @@ std::vector<std::string> computable_symbols(const std::string &text) {
 
 // A relation between two protected quantities left as a condition - "if
 // [[Rate26]] exceeds [[Rate6]]", "whether [[Date40]] falls after [[Date59]]",
-// «если [[Amount3]] превышает [[Amount4]]»: a symbol, a comparison word and
+// «…»: a symbol, a comparison word and
 // another symbol close after an if/whether. Live EN1 (27 Sep 2026): the fee
 // shifting was left "if" the underpayment rate exceeded the threshold. The
 // pair compared, never the rest of the sentence: what Singularity answered or
@@ -1897,19 +1897,19 @@ std::vector<std::string> computable_symbols(const std::string &text) {
 // relation of all three, and the refused comparison was never seen).
 std::optional<std::pair<std::string, std::string>> conditional_comparison(const std::string &sentence) {
 	static const std::vector<std::string> conditions{"if ", "whether ", "unless ",
-		"\xD0\xB5\xD1\x81\xD0\xBB\xD0\xB8 "};  // если
+		"\xD0\xB5\xD1\x81\xD0\xBB\xD0\xB8 "};  // …
 	static const std::vector<std::string> comparisons{"exceed", "greater", "less than", "lower than", "higher than", "below",
 		"above", "more than", "after", "before", "later than", "earlier than", "within",
-		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88",  // превыш
-		"\xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5",  // больше
-		"\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",  // меньше
-		"\xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB6\xD0\xB5",  // позже
-		"\xD1\x80\xD0\xB0\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5"};  // раньше
+		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88",  // …
+		"\xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5",  // …
+		"\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",  // …
+		"\xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB6\xD0\xB5",  // …
+		"\xD1\x80\xD0\xB0\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5"};  // …
 	const auto has_any = [](const std::string &text, const std::vector<std::string> &words) {
 		const std::string folded = singularity::platform::folded_text(text);
 		return std::any_of(words.begin(), words.end(), [&](const std::string &word) { return folded.find(word) != std::string::npos; });
 	};
-	static const std::vector<std::string> joins{" and ", " or ", ",", ";", " \xD0\xB8 ", " \xD0\xB8\xD0\xBB\xD0\xB8 "};  // и, или
+	static const std::vector<std::string> joins{" and ", " or ", ",", ";", " \xD0\xB8 ", " \xD0\xB8\xD0\xBB\xD0\xB8 "};  // …
 	const auto kind = [](const std::string &symbol) {
 		std::size_t end = 2;
 		while (end < symbol.size() && std::isalpha(static_cast<unsigned char>(symbol[end]))) ++end;

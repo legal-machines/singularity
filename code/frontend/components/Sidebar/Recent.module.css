@@ -1,8 +1,8 @@
-/* The conversations visited lately, under the sidebar's places (D-200). Its
-   heading stands an --edge below the places' last row, measured between
-   what is drawn (UI-29): a place's 18-point icon stands centred in its row,
-   its drawing ending 2.9 inside it, and the heading's letters stand 7.5 into
-   the heading. The Matters' heading is this one (Matters.jsx). */
+/* The conversations visited lately, under the sidebar's places. Its heading
+   stands an --edge below the places' last row, measured between what is
+   drawn: a place's 18-point icon stands centred in its row, its drawing
+   ending 2.9 inside it, and the heading's letters stand 7.5 into the
+   heading. The Matters' heading is this one (Matters.jsx). */
 .section { margin-top: calc(var(--edge) - (var(--sidebar-row) - 18px) / 2 - 10.4px); }
 .heading { display: flex; align-items: center; justify-content: space-between; min-height: 28px; padding: 0 8px 4px calc(var(--edge) - var(--sidebar-inset) - 1px); color: var(--ink-3); }
 .heading h2 { min-width: 0; font: 500 12px/18px var(--font-sans); }

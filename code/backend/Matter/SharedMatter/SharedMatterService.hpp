@@ -44,8 +44,8 @@ struct SharedActivity {
 struct FirmPerson {
 	SharedMember member;
 	bool is_you = false;
-	// Archived by the firm (D-214): their seat closed, their history kept; or
-	// removed from it, named only where they wrote.
+	// Archived by the firm: their seat closed, their history kept; or removed
+	// from it, named only where they wrote.
 	bool is_archived = false;
 	bool is_removed = false;
 	std::vector<std::pair<std::string, std::string>> matters;
@@ -76,11 +76,11 @@ SharedActivity decide_member_computer(const std::string &project_id, const std::
 	const std::string &device_id, bool confirm);
 
 // The same for a computer that asks to join the Matter through the firm's
-// coordination (D-123): it holds no Matter yet, so no member record states its
-// key. It is decided by the key its request was signed with - the one whose
-// code the person here compared - and so, once confirmed, what it writes when
-// the Matter reaches it counts as the colleague's. A revoked one's request is
-// not shown again.
+// coordination: it holds no Matter yet, so no member record states its key. It
+// is decided by the key its request was signed with - the one whose code the
+// person here compared - and so, once confirmed, what it writes when the
+// Matter reaches it counts as the colleague's. A revoked one's request is not
+// shown again.
 SharedActivity decide_asking_computer(const std::string &project_id, const std::string &actor_id,
 	const std::string &device_key, bool confirm);
 

@@ -4,8 +4,7 @@
 #include <string>
 
 // Where this user's Word and Excel find an add-in that is not from a store:
-// Singularity's own, whose manifest Singularity writes on this computer
-// (Office/OfficeAddins, D-105).
+// Singularity's own, whose manifest Singularity writes on this computer.
 //
 // Windows: Office's developer add-ins, a value per add-in under
 // HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\WEF\Developer naming its

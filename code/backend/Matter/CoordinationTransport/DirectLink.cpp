@@ -230,8 +230,7 @@ std::uint64_t DirectLink::send(const PeerKey& peer, Bytes message) {
 	const std::uint64_t id = nextLinkId_++;
 	found.linkIds[found.delivery.send(std::move(message))] = id;
 	// Where the link is up it goes at once, not on the thread's next turn, which
-	// waits on the socket up to 10 ms - 16 on Windows (2026-10-26: each message
-	// waited 14 to 21 ms before its first datagram left).
+	// waits on the socket up to 10 ms - 16 on Windows.
 	if (found.session && found.endpoint.empty() == false) {
 		const Clock::time_point now = Clock::now();
 		for (const Bytes& frame : found.delivery.frames_to_send(now)) sendData(found, frame, now);

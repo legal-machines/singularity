@@ -8,10 +8,10 @@ import { longDate, money, shortDate } from "./bill.js";
 
 import styles from "./BillingView.module.css";
 
-// A Matter's bill for the period, for its leads (D-075): people's time at
-// their rates; the AI colleagues' work on the basis the engagement letter
-// agrees in advance; AI model usage as a disbursement at cost; the budget;
-// and the invoice one press away.
+// A Matter's bill for the period, for its leads: people's time at their
+// rates; the AI colleagues' work on the basis the engagement letter agrees
+// in advance; AI model usage as a disbursement at cost; the budget; and
+// the invoice one press away.
 export function MatterBill({ bill, onOpen }) {
 	const share = Math.round(bill.budget.share * 100);
 	const overhead = bill.matter.memberIds

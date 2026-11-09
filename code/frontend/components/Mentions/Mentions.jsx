@@ -4,14 +4,12 @@ import { useShowPerson } from "../PersonCard/showPerson.js";
 
 import styles from "./Mentions.module.css";
 
-// Words with their @mentions set apart, in a thread's post or a chat's
-// message, whoever wrote them, a person or an AI colleague (the owner,
-// 2026-10-24: "agents must refer to people with @ too"): a member named with
-// @ stands in medium weight, the member at this computer in the accent's ink,
-// and a press on it opens that member's card.
-// A model's emphasis, written as markdown, is drawn as emphasis and never as its
-// asterisks (D-120: a live run's names showed as "**Email**"). @all names
-// everyone in the thread, so it stands in the accent for every reader.
+// Words with their @mentions set apart, in a thread's post or a chat's message,
+// whoever wrote them, a person or an AI colleague: a member named with @ stands
+// in medium weight, the member at this computer in the accent's ink, and a press
+// on it opens that member's card. A model's emphasis, written as markdown, is
+// drawn as emphasis and never as its asterisks. @all names everyone in the
+// thread, so it stands in the accent for every reader.
 export function Mentioned({ text }) {
 	return emphasised(text).map((piece, index) => piece.isStrong
 		? <strong key={index} className={styles.strong}><Named text={piece.text} /></strong>

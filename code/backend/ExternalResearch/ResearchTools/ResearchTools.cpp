@@ -53,7 +53,7 @@ struct ResearchBackendSelection {
 ResearchBackendSelection select_research_backend(const tools::ToolExecutionContext &context) {
 	const platform::AppSettings settings = platform::load_app_settings();
 	ResearchBackendSelection selection;
-	selection.openrouter = context.research_backend.value_or(settings.local_node_setup.research_backend) == "openrouter";
+	selection.openrouter = research_backend_for(context.research_backend, settings.local_node_setup) == "openrouter";
 	const std::string providerId = selection.openrouter ? "openai_compatible" : "openai";
 	const std::string providerName = selection.openrouter ? "OpenRouter" : "OpenAI";
 	const auto provider = std::find_if(settings.local_node_setup.connected_providers.begin(),
@@ -61,7 +61,8 @@ ResearchBackendSelection select_research_backend(const tools::ToolExecutionConte
 			return entry.id == providerId;
 		});
 	if (provider == settings.local_node_setup.connected_providers.end()) {
-		selection.unavailable_reason = "Web research needs a connected " + providerName + " provider.";
+		selection.unavailable_reason = selection.openrouter ? std::string("Web research needs a connected OpenRouter provider.")
+			: std::string("Web research needs a connected OpenAI or OpenRouter provider.");
 		return selection;
 	}
 	if (selection.openrouter && platform::https_host(provider->base_url.value_or("")) != "openrouter.ai") {
@@ -90,7 +91,7 @@ ResearchBackendSelection select_research_backend(const tools::ToolExecutionConte
 // Which backend a research step goes through, from settings alone - never the
 // credential, so describing a step for approval opens nothing.
 bool is_openrouter_research(const tools::ToolExecutionContext &context) {
-	return context.research_backend.value_or(platform::load_app_settings().local_node_setup.research_backend) == "openrouter";
+	return research_backend_for(context.research_backend, platform::load_app_settings().local_node_setup) == "openrouter";
 }
 
 // The page address behind every source a search returned, by its sourceId: a

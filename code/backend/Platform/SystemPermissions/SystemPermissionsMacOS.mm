@@ -37,13 +37,12 @@ std::map<std::string, Permission> &known() {
 }
 
 // What macOS allowed this application, kept in the app's own folder, so a
-// permission already given is never asked again (the owner, 2026-11-05: "if
-// some permission is already given, there is no need to ask about it at
-// all"). macOS can't be asked silently whether it would allow; it keeps each
-// answer for the application's code identity. Signed by a lasting identity
-// (deploy/backend/CMakeLists.txt, "Singularity Dev"), that is the code's
-// designated requirement, the same across builds and updates; signed ad hoc,
-// each build is new to macOS, and is named by its executable's size and time.
+// permission already given is never asked again. macOS can't be asked
+// silently whether it would allow; it keeps each answer for the application's
+// code identity. Signed by a lasting identity (deploy/backend/CMakeLists.txt,
+// "Singularity Dev"), that is the code's designated requirement, the same
+// across builds and updates; signed ad hoc, each build is new to macOS, and
+// is named by its executable's size and time.
 std::string signing_requirement() {
 	std::string text;
 	SecCodeRef code = nullptr;

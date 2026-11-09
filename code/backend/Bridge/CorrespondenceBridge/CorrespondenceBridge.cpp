@@ -94,7 +94,7 @@ Json file(const Json &params) {
 		}
 	}
 	const std::string from = params.contains("from") && params.at("from").is_string() ? params.at("from").get<std::string>() : "outlook";
-	// Filed by a rule of the Matter's intake (D-228), which the Matter checks.
+	// Filed by a rule of the Matter's intake, which the Matter checks.
 	const bool byRule = params.contains("by") && params.at("by").is_string() && params.at("by").get<std::string>() == "rule";
 	return mail::letter_to_json(mail::file_letter(required_text(params, "matterId"), message_in(params), evidence, from, byRule));
 }
@@ -133,7 +133,7 @@ Json draft_reply(const Json &params) {
 	if (platform::is_plain_mail_address(draft.to) == false)
 		throw mail::CorrespondenceRefused("This letter's address can't go into a mail draft. Reply to it from your mail app.");
 	// With files, the reply is an unsent email that carries them, opened in
-	// the mail app as a new message (D-115); a mail link carries no file.
+	// the mail app as a new message; a mail link carries no file.
 	if (documentIds.empty() == false) {
 		const mail::ReplyFile written = mail::write_reply_with_files(matterId, *letter, text, documentIds);
 		if (platform::open_mail_draft(draft.to, draft.subject, draft.body, written.files, written.path) == false)

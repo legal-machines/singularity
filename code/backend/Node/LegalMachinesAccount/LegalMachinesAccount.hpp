@@ -29,11 +29,11 @@ enum class SignInStatus {
 	SignedIn,
 	TwoFactorRequired,
 	EmailVerificationRequired,
-	// A new organisation that Legal Machines has not approved yet (D-030):
-	// nothing is kept and nothing is downloaded until it is.
+	// A new organisation that Legal Machines has not approved yet: nothing
+	// is kept and nothing is downloaded until it is.
 	AwaitingApproval,
-	// A new organisation whose setup is not finished (D-146): the password was
-	// right, and its setup goes on with two-factor authentication.
+	// A new organisation whose setup is not finished: the password was right,
+	// and its setup goes on with two-factor authentication.
 	SetupRequired,
 };
 
@@ -43,10 +43,10 @@ const char *to_string(SignInStatus status);
 struct SignInAnswer {
 	SignInStatus status = SignInStatus::SignedIn;
 	// With TwoFactorRequired: what the code must be sent back with, and where
-	// the code comes from - "authenticator" for the seat's authenticator app
-	// (or a recovery code, D-146), "email" for one mailed. With SignedIn, a
-	// colleague's seat's sign-in that stands checked (D-204), which this
-	// computer's session is asked against; empty otherwise.
+	// the code comes from - "authenticator" for the seat's authenticator app,
+	// "email" for one mailed. With SignedIn, a colleague's seat's sign-in
+	// that stands checked, which this computer's session is asked against;
+	// empty otherwise.
 	std::string challenge_id;
 	std::string method = "email";
 	// Set only with SetupRequired: what the setup sets next ("two_factor"), and
@@ -64,14 +64,14 @@ struct SignInAnswer {
 	// named them.
 	std::optional<std::string> organisation_id;
 	std::optional<std::string> seat_id;
-	// The seat's role as the service said it (D-204): "admin" for the firm's
+	// The seat's role as the service said it: "admin" for the firm's
 	// administrator seat, "member" for a colleague's seat it made.
 	std::optional<std::string> role;
-	// A colleague's seat with no authenticator yet (D-215): signed in, and
-	// asked to set one up before it works.
+	// A colleague's seat with no authenticator yet: signed in, and asked
+	// to set one up before it works.
 	bool needs_two_factor_setup = false;
-	// The second step was a recovery code (D-218): the seat signed in without
-	// its authenticator app, and has this many codes left.
+	// The second step was a recovery code: the seat signed in without its
+	// authenticator app, and has this many codes left.
 	bool used_recovery_code = false;
 	std::optional<int> recovery_codes_left;
 };
@@ -89,19 +89,19 @@ enum class AccountFailureKind {
 	// The organisation's email is not confirmed yet, so no session is issued.
 	OrganisationNotActive,
 	// Legal Machines has not approved the organisation yet, so no session is
-	// issued (D-030).
+	// issued.
 	AwaitingApproval,
 	// An organisation with these details is registered already.
 	AlreadyRegistered,
 	// A new organisation's setup can no longer be finished from here: sign in
-	// to go on with it (D-146).
+	// to go on with it.
 	SetupExpired,
 	// The seat has no authenticator app yet, and its session opens nothing but
 	// setting one up: set up two-step sign-in, then the same call works.
 	TwoStepSetupRequired,
-	// The administrator's password reset (D-215) took the email's code, and
-	// the seat signs in with two steps: the same reset goes on with the code
-	// its authenticator app shows, or a recovery code. Nothing was used up.
+	// The administrator's password reset took the email's code, and the seat
+	// signs in with two steps: the same reset goes on with the code its
+	// authenticator app shows, or a recovery code. Nothing was used up.
 	TwoStepCodeRequired,
 };
 
@@ -144,8 +144,8 @@ private:
 };
 
 // A seat with no authenticator app may do nothing at Legal Machines but set one
-// up (D-215): its session reads its own seat and sets up two steps, and every
-// other door - the firm's seats and computers, the models - answers 403 with
+// up: its session reads its own seat and sets up two steps, and every other
+// door - the firm's seats and computers, the models - answers 403 with
 // "twoFactorSetup": "required". Such an answer is never a session to drop or a
 // password to ask again: the seat sets up two-step sign-in, and the same
 // session then opens everything.
@@ -174,25 +174,25 @@ SignInAnswer sign_in(const AccountPoster &post,
                      const std::string &password);
 
 // POST {base}/organisations/lookup {email}: whether Legal Machines knows an
-// organisation by this email, its contact address (D-133).
+// organisation by this email, its contact address.
 bool organisation_exists(const AccountPoster &post, const std::string &email);
 
 // The same lookup, whole: whether an organisation uses this email, the one
-// every seat of the firm signs in with (D-204).
+// every seat of the firm signs in with.
 struct EmailLookup {
 	bool exists = false;
 };
 EmailLookup look_up_email(const AccountPoster &post, const std::string &email);
 
-// A firm's seats (D-204), each a login of the firm's with no person in it: its
-// seat id, drawn by Legal Machines from a random set, and a password of its
-// own. Posted with this computer's session, which must be the firm's
+// A firm's seats, each a login of the firm's with no person in it: its seat
+// id, drawn by Legal Machines from a random set, and a password of its own.
+// Posted with this computer's session, which must be the firm's
 // administrator's; each throws AccountFailure in words for the lawyer.
 struct FirmSeat {
 	std::string seat_id;
 	std::string role;
 	std::string created_at;
-	// Whether it signs in with an authenticator's code (D-215).
+	// Whether it signs in with an authenticator's code.
 	bool has_two_factor = false;
 };
 // POST {base}/organisations/seats {}: the firm's seats, the administrator's
@@ -213,10 +213,10 @@ void set_seat_password(const AccountPoster &session_post, const std::string &sea
 void remove_seat(const AccountPoster &session_post, const std::string &seat_id);
 // POST {base}/organisations/seats/two-factor/reset {seatId}: a colleague's
 // two-step sign-in turned off, for a lost phone; they set it again at their
-// next sign-in (D-215).
+// next sign-in.
 void reset_seat_two_factor(const AccountPoster &session_post, const std::string &seat_id);
 
-// This computer's own seat (D-215), with its session, any seat's:
+// This computer's own seat, with its session, any seat's.
 // - own_seat: its id, its role and whether two-step sign-in is on;
 // - start_own_two_factor: the key an authenticator app takes, kept until a
 //   code turns it on; confirm_own_two_factor: the code the app shows, which
@@ -227,22 +227,21 @@ struct OwnSeat {
 	std::string seat_id;
 	std::string role;
 	bool has_two_factor = false;
-	// How many recovery codes are left unused (D-218); none where the service
-	// does not say.
+	// How many recovery codes are left unused; none where the service does
+	// not say.
 	std::optional<int> recovery_codes_left;
-	// Its firm is one of Legal Machines' design partners (D-257), a mark
-	// Legal Machines alone sets: the seat may report problems and share work
-	// logs. False where the service does not say.
+	// Its firm is one of Legal Machines' design partners, a mark Legal
+	// Machines alone sets: the seat may report problems and share work logs.
+	// False where the service does not say.
 	bool is_design_partner = false;
-	// The version of the Diagnostics Consent this seat accepted (D-257), or
-	// none: a design partner's seat sends nothing to Legal Machines before it.
+	// The version of the Diagnostics Consent this seat accepted, or none: a
+	// design partner's seat sends nothing to Legal Machines before it.
 	std::optional<std::string> diagnostics_consent;
 };
 OwnSeat own_seat(const AccountPoster &session_post);
-// The seat accepts this version of the Diagnostics Consent (D-257; the owner,
-// 2026-11-05: "before sending, on each seat, a checkbox: a separate consent to
-// sending this data"): Legal Machines keeps it on the seat with when. Throws
-// where it is not kept, so that nothing is sent without it.
+// The seat accepts this version of the Diagnostics Consent: Legal Machines
+// keeps it on the seat with when. Throws where it is not kept, so that nothing
+// is sent without it.
 void accept_diagnostics_consent(const AccountPoster &session_post, const std::string &version);
 struct OwnTwoFactorKey {
 	std::string secret;
@@ -253,23 +252,23 @@ std::vector<std::string> confirm_own_two_factor(const AccountPoster &session_pos
 void change_own_password(const AccountPoster &session_post, const std::string &current, const std::string &wanted,
 	const std::string &code);
 
-// Two-step sign-in changed by the rules every service keeps (D-218), each only
-// once the seat proved it is itself - its password and a code its app shows
-// now, or a recovery code, which is then used up:
+// Two-step sign-in changed by the rules every service keeps, each only once
+// the seat proved it is itself - its password and a code its app shows now, or
+// a recovery code, which is then used up.
 // - replace_own_two_factor: a new authenticator app's key, kept beside the one
 //   in use until confirm_replaced_two_factor's code from the new app swaps
 //   them and answers ten new recovery codes; until then the old app and codes
 //   work, and an attempt left halfway changes nothing;
 // - renew_own_recovery_codes: ten new recovery codes; the old stop at once.
-// There is no turning it off: every seat signs in with two steps (D-215).
+//   There is no turning it off: every seat signs in with two steps.
 OwnTwoFactorKey replace_own_two_factor(const AccountPoster &session_post, const std::string &password, const std::string &code);
 std::vector<std::string> confirm_replaced_two_factor(const AccountPoster &session_post, const std::string &code);
 std::vector<std::string> renew_own_recovery_codes(const AccountPoster &session_post, const std::string &password,
 	const std::string &code);
 
-// The firm's administrator who forgot their password (D-215), with no
-// session, by the firm's email: request_recovery mails a code to it when it is
-// a firm's confirmed email, with the same answer when it is not (POST
+// The firm's administrator who forgot their password, with no session, by the
+// firm's email: request_recovery mails a code to it when it is a firm's
+// confirmed email, with the same answer when it is not (POST
 // {base}/organisations/recover {email}); reset_password takes that code, with
 // two-step on also a code the authenticator shows or a recovery code, and the
 // new password, which signs every computer of the seat out (POST
@@ -280,9 +279,9 @@ void request_recovery(const AccountPoster &post, const std::string &email);
 void reset_password(const AccountPoster &post, const std::string &email, const std::string &email_code,
 	const std::string &two_step_code, const std::string &wanted);
 
-// The firm's computers (D-205), with this computer's session, any seat's:
-// public keys and addresses only, which nothing here trusts until a lawyer
-// has checked the computers' number.
+// The firm's computers, with this computer's session, any seat's: public
+// keys and addresses only, which nothing here trusts until a lawyer has
+// checked the computers' number.
 struct ListedComputer {
 	std::string seat_id;
 	// "administrator" or "member": the seat's office, never who sits in it.
@@ -314,8 +313,8 @@ std::vector<PairingMessage> pairing_inbox(const AccountPoster &session_post, con
 
 // POST {base}/auth/login {email, seat?, password}: signing in by the
 // organisation's email and a seat's id instead of its Organisation and Seat
-// IDs (D-204); with no seat, the administrator's. The answer names the
-// organisation and the seat the password opened.
+// IDs; with no seat, the administrator's. The answer names the organisation
+// and the seat the password opened.
 SignInAnswer sign_in_with_email(const AccountPoster &post, const std::string &email, const std::string &seat,
 		const std::string &password);
 
@@ -349,14 +348,13 @@ struct RegistrationAnswer {
 RegistrationAnswer register_organisation(const AccountPoster &post, const OrganisationRegistration &registration);
 
 // POST {base}/organisations/create: a new organisation from its details and
-// agreements alone, no password (D-146). Legal Machines names it and mails
-// the code alone to its email; the setup that follows the code sets the
-// password and two-factor authentication. The registration's password is not
-// read.
+// agreements alone, no password. Legal Machines names it and mails the code
+// alone to its email; the setup that follows the code sets the password and
+// two-factor authentication. The registration's password is not read.
 RegistrationAnswer create_organisation(const AccountPoster &post, const OrganisationRegistration &registration);
 
 // What confirming the organisation's email came to: it waits for Legal
-// Machines' approval (D-030), or it is in use at once.
+// Machines' approval, or it is in use at once.
 enum class ContactConfirmation {
 	AwaitingApproval,
 	Active,
@@ -364,9 +362,9 @@ enum class ContactConfirmation {
 
 const char *to_string(ContactConfirmation confirmation);
 
-// What confirming the email came to, and for a new organisation (D-146) the
-// setup it opens: what it sets first ("password" or "two_factor") and the
-// token that opens it. The token stays native.
+// What confirming the email came to, and for a new organisation the setup
+// it opens: what it sets first ("password" or "two_factor") and the token
+// that opens it. The token stays native.
 struct ContactConfirmed {
 	ContactConfirmation state = ContactConfirmation::AwaitingApproval;
 	std::string setup;
@@ -377,8 +375,8 @@ struct ContactConfirmed {
 ContactConfirmed confirm_contact(const AccountPoster &post, const std::string &organisation_id,
                                  const std::string &code);
 
-// A new organisation's setup (D-146), each step opened by the token the
-// email's confirmation or a sign-in gave. A token that opens nothing throws
+// A new organisation's setup, each step opened by the token the email's
+// confirmation or a sign-in gave. A token that opens nothing throws
 // AccountFailure(SetupExpired).
 //
 // POST {base}/organisations/setup/password: 12 characters at least.
@@ -401,9 +399,9 @@ struct TwoFactorOn {
 	ContactConfirmation state = ContactConfirmation::AwaitingApproval;
 	std::vector<std::string> recovery_codes;
 	// Active at the end of its setup, the administrator stands signed in for
-	// this computer (D-152): the service's verified sign-in, which the app
-	// claims at once with the password just set, and the organisation's name.
-	// Empty where the service gives none: the app then signs in with a code.
+	// this computer: the service's verified sign-in, which the app claims at
+	// once with the password just set, and the organisation's name. Empty
+	// where the service gives none: the app then signs in with a code.
 	std::string challenge_id;
 	std::optional<std::string> organisation_name;
 };
@@ -415,16 +413,16 @@ TwoFactorOn confirm_two_factor(const AccountPoster &post, const std::string &org
 void resend_contact_code(const AccountPoster &post, const std::string &organisation_id);
 
 // POST {base}/auth/2fa/verify {challengeId, code}: the six-digit code - mailed,
-// or shown by the seat's authenticator app - or a recovery code's eight
-// letters and digits (D-146). Returns, once the code is
-// accepted, a signed-in answer with the names the service gives: the
-// organisation's and the person's (none from an older service, or for a seat
-// whose name it does not know yet); throws AccountFailure otherwise.
+// or shown by the seat's authenticator app - or a recovery code's eight letters
+// and digits. Returns, once the code is accepted, a signed-in answer with the
+// names the service gives: the organisation's and the person's (none from an
+// older service, or for a seat whose name it does not know yet); throws
+// AccountFailure otherwise.
 SignInAnswer verify_two_factor(const AccountPoster &post, const std::string &challenge_id, const std::string &code);
 
 // POST {base}/organisations/contact-status {organisationId}: whether Legal
-// Machines has approved the organisation (D-030), which the app's wait for it
-// asks while it is shown. Throws AccountFailure when the service cannot say.
+// Machines has approved the organisation, which the app's wait for it asks
+// while it is shown. Throws AccountFailure when the service cannot say.
 bool organisation_is_approved(const AccountPoster &post, const std::string &organisation_id);
 
 // POST {base}/auth/node-session {organisationId, seatId, password, nodeId,

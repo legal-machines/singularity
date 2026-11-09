@@ -142,8 +142,6 @@ private:
 	std::optional<std::uint64_t> planned_context_tokens(const std::string &model_id,
 		const hardware::HardwareCapabilities &capabilities) const;
 	std::shared_ptr<Entry> entry_for(const std::string &model_id) const;
-	// The owner name a model's governor lease is acquired under -
-	// informational; exclusion is always by lease id.
 	static std::string resource_lease_owner(const Entry &entry);
 	// Every change of an Entry's lease goes through here, under mutex_; the
 	// previous lease is released after mutex_ is dropped.

@@ -52,10 +52,9 @@ struct StorageSummary {
   std::uint64_t indexes_cache_bytes = 0;
 };
 
-// This machine's Hardware Profile abstraction (docs/LOCAL_INFERENCE.md).
-// Purely about the machine: what any
-// registered local model's execution plan is chosen against, never a
-// specific model's own facts (see LocalModel/LocalModelRegistry/LocalModelRegistry.hpp's
+// This machine's Hardware Profile abstraction. Purely about the machine: what any
+// registered local model's execution plan is chosen against, never a specific model's
+// own facts (see LocalModel/LocalModelRegistry/LocalModelRegistry.hpp's
 // ModelExecutionProfile for that side) or its benchmark evidence (see
 // LocalModelStatus.live.benchmark).
 struct NodeSummary {

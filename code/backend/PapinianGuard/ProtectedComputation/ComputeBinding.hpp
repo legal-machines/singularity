@@ -262,7 +262,7 @@ struct LoopBinding {
 // model writes is judged as written, against the material as the provider was
 // sent it. Every call that goes out protected is held to it, with or without
 // the protocol's budgets - a model whose window is too small for the protocol
-// writes searches all the same (PRIV-1). `data_plane` as for loop_binding.
+// writes searches all the same. `data_plane` as for loop_binding.
 inline std::function<Code(const std::string &, bool, const std::string &)> query_admission(const PapinianGuard &guard,
 		OperationProtectedSymbolTable &table, std::function<std::string(const std::string &)> data_plane = {}) {
 	const auto plane = [data_plane](const std::string &prompt) {

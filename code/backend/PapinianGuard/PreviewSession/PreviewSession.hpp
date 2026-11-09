@@ -26,10 +26,9 @@ struct PreviewSessionFingerprint {
 	// different order still compare equal.
 	std::vector<std::string> policy_categories;
 	std::vector<std::string> policy_custom_terms;
-	// The effective Reasoning provider/model (Node -> Project -> Chat
-	// inheritance, AI_SETUP_CONTRACT.md) - never Node-default-only, so a
-	// Project/Chat AI Setup override is honestly reflected here instead of
-	// only ever comparing against the Node default.
+	// The effective Reasoning provider/model - never Node-default-only, so
+	// a Project/Chat AI Setup override is honestly reflected here instead
+	// of only ever comparing against the Node default.
 	std::string provider_id;
 	std::string model_id;
 	// The exact documents this preview's context actually drew from, and the

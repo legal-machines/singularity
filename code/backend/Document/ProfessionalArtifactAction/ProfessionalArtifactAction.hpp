@@ -307,9 +307,7 @@ inline constexpr std::size_t kMaxArtifactFileNameCharacters = 80;
 
 // One correction, then the lawyer: a draft the review still questions after one
 // repair goes to them as a proposal with the review's concern beside it, never
-// written on its own. Two rounds cost a live amendment nine minutes and $0.36
-// of GPT-5 calls re-litigating a term only the lawyer could decide (24 Sep 2026);
-// the owner's rule is one bounded repair.
+// written on its own.
 inline constexpr std::size_t kMaxProfessionalArtifactReviewCycles = 1;
 
 // The change a proposal makes, as a person reads one before approving it and
@@ -674,7 +672,7 @@ struct ProfessionalReviewSource {
 // A reviewer's words made fit for the lawyer who reads them beside a draft:
 // about the document only, never about Singularity's protection of it, in English
 // and Russian. "a duplicated protected remedy" reads "a duplicated remedy"
-// ("защищённое значение" reads "значение"), a type written as a code
+// ("…" reads "…"), a type written as a code
 // ("PERSON", "LEGAL_ENTITY") reads as a word in the note's language, and a
 // sentence about symbols or placeholders together with what protected or
 // restored them is left out when anything else was said. The document's own
@@ -689,10 +687,10 @@ struct ProfessionalReviewSource {
 void write_new_word_document(const std::filesystem::path &path, const std::string &title, const std::string &content,
 	const std::string &language, const std::string &author);
 
-// A new workbook of one sheet written whole at `path` (D-175): `columns` its
-// header row, bold and frozen above `rows`, each column as wide as what it
-// holds, and a date, a percentage or an amount stored as the number it stands
-// for, shown as it was written. Throws, in words, for text a workbook cannot hold.
+// A new workbook of one sheet written whole at `path`: `columns` its header row,
+// bold and frozen above `rows`, each column as wide as what it holds, and a date,
+// a percentage or an amount stored as the number it stands for, shown as it was
+// written. Throws, in words, for text a workbook cannot hold.
 void write_new_workbook(const std::filesystem::path &path, const std::vector<std::string> &columns,
 	const std::vector<std::vector<std::string>> &rows);
 
@@ -726,9 +724,9 @@ std::size_t settle_quoted_table_edits(const ProfessionalArtifactActionPlan &plan
 	const tools::ToolExecutionContext &context, bool preapproved = false);
 
 // A workbook's cells changed in a copy of it, never in it: a colleague's revised
-// draft of a tracker, handed in beside the original for the lawyer to accept
-// (D-115). The change is checked, written and proven exactly as every change to
-// a workbook is (no formula or calculated cell overwritten, a number kept a
+// draft of a tracker, handed in beside the original for the lawyer to accept.
+// The change is checked, written and proven exactly as every change to a
+// workbook is (no formula or calculated cell overwritten, a number kept a
 // number, every other cell, formula, row and sheet as it was), staged and
 // committed only where `copy` does not exist yet. Each cell is then read back
 // from the copy as Excel shows it.
@@ -754,10 +752,10 @@ struct WorkbookCopyResult {
 	std::filesystem::path path;
 	std::string sha256;
 	std::vector<WorkbookCellReading> cells;
-	// Each change is judged on its own (D-117): one misquoted cell refuses only
-	// itself. A number quoted in any writing of the same number ("421",
-	// "421.00", "$421.00") is the cell's value; a cell that already holds what
-	// the change gives it is left as it is ("Contracts!H2").
+	// Each change is judged on its own: one misquoted cell refuses only itself.
+	// A number quoted in any writing of the same number ("421", "421.00",
+	// "$421.00") is the cell's value; a cell that already holds what the change
+	// gives it is left as it is ("Contracts!H2").
 	std::vector<WorkbookCellRefusal> refused;
 	std::vector<std::string> unchanged;
 };

@@ -2,7 +2,7 @@
    head's line and 30 over the list; each client's Matters under the client's
    name in plain words with their count; no frame, no capitals, no lines
    between rows, a row's ground under the pointer only; marks and names on
-   the head's edge (the owner, 2026-11-02). */
+   the head's edge. */
 .toolbar {
 	display: flex;
 	align-items: center;
@@ -157,8 +157,7 @@
 }
 
 /* Each face set off from the next by a ring of the row's own ground, white
-   at rest and the pointer's grey under it (the owner, 2026-11-02: "a bug
-   with the outline"). */
+   at rest and the pointer's grey under it. */
 .face {
 	display: inline-flex;
 	margin-left: -5px;

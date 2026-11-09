@@ -1,5 +1,5 @@
 {
-  "apiVersion": 105,
+  "apiVersion": 106,
   "compatibility": {
     "window.singularity": [
       "platform",
@@ -1933,7 +1933,8 @@
       "policy": "worker",
       "params": {
         "name": "string",
-        "folderToken": "string | undefined"
+        "folderToken": "string | undefined",
+        "openExisting": "boolean | undefined"
       },
       "result": "Project",
       "error": "NativeError"
@@ -4092,6 +4093,55 @@
       "policy": "ui",
       "result": "UpdateStatus",
       "error": "NativeError"
+    },
+    {
+      "name": "chat.sourceIcons",
+      "policy": "worker",
+      "params": {
+        "sites": "string[]"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "icons"
+        ],
+        "properties": {
+          "icons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "error": "NativeError"
+    },
+    {
+      "name": "chat.stopColleagues",
+      "policy": "worker",
+      "params": {
+        "chatId": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "ended"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "ended": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "error": "NativeError"
     }
   ],
   "events": [
@@ -4376,7 +4426,7 @@
         },
         "archivedAt": {
           "type": "string",
-          "description": "When it was archived (D-214); empty while it is open."
+          "description": "When it was archived; empty while it is open."
         },
         "archivedBy": {
           "type": "string",
@@ -4685,7 +4735,7 @@
             "thread",
             null
           ],
-          "description": "Why this chat's work stays on this computer, when it does (Beta 1 #44): then primaryModel is the local model it really runs on (null when nothing here can run it) and destination is local, whatever AI Setup would choose."
+          "description": "Why this chat's work stays on this computer, when it does: then primaryModel is the local model it really runs on (null when nothing here can run it) and destination is local, whatever AI Setup would choose."
         },
         "keptHereMessage": {
           "type": [
@@ -7269,7 +7319,7 @@
           ]
         },
         "pictures": {
-          "description": "The pictures a member attached that the call carried as they are, unmasked (D-256): each by its name, size and SHA-256, never its bytes.",
+          "description": "The pictures a member attached that the call carried as they are, unmasked: each by its name, size and SHA-256, never its bytes.",
           "type": "array",
           "items": {
             "type": "object",
@@ -8587,7 +8637,7 @@
       ],
       "properties": {
         "apiVersion": {
-          "const": 105
+          "const": 106
         },
         "platform": {
           "type": "string"
@@ -8596,7 +8646,7 @@
           "type": "string"
         },
         "build": {
-          "description": "Which build this is, as a design partner's problem report says it (D-257).",
+          "description": "Which build this is, as a design partner's problem report says it.",
           "enum": [
             "Debug",
             "Release"
@@ -8897,11 +8947,11 @@
           "type": "string"
         },
         "recorded": {
-          "description": "Whether this computer's work record holds the call (D-252).",
+          "description": "Whether this computer's work record holds the call.",
           "type": "boolean"
         },
         "confirmation": {
-          "description": "What the provider's own record says the call cost (D-252), or null before it is asked.",
+          "description": "What the provider's own record says the call cost, or null before it is asked.",
           "type": [
             "object",
             "null"
@@ -11019,7 +11069,7 @@
         },
         "viewer": {
           "$ref": "#/schemas/OrganisationViewer",
-          "description": "Who is looking and what they may do, the same viewer organisation.get holds (Beta 1 #274)."
+          "description": "Who is looking and what they may do, the same viewer organisation.get holds."
         }
       },
       "additionalProperties": false
@@ -12872,7 +12922,7 @@
       "additionalProperties": false
     },
     "AccountState": {
-      "description": "Who is signed in to Legal Machines on this computer. Identifiers and display names only: never a password, a code or a session token. organisationEmail is the firm's own email every seat signs in with, as typed here (D-204); role says whether the seat is the firm's administrator's or a colleague's (D-204); hasDownloadSession says whether this computer holds its native-only model download session.",
+      "description": "Who is signed in to Legal Machines on this computer. Identifiers and display names only: never a password, a code or a session token. organisationEmail is the firm's own email every seat signs in with, as typed here; role says whether the seat is the firm's administrator's or a colleague's; hasDownloadSession says whether this computer holds its native-only model download session.",
       "type": "object",
       "required": [
         "signedIn",
@@ -12932,7 +12982,7 @@
       "additionalProperties": false
     },
     "AccountSignInResult": {
-      "description": "What a sign-in step came to. signed_in: the account and this computer's download session are kept; a missing protection model downloads at once only when onboarding is complete and protection is on, and otherwise when the member asks (localModels.sync papinian-ner, D-198; follow papinian.getModelStatus). two_factor_required: send the code with account.verifyTwoFactor and challengeId. email_verification_required: the organisation's email must be confirmed first; nothing was kept. awaiting_approval: Legal Machines has not approved the new organisation yet; nothing was kept, and maskedEmail is where it writes once it does. setup_required: a new organisation whose setup is not finished (D-146) goes on with setup (two_factor); the token that opens it stays native. method, with two_factor_required: authenticator when the seat's authenticator app shows the code (a recovery code stands in once), email when a code was mailed. saved_password_refused: a sign-in asked with savedPassword, and the password this computer kept for the seat was refused by Legal Machines or is no longer kept (D-243); it is forgotten, nothing was kept, and the page asks for the password.",
+      "description": "What a sign-in step came to. signed_in: the account and this computer's download session are kept; a missing protection model downloads at once only when onboarding is complete and protection is on, and otherwise when the member asks. two_factor_required: send the code with account.verifyTwoFactor and challengeId. email_verification_required: the organisation's email must be confirmed first; nothing was kept. awaiting_approval: Legal Machines has not approved the new organisation yet; nothing was kept, and maskedEmail is where it writes once it does. setup_required: a new organisation whose setup is not finished goes on with setup (two_factor); the token that opens it stays native. method, with two_factor_required: authenticator when the seat's authenticator app shows the code (a recovery code stands in once), email when a code was mailed. saved_password_refused: a sign-in asked with savedPassword, and the password this computer kept for the seat was refused by Legal Machines or is no longer kept; it is forgotten, nothing was kept, and the page asks for the password.",
       "type": "object",
       "required": [
         "status",
@@ -12967,7 +13017,7 @@
           "type": "string"
         },
         "usedRecoveryCode": {
-          "description": "Set by account.verifyTwoFactor when the second step was a recovery code (D-218): the page asks for a new authenticator app.",
+          "description": "Set by account.verifyTwoFactor when the second step was a recovery code: the page asks for a new authenticator app.",
           "type": "boolean"
         },
         "recoveryCodesLeft": {
@@ -12976,7 +13026,7 @@
           "minimum": 0
         },
         "onboardedHere": {
-          "description": "With signed_in: whether this seat finished onboarding on this computer before (D-250); then onboarding stands complete again, and the page goes straight back to work.",
+          "description": "With signed_in: whether this seat finished onboarding on this computer before; then onboarding stands complete again, and the page goes straight back to work.",
           "type": "boolean"
         },
         "account": {
@@ -12996,13 +13046,13 @@
         },
         "twoFactorSetup": {
           "type": "string",
-          "description": "\"required\": a colleague's seat with no authenticator yet sets one up before it works (D-215)."
+          "description": "\"required\": a colleague's seat with no authenticator yet sets one up before it works."
         }
       },
       "additionalProperties": false
     },
     "AccountLookup": {
-      "description": "Whether Legal Machines knows an organisation by this email, the one every seat of the firm signs in with (D-133, D-204).",
+      "description": "Whether Legal Machines knows an organisation by this email, the one every seat of the firm signs in with.",
       "type": "object",
       "required": [
         "exists"
@@ -13068,7 +13118,7 @@
       "additionalProperties": false
     },
     "AccountEmailConfirmation": {
-      "description": "What confirming the organisation's email came to: awaiting_approval until Legal Machines approves it (D-030), or active. setup, for a new organisation created by account.create (D-146): what its setup sets first, password or two_factor; the token that opens it stays native.",
+      "description": "What confirming the organisation's email came to: awaiting_approval until Legal Machines approves it, or active. setup, for a new organisation created by account.create: what its setup sets first, password or two_factor; the token that opens it stays native.",
       "type": "object",
       "required": [
         "state"
@@ -13663,7 +13713,13 @@
         },
         "firmCopy": {
           "type": "boolean",
-          "description": "Held here from the firm's record (D-213): changed on the computer that runs it."
+          "description": "Held here from the firm's record: changed on the computer that runs it."
+        },
+        "workChatIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
@@ -14203,7 +14259,7 @@
         },
         "viewer": {
           "$ref": "#/schemas/OrganisationViewer",
-          "description": "Who is looking and what they may do, the same viewer organisation.get holds (Beta 1 #274)."
+          "description": "Who is looking and what they may do, the same viewer organisation.get holds."
         }
       },
       "additionalProperties": false
@@ -14779,7 +14835,7 @@
         },
         "invited": {
           "type": "boolean",
-          "description": "Given the Matter from this computer by choosing them (D-205), with no record of their own in it yet."
+          "description": "Given the Matter from this computer by choosing them, with no record of their own in it yet."
         }
       },
       "additionalProperties": false
@@ -15121,11 +15177,11 @@
         },
         "archived": {
           "type": "boolean",
-          "description": "Archived by the firm (D-214): their seat closed, their history kept."
+          "description": "Archived by the firm: their seat closed, their history kept."
         },
         "removed": {
           "type": "boolean",
-          "description": "Removed from the firm (D-214): named only where they wrote."
+          "description": "Removed from the firm: named only where they wrote."
         }
       },
       "additionalProperties": false
@@ -16094,7 +16150,7 @@
         }
       },
       "additionalProperties": true,
-      "description": "The privacy overview's counts and Papinian Guard's state, without what left this device: nothing of the routing log is read (Beta 1 #266)."
+      "description": "The privacy overview's counts and Papinian Guard's state, without what left this device: nothing of the routing log is read."
     },
     "MatterChatSummary": {
       "type": "object",
@@ -16166,7 +16222,7 @@
       "additionalProperties": false
     },
     "ChatLatestMessage": {
-      "description": "A thread's latest message as a list of Matters shows it (D-200): who wrote it and its words in one line of at most 160 letters, without source markers. A person's message names their actor id and name, an AI colleague's its agent id and name; a model's answer to a person's own request names no one.",
+      "description": "A thread's latest message as a list of Matters shows it: who wrote it and its words in one line of at most 160 letters, without source markers. A person's message names their actor id and name, an AI colleague's its agent id and name; a model's answer to a person's own request names no one.",
       "type": "object",
       "required": [
         "taskId",
@@ -16210,7 +16266,7 @@
       "additionalProperties": false
     },
     "ChatReadMarks": {
-      "description": "What the member at this computer has read of each conversation (D-202): by its chat's id, the time of the latest message seen there. Kept on this computer with the member's preferences, never in a Matter's folder.",
+      "description": "What the member at this computer has read of each conversation: by its chat's id, the time of the latest message seen there. Kept on this computer with the member's preferences, never in a Matter's folder.",
       "type": "object",
       "required": [
         "marks"
@@ -16226,7 +16282,7 @@
       "additionalProperties": false
     },
     "FirmColleagueList": {
-      "description": "The firm's colleagues other computers of the firm run (D-203).",
+      "description": "The firm's colleagues other computers of the firm run.",
       "type": "object",
       "required": [
         "colleagues"
@@ -16242,7 +16298,7 @@
       "additionalProperties": false
     },
     "FirmColleague": {
-      "description": "A colleague of the firm that another of the firm's computers runs, as the firm's record holds it (D-203): who it is, its office, how it works and what it does, its model, its status and who answers for it.",
+      "description": "A colleague of the firm that another of the firm's computers runs, as the firm's record holds it: who it is, its office, how it works and what it does, its model, its status and who answers for it.",
       "type": "object",
       "required": [
         "agentId",
@@ -16363,7 +16419,7 @@
         },
         "description": {
           "type": "string",
-          "description": "What the Matter is and for whom, as New Matter asked it; empty when nothing was said. Read on every change, so an edit on another computer shows here (the owner, 2026-11-02)."
+          "description": "What the Matter is and for whom, as New Matter asked it; empty when nothing was said. Read on every change, so an edit on another computer shows here."
         },
         "appearance": {
           "$ref": "#/schemas/ProjectAppearance"
@@ -16409,7 +16465,7 @@
         },
         "archivedAt": {
           "type": "string",
-          "description": "When it was archived (D-214); empty while it is open."
+          "description": "When it was archived; empty while it is open."
         },
         "archivedBy": {
           "type": "string",
@@ -17856,6 +17912,7 @@
         "certificateEnds",
         "documentsRegistered",
         "outlookManifest",
+        "firstOpening",
         "connectedAt",
         "problem"
       ],
@@ -17886,6 +17943,14 @@
         },
         "documentsRegistered": {
           "type": "boolean"
+        },
+        "firstOpening": {
+          "type": "string",
+          "enum": [
+            "none",
+            "waiting",
+            "opened"
+          ]
         },
         "outlookManifest": {
           "type": "string"
@@ -18636,7 +18701,7 @@
         },
         "outcome": {
           "type": "string",
-          "description": "What the result is for the lawyer (D-120): completed, partial, blocked, unchanged or failed; empty until handed in."
+          "description": "What the result is for the lawyer: completed, partial, blocked, unchanged or failed; empty until handed in."
         },
         "label": {
           "type": "string",
@@ -18812,7 +18877,7 @@
     },
     "AssignmentDecision": {
       "type": "object",
-      "description": "What only the lawyer can decide in an assignment (D-120): the question, why it matters, where, the options with the colleague's recommendation first, and whether the next step waits on it.",
+      "description": "What only the lawyer can decide in an assignment: the question, why it matters, where, the options with the colleague's recommendation first, and whether the next step waits on it.",
       "required": [
         "id",
         "stepNumber",
@@ -18873,7 +18938,7 @@
         },
         "reasoning": {
           "type": "string",
-          "description": "Why the colleague recommends its first option, in a sentence; shown once, with that option (D-174). Empty when none."
+          "description": "Why the colleague recommends its first option, in a sentence; shown once, with that option. Empty when none."
         },
         "isBlocking": {
           "type": "boolean"
@@ -18947,7 +19012,7 @@
         },
         "ackMessageId": {
           "type": "string",
-          "description": "The colleague's reply that took the work up, which the assignment's card stands under (D-120)."
+          "description": "The colleague's reply that took the work up, which the assignment's card stands under."
         },
         "summaryMessageId": {
           "type": "string"
@@ -19053,7 +19118,7 @@
     },
     "AssignmentDecisionAnswer": {
       "type": "object",
-      "description": "The assignment once the lawyer answered one of its decisions, and the message that said it to the colleague (D-120).",
+      "description": "The assignment once the lawyer answered one of its decisions, and the message that said it to the colleague.",
       "required": [
         "assignment",
         "message"
@@ -19137,7 +19202,7 @@
       "additionalProperties": false
     },
     "AccountApprovalState": {
-      "description": "Whether Legal Machines approved the organisation that waits for it (D-030).",
+      "description": "Whether Legal Machines approved the organisation that waits for it.",
       "type": "object",
       "required": [
         "approved"
@@ -19150,7 +19215,7 @@
       "additionalProperties": false
     },
     "AccountSetupStep": {
-      "description": "A new organisation's setup goes on (D-146): two_factor is next.",
+      "description": "A new organisation's setup goes on: two_factor is next.",
       "type": "object",
       "required": [
         "setup"
@@ -19163,7 +19228,7 @@
       "additionalProperties": false
     },
     "AccountTwoFactorKey": {
-      "description": "The key an authenticator app takes for a new organisation's administrator (D-146): secret to type by hand, uri (otpauth://totp/...) to scan as a QR code.",
+      "description": "The key an authenticator app takes for a new organisation's administrator: secret to type by hand, uri (otpauth://totp/...) to scan as a QR code.",
       "type": "object",
       "required": [
         "secret",
@@ -19180,7 +19245,7 @@
       "additionalProperties": false
     },
     "AccountTwoFactorOn": {
-      "description": "Two-factor authentication is on and the setup is over (D-146): the organisation is active (or, from an older service, waits for Legal Machines' approval), and recoveryCodes are shown this once; they stay in memory here for account.saveRecoveryCodes and account.printRecoveryCodes while the app runs. signedIn, when the call gave seatId and password and the service gave its verified sign-in (D-152): the administrator is signed in here at once, as account.verifyTwoFactor would answer, and no code is asked again; the password is used for this call only.",
+      "description": "Two-factor authentication is on and the setup is over: the organisation is active (or, from an older service, waits for Legal Machines' approval), and recoveryCodes are shown this once; they stay in memory here for account.saveRecoveryCodes and account.printRecoveryCodes while the app runs. signedIn, when the call gave seatId and password and the service gave its verified sign-in: the administrator is signed in here at once, as account.verifyTwoFactor would answer, and no code is asked again; the password is used for this call only.",
       "type": "object",
       "required": [
         "state",
@@ -19452,7 +19517,7 @@
       "additionalProperties": false
     },
     "FirmSeat": {
-      "description": "A seat of the firm (D-204): a login of the firm's with no person in it, its id drawn by Legal Machines from a random set; the firm's administrator's or a colleague's.",
+      "description": "A seat of the firm: a login of the firm's with no person in it, its id drawn by Legal Machines from a random set; the firm's administrator's or a colleague's.",
       "type": "object",
       "required": [
         "seatId",
@@ -19474,13 +19539,13 @@
         },
         "twoFactor": {
           "type": "boolean",
-          "description": "Whether it signs in with an authenticator's code (D-215)."
+          "description": "Whether it signs in with an authenticator's code."
         }
       },
       "additionalProperties": false
     },
     "FirmSeatList": {
-      "description": "The firm's seats, the administrator's first, and the firm's email they all sign in with, when this computer knows it (D-204).",
+      "description": "The firm's seats, the administrator's first, and the firm's email they all sign in with, when this computer knows it.",
       "type": "object",
       "required": [
         "seats",
@@ -19503,7 +19568,7 @@
       "additionalProperties": false
     },
     "FirmSeatMade": {
-      "description": "A colleague's seat the administrator made (D-204): its id, which the colleague signs in with together with the firm's email and the password the administrator set.",
+      "description": "A colleague's seat the administrator made: its id, which the colleague signs in with together with the firm's email and the password the administrator set.",
       "type": "object",
       "required": [
         "seatId",
@@ -19523,7 +19588,7 @@
       "additionalProperties": false
     },
     "FirmSeatChanged": {
-      "description": "A colleague's seat has a new password; its computers were signed out (D-204).",
+      "description": "A colleague's seat has a new password; its computers were signed out.",
       "type": "object",
       "required": [
         "changed"
@@ -19536,7 +19601,7 @@
       "additionalProperties": false
     },
     "FirmSeatRemoved": {
-      "description": "A colleague's seat is gone, with its computers' sessions (D-204).",
+      "description": "A colleague's seat is gone, with its computers' sessions.",
       "type": "object",
       "required": [
         "removed"
@@ -19549,7 +19614,7 @@
       "additionalProperties": false
     },
     "SeatProfile": {
-      "description": "Who sits in one of the firm's seats, as the firm's own record says (D-209): their name, their role on the firm's scale, their own title, their practice and their photo. Kept between the firm's computers, never at Legal Machines.",
+      "description": "Who sits in one of the firm's seats, as the firm's own record says: their name, their role on the firm's scale, their own title, their practice and their photo. Kept between the firm's computers, never at Legal Machines.",
       "type": "object",
       "required": [
         "seatId",
@@ -19591,13 +19656,13 @@
         },
         "state": {
           "type": "string",
-          "description": "Where the colleague stands with the firm (D-214): empty at work, archived or removed."
+          "description": "Where the colleague stands with the firm: empty at work, archived or removed."
         }
       },
       "additionalProperties": false
     },
     "SeatProfileList": {
-      "description": "Every seat the firm's record says who sits in (D-209).",
+      "description": "Every seat the firm's record says who sits in.",
       "type": "object",
       "required": [
         "profiles"
@@ -19613,7 +19678,7 @@
       "additionalProperties": false
     },
     "FirmComputer": {
-      "description": "One of the firm's computers as this computer sees it (D-205): its seat, its device, its device key's code and whether a lawyer here checked it by the number both computers show. Public keys only, never a name.",
+      "description": "One of the firm's computers as this computer sees it: its seat, its device, its device key's code and whether a lawyer here checked it by the number both computers show. Public keys only, never a name.",
       "type": "object",
       "required": [
         "seatId",
@@ -19662,7 +19727,7 @@
       "additionalProperties": false
     },
     "FirmComputerList": {
-      "description": "The firm's computers as last read from Legal Machines, and the computers that began a check with this one (D-205).",
+      "description": "The firm's computers as last read from Legal Machines, and the computers that began a check with this one.",
       "type": "object",
       "required": [
         "computers",
@@ -19685,7 +19750,7 @@
       "additionalProperties": false
     },
     "ComputerCheck": {
-      "description": "A check of one of the firm's computers (D-205): waiting for the other computer, ready with the eight digits both show, failed with words for the lawyer, or none under way.",
+      "description": "A check of one of the firm's computers: waiting for the other computer, ready with the eight digits both show, failed with words for the lawyer, or none under way.",
       "type": "object",
       "required": [
         "deviceId",
@@ -19716,7 +19781,7 @@
       "additionalProperties": false
     },
     "MatterGiven": {
-      "description": "A Matter given to a lawyer of the firm by choosing them (D-205); `reaches` says whether they have a computer a lawyer here checked, which the offer reaches now.",
+      "description": "A Matter given to a lawyer of the firm by choosing them; `reaches` says whether they have a computer a lawyer here checked, which the offer reaches now.",
       "type": "object",
       "required": [
         "given",
@@ -19733,7 +19798,7 @@
       "additionalProperties": false
     },
     "MatterOffer": {
-      "description": "A Matter a lawyer of the firm gave this member (D-205), from a computer a lawyer here checked, not yet answered.",
+      "description": "A Matter a lawyer of the firm gave this member, from a computer a lawyer here checked, not yet answered.",
       "type": "object",
       "required": [
         "matterId",
@@ -19772,7 +19837,7 @@
       "additionalProperties": false
     },
     "MatterOfferList": {
-      "description": "The Matters offered to this member that wait for their answer (D-205).",
+      "description": "The Matters offered to this member that wait for their answer.",
       "type": "object",
       "required": [
         "offers"
@@ -19788,13 +19853,14 @@
       "additionalProperties": false
     },
     "ChosenFolder": {
-      "description": "The folder a lawyer chose for a new Matter, in the system's dialog: its path, its name, whether it holds a Matter already, and the token project.create takes it by - the path itself is never written back by the window.",
+      "description": "The folder a lawyer chose for a new Matter, in the system's dialog: its path, its name, whether it holds a Matter already and which, and the token project.create takes it by - the path itself is never written back by the window.",
       "type": "object",
       "required": [
         "token",
         "path",
         "name",
-        "holdsMatter"
+        "holdsMatter",
+        "heldMatter"
       ],
       "properties": {
         "token": {
@@ -19808,12 +19874,48 @@
         },
         "holdsMatter": {
           "type": "boolean"
+        },
+        "heldMatter": {
+          "oneOf": [
+            {
+              "$ref": "#/schemas/HeldMatter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "HeldMatter": {
+      "description": "The Matter a chosen folder holds already, and where it stands on this computer: trashed in the Trash, listed among the Matters, or away - deleted from this computer or never opened here.",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "state"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "trashed",
+            "listed",
+            "away"
+          ]
         }
       },
       "additionalProperties": false
     },
     "ColleagueDeleted": {
-      "description": "An AI colleague the firm let go (D-214): gone from every computer, its words kept where it wrote them.",
+      "description": "An AI colleague the firm let go: gone from every computer, its words kept where it wrote them.",
       "type": "object",
       "required": [
         "deleted"
@@ -19826,7 +19928,7 @@
       "additionalProperties": false
     },
     "OwnSeat": {
-      "description": "This computer's own seat (D-215): its id, its role, whether two-step sign-in is on and, where Legal Machines says it, how many of its recovery codes are left unused (D-218), whether its firm is one of Legal Machines' design partners, whose seats report problems and share work logs, whether this computer keeps and offers work logs (a design partner's seat on a build that holds Legal Machines' keys for them), and the version of the Diagnostics Consent this seat accepted, or null (D-257).",
+      "description": "This computer's own seat: its id, its role, whether two-step sign-in is on and, where Legal Machines says it, how many of its recovery codes are left unused, whether its firm is one of Legal Machines' design partners, whose seats report problems and share work logs, whether this computer keeps and offers work logs (a design partner's seat on a build that holds Legal Machines' keys for them), and the version of the Diagnostics Consent this seat accepted, or null.",
       "type": "object",
       "required": [
         "seatId",
@@ -19866,7 +19968,7 @@
       "additionalProperties": false
     },
     "OwnTwoFactorKey": {
-      "description": "The key an authenticator app takes, typed or scanned from its otpauth link (D-215).",
+      "description": "The key an authenticator app takes, typed or scanned from its otpauth link.",
       "type": "object",
       "required": [
         "secret",
@@ -19883,7 +19985,7 @@
       "additionalProperties": false
     },
     "OwnTwoFactorOn": {
-      "description": "Two-step sign-in on, with the ten recovery codes, shown once (D-215).",
+      "description": "Two-step sign-in on, with the ten recovery codes, shown once.",
       "type": "object",
       "required": [
         "recoveryCodes"
@@ -19899,7 +20001,7 @@
       "additionalProperties": false
     },
     "PasswordChanged": {
-      "description": "A password changed (D-215).",
+      "description": "A password changed.",
       "type": "object",
       "required": [
         "changed"
@@ -19912,7 +20014,7 @@
       "additionalProperties": false
     },
     "SeatTwoFactorReset": {
-      "description": "A colleague's two-step sign-in turned off; they set it again at their next sign-in (D-215).",
+      "description": "A colleague's two-step sign-in turned off; they set it again at their next sign-in.",
       "type": "object",
       "required": [
         "reset"
@@ -19925,7 +20027,7 @@
       "additionalProperties": false
     },
     "RecoveryRequested": {
-      "description": "A recovery code mailed to the firm's confirmed email, when it is one (D-215).",
+      "description": "A recovery code mailed to the firm's confirmed email, when it is one.",
       "type": "object",
       "required": [
         "sent"
@@ -19938,7 +20040,7 @@
       "additionalProperties": false
     },
     "LetterReplyOpened": {
-      "description": "A reply to a filed letter opened in the member's mail app, never sent (D-105); with attachmentDocumentIds it opens as an unsent email carrying those documents (D-115). carriesText false when the text was too long for a mail link.",
+      "description": "A reply to a filed letter opened in the member's mail app, never sent; with attachmentDocumentIds it opens as an unsent email carrying those documents. carriesText false when the text was too long for a mail link.",
       "type": "object",
       "required": [
         "opened",
@@ -19955,7 +20057,7 @@
       "additionalProperties": false
     },
     "SeatPasswordStore": {
-      "description": "Where this computer can keep a seat's password at the member's choice (D-243): windows, the user's Credential Manager, on this computer only; null where it keeps none (macOS and Linux for now), and the page offers none.",
+      "description": "Where this computer can keep a seat's password at the member's choice: windows, the user's Credential Manager, on this computer only; null where it keeps none (macOS and Linux for now), and the page offers none.",
       "type": "object",
       "required": [
         "store"
@@ -19971,7 +20073,7 @@
       "additionalProperties": false
     },
     "SavedSeatPassword": {
-      "description": "Whether this computer keeps a password for the seat, named by the firm's email and the seat as the sign-in names it (none for the administrator's). Never the password: a sign-in uses it with savedPassword (D-243).",
+      "description": "Whether this computer keeps a password for the seat, named by the firm's email and the seat as the sign-in names it (none for the administrator's). Never the password: a sign-in uses it with savedPassword.",
       "type": "object",
       "required": [
         "saved"
@@ -19984,7 +20086,7 @@
       "additionalProperties": false
     },
     "SeatPasswordSaved": {
-      "description": "Whether the password was kept: only for the seat that signed in on this computer in the last ten minutes, and only the very password it signed in with (D-243).",
+      "description": "Whether the password was kept: only for the seat that signed in on this computer in the last ten minutes, and only the very password it signed in with.",
       "type": "object",
       "required": [
         "saved"
@@ -19997,7 +20099,7 @@
       "additionalProperties": false
     },
     "SeatPasswordForgotten": {
-      "description": "Whether a kept password was forgotten; false when none was kept (D-243).",
+      "description": "Whether a kept password was forgotten; false when none was kept.",
       "type": "object",
       "required": [
         "forgotten"
@@ -20027,7 +20129,7 @@
       "additionalProperties": false
     },
     "ProblemReported": {
-      "description": "A problem report made a card of its version's board, by its number there (D-257).",
+      "description": "A problem report made a card of its version's board, by its number there.",
       "type": "object",
       "required": [
         "number"
@@ -20040,7 +20142,7 @@
       "additionalProperties": false
     },
     "WorkLogPreview": {
-      "description": "What a design partner's member sees before sending a chat's work log (D-257): the model calls this computer keeps for it, how many went under client data protection, without it or failed, from when to when, how many bytes, and whether it can be sent now, with why not in words.",
+      "description": "What a design partner's member sees before sending a chat's work log: the model calls this computer keeps for it, how many went under client data protection, without it or failed, from when to when, how many bytes, and whether it can be sent now, with why not in words.",
       "type": "object",
       "required": [
         "calls",
@@ -20090,7 +20192,7 @@
       "additionalProperties": false
     },
     "WorkLogMessage": {
-      "description": "One message of the conversation as the member's page shows it, sent inside the sealed work log (D-257).",
+      "description": "One message of the conversation as the member's page shows it, sent inside the sealed work log.",
       "type": "object",
       "required": [
         "author",
@@ -20111,7 +20213,7 @@
       "additionalProperties": false
     },
     "WorkLogShared": {
-      "description": "A work log sealed to Legal Machines' keys and taken by its intake (D-257): the SHA-256 of what was sealed, as the intake logged it, how many of Legal Machines' addresses it went to, and its size sealed.",
+      "description": "A work log sealed to Legal Machines' keys and taken by its intake: the SHA-256 of what was sealed, as the intake logged it, how many of Legal Machines' addresses it went to, and its size sealed.",
       "type": "object",
       "required": [
         "sent",
@@ -20138,7 +20240,7 @@
       "additionalProperties": false
     },
     "UsageConfirmCostsResult": {
-      "description": "What usage.confirmCosts did (D-252): the OpenRouter calls of the Matter in the period whose cost OpenRouter's own record now confirms, those it does not have yet, and whether Legal Machines timestamped this computer's work record.",
+      "description": "What usage.confirmCosts did: the OpenRouter calls of the Matter in the period whose cost OpenRouter's own record now confirms, those it does not have yet, and whether Legal Machines timestamped this computer's work record.",
       "type": "object",
       "required": [
         "confirmed",
@@ -20477,6 +20579,8 @@
     "clearConversation": "chat.clearConversation",
     "restoreConversation": "chat.restoreConversation",
     "listClearedConversations": "chat.clearedConversations",
+    "sourceIcons": "chat.sourceIcons",
+    "stopColleagues": "chat.stopColleagues",
     "runMatterTask": "matter.runTask",
     "previewOutboundRequest": "matter.previewOutboundRequest",
     "closeOutboundPreview": "matter.closeOutboundPreview",

@@ -8,7 +8,7 @@ namespace singularity::bridge::update_bridge {
 // is known now, asking the site now, downloading the version found - its
 // progress read from the status meanwhile - showing the installer in its
 // folder, and Restart now, which installs the version readied as Singularity
-// ends (D-261).
+// ends.
 nlohmann::json status(const nlohmann::json &params);
 nlohmann::json check(const nlohmann::json &params);
 nlohmann::json download(const nlohmann::json &params);

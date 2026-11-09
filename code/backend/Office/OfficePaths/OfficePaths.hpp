@@ -4,9 +4,9 @@
 #include <optional>
 #include <string>
 
-// The rules for files a pane names (D-105), apart from any Matter: where a
-// file Office names is on this computer, whether it is inside a folder, the
-// name a folder can take, and the Base64 a pane hands bytes in.
+// The rules for files a pane names, apart from any Matter: where a file
+// Office names is on this computer, whether it is inside a folder, the name
+// a folder can take, and the Base64 a pane hands bytes in.
 namespace singularity::office {
 
 // A file:// address as a path on this computer; anything else unchanged.

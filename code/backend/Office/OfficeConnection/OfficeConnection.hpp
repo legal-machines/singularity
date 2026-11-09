@@ -11,8 +11,8 @@
 #include <string>
 #include <utility>
 
-// The Office connection (D-105): Singularity's second carrier of the Native
-// API (docs/NATIVE_TRANSPORT.md), for its panes in Word, Excel and Outlook.
+// The Office connection: Singularity's second carrier of the Native API, for its
+// panes in Word, Excel and Outlook.
 //
 // It listens on this computer's loopback only (127.0.0.1), over TLS with the
 // certificate of Office/OfficeCertificate, and answers:
@@ -22,15 +22,13 @@
 //     window asks the person to allow (Office/OfficeClients);
 //   - a paired pane's Native API call, POST /api/call {method, params}, for
 //     the methods its kind of client needs and no other (may_call), through
-//     the bridge's one handler table and error envelope (TRN-4);
 //   - a paired pane's events, POST /api/events, streamed as server-sent events.
 //
-// Reaching the port proves nothing, so nothing that holds data is answered
-// without a paired client's token, a moment within two minutes and a nonce
-// not used before (TRN-5). A call must name this server as its Host (no page
-// can rebind a name of its own to this computer), and a browser's call must
-// come from the pane's own origin. A Matter a call names must be one open on
-// this computer. The security review is in docs/OFFICE.md.
+// Reaching the port proves nothing, so nothing that holds data is answered without a
+// paired client's token, a moment within two minutes and a nonce not used before. A
+// call must name this server as its Host (no page can rebind a name of its own to
+// this computer), and a browser's call must come from the pane's own origin. A
+// Matter a call names must be one open on this computer.
 namespace singularity::office {
 
 // How the connection reaches the Native API: the bridge, through

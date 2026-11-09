@@ -396,7 +396,7 @@ std::string seal_key(const KeyGift &gift, const std::array<std::uint8_t, kKeyByt
 	body.push_back(static_cast<char>(Kind::KeyWrap));
 	Json said = Json{{"m", gift.matter_id}, {"f", gift.from_device}, {"k", gift.from_device_key},
 		{"t", gift.to_device}, {"c", gift.counter}};
-	// The Matter's size, where its giver says it (D-207).
+	// The Matter's size, where its giver says it.
 	if (gift.files > 0 || gift.bytes > 0) {
 		said["n"] = gift.files;
 		said["b"] = gift.bytes;
@@ -471,7 +471,7 @@ std::optional<KeyGift> open_key(const std::string &envelope, const ComputerKeys 
 	return gift;
 }
 
-// ---- 0x06: one of the firm's model accounts, given (D-210) ---------------------------
+// ---- 0x06: one of the firm's model accounts, given ---------------------------
 
 AccountGift::~AccountGift() {
 	if (credential.empty() == false) crypto_wipe(raw(credential), credential.size());

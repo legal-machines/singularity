@@ -1,7 +1,7 @@
-/* The invoice (D-076). On screen it is a sheet of Letter paper below the way
-   back and its actions; printed, the sheet alone fills the page (base.css).
-   Its tables part their rows by space and head them with a quiet band,
-   never by rules (UI-22). */
+/* The invoice. On screen it is a sheet of Letter paper below the way back
+   and its actions; printed, the sheet alone fills the page (base.css). Its
+   tables part their rows by space and head them with a quiet band, never by
+   rules. */
 
 .chrome {
 	margin-bottom: 22px;

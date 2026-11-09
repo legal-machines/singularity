@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { pixelsOf } from "../Window/cssLength.js";
 import { remeasureTitlebarControls } from "../Window/titlebar.js";
 
 import styles from "./MovingHead.module.css";
@@ -11,32 +12,26 @@ const BAND_LEFT = 24;
 // A face that travels with the title docks this tall, the title beside it.
 const LEAD_IN_BAND = 28;
 
-// A page's head that travels into the window's band as the page scrolls (the
-// owner, 2026-10-24: "it literally moves to its new place, tied to the
-// scroll"), on every page that has one. The title, and on a thread or a
-// letter the project's band and the faces, are drawn once, over the page; an
-// unseen copy in the page's flow (its parts marked data-part="title", "band"
-// and "faces" inside `placeholderRef`) keeps their room and says where they
-// rest and in what type. As the page scrolls, the title rises with the words
-// and, early, slides left and draws in from its own size and weight to the
-// band's 15px medium, set as real type at every step so it stays sharp (the
-// owner: "the title's font has a problem"). The band hangs on the title: it
-// comes round to the title's right side and rises onto its row late, so the
-// two never cross; the faces ride beside it. Scrolled back to the top, all
-// of it comes down to rest. Each part follows the scroll frame by frame.
-// A member's page carries its face and its buttons too (the owner,
-// 2026-11-02: "the avatar, the caption and the buttons don't go into the
-// header as the page scrolls, but they should"): the face, `lead`, draws in
-// to the band's left with the title docking beside it, and the buttons,
-// `actions`, rise into the band where they stand, clear of the window's own
-// buttons on its right.
+// A page's head that travels into the window's band as the page scrolls, on
+// every page that has one. The title, and on a thread or a letter the
+// project's band and the faces, are drawn once, over the page; an unseen copy
+// in the page's flow (its parts marked data-part="title", "band" and "faces"
+// inside `placeholderRef`) keeps their room and says where they rest and in
+// what type. As the page scrolls, the title rises with the words and, early,
+// slides left and draws in from its own size and weight to the band's 15px
+// medium, set as real type at every step so it stays sharp. The band hangs on
+// the title: it comes round to the title's right side and rises onto its row
+// late, so the two never cross; the faces ride beside it. Scrolled back to the
+// top, all of it comes down to rest. Each part follows the scroll frame by
+// frame. A member's page carries its face and its buttons too: the face,
+// `lead`, draws in to the band's left with the title docking beside it, and
+// the buttons, `actions`, rise into the band where they stand, clear of the
+// window's own buttons on its right.
 //
-// A title that can be renamed, `onRename`, is edited where it stands (the
-// owner, 2026-11-02: "when I create a thread I want its name in focus as an
-// input, so I can change it; and later too, easy to rename by pressing its
-// name"): a press on it at rest makes it a field in its own type, Return or
-// leaving it keeps the name, Escape keeps the old one; `isNaming` opens it so,
-// its words chosen, and `onNamed` follows Return.
+// A title that can be renamed, `onRename`, is edited where it stands: a press
+// on it at rest makes it a field in its own type, Return or leaving it keeps
+// the name, Escape keeps the old one; `isNaming` opens it so, its words
+// chosen, and `onNamed` follows Return.
 export function MovingHead({ scrollRef, placeholderRef, title, band, faces, lead, actions, onTop, onRename, isNaming = false, onNamed }) {
 	const [draft, setDraft] = useState(isNaming && onRename != null ? title : null);
 	const isEditing = draft != null;
@@ -92,14 +87,18 @@ export function MovingHead({ scrollRef, placeholderRef, title, band, faces, lead
 				tracking: parseFloat(type.letterSpacing) || 0,
 				line: (parseFloat(type.lineHeight) || size * 1.25) / size,
 			};
-			const middle = parseFloat(getComputedStyle(layer).getPropertyValue("--titlebar-height")) / 2 || 30;
+			const middle = pixelsOf(layer, "--titlebar-height") / 2 || 30;
 			const hasLead = rest.lead != null && leadRef.current != null;
-			const docked = { x: BAND_LEFT + (hasLead ? LEAD_IN_BAND + 10 : 0), y: middle - DOCKED.line / 2 };
+			// Past the sidebar's button while the sidebar is put away (App's
+			// --band-lead), never under the traffic lights.
+			const bandLeft = Math.max(BAND_LEFT, pixelsOf(layer, "--band-lead"));
+			const docked = { x: bandLeft + (hasLead ? LEAD_IN_BAND + 10 : 0), y: middle - DOCKED.line / 2 };
 			const reserve = parseFloat(getComputedStyle(layer).getPropertyValue("--caption-reserve")) || 0;
 			geometry = {
 				rest,
 				font,
 				docked,
+				bandLeft,
 				middle,
 				lead: hasLead ? { height: leadRef.current.offsetHeight } : null,
 				actions: rest.actions != null && actionsRef.current != null ? {
@@ -134,8 +133,7 @@ export function MovingHead({ scrollRef, placeholderRef, title, band, faces, lead
 			const titleY = between(rest.title.y, docked.y);
 			title.style.transform = `translate(${titleX}px, ${titleY}px)`;
 			// Docked, its title and buttons stand in the window's strip: the window
-			// is told where they are, or a press on them would drag it (the owner,
-			// 2026-11-02: "the buttons in the header can't be pressed"); undocked,
+			// is told where they are, or a press on them would drag it; undocked,
 			// it is told they have left.
 			const isDocked = progress >= 1;
 			if (layer.hasAttribute("data-docked") != isDocked) {
@@ -146,7 +144,7 @@ export function MovingHead({ scrollRef, placeholderRef, title, band, faces, lead
 			// The face: drawn in to the band's left, beside the docked title.
 			if (geometry.lead != null) {
 				const scale = between(1, LEAD_IN_BAND / geometry.lead.height, early);
-				const leadX = between(rest.lead.x, BAND_LEFT, early);
+				const leadX = between(rest.lead.x, geometry.bandLeft, early);
 				const leadY = between(rest.lead.y, geometry.middle - LEAD_IN_BAND / 2, progress);
 				leadRef.current.style.transform = `translate(${leadX}px, ${leadY}px) scale(${scale})`;
 			}
@@ -163,8 +161,7 @@ export function MovingHead({ scrollRef, placeholderRef, title, band, faces, lead
 			const round = early;
 			// On a thread the band rises late, so it never crosses the title; on
 			// a page that carries its face, the line under the name rises with
-			// everything else and lands with it (the owner, 2026-11-02: "the
-			// name's move must end at one moment with the rest").
+			// everything else and lands with it.
 			const rise = geometry.lead != null ? progress : Math.pow(progress, 4);
 			const bandX = titleX + between(rest.band.x - rest.title.x, width + 8, round);
 			const bandY = titleY + between(rest.band.y - rest.title.y, (line - geometry.band.height) / 2, rise);

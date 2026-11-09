@@ -15,13 +15,13 @@ import { setSidebarSlot } from "./slot.js";
 
 import styles from "./Sidebar.module.css";
 
-// Navigation (D-165): the firm's places, stable Matter folders and shortcuts
-// to places actually visited. Calendar replaces the folders with its own
-// controls (D-081). The account and global navigation never scroll away.
+// Navigation: the firm's places, stable Matter folders and shortcuts to
+// places actually visited. Calendar replaces the folders with its own
+// controls. The account and global navigation never scroll away.
 export function Sidebar({ state, opened = {}, hidden = false }) {
 	const { place, open } = useNavigation();
-	// What waits unread (D-202): a computer asking to join a Matter here counts
-	// on the Inbox too (D-123).
+	// What waits unread: a computer asking to join a Matter here counts on the
+	// Inbox too.
 	const unread = unreadCounts(state);
 	const firm = useFirmComputers();
 	const asking = firm.asking.filter(computer => state.doneIds.includes(`computer:${computer.deviceId}`) == false).length;
@@ -45,8 +45,8 @@ export function Sidebar({ state, opened = {}, hidden = false }) {
 					<span className={styles.firm_name}>{organisation.name}</span>
 				</button>
 				{/* The firm's name alone heads the sidebar, with no chevron or search
-				    button beside it (the owner, 2026-11-02): search opens with ⌘K or
-				    Ctrl+K (App.jsx), and the name still opens the firm's menu. */}
+				    button beside it: search opens with ⌘K or Ctrl+K (App.jsx), and the
+				    name still opens the firm's menu. */}
 				{firmMenu.isOpen ? (
 					<Menu
 						anchor={firmMenu.anchor}
@@ -56,8 +56,7 @@ export function Sidebar({ state, opened = {}, hidden = false }) {
 						items={[
 							{ key: "team", label: "Team", icon: "team", onSelect: () => open({ kind: "team" }) },
 							{ key: "matters", label: "Matters", icon: "matters", onSelect: () => open({ kind: "matters" }) },
-							// The model accounts' keys, in Settings (the owner, 2026-11-02);
-							// hiring is Team's own.
+							// The model accounts' keys, in Settings; hiring is Team's own.
 							hasNative() ? { key: "keys", label: "API keys", icon: "plug", onSelect: () => open({ kind: "settings", tab: "keys" }) } : null,
 						]}
 					/>

@@ -21,8 +21,8 @@ import styles from "./InboxPage.module.css";
 
 const views = [{ id: "active", label: "Active" }, { id: "done", label: "Done" }, { id: "saved", label: "Saved" }];
 
-// One personal queue across the firm (D-164). What calls for this member
-// comes first; everyone else's work continues in its own place. The view is
+// One personal queue across the firm. What calls for this member comes
+// first; everyone else's work continues in its own place. The view is
 // disposable UI state; the existing app handlers own read, saved and done.
 export function InboxPage({ state, onDone, onSave, onFile, display, onDisplayChange }) {
 	const { place, open } = useNavigation();
@@ -153,9 +153,8 @@ function Line({ entry, isSelected, isDone, isSaved, onOpen, onDone, onSave, onFi
 	const status = content.status;
 	const givenWords = entry.isAsk ? (status?.words ?? (entry.kind == "computer" ? "Requests access" : null)) : status != null && status.kind != "waiting" ? status.words : null;
 	// A thread's bare "Asks you" says no more than the section it stands in
-	// ("Needs you"), so its row says nothing there (the owner, 2026-11-02:
-	// "remove this Asks you from the threads in the Inbox"); a sharper word -
-	// "Answer today", "Your review" - stays.
+	// ("Needs you"), so its row says nothing there; a sharper word - "Answer
+	// today", "Your review" - stays.
 	const statusWords = entry.kind == "thread" && givenWords == "Asks you" ? null : givenWords;
 	const shortStatus = /Ready for review$/.test(statusWords ?? "") ? "Your review"
 		: { "Waits for your answer today": "Answer today", "Waits for your answer": "Your answer", "Waits for your acceptance": "Your review" }[statusWords] ?? statusWords;
@@ -309,10 +308,9 @@ function entriesOf(state, firm) {
 		.flatMap(chat => chat.messages.filter(message => message.isUnsorted == true && message.authorId != viewerId).map(message => ({ chat, message })))
 		.map(({ chat, message }) => ({ id: message.id, kind: "dm", matterId: filingOf(message, state), at: message.at, isAsk: true, memberId: chat.memberId }));
 	// A computer that asks to join a Matter open here: a decision the member
-	// holds (D-123), decided on the Matter's page.
-	// One for the Matter the window shows stands with that Matter; one for any
-	// other Matter carried here stands with the unsorted, and is decided on the
-	// Matters page.
+	// holds, decided on the Matter's page. One for the Matter the window shows
+	// stands with that Matter; one for any other Matter carried here stands
+	// with the unsorted, and is decided on the Matters page.
 	const shownMatterId = realWork().matterId ?? null;
 	const uiMatterId = realWork().uiMatterId ?? null;
 	const computerEntries = (firm?.asking ?? [])
@@ -322,8 +320,7 @@ function entriesOf(state, firm) {
 }
 
 // The member's day, by the computer's own clock in the real app and the
-// prototype's moment in its scene. No greeting by the time of day (DESIGN.md,
-// UI-17: the window said "Good morning" at three in the morning, 2026-10-29).
+// prototype's moment in its scene. No greeting by the time of day.
 function today() {
 	const now = hasNative() == true ? new Date() : new Date(mockNow);
 	return new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(now);

@@ -245,10 +245,6 @@ inline std::atomic<bool> &staged_commit_fault_for_testing() {
 // file beside it: "~$" and the file's name - its first one or two characters
 // dropped for a longer name. While it is there, the program holding the
 // document writes its own copy back over anything written underneath it.
-// The first one or two CHARACTERS: where a name is UTF-8 a Cyrillic or accented
-// letter is two bytes or more, and "~$говор поставки.docx" is the owner file
-// of "Договор поставки.docx" (dropping bytes never found it, and a change was
-// written under an open Word that then saved its own copy over it).
 // LibreOffice marks a document it has open with ".~lock.<name>#" instead.
 inline bool office_document_is_open(const std::filesystem::path &document) {
 	using StringType = std::filesystem::path::string_type;

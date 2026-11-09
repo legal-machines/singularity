@@ -22,7 +22,7 @@ enum class EntityType {
   Judge,
   Date,
   MoneyAmount,
-  // A rate or a share: "3%", "0,1 % за каждый день", "0.001 (shown as a
+  // A rate or a share: "3%", "…", "0.001 (shown as a
   // percentage)". Typed apart from money so a model is never told a rate is
   // an amount; Standard protects both under its monetary-amounts category.
   Percentage,

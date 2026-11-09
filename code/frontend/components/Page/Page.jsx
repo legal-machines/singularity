@@ -12,10 +12,10 @@ import styles from "./Page.module.css";
 // that the head's title travels in.
 const PageContext = createContext(null);
 
-// A place's page: its band, then its content, which scrolls (DESIGN.md,
-// FOLIO-12). The content keeps the page's gutters and, on a very wide
-// window, a width a reader can follow. Its head's title travels up into the
-// band as it scrolls (PageHead, MovingHead).
+// A place's page: its band, then its content, which scrolls. The content
+// keeps the page's gutters and, on a very wide window, a width a reader can
+// follow. Its head's title travels up into the band as it scrolls
+// (PageHead, MovingHead).
 export function Page({ bar, children, wide = false, asInbox = false, hardEdge = false, className }) {
 	const scrollRef = useRef(null);
 	useStableGutter(scrollRef);
@@ -36,8 +36,7 @@ export function Page({ bar, children, wide = false, asInbox = false, hardEdge = 
 
 // A page's head: its title, one sentence under it, and its actions on the
 // right, the leading one last. Its title travels into the window's band as
-// the page scrolls (the owner, 2026-10-24: "not every page has a header like
-// the thread's"); the rest scrolls away with the page.
+// the page scrolls; the rest scrolls away with the page.
 export function PageHead({ lead, title, line, lineAfter, actions, asInbox = false, compact = false, carries = false, children }) {
 	const page = useContext(PageContext);
 	const headRef = useRef(null);

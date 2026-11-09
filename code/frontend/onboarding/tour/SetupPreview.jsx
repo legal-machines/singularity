@@ -19,8 +19,7 @@ export function SetupPreview({ kind, draft, asked = null }) {
 
 // A part of what a slide pictures, set as the app sets its parts now: its
 // name, then what it holds on the page's white, apart by space alone - no
-// card, frame, small capitals or line between rows (the owner, 2026-11-05:
-// onboarding's right side still showed the old design system).
+// card, frame, small capitals or line between rows.
 function Part({ name, children }) {
 	return <section className={styles.part}>
 		{name != null ? <h3 className={styles.part_name}>{name}</h3> : null}
@@ -57,11 +56,11 @@ const SYSTEM_ASKS = {
 			{ icon: "settings", says: "Privacy & Security", answer: "Choose Open Anyway, then confirm." },
 		] },
 	},
-	// Each question the system asks as Allow access is pressed, by the
-	// permission it is for, in the order they come (pages.js). Only those the
-	// slide asks for are shown: one this computer allows already never comes
-	// (the owner, 2026-11-05, D-249). Windows ticks the kind of network it is on,
-	// public or private, so its firewall's answer is Allow access as it stands.
+	// Each question the system asks as Allow access is pressed, by the permission
+	// it is for, in the order they come (pages.js). Only those the slide asks for
+	// are shown: one this computer allows already never comes. Windows ticks the
+	// kind of network it is on, public or private, so its firewall's answer is
+	// Allow access as it stands.
 	permissions: {
 		win32: { title: "This computer", line: "What Windows asks, one after another.", label: "Windows Security", asks: [
 			{ key: "controlledFolders", icon: "matters", says: "Unauthorized changes blocked", answer: "Choose Open settings, then allow Singularity." },
@@ -89,10 +88,10 @@ function SystemAsks({ kind, asked }) {
 }
 
 // One clause of the deal in Word after an AI colleague's change, and what was
-// done to it on this computer on the way (D-195): read as Word numbers it, its
-// names and amount masked for the model, the change returned as a tracked
-// change read back, its price checked against the schedule. Fictional, a US
-// stock purchase (AG-12): the buyer pays for the shares it buys.
+// done to it on this computer on the way: read as Word numbers it, its names
+// and amount masked for the model, the change returned as a tracked change
+// read back, its price checked against the schedule. Fictional, a US stock
+// purchase: the buyer pays for the shares it buys.
 function Preparation() {
 	return <div className={styles.picture}>
 		<section className={styles.document}>
@@ -114,24 +113,24 @@ function Preparation() {
 // When each step of the protection picture comes, in milliseconds from the
 // slide's opening: the sentence copied for sending, its three names masked one
 // by one, its leaving, the answer, and its two symbols restored one by one.
-// Unhurried, so each change can be read as it happens (the owner, 2026-11-01:
-// "slower"): one name a step, each finished before the next begins.
+// Unhurried, so each change can be read as it happens: one name a step, each
+// finished before the next begins.
 const MASKING_STEPS = [900, 1900, 2600, 3300, 4300, 5500, 6500, 7200];
 
 function reducedMotion() {
 	return typeof window != "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 }
 
-// One sentence of the deal on its way (D-195): written on this computer with
-// its client's names and figures, masked here before it leaves for the AI
-// model, and the answer restored here. As the slide opens it plays once, in
-// the order it happens (the owner, 2026-11-01, D-198): the sentence is copied
-// for sending, its names become symbols while it is still on this computer's
-// white, it leaves on its green ground, and the answer's symbols become names
-// again here. Under reduced motion it shows the end at once. With protection
-// off, what leaves stands as written on a warning ground, and nothing is
-// masked or restored. Every row keeps the height of its fullest state, so
-// nothing below it moves while it plays or as the member switches. Fictional.
+// One sentence of the deal on its way: written on this computer with its
+// client's names and figures, masked here before it leaves for the AI model,
+// and the answer restored here. As the slide opens it plays once, in the
+// order it happens: the sentence is copied for sending, its names become
+// symbols while it is still on this computer's white, it leaves on its green
+// ground, and the answer's symbols become names again here. Under reduced
+// motion it shows the end at once. With protection off, what leaves stands as
+// written on a warning ground, and nothing is masked or restored. Every row
+// keeps the height of its fullest state, so nothing below it moves while it
+// plays or as the member switches. Fictional.
 function Protection({ off = false }) {
 	const [step, setStep] = useState(() => (reducedMotion() ? MASKING_STEPS.length : 0));
 	useEffect(() => {
@@ -202,7 +201,7 @@ function Swap({ word, symbol, masked }) {
 }
 
 // An AI colleague's title is its role; the rank it holds is a level, never the
-// title of Partner, which belongs to people (D-060).
+// title of Partner, which belongs to people.
 function Colleague({ draft }) {
 	const member = { id: "onboarding-colleague", kind: "ai_colleague", name: draft?.name.trim() || "Kitsune", species: draft?.species ?? "kitsune" };
 	return <div className={styles.profile}>

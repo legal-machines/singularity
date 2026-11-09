@@ -115,7 +115,7 @@ public:
 
 	// What the window does when it opens: agents check their rooms on their
 	// own thread while this process lives (Agent/AgentScheduler). Outside AI
-	// apps are not answered (D-217).
+	// apps are not answered.
 	void agents_on() {
 		if (agents_on_) return;
 		singularity::agents::AgentScheduler::shared().start();
@@ -571,8 +571,8 @@ public:
 		std::cout << "DECIDED " << (allowed ? "approve " : "reject ") << singularity::chat::to_string(status.state) << "\n";
 		approval_id_.clear();
 		// The decision carries its operation on, as the application's own
-		// bridge does after it (Beta 1 #262): an approved change is written, a
-		// rejected one has already ended.
+		// bridge does after it: an approved change is written, a rejected one
+		// has already ended.
 		if (singularity::chat::paused_decision_awaits_resume(project_id_, operation_id_) == false) return;
 		run_in_background("chat.resumeOperation", Json{{"projectId", project_id_}, {"operationId", operation_id_}});
 	}
@@ -1263,10 +1263,15 @@ int main(int argc, char **argv) {
 		const Flags flags = parse_flags(argc, argv);
 
 		// Only the firm's administrator connects or removes the firm's model
-		// accounts (D-184), from the command line as from the window.
+		// accounts, from the command line as from the window.
 		singularity::providers::set_may_connect_accounts([] { return singularity::organisation::is_administrator(); });
 		if (flags.set_credential.has_value()) {
 			singularity::providers::require_may_connect_accounts();
+			// A provider's key only: never one of Singularity's own secrets.
+			if (singularity::platform::is_reserved_credential_name(flags.set_credential->first)) {
+				std::cerr << "CREDENTIAL_REFUSED " << flags.set_credential->first << " is Singularity's own, not a provider's.\n";
+				return 2;
+			}
 			// Deliberately the very first thing this process does, before any
 			// Session/trace sink exists, so the credential value is never at
 			// risk of being echoed into a live trace stream. Exits immediately

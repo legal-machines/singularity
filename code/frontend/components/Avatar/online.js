@@ -2,13 +2,10 @@ import { useSyncExternalStore } from "react";
 
 import { viewerId } from "../../data/workspace.js";
 
-// Who of the firm is there now (the owner, 2026-11-02: "if a colleague - a
-// person or an AI - is online, available, always show a green dot beside
-// them, everywhere in the system"): a person while a computer of theirs is
+// Who of the firm is there now: a person while a computer of theirs is
 // connected to this one (data/coordination.js says which, as the firm's
 // exchange reports it); an AI colleague while the computer that runs it is
-// here or connected; and the member at this computer, who is here (the owner,
-// 2026-11-02: "why am I not shown as online?").
+// here or connected; and the member at this computer, who is here.
 let state = { actors: new Set(), version: 0 };
 const listeners = new Set();
 

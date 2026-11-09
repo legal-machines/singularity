@@ -25,7 +25,7 @@
 namespace singularity::bridge {
 
 // A failure as the interface is given it - the one place an exception becomes
-// what the lawyer can be shown (docs/API_CONTRACT.md, "Envelope and errors").
+// what the lawyer can be shown.
 //
 // `code` is stable and never empty: the interface says a failure by its code,
 // never by guessing at words. `userMessage` is always a sentence written for a

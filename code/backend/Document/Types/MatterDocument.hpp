@@ -11,12 +11,11 @@ namespace singularity::matters {
 enum class DocumentSourceMode { Managed, Referenced };
 enum class DocumentExtractionState { NotExtracted, Ready, Empty, OcrRequired, Unsupported, Unreadable };
 
-// The six user-facing Document states Phase 08 owns (phase-08-documents-filesystem-states.md
-// Sec.9). A Managed document derives this from extraction_status (see
-// document_lifecycle_state() in MatterRepository.cpp); a Referenced document
-// (source_mode == Referenced, real Project-folder file) stores it directly -
-// DocumentRegistry.cpp is the only writer, since only it observes the real
-// filesystem transitions (new/changed/missing) this enum distinguishes.
+// The six user-facing Document states Phase 08 owns. A Managed document derives this from
+// extraction_status (see document_lifecycle_state in MatterRepository.cpp); a Referenced
+// document (source_mode == Referenced, real Project-folder file) stores it directly -
+// DocumentRegistry.cpp is the only writer, since only it observes the real filesystem
+// transitions (new/changed/missing) this enum distinguishes.
 enum class DocumentLifecycleState { Ready, Processing, Changed, NeedsAttention, Unsupported, Unavailable };
 
 // A real filesystem identity hint for a Referenced document - device/inode on
@@ -90,8 +89,7 @@ struct MatterDocument {
 // The single Document state vocabulary the frontend renders, regardless of
 // source_mode: derived from extraction_status for a Managed document (Phase
 // 03's existing lifecycle), or read directly from lifecycle_state/available
-// for a Referenced one (Phase 08's real filesystem truth). Never a second
-// competing enum - see Sec.9 of phase-08-documents-filesystem-states.md.
+// for a Referenced one (Phase 08's real filesystem truth).
 [[nodiscard]] DocumentLifecycleState document_lifecycle_state(const MatterDocument& document) noexcept;
 
 } // namespace singularity::matters

@@ -338,6 +338,19 @@ const char *mac_bundle_of(OfficeApp app) {
 	}
 }
 
+bool has_been_opened(OfficeApp app) {
+#if defined(__APPLE__)
+	const char *home = std::getenv("HOME");
+	if (home == nullptr || *home == '\0') return false;
+	std::error_code error;
+	return std::filesystem::is_directory(
+		std::filesystem::path(home) / "Library" / "Containers" / mac_bundle_of(app) / "Data" / "Documents", error);
+#else
+	static_cast<void>(app);
+	return true;
+#endif
+}
+
 const char *mac_app_folder_of(OfficeApp app) {
 	switch (app) {
 		case OfficeApp::word: return "Microsoft Word.app";

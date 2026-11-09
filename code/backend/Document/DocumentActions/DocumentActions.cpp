@@ -65,8 +65,8 @@ matters::Matter import_files(const std::string &matter_id, const std::vector<std
   if (paths.empty()) return *found;
   // A Matter with a folder keeps its documents there, beside its `.lm`: a file
   // added is copied into the folder, where the lawyer finds it, its AI
-  // colleagues read it and the firm's computers carry it, sealed (D-123). Only
-  // a Matter with no folder keeps a copy in Singularity's own store.
+  // colleagues read it and the firm's computers carry it, sealed. Only a
+  // Matter with no folder keeps a copy in Singularity's own store.
   if (found->directory_path.has_value() == true && found->directory_path->empty() == false) {
     matters::Matter added = *found;
     // A name already in the folder keeps both, as a dropped file does: a
@@ -162,8 +162,8 @@ bool open(const std::string& matter_id, const std::string& document_id) {
     // Opening hands the file to the system's default application, which
     // chooses by file type: the file on disk decides below whether it is a
     // document or a picture that may be handed over - a photo in a personal
-    // conversation (D-212) is no document format of the record's, and opened
-    // all the same; anything else can still be revealed in the file manager.
+    // conversation is no document format of the record's, and opened all the
+    // same; anything else can still be revealed in the file manager.
     path = resolve_document_path(workspace, *found, *document);
   }
   // What the record says a file is decides nothing: the file on disk must be a

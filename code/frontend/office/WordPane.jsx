@@ -7,10 +7,10 @@ import { when } from "./words.js";
 
 import styles from "./pane.module.css";
 
-// Singularity in Word (D-105): the Matter of the document the lawyer is in,
-// at the document. The document stays in Word; the Matter, its thread, its
-// colleagues and the decisions belong to Singularity, and the pane shows
-// only what concerns this document and the clause at the cursor:
+// Singularity in Word: the Matter of the document the lawyer is in, at the
+// document. The document stays in Word; the Matter, its thread, its
+// colleagues and the decisions belong to Singularity, and the pane shows only
+// what concerns this document and the clause at the cursor.
 //   - where the work on it stands, and the decision the lawyer holds;
 //   - the clause at the cursor, why the colleague changed it, what the
 //     thread said about it, and a word to a colleague about it, which goes to
@@ -286,7 +286,7 @@ function Clause({ data, work, clause, about, document, documentId, chatId, onPos
 	const label = clause?.number != null ? `${clause.number}${clause.heading ? ` ${clause.heading}` : ""}` : null;
 	// In a colleague's draft, Word gives a clause's words with the struck and
 	// the inserted run together; the clause reads as the backend read it back
-	// from the saved draft, with its changes made (D-102).
+	// from the saved draft, with its changes made.
 	const readsNow = here.find(change => (change.readBack ?? "") != "")?.readBack ?? null;
 	const clauseWords = readsNow ?? clause?.text ?? "";
 

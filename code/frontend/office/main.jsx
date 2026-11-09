@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { hostInAddress, officeReady } from "./host.js";
 import { OfficePane } from "./OfficePane.jsx";
 
-// Singularity's pane in Word, Excel, PowerPoint and Outlook (D-105). Roboto and the
+// Singularity's pane in Word, Excel, PowerPoint and Outlook. Roboto and the
 // window's tokens, so the pane is Singularity's in every application.
 import "@fontsource-variable/roboto/wght.css";
 import "../styles/tokens.css";

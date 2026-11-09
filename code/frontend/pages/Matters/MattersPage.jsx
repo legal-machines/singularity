@@ -21,15 +21,13 @@ import { Figures } from "./Figures.jsx";
 import { useMatterFigures } from "./figures.js";
 import styles from "./MattersPage.module.css";
 
-// Every Matter the member can see, by client (PRODUCT.md: "How the member
-// finds every Matter is open"; reached from the firm's menu), set as Team is
-// (the owner, 2026-11-02: "rebuild it in the same logic as Team"): which
-// Matters - the open or the archived - over the list, then each client's
-// Matters under the client's name with their count, on the page itself, no
-// frame, no capitals, no lines between rows. Each row: the Matter's own mark,
-// its name with what it holds and what its work came to beside it, what it
-// is, and who works on it; under the pointer, what can be done with it, as
-// an Inbox row's (the owner, 2026-11-02).
+// Every Matter the member can see, by client, set as Team is: which Matters -
+// the open or the archived - over the list, then each client's Matters under
+// the client's name with their count, on the page itself, no frame, no
+// capitals, no lines between rows. Each row: the Matter's own mark, its name
+// with what it holds and what its work came to beside it, what it is, and who
+// works on it; under the pointer, what can be done with it, as an Inbox
+// row's.
 export function MattersPage({ state }) {
 	const { place, open } = useNavigation();
 	// Opened from the desk's New Matter, the page asks for the Matter at once.
@@ -40,19 +38,17 @@ export function MattersPage({ state }) {
 	useEffect(() => {
 		if (hasNative()) lookForArrivedMatters();
 	}, []);
-	// The archived ones stand apart, under their own view, in the app (D-214).
+	// The archived ones stand apart, under their own view, in the app.
 	const archived = hasNative() ? shownMatters().filter(matter => matter.isClosed == true) : [];
 	const matters = shownMatters().filter(matter => archived.includes(matter) == false);
-	// Matters the firm's computers brought that are not open here yet (D-123).
+	// Matters the firm's computers brought that are not open here yet.
 	const arrivals = real.arrivals ?? [];
 	const clients = [...new Set(matters.map(matter => matter.client))];
-	// A colleague's Matter comes to this computer as their offer, accepted
-	// here (D-205): no invitation to type (the owner, 2026-11-02: "this
-	// function shouldn't be here any more").
-	// A lawyer opens the firm's Matters here (2026-10-29: a new firm had no way to).
+	// A colleague's Matter comes to this computer as their offer, accepted here: no
+	// invitation to type. A lawyer opens the firm's Matters here.
 	const create = hasNative() ? <Button variant="primary" icon="plus" onClick={() => setCreating(true)}>New Matter</Button> : null;
 	const openMatter = matterId => open({ kind: "matter", matterId, tab: "overview" });
-	// This computer's Trash (D-247): what was deleted here in the last 30 days.
+	// This computer's Trash: what was deleted here in the last 30 days.
 	const trash = hasNative() ? matterTrash() : [];
 	const views = [{ id: "open", label: "Open" }, { id: "archived", label: hasNative() ? "Archived" : "Closed" },
 		...(hasNative() ? [{ id: "trash", label: "Trash" }] : [])];
@@ -145,8 +141,8 @@ function MatterRow({ matter, line, figures = [], onOpen, actions = null, aside }
 }
 
 // What can be done with an open Matter from its row, as an Inbox row's
-// buttons: show its folder, archive it (D-214). Its icon is changed on its
-// own page (the owner, 2026-11-02: "remove the pencil").
+// buttons: show its folder, archive it. Its icon is changed on its own
+// page.
 function MatterActions({ matter }) {
 	const [isArchiving, setArchiving] = useState(false);
 	if (matter.isReal != true) return null;
@@ -177,8 +173,8 @@ function folderWordsOf() {
 	return "Show in Files";
 }
 
-// The archived Matters (D-214): each opens to be read, and comes back among the
-// open ones with Restore.
+// The archived Matters: each opens to be read, and comes back among the open
+// ones with Restore.
 function Archived({ matters, onOpen }) {
 	const clients = [...new Set(matters.map(matter => matter.client))];
 	return clients.map(client => {
@@ -206,9 +202,9 @@ function Archived({ matters, onOpen }) {
 	});
 }
 
-// This computer's Trash (D-247): each Matter deleted here, when it went, and
-// when it is deleted for good; Restore brings it back whole, Delete now asks
-// first and deletes it from this computer at once.
+// This computer's Trash: each Matter deleted here, when it went, and when it
+// is deleted for good; Restore brings it back whole, Delete now asks first
+// and deletes it from this computer at once.
 function Trash({ matters }) {
 	const [deleting, setDeleting] = useState(null);
 	const day = iso => {

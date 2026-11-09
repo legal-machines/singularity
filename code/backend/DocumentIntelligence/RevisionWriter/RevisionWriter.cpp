@@ -370,7 +370,7 @@ std::optional<documents::DocumentPatch> tablePatchFor(const std::filesystem::pat
 
 }
 
-// ---- Comments in the margin (D-117) ----------------------------------------------------
+// ---- Comments in the margin ----------------------------------------------------
 
 constexpr const char* kCommentsRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
 constexpr const char* kCommentsContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml";

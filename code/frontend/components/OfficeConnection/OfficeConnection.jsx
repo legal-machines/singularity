@@ -8,12 +8,12 @@ import { hasNative, nativeApp } from "../../data/native.js";
 import styles from "./OfficeConnection.module.css";
 
 // The question a pane in Word, Excel or Outlook asks before it may read
-// anything (D-105), which only Singularity's own window can answer. Connecting
-// them, and the panes allowed, are the guide's (OfficeGuide.jsx).
+// anything, which only Singularity's own window can answer. Connecting them,
+// and the panes allowed, are the guide's (OfficeGuide.jsx).
 
 // The question a pane asks, shown on top of whatever page is open as the guide
-// asks it (D-248): Singularity's question whether the pane shows the same
-// code, so the person can see it is the pane they just asked from.
+// asks it: Singularity's question whether the pane shows the same code, so the
+// person can see it is the pane they just asked from.
 export function OfficePairingQuestion() {
 	const [pending, setPending] = useState([]);
 	// A question the person closed without answering stays unanswered: the pane

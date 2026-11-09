@@ -7,10 +7,10 @@ import { Menu, useMenu } from "../Menu/Menu.jsx";
 
 import styles from "./Manage.module.css";
 
-// What a member may do to a Matter, a thread or a member of the firm (D-214):
-// archive it, delete it, change it. Each stands behind one quiet button, its
-// menu; what cannot be undone asks once, in words that say what goes and
-// what stays.
+// What a member may do to a Matter, a thread or a member of the firm: archive
+// it, delete it, change it. Each stands behind one quiet button, its menu;
+// what cannot be undone asks once, in words that say what goes and what
+// stays.
 
 export function MoreButton({ label, items, size = "medium" }) {
 	const menu = useMenu();

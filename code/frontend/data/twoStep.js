@@ -3,9 +3,9 @@ import { useSyncExternalStore } from "react";
 import { dropNotice, notice } from "../components/Toast/toast.js";
 import { hasNative, nativeApp } from "./native.js";
 
-// A sign-in by a recovery code (D-218), as every service treats one: the
-// member signed in without their authenticator app, so once Singularity opens
-// it asks, once and calmly, for a new app, and says how many codes are left.
+// A sign-in by a recovery code, as every service treats one: the member
+// signed in without their authenticator app, so once Singularity opens it
+// asks, once and calmly, for a new app, and says how many codes are left.
 // Only the count is kept, for this window, never a code.
 const KEY = "singularity.recoverySignIn";
 let recovered = null;
@@ -62,14 +62,14 @@ export function recoveryCodesLine(left) {
 	return `${left} left. Each signs you in once if you lose your phone`;
 }
 
-// Two-step sign-in to set up before Legal Machines opens anything else (D-215):
-// a seat with no authenticator app may only set one up, and every other call
-// of its session - the firm's seats and computers, the models - is refused
-// with "account.two_step_setup_required" and told as the event
-// account.twoStepSetupRequired. The window then leads the member to the
-// stepped setup once; put off, it waits as a notice with Set up. Once it is
-// done, the same session opens everything: Singularity's own rounds go on by
-// themselves, and what the window read is read again (`setUps`).
+// Two-step sign-in to set up before Legal Machines opens anything else: a seat
+// with no authenticator app may only set one up, and every other call of its
+// session - the firm's seats and computers, the models - is refused with
+// "account.two_step_setup_required" and told as the event
+// account.twoStepSetupRequired. The window then leads the member to the stepped
+// setup once; put off, it waits as a notice with Set up. Once it is done, the
+// same session opens everything: Singularity's own rounds go on by themselves,
+// and what the window read is read again (`setUps`).
 const SETUP_NOTICE = "two-step-setup";
 let setup = { isOpen: false, isPutOff: false, setUps: 0 };
 const setupListeners = new Set();

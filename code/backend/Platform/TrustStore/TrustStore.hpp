@@ -3,23 +3,22 @@
 #include <string>
 
 // The system's trust in the one certificate Singularity makes for its own
-// panes on this computer (Office/OfficeCertificate, D-105): a self-signed
-// server certificate for localhost, trusted as itself - never an authority,
-// so it vouches for nothing else. Nothing else is ever added or removed.
+// panes on this computer: a self-signed server certificate for localhost,
+// trusted as itself - never an authority, so it vouches for nothing else.
+// Nothing else is ever added or removed.
 //
 // Windows: the current user's Trusted Root store, where Windows itself asks
 // the person in its security warning, and nothing is trusted unless they say
 // yes; Singularity's window owns that warning while it is open, so it stands
 // in front of the window. The certificate is still no authority (it signs
 // nothing). Trusted People, which Chromium (WebView2) reads as trusted
-// leaves, is not enough:
-// software that inspects encrypted connections - an antivirus such as
-// Kaspersky's, which re-signs every connection a browser makes, localhost's
-// included - judges a server only by the roots, and blocks the pane
-// otherwise (found on 2026-10-24, docs/OFFICE.md). Singularity's window
-// says what is added before it asks Windows, and offers its removal.
-// macOS: the login keychain, with trust set for this user; macOS asks for the
-// person's password. Linux: no Office runs there, so nothing is offered.
+// leaves, is not enough: software that inspects encrypted connections - an
+// antivirus such as Kaspersky's, which re-signs every connection a browser
+// makes, localhost's included - judges a server only by the roots, and blocks
+// the pane otherwise. Singularity's window says what is added before it asks
+// Windows, and offers its removal. macOS: the login keychain, with trust set
+// for this user; macOS asks for the person's password. Linux: no Office runs
+// there, so nothing is offered.
 namespace singularity::platform::trust_store {
 
 enum class TrustState {

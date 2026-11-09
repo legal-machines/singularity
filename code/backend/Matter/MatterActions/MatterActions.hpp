@@ -29,33 +29,45 @@ struct UpdateMatter {
   TextPatch instructions;
   // The Project's short name and mark, replaced as one value when supplied.
   std::optional<matters::ProjectAppearance> appearance;
-  // Archived or restored (D-214), when supplied.
+  // Archived or restored, when supplied.
   std::optional<bool> archived;
-  // The rules of its correspondence intake, replaced as one list when supplied
-  // (D-228).
+  // The rules of its correspondence intake, replaced as one list when
+  // supplied.
   std::optional<std::vector<correspondence::IntakeRule>> correspondence_intake;
 };
 
 // The firm's Matters known here - never the member's desk.
 std::vector<matters::Matter> list();
+// The Matters the member's list shows: every Matter known here but one sealed
+// for another organisation than the one signed in, which stays on this
+// computer and is listed again once that organisation is.
+std::vector<matters::Matter> listed();
 
-// The member's desk (D-157): the project in this computer's own data that keeps
-// the member's personal chats with the firm's AI colleagues (D-042). It is in
-// the application's data, never in the workspace folder, which may be the
-// firm's share (D-128), and it is never listed, shared or offered as a Matter.
+// The member's desk: the project in this computer's own data that keeps the
+// member's personal chats with the firm's AI colleagues. It is in the
+// application's data, never in the workspace folder, which may be the firm's
+// share, and it is never listed, shared or offered as a Matter.
 std::filesystem::path desk_folder();
 bool is_desk(const matters::Matter &matter);
+
+// The folder of a Matter of the firm whose .lm this computer holds, for a
+// record that travels with the Matter to each of its computers. Nothing for
+// the member's desk or a personal conversation, both kept in this computer's
+// own data, nor for a Matter not set up or not readable here.
+std::optional<std::filesystem::path> records_folder_of(const std::string &matter_id);
+// Every such folder this computer holds.
+std::vector<std::filesystem::path> records_folders();
 // The desk's project id, the desk opened from its folder - made the first time
 // it is asked for - or "" when it cannot be. Never call it with the
 // persistence lock held.
 std::string desk_project_id();
 
-// A personal conversation of two members (D-042): the project kept in the
-// folder of their personal channel (Matter/MatterCoordination), in this
-// computer's own data, never in a Matter's folder or the firm's storage. Its id
-// comes from the channel's ("pc_<hex>" is "mt_<hex>"), so either computer of
-// the two may make it and both open the same project. It is never listed,
-// shared or offered as a Matter.
+// A personal conversation of two members: the project kept in the folder of
+// their personal channel (Matter/MatterCoordination), in this computer's own
+// data, never in a Matter's folder or the firm's storage. Its id comes from the
+// channel's ("pc_<hex>" is "mt_<hex>"), so either computer of the two may make
+// it and both open the same project. It is never listed, shared or offered as a
+// Matter.
 std::string personal_project_id(const std::string &channel_id);
 bool is_personal_project(const matters::Matter &matter);
 // The conversation's project in `folder`: opened when the folder holds it -
@@ -74,6 +86,22 @@ std::vector<matters::Matter> remove(const std::string &id);
 // another folder (a copy) or when its data is damaged. A folder without `.lm`
 // becomes a new Project with its data set up before it is listed.
 matters::Matter create_or_open_from_folder(const std::string &selected_path);
+
+// The Matter a folder holds already, as New Matter says it: its id and name,
+// and where it stands on this computer - "trashed" in the Trash, "listed"
+// among the Matters, or "away", deleted from this computer or never opened
+// here, though the firm's other computers may keep it. None for a folder that
+// holds no Matter. A Matter deleted here is never a reason its folder refuses
+// New Matter with no way back (a design partner, 2026-11-05).
+struct FolderMatter {
+  std::string id;
+  std::string name;
+  std::string state;
+};
+// `is_in_trash` says whether a Matter stands in this computer's Trash
+// (Matter/MatterTrash), which the bridge keeps beside the list.
+std::optional<FolderMatter> matter_in_folder(const std::filesystem::path &folder,
+    const std::function<bool(const std::string &)> &is_in_trash);
 // The sample matter, set up so a lawyer can try Singularity without opening a
 // client's files: the bundled matter folder is copied once into
 // `destination_root`, keeping its name, and opened as a Project like any
@@ -134,6 +162,18 @@ matters::Matter process_project_documents(const std::string& id);
 // repeats the full-tree hash. Safe to call repeatedly; a Matter with no
 // folder assigned yet simply returns its current (empty) document list.
 matters::Matter list_documents(const std::string& id);
+
+// What waits to be read in the Matter's documents, read on a thread of its
+// own; a pass already reading them reads these too before it ends. Each
+// document read is saved, and the save tells whoever shows the Matter.
+void read_documents_in_background(const std::string& id);
+
+// The window's list of the documents: list_documents without waiting for
+// any of them to be read - what waits is read in the background
+// (read_documents_in_background), and the window reads the list again as
+// each is read. A file a member pasted or dropped into a reply showed only
+// once it had been read.
+matters::Matter list_documents_without_waiting(const std::string& id);
 
 // Phase 09's "Try again" on a document stuck at Needs attention -
 // Document/DocumentRegistry/DocumentRegistry.hpp::request_reprocessing()
@@ -228,8 +268,8 @@ void set_after_extraction_observer_for_testing(std::function<void(const std::str
 // started for `id`. Not required for normal operation.
 void stop_watching_documents(const std::string& id);
 
-// A chat as a rail, Home or a header shows it (Beta 1 #265): how many requests
-// it holds, and its latest in one line (at most 160 letters).
+// A chat as a rail, Home or a header shows it: how many requests it holds, and
+// its latest in one line (at most 160 letters).
 struct ChatRequestSummary {
 	std::string chat_id;
 	long long request_count = 0;
@@ -262,11 +302,11 @@ struct SharedMatterHooks {
 };
 void set_shared_matter_hooks(SharedMatterHooks hooks);
 
-// The firm's seal on its Matters (D-167): every Matter this computer makes is
-// sealed at once, and a Matter not listed here is offered by discovery, or
-// opened from its folder, only when it is the firm's - so a `.lm` from outside
-// the organisation, or one written by hand, never enters it as the firm's.
-// The application installs these from Matter/SharedMatter. Empty, nothing is
+// The firm's seal on its Matters: every Matter this computer makes is sealed
+// at once, and a Matter not listed here is offered by discovery, or opened
+// from its folder, only when it is the firm's - so a `.lm` from outside the
+// organisation, or one written by hand, never enters it as the firm's. The
+// application installs these from Matter/SharedMatter. Empty, nothing is
 // sealed or refused: a test that needs neither.
 struct MatterSealHooks {
 	// Seals the Matter in `folder` with this computer's seal for its firm.
@@ -276,6 +316,9 @@ struct MatterSealHooks {
 	// Whether the person may open it from its folder: the firm's, or sealed for
 	// the firm by a computer not confirmed here yet.
 	std::function<bool(const std::filesystem::path &folder, const std::string &matter_id)> may_open;
+	// Whether the Matter in `folder` is sealed for another organisation than
+	// the one signed in: the member's list leaves it out (listed()).
+	std::function<bool(const std::filesystem::path &folder, const std::string &matter_id)> is_other_organisations;
 };
 void set_matter_seal_hooks(MatterSealHooks hooks);
 // Why the Matter in `folder` is not opened here, in the words the person
@@ -310,20 +353,18 @@ matters::Matter reconcile_from_watcher_report_for_testing(
 		const std::string& id, const platform::FileSystemChangeReport& report);
 
 // Persists this Matter's explicit Project-level AI Setup differences from
-// the Node default (Phase 06, AI_SETUP_CONTRACT.md). `overrides` replaces
-// the full override set - it is itself the sparse list of explicit
-// differences, so passing an empty vector is exactly "Reset to Singularity
-// default" (never a delete of the Matter's other configuration). Each entry
-// is validated against Routing::AiSetup's real role-compatibility rules
-// before it is persisted; an incompatible role/model pairing throws instead
-// of being silently saved.
+// the Node default. `overrides` replaces the full override set - it is
+// itself the sparse list of explicit differences, so passing an empty
+// vector is exactly "Reset to Singularity default" (never a delete of the
+// Matter's other configuration). Each entry is validated against
+// Routing::AiSetup's real role-compatibility rules before it is persisted;
+// an incompatible role/model pairing throws instead of being silently
+// saved.
 matters::Matter save_ai_setup_overrides(const std::string &id,
                                         std::vector<matters::AiSetupRoleOverride> overrides);
 
-// Read model for a Matter's portable .lm state - see PROJECT_CONTRACT.md's
-// "Project Data - .lm" and Persistence/ProjectStore/ProjectStore.hpp. This
-// is presence/health only (never durable content) so it is safe to query
-// often without loading and replaying the whole Project.
+// This is presence/health only (never durable content) so it is safe to
+// query often without loading and replaying the whole Project.
 struct ProjectDataStatus {
   bool available = false;
   std::string path;
@@ -361,18 +402,17 @@ void remove_project_data(const std::string &id);
 // Before a Matter's Singularity data is removed, the application may refuse:
 // it returns the reason in a person's words, or nothing to allow it. The
 // application installs it - a Matter other people work in keeps its data until
-// the owners decide how it is removed for everyone (Beta 1 #142, #169). With
-// none installed, removal is allowed, as before.
+// the owners decide how it is removed for everyone. With none installed,
+// removal is allowed, as before.
 using RemovalGuard = std::function<std::optional<std::string>(const std::filesystem::path &project_folder)>;
 void set_removal_guard(RemovalGuard guard);
 
-// COL-1: every unresolved merge conflict this Project has, in ANY of its
-// collections - not only Context. Two people (or one person on two devices)
-// working in one Project folder can change the same Chat, task, Work Product,
-// note, entity or instruction at once; the store already detects and records
-// that, but until now only Context conflicts could be seen or answered, so
-// every other one was a change that silently did not happen. A person can only
-// trust a shared Project if it tells them that.
+// Two people (or one person on two devices) working in one Project folder can
+// change the same Chat, task, Work Product, note, entity or instruction at
+// once; the store already detects and records that, but until now only Context
+// conflicts could be seen or answered, so every other one was a change that
+// silently did not happen. A person can only trust a shared Project if it
+// tells them that.
 struct ProjectConflictSummary {
 	std::string id;
 	// The collection as the store records it, and the same thing in the words
@@ -407,13 +447,13 @@ struct ProjectConflictSummary {
 void resolve_project_conflict(const std::string &id, const std::string &conflict_id,
 	const std::string &resolution);
 
-// Real, actually-discovered/restored Projects - "Project discovery/
-// restoration" (PROJECT_CONTRACT.md) - recursively scanning for .lm the same
-// way Singularity recognizes a Project at every launch. Not limited to Matters
-// already known to matters.json: a Project copied or shared into an
-// accessible location is found here too, with no per-Project registration
-// step. Manual per-Matter folder selection (assign_folder()) remains the
-// fallback for a Project outside every accessible root either mode covers.
+// Real, actually-discovered/restored Projects - "Project discovery/ restoration" -
+// recursively scanning for .lm the same way Singularity recognizes a Project at
+// every launch. Not limited to Matters already known to matters.json: a Project
+// copied or shared into an accessible location is found here too, with no
+// per-Project registration step. Manual per-Matter folder selection
+// (assign_folder) remains the fallback for a Project outside every accessible root
+// either mode covers.
 //
 // The roots actually searched come from
 // platform::resolve_project_discovery_scope() - Limited to exactly Phase 02
@@ -434,15 +474,15 @@ void resolve_project_conflict(const std::string &id, const std::string &conflict
 // (the command palette), not an onboarding flow or a general search
 // feature.
 //
-// Also self-heals real "Project mobility" (PROJECT_CONTRACT.md): a Matter
-// already known to matters.json whose folder was moved/renamed outside Singularity
-// (Finder, a sync client) - real, empirical evidence is that this scan
-// alone finds and displays it correctly by name, but matters.json's own
-// stored directory_path is a separate record that a scan result never
-// automatically corrects, and every actual Chat/Context/Document action
-// reads that stored path, not this scan. See reconcile_relocated_projects()
-// below, which this calls before returning - the returned summaries
-// themselves are unchanged by it (they already reflect real disk state).
+// Also self-heals real "Project mobility": a Matter already known to matters.json
+// whose folder was moved/renamed outside Singularity (Finder, a sync client) -
+// real, empirical evidence is that this scan alone finds and displays it correctly
+// by name, but matters.json's own stored directory_path is a separate record that
+// a scan result never automatically corrects, and every actual
+// Chat/Context/Document action reads that stored path, not this scan. See
+// reconcile_relocated_projects below, which this calls before returning - the
+// returned summaries themselves are unchanged by it (they already reflect real
+// disk state).
 std::vector<persistence::ProjectSummary> discover_projects();
 
 // The same real discovery logic as discover_projects(), but with the

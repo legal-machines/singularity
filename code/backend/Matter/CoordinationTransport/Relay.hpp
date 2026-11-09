@@ -8,9 +8,9 @@
 
 namespace singularity::matter::coordination::transport::link {
 
-// The way to another of the firm's computers when no direct one reaches it
-// (D-242): Legal Machines' relay, which passes the direct link's datagrams -
-// already sealed for the two computers alone (Noise IK) - between the firm's
+// The way to another of the firm's computers when no direct one reaches it:
+// Legal Machines' relay, which passes the direct link's datagrams - already
+// sealed for the two computers alone (Noise IK) - between the firm's
 // signed-in computers, keeps none and opens none. The link uses it last: it
 // calls directly first, and goes back to a direct way as soon as one answers.
 class Relay {

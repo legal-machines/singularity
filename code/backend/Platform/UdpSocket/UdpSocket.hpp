@@ -10,13 +10,12 @@
 namespace singularity::platform {
 
 // A UDP socket on all three systems, for the firm's computers to reach each
-// other directly (D-124). One socket takes both IPv4 and IPv6 where the system
-// has IPv6 - IPV6_V6ONLY is set off explicitly, since the systems' defaults
-// differ - and IPv4 alone where it has not. Addresses are text:
-// "192.168.1.72:51820", "[2001:db8::1]:51820"; an IPv4 address reached through
-// the IPv6 socket is said as IPv4, never as "::ffff:".
-// Winsock on Windows (UdpSocketWindows.cpp); BSD sockets on macOS and Linux
-// (UdpSocketPosix.cpp).
+// other directly. One socket takes both IPv4 and IPv6 where the system has
+// IPv6 - IPV6_V6ONLY is set off explicitly, since the systems' defaults differ
+// - and IPv4 alone where it has not. Addresses are text: "192.168.1.72:51820",
+// "[2001:db8::1]:51820"; an IPv4 address reached through the IPv6 socket is
+// said as IPv4, never as "::ffff:". Winsock on Windows (UdpSocketWindows.cpp);
+// BSD sockets on macOS and Linux (UdpSocketPosix.cpp).
 class UdpSocket {
 public:
 	struct Datagram {

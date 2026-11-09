@@ -1,10 +1,10 @@
-// What an AI colleague's character acts out (D-013). The backend derives it in
-// one place (Agent/AgentActions agent_presence) and carries it on every AI
+// What an AI colleague's character acts out. The backend derives it in one
+// place (Agent/AgentActions agent_presence) and carries it on every AI
 // colleague as `presence`, in `agent.*` and `organisation.*`: greet, think,
 // work, wait, explain, listen or rest. A species without a pass for one shows
 // the nearest honest one: working, it thinks; greeting, it explains; and
-// otherwise it rests. `presences` maps each presence a species has to how
-// many milliseconds its pass plays.
+// otherwise it rests. `presences` maps each presence a species has to how many
+// milliseconds its pass plays.
 const nearer = { work: "think", greet: "explain" };
 
 export function shownPresence(presence, presences) {
@@ -15,8 +15,8 @@ export function shownPresence(presence, presences) {
 	return "rest";
 }
 
-// What the small dot at a face's corner says (D-067): the colleague's ground
-// is who it is, the dot what it is doing now. Its colours are tokens in
+// What the small dot at a face's corner says: the colleague's ground is who
+// it is, the dot what it is doing now. Its colours are tokens in
 // styles/base.css; a colleague at rest wears none.
 const states = {
 	think: { colour: "var(--state-working)", words: "Working" },

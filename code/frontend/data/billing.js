@@ -1,8 +1,8 @@
 // MOCK DATA - Marlowe Finch LLP's time and billing for Halvane Robotics in
-// October 2026 (AG-12, PROD-2). Every name, number and figure is fictional;
-// the firm's tax ID begins 00, which the IRS never issues. Nothing here is read
-// from, or written to, the backend. The AI colleagues' model costs are the
-// ones their profiles report (data/profiles.js), as Usage counts them.
+// October 2026. Every name, number and figure is fictional; the firm's tax ID
+// begins 00, which the IRS never issues. Nothing here is read from, or written
+// to, the backend. The AI colleagues' model costs are the ones their profiles
+// report (data/profiles.js), as Usage counts them.
 
 // The firm, as its letterhead reads.
 export const firm = {
@@ -15,7 +15,7 @@ export const firm = {
 };
 
 // The client, as the engagement letter of January 12, 2026 names it. Its
-// Schedule B sets how the AI colleagues' work is billed (D-074).
+// Schedule B sets how the AI colleagues' work is billed.
 export const client = {
 	id: "04512",
 	name: "Halvane Robotics, Inc.",
@@ -55,7 +55,7 @@ export const agreements = {
 // Each Matter's billing: its numbers in the firm's books and the client's,
 // the fee budget its charter sets, what was billed before this month, the
 // partner responsible for the bill and the lawyer who leads the Matter. Its
-// leads see its bill and its invoices in the Matter (D-075).
+// leads see its bill and its invoices in the Matter.
 export const matterBilling = {
 	x_sablewood: { number: "04512-0011", clientNumber: "HR-LGL-131", budget: 3000, billedBefore: 0, partnerId: "m_gabriel", leadId: "m_evelyn", taskSet: "project" },
 	x_orbis: { number: "04512-0007", clientNumber: "HR-LGL-118", budget: 35000, billedBefore: 9860, partnerId: "m_gabriel", leadId: "m_evelyn", taskSet: "project" },

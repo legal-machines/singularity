@@ -9,12 +9,11 @@
 #include <optional>
 #include <vector>
 
-// Singularity is closing (Beta 1 #55, #16, #216). The Native Bridge says so
-// first, before it interrupts anything. From then on no domain begins new work;
-// a loop between two requests ends there and records what it did as
-// interrupted, never as the lawyer's Stop; and every token bound to the
-// closing is cancelled, so a provider request in flight stops on its
-// connection.
+// Singularity is closing. The Native Bridge says so first, before it interrupts
+// anything. From then on no domain begins new work; a loop between two requests
+// ends there and records what it did as interrupted, never as the lawyer's
+// Stop; and every token bound to the closing is cancelled, so a provider
+// request in flight stops on its connection.
 //
 // One fact for the whole process, so a domain needs no hook of its own in the
 // bridge's shutdown, and nothing here is a copy of another state. Header-only,

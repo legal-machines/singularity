@@ -446,8 +446,8 @@ std::vector<Letter> letters_of(const std::string &matter_id) {
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
 		matter = matter_here(node::require_active_workspace_path(), matter_id);
 	}
-	// An email a member put in the Matter's folder is one of its letters (D-180),
-	// filed the first time it is seen here.
+	// An email a member put in the Matter's folder is one of its letters, filed
+	// the first time it is seen here.
 	if (has_unread_email(matter)) {
 		try {
 			if (!file_folder_letters(matter_id).empty()) {

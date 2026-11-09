@@ -97,9 +97,8 @@ struct AgentRequester {
 struct Agent {
 	int format_version = kAgentFormatVersion;
 	std::string id;
-	// The nonce its id was bound with to the key of the computer that made it
-	// (Agent/Types/AgentIdentity, D-128); empty for an older agent, whose id
-	// is random.
+	// The nonce its id was bound with to the key of the computer that made
+	// it; empty for an older agent, whose id is random.
 	std::string id_nonce;
 	std::string matter_id;
 	// The template the agent was begun from (data_room_watch, deadlines,
@@ -116,15 +115,14 @@ struct Agent {
 	// The lawyer's instruction, in their words: what to look for, or the task.
 	std::string goal;
 	// Its professional habits, in a sentence: what makes it this colleague and
-	// not another (Agent/ColleagueBrief, D-101). Empty: none of its own.
+	// not another. Empty: none of its own.
 	std::string manner;
-	// Its office in the firm, as a person's place in the firm is given (ORG-1,
-	// D-071's second step): the office it holds ("Practice Group Leader"), the
-	// position of the firm's scale it ranks with ("Partner",
-	// Organisation/Types/FirmOffice), its practice, its area, and the member it
-	// answers to. Of the whole firm, never of one Matter (the owner,
-	// 2026-10-26). Empty for a colleague not given one: it is then known by its
-	// standing work.
+	// Its office in the firm, as a person's place in the firm is given: the
+	// office it holds ("Practice Group Leader"), the position of the firm's
+	// scale it ranks with ("Partner", Organisation/Types/FirmOffice), its
+	// practice, its area, and the member it answers to. Of the whole firm,
+	// never of one Matter. Empty for a colleague not given one: it is then
+	// known by its standing work.
 	struct Office {
 		std::string title;
 		std::string ranks_with;
@@ -159,12 +157,11 @@ struct Agent {
 	// How many pieces of work it was ever given: the next one's number.
 	int work_given = 0;
 	AgentModelPolicy model_policy = AgentModelPolicy::MatterSetup;
-	// The model it thinks with, as its page sets it (D-185): a connected
-	// provider's model, or both empty for the firm's default (the Matter's AI
-	// Setup).
+	// The model it thinks with, as its page sets it: a connected provider's
+	// model, or both empty for the firm's default (the Matter's AI Setup).
 	std::string model_provider_id;
 	std::string model_id;
-	// What gathers its memory (D-206): a model chosen on its page, a connected
+	// What gathers its memory: a model chosen on its page, a connected
 	// provider's or one on this computer; both empty for the firm's model for
 	// context work (AI Setup's Context role), an efficient one. Off, it keeps no
 	// new notes, and its notes stay as they are.
@@ -173,8 +170,8 @@ struct Agent {
 	bool is_memory_off = false;
 	AgentStatus status = AgentStatus::Active;
 	// A colleague of the firm another computer runs, held here from the firm's
-	// record (D-213): it answers the member here in its own chat with them on
-	// this computer, and takes up no Matter's work - the computer that runs it
+	// record: it answers the member here in its own chat with them on this
+	// computer, and takes up no Matter's work - the computer that runs it
 	// does. What it is follows the record; nothing of it is written back.
 	bool is_firm_copy = false;
 	long long revision = 1;
@@ -206,7 +203,7 @@ struct Agent {
 	std::size_t most_evidence_characters = 48000;
 	// Its own runs that could not finish, one after another: how long it waits
 	// before trying again (kAgentLongestRetryHours); and the runs it made on its
-	// own today, counted for its record, never a limit (D-158).
+	// own today, counted for its record, never a limit.
 	int failed_in_a_row = 0;
 	// Why the agent paused itself; empty when the lawyer paused it, or it runs.
 	std::string paused_reason;
@@ -222,15 +219,14 @@ struct Agent {
 // The characters an agent can be drawn as. The page owns how each looks and
 // moves; the backend keeps which one an agent is.
 inline constexpr const char *kAgentCharacters[] = {"ember", "moss", "slate", "tide", "dune", "plum", "ink", "sun"};
-// The Agent Family's species (D-063), which the new client draws an AI
+// The Agent Family's species, which the new client draws an AI
 // colleague as and a firm hires one as: kept as its character too.
 inline constexpr const char *kAgentSpecies[] = {"kitsune", "unicorn", "phoenix", "griffin", "pegasus", "dragon"};
 
 // A colleague's own run that could not finish is tried again after a wait that
 // doubles with each one in a row - half an hour, an hour, two - up to a day. It
 // never stops of its own accord and no person has to start it again: a member
-// is not paused for a cause outside them, and neither is an AI colleague (the
-// owner, 2026-10-30; D-158).
+// is not paused for a cause outside them, and neither is an AI colleague.
 inline constexpr int kAgentLongestRetryHours = 24;
 
 // One quoted paragraph and where it stands.
@@ -346,11 +342,10 @@ struct AgentRun {
 	// running | completed | failed | cancelled | access_needed | interrupted
 	std::string status = "running";
 	// listing | reading | comparing | answering | analysing | writing | answered
-	// | done.
-	// answering: it writes its answer to a message (its talk, D-129), in the
-	// chat `answering_chat_id` names; it is at work only once it takes work on.
+	// | done. answering: it writes its answer to a message, in the chat
+	// `answering_chat_id` names; it is at work only once it takes work on.
 	// answered: its answer is out and its run is ending - neither typing nor at
-	// work (D-130).
+	// work.
 	std::string stage = "listing";
 	std::string answering_chat_id;
 	// Measured while documents are read; zero when not measured.
@@ -392,6 +387,10 @@ struct AgentAssignment {
 	// (@), or its own thread when empty; and the message it answers.
 	std::string chat_id;
 	std::string reply_to_message_id;
+	// The later messages of the same member in the same thread that joined this
+	// work while it waited: the colleague reads them with the first, and each
+	// is taken up once, as the first is.
+	std::vector<std::string> folded_message_ids;
 	std::string instruction;
 	// Who gave it, as Singularity knows them on this computer.
 	std::string given_by_actor_id;
@@ -400,7 +399,7 @@ struct AgentAssignment {
 	// It reached this computer through the Matter's shared folder - not from a
 	// message posted in this window. It is taken up only as its author's, signed
 	// by a computer the person here confirmed (Chat/MessageProvenance), and is
-	// work like any other (D-158).
+	// work like any other.
 	bool from_shared_folder = false;
 	// waiting | working | done | failed | stopped | withdrawn
 	std::string state = "waiting";
@@ -416,16 +415,16 @@ struct AgentAssignment {
 
 // The most characters of one piece of work: as many as any member's message
 // holds (Chat/ChatActions). A colleague takes all the work it is given, in
-// the order given, as a person does (D-158).
+// the order given, as a person does.
 inline constexpr std::size_t kAgentMostAssignmentCharacters = 20000;
 
-// What an AI colleague remembers (D-159): its own short notes, one memory
-// across every conversation and every piece of work it has in the firm - its
-// personal chats and every Matter's threads alike. A note says what kind of
-// thing it is, what it is about - the whole firm, one Matter, or one member -
-// and where it was learned, so the walls between clients and a member's
-// privacy hold by structure (ORG-6): a Matter's notes are used only where that
-// Matter's members are, a member's only when that member takes part.
+// What an AI colleague remembers: its own short notes, one memory across every
+// conversation and every piece of work it has in the firm - its personal chats
+// and every Matter's threads alike. A note says what kind of thing it is, what
+// it is about - the whole firm, one Matter, or one member - and where it was
+// learned, so the walls between clients and a member's privacy hold by
+// structure: a Matter's notes are used only where that Matter's members are, a
+// member's only when that member takes part.
 struct MemoryNote {
 	std::string id;
 	// rule | preference | fact | decision | commitment
@@ -457,7 +456,7 @@ struct MemoryNote {
 // whole firm, of each Matter, of each member. Past a budget the oldest notes
 // of the least lasting kind go first - a fact before a commitment, a
 // preference, a decision, a rule - so memory stays short enough to be read in
-// every conversation, from the cache (D-159).
+// every conversation, from the cache.
 inline constexpr std::size_t kMemoryFirmCharacters = 2200;
 inline constexpr std::size_t kMemoryMatterCharacters = 1500;
 inline constexpr std::size_t kMemoryPersonCharacters = 800;

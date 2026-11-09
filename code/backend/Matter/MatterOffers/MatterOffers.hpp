@@ -9,13 +9,13 @@
 
 namespace singularity::matter::offers {
 
-// A Matter given to a member of the firm by choosing them (D-205). The giving
+// A Matter given to a member of the firm by choosing them. The giving
 // computer writes the offer into the two members' personal channel, which
 // travels sealed to that member's computers a lawyer checked and to no one
-// else (D-128): the Matter's name never passes through Legal Machines
-// (AG-SEC-9). The member's computer shows it - who gives what, and how much -
-// and Accept takes the Matter from the giving computer, whose keys the two
-// lawyers checked once, so nothing is read aloud.
+// else: the Matter's name never passes through Legal Machines. The member's
+// computer shows it - who gives what, and how much - and Accept takes the
+// Matter from the giving computer, whose keys the two lawyers checked once,
+// so nothing is read aloud.
 struct Offer {
 	std::string matter_id;
 	std::string name;
@@ -24,7 +24,7 @@ struct Offer {
 	// Whose, and to whom: members, "seat:<id>".
 	std::string from_actor;
 	std::string to_actor;
-	// The giving computer, and the Matter's invitation from it (LMM2, D-127).
+	// The giving computer, and the Matter's invitation from it.
 	std::string from_device;
 	std::string from_device_key;
 	std::string invitation;

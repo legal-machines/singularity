@@ -13,17 +13,17 @@ namespace singularity::node::openpgp {
 /*
  * An OpenPGP message sealed on this computer to its recipients' public keys
  * (RFC 9580), so that only a holder of one of their secret keys opens it. A
- * design partner's work log (D-257) is sealed so to Legal Machines' keys: the
- * mail server that carries it reads none of it, and Seal opens it.
+ * design partner's work log is sealed so to Legal Machines' keys: the mail
+ * server that carries it reads none of it, and Seal opens it.
  *
  * It writes what every OpenPGP program reads, for the keys Seal, openpgp.js
  * and GnuPG make (v4 keys whose encryption subkey is Curve25519 ECDH):
  * - for each recipient, the session key wrapped to its encryption subkey
- *   (PKESK version 3, ECDH: X25519 with a fresh key of its own, the key that
- *   wraps derived by the key's KDF, RFC 9580 section 11.5, and AES key wrap,
- *   RFC 3394);
+ * (PKESK version 3, ECDH: X25519 with a fresh key of its own, the key that
+ * wraps derived by the key's KDF, RFC 9580 section 11.5, and AES key wrap,
+ * RFC 3394);
  * - then the data, one literal data packet, sealed under a fresh AES-256
- *   session key with its modification detection code (SEIPD version 1).
+ * session key with its modification detection code (SEIPD version 1).
  * Nothing secret is kept: the session key and each fresh X25519 key are wiped
  * once used.
  */

@@ -97,7 +97,7 @@
 /* A narrow list - a narrow window, or onboarding's Matter beside its words -
    keeps every file's name: the size goes, and who added it and when take
    less. The fixed columns once took all of a 440px list and left the names
-   none (2026-11-03). */
+   none. */
 @container (max-width: 640px) {
 	.head,
 	.open {

@@ -255,16 +255,9 @@ Json task_json(const matters::MatterTask &task) {
       {"workflowStepId", task.workflow_step_id ? Json(*task.workflow_step_id) : Json(nullptr)}};
 }
 
-// Phase 08 (Documents - filesystem, list and states) adds relativePath /
-// displayName / contentHash / processingState / aiReadiness / version /
-// attentionDetail / unavailableSince - the ProjectDocument read model
-// phase-09-documents-actions-source-peek.md's backend contract names.
-// filesystem_identity (device/inode) never appears here: it is an internal
-// rename/move-continuity hint, not user-facing identity or content - see
-// MatterDocument.hpp.
 Json document_json(const matters::MatterDocument &document, bool is_elsewhere = false) {
-	// A Managed document whose own copy stayed on the computer that added it
-	// is not ready here (UI-4): its record came with the Matter, its file did not.
+	// A Managed document whose own copy stayed on the computer that added it is
+	// not ready here: its record came with the Matter, its file did not.
 	const matters::DocumentLifecycleState state = is_elsewhere == true ? matters::DocumentLifecycleState::Unavailable
 		: matters::document_lifecycle_state(document);
 	const std::optional<std::string> attention = is_elsewhere == true
@@ -312,7 +305,7 @@ Json documents_json(const matters::Matter &entry) {
 	return result;
 }
 
-// The rules of the Matter's correspondence intake (D-228).
+// The rules of the Matter's correspondence intake.
 Json intake_json(const matters::Matter &entry) {
   Json rules = Json::array();
   for (const correspondence::IntakeRule &rule : entry.correspondence_intake) rules.push_back(correspondence::intake_rule_to_json(rule));
@@ -369,7 +362,7 @@ nlohmann::json serialize(const std::vector<matters::Matter> &entries) {
   return Json{{"matters", std::move(result)}};
 }
 
-nlohmann::json list(const nlohmann::json &) { return serialize(matter::list()); }
+nlohmann::json list(const nlohmann::json &) { return serialize(matter::listed()); }
 
 namespace {
 
@@ -382,7 +375,7 @@ Json latest_message_json(const chat::ChatLatestMessage &message) {
 Json summary_of(const matters::Matter &entry) {
   const matter::MatterRequestSummary requests = matter::summarize_requests(entry);
   // Each thread's latest message, by its chat: what a list of Matters says
-  // under a Matter's name (D-200).
+  // under a Matter's name.
   std::map<std::string, chat::ChatLatestMessage> latest;
   for (chat::ChatLatestMessage &message : chat::latest_messages(entry)) latest.emplace(message.chat_id, std::move(message));
   Json chats = Json::array();
@@ -462,7 +455,7 @@ nlohmann::json update(const nlohmann::json &params) {
     command.appearance = std::move(appearance);
   }
   if (params.contains("archived") && params.at("archived").is_boolean()) command.archived = params.at("archived").get<bool>();
-  // The rules of its correspondence intake, replaced as one list (D-228).
+  // The rules of its correspondence intake, replaced as one list.
   if (params.contains("correspondenceIntake")) {
     const auto &value = params.at("correspondenceIntake");
     if (!value.is_array()) throw std::invalid_argument("correspondenceIntake must be a list of rules.");
@@ -473,8 +466,8 @@ nlohmann::json update(const nlohmann::json &params) {
   return serialize(matter::update(std::move(command)));
 }
 
-// Deleted from this computer (D-214): it stops travelling here first, so the
-// firm's exchange never brings it back, then leaves the list. Its folder and
+// Deleted from this computer: it stops travelling here first, so the firm's
+// exchange never brings it back, then leaves the list. Its folder and
 // documents stay where they are; the Matter's other computers keep it.
 nlohmann::json remove(const nlohmann::json &params) {
   const std::string id = params.at("id").get<std::string>();
@@ -502,6 +495,13 @@ bool is_in_trash(const std::filesystem::path &workspace, const std::string &id) 
 }
 
 } // namespace
+
+nlohmann::json held_matter(const std::filesystem::path &folder) {
+  const std::optional<matter::FolderMatter> held = matter::matter_in_folder(folder,
+      [](const std::string &id) { return is_in_trash(node::require_active_workspace_path(), id); });
+  if (!held) return nullptr;
+  return nlohmann::json{{"id", held->id}, {"name", held->name}, {"state", held->state}};
+}
 
 nlohmann::json list_trash(const nlohmann::json &) {
   const auto workspace = node::require_active_workspace_path();
@@ -576,11 +576,19 @@ nlohmann::json create_named_in(const nlohmann::json &params, const std::optional
   std::error_code error;
   if (std::filesystem::is_directory(*chosen, error) == false)
     throw std::invalid_argument("That folder is not on this computer any more. Choose it again.");
-  if (std::filesystem::exists(*chosen / ".lm", error) == true)
+  if (std::filesystem::exists(*chosen / ".lm", error) == true) {
+    // Asked to, the Matter the folder holds is opened again, under its own
+    // name: one deleted from this computer comes back.
+    const auto again = params.find("openExisting");
+    if (again != params.end() && again->is_boolean() == true && again->get<bool>() == true) {
+      (void)node::ensure_active_workspace_path();
+      return serialize(matter::create_or_open_from_folder(chosen->u8string()));
+    }
     throw std::invalid_argument("That folder holds a Matter already. Open it from Matters instead.");
+  }
   (void)node::ensure_active_workspace_path();
-  // The lawyer gave Singularity this folder by choosing it for the Matter
-  // (D-095): its documents are the Matter's.
+  // The lawyer gave Singularity this folder by choosing it for the
+  // Matter: its documents are the Matter's.
   node::grant_folder_access(*chosen);
   matters::Matter made = matter::create_or_open_from_folder(chosen->u8string());
   // Named as the lawyer named it, not after its folder.
@@ -616,8 +624,8 @@ nlohmann::json update_issue_status(const nlohmann::json &params) {
 // function's own comment.
 nlohmann::json save_ai_setup(const nlohmann::json &params) {
   const std::string project_id = params.at("projectId").get<std::string>();
-  // Only what this save changes is checked (Beta 1 #41): the overrides the
-  // Matter keeps now are what it is compared with.
+  // Only what this save changes is checked: the overrides the Matter keeps
+  // now are what it is compared with.
   std::vector<routing::RoleAssignmentEntry> previous;
   {
     const persistence::PersistenceLock lock(persistence::persistence_mutex());
@@ -712,7 +720,7 @@ Json shared_activity_json(const matter::SharedActivity &activity) {
 			{"position", member.position}, {"practice", member.practice},
 			{"photo", member.photo.empty() ? Json(nullptr) : Json(member.photo)},
 			// When their computer first joined the Matter: the overview's history
-			// shows the arrival (the owner, 2026-11-02).
+			// shows the arrival.
 			{"firstSeenAt", member.first_seen_at},
 			{"lastSeenAt", member.last_seen_at}, {"computers", std::move(computers)}, {"invited", member.is_invited}});
 	}
@@ -756,8 +764,8 @@ Json firm_team_json(const matter::FirmTeam &team) {
 	for (const matter::FirmPerson &person : team.people) {
 		Json matters = Json::array();
 		for (const auto &[id, name] : person.matters) matters.push_back(Json{{"projectId", id}, {"name", name}});
-		// Their place in the firm as their record states it (D-168): the team
-		// stands in its order, by position, wherever its Matters are open.
+		// Their place in the firm as their record states it: the team stands
+		// in its order, by position, wherever its Matters are open.
 		people.push_back(Json{{"actorId", person.member.actor_id}, {"name", person.member.name}, {"organisation", person.member.organisation},
 			{"isYou", person.is_you}, {"isAccountName", person.member.is_account_name}, {"lastSeenAt", person.member.last_seen_at},
 			{"position", person.member.position}, {"practice", person.member.practice},
@@ -777,8 +785,8 @@ nlohmann::json firm_team(const nlohmann::json &) {
 
 namespace {
 
-// The computers that ask to join a Matter through the firm's coordination
-// (D-123), as its engine keeps them; none while its record cannot be read.
+// The computers that ask to join a Matter through the firm's coordination,
+// as its engine keeps them; none while its record cannot be read.
 std::vector<matter::AskingDevice> asking_devices(const std::string &project_id) {
 	std::vector<matter::AskingDevice> devices;
 	try {
@@ -826,10 +834,10 @@ matter::SharedActivity with_asking(matter::SharedActivity activity, const std::s
 	return activity;
 }
 
-// The lawyers this computer gave the Matter to by choosing them (D-205) who
-// have no record of their own in it yet, among its members as invited and
-// named as the firm's record names them: whoever shared it sees at once whom it
-// went to, and their record takes the place once their computer opens it.
+// The lawyers this computer gave the Matter to by choosing them who have no
+// record of their own in it yet, among its members as invited and named as the
+// firm's record names them: whoever shared it sees at once whom it went to, and
+// their record takes the place once their computer opens it.
 matter::SharedActivity with_invited(matter::SharedActivity activity, const std::string &project_id) {
 	std::map<std::string, std::int64_t> offered;
 	try {
@@ -871,8 +879,8 @@ nlohmann::json shown_activity(matter::SharedActivity activity, const std::string
 } // namespace
 
 // The latest document changes the window reads: who changed what, and the
-// Matter's history as its overview shows it (D-230). The window drops the
-// oldest batch of a full list, which may be cut (code/frontend/data/native.js).
+// Matter's history as its overview shows it. The window drops the oldest batch
+// of a full list, which may be cut (code/frontend/data/native.js).
 constexpr std::size_t kSharedChanges = 200;
 
 nlohmann::json shared_activity(const nlohmann::json &params) {
@@ -886,9 +894,9 @@ nlohmann::json confirm_computer(const nlohmann::json &params) {
 	const std::string deviceId = params.at("deviceId").get<std::string>();
 	const std::optional<matter::AskingDevice> asking = asking_device(projectId, actorId, deviceId);
 	if (asking.has_value() == true) {
-		// It asked to join (D-123): it is confirmed by the key its request was
-		// signed with, whose code the lawyer compared, and given the Matter's key,
-		// sealed to its own.
+		// It asked to join: it is confirmed by the key its request was signed
+		// with, whose code the lawyer compared, and given the Matter's key, sealed
+		// to its own.
 		(void)matter::decide_asking_computer(projectId, actorId, asking->device_key, true);
 		(void)matter::coordination::give_key(projectId, deviceId);
 	} else {
@@ -904,7 +912,7 @@ nlohmann::json revoke_computer(const nlohmann::json &params) {
 	const std::optional<matter::AskingDevice> asking = asking_device(projectId, actorId, deviceId);
 	if (asking.has_value() == true) {
 		(void)matter::decide_asking_computer(projectId, actorId, asking->device_key, false);
-		// Its request goes, and its direct link is spoken with no more (D-127).
+		// Its request goes, and its direct link is spoken with no more.
 		(void)matter::coordination::refuse(projectId, deviceId);
 	} else {
 		(void)matter::decide_member_computer(projectId, actorId, deviceId, false);
@@ -927,11 +935,10 @@ nlohmann::json resolve_project_conflict(const nlohmann::json &params) {
 namespace {
 
 // Where the coordination stands, for the window: never a key, never what it
-// knows of each file.
-// Whether a Matter or the firm's record travels (D-137): its state, the
-// computers with a live encrypted session now, when something sealed last came
-// from each other computer, and what of it is on its way (D-207), coming here
-// from each computer and going to each, with how much has come.
+// knows of each file. Whether a Matter or the firm's record travels: its
+// state, the computers with a live encrypted session now, when something
+// sealed last came from each other computer, and what of it is on its way,
+// coming here from each computer and going to each, with how much has come.
 Json travel_json(const matter::coordination::LinkedMatter &link) {
   const auto transfers = [](const std::vector<matter::coordination::Transfer> &list) {
     Json found = Json::array();
@@ -969,9 +976,9 @@ Json coordination_json(const matter::coordination::CoordinationStatus &status) {
     matter["offering"] = std::move(offering);
     matters.push_back(std::move(matter));
   }
-  // The firm's own record (D-203), apart from the Matters: whether it was heard
-  // from another of the firm's computers, so a computer waiting for its firm
-  // can say what has come. Null while this computer holds none.
+  // The firm's own record, apart from the Matters: whether it was heard from
+  // another of the firm's computers, so a computer waiting for its firm can say
+  // what has come. Null while this computer holds none.
   return Json{{"firmFolder", status.firm_folder.u8string()}, {"transports", status.transports},
       {"deviceCode", status.device_code}, {"matters", std::move(matters)},
       {"firm", status.firm.has_value() ? travel_json(*status.firm) : Json(nullptr)}};
@@ -997,7 +1004,7 @@ nlohmann::json coordination_share(const nlohmann::json &params) {
   const std::optional<matters::Matter> found = loadedMatter(id);
   if (!found || !found->directory_path || found->directory_path->empty())
     throw std::invalid_argument("This Matter has no folder on this computer to share.");
-  // The member's personal chats stay theirs (D-128, D-157).
+  // The member's personal chats stay theirs.
   if (matter::is_desk(*found)) throw std::invalid_argument("Personal chats are never shared as a Matter.");
   return coordination_json(matter::coordination::share_matter(id, found->name, std::filesystem::u8path(*found->directory_path)));
 }
@@ -1017,9 +1024,8 @@ namespace {
 // A Matter's own folder on this computer when it comes from another, beside
 // this computer's other Matters, named as the firm names it. The lawyer gives
 // Singularity this folder by asking for the Matter: it is found in it once its
-// records have come (D-095), whatever other folders this lawyer gave. Given
-// before the coordination knows the folder, so nothing written to test it is
-// ever sent.
+// records have come, whatever other folders this lawyer gave. Given before the
+// coordination knows the folder, so nothing written to test it is ever sent.
 std::filesystem::path folder_for_coming(const std::string &given_name) {
   // A name another computer gave is a folder's name here, never a path: no
   // separator, no drive, no control character, and no leading dot.
@@ -1058,7 +1064,7 @@ nlohmann::json coordination_join(const nlohmann::json &params) {
   const std::string name = invitation->name.empty() == true ? std::string("Matter") : invitation->name;
   const std::filesystem::path folder = folder_for_coming(name);
   // By the whole invitation: where it names the inviting computer's direct link,
-  // this computer calls it there (D-127).
+  // this computer calls it there.
   matter::coordination::Invitation joining = *invitation;
   joining.name = name;
   return coordination_json(matter::coordination::join_matter(joining, folder));
@@ -1131,7 +1137,7 @@ nlohmann::json coordination_give_matter(const nlohmann::json &params) {
   const std::optional<matters::Matter> found = loadedMatter(id);
   if (!found || !found->directory_path || found->directory_path->empty())
     throw std::invalid_argument("This Matter has no folder on this computer to give.");
-  // The member's personal chats stay theirs (D-128, D-157).
+  // The member's personal chats stay theirs.
   if (matter::is_desk(*found)) throw std::invalid_argument("Personal chats are never given as a Matter.");
   const matter::offers::Given given = matter::offers::give(id, found->name, std::filesystem::u8path(*found->directory_path),
       params.at("actorId").get<std::string>());
@@ -1185,7 +1191,7 @@ bool channel_reaches(const std::string &channel_id) {
 
 nlohmann::json open_personal_chat(const nlohmann::json &params) {
   const std::string other = params.at("otherActorId").get<std::string>();
-  // An AI colleague's personal chat is on the member's desk (D-157), never here.
+  // An AI colleague's personal chat is on the member's desk, never here.
   if (other.rfind("agent_", 0) == 0) throw std::invalid_argument("A personal chat with an AI colleague is on your desk.");
   (void)node::ensure_active_workspace_path();
   const matter::coordination::PersonalChannel channel = matter::coordination::personal_channel(other);
@@ -1200,7 +1206,7 @@ nlohmann::json list_personal_chats(const nlohmann::json &) {
   const std::string me = platform::resolve_actor_identity().actor_id;
   for (const matter::coordination::LinkedMatter &channel : matter::coordination::status().personal) {
     // This member's own conversations with people: never a colleague's channel
-    // this computer carries for another member (D-128), never an AI colleague's.
+    // this computer carries for another member, never an AI colleague's.
     if (channel.state != "carried" || channel.other_actor_id.empty() || channel.other_actor_id.rfind("agent_", 0) == 0) continue;
     if (me.empty() || matter::coordination::personal_channel_id(me, channel.other_actor_id) != channel.matter_id) continue;
     // Nothing written in it yet by either member: no conversation to show.
@@ -1239,7 +1245,7 @@ nlohmann::json open_discovered(const nlohmann::json &params) {
     if (!found_error && found == wanted) isDiscovered = true;
   }
   if (!isDiscovered) {
-    // Found, but not the firm's (D-167): it says so.
+    // Found, but not the firm's: it says so.
     if (const std::optional<std::string> refusal = matter::seal_refusal(std::filesystem::u8path(path))) throw std::invalid_argument(*refusal);
     throw std::invalid_argument("That folder is not a Matter in the folders you gave Singularity, so it was not opened.");
   }

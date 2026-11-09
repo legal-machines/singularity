@@ -34,8 +34,7 @@ const paths = {
 	notes: <path d="M4 5.5H16M4 10H16M4 14.5H11" />,
 	repeat: <><path d="M4 9V8C4 6.3 5.3 5 7 5H15M12.5 2.5L15 5L12.5 7.5" /><path d="M16 11V12C16 13.7 14.7 15 13 15H5M7.5 17.5L5 15L7.5 12.5" /></>,
 	mail: <><rect x="3" y="5" width="14" height="10" rx="1.5" /><path d="M3.5 6L10 11L16.5 6" /></>,
-	// An address, for a letter's conversation (the owner, 2026-11-02: "put @
-	// instead of the complicated letter").
+	// An address, for a letter's conversation.
 	at: <><circle cx="10" cy="10" r="3.25" /><path d="M13.25 6.75V10.75A2.25 2.25 0 0 0 17.75 10.75V10A7.75 7.75 0 1 0 14.75 16.15" /></>,
 	open: <path d="M7 13L13 7M8 7H13V12" />,
 	matter: <><path d="M2.75 6.25C2.75 5.42 3.42 4.75 4.25 4.75H7.6L9.1 6.25H15.75C16.58 6.25 17.25 6.92 17.25 7.75V14.75C17.25 15.58 16.58 16.25 15.75 16.25H4.25C3.42 16.25 2.75 15.58 2.75 14.75V6.25Z" /></>,
@@ -46,10 +45,9 @@ const paths = {
 	usage: <><path d="M3.25 14.5A7 7 0 1 1 16.75 14.5" /><path d="M10 12.65L13.25 9" /></>,
 	archive: <><rect x="2.75" y="4" width="14.5" height="3.5" rx="1" /><path d="M4.25 7.5V15C4.25 15.83 4.92 16.5 5.75 16.5H14.25C15.08 16.5 15.75 15.83 15.75 15V7.5" /><path d="M8.25 10.5H11.75" /></>,
 	plug: <><path d="M7.5 2.75V6M12.5 2.75V6" /><path d="M5 6H15V8.75C15 11.51 12.76 13.75 10 13.75C7.24 13.75 5 11.51 5 8.75V6Z" /><path d="M10 13.75V17.25" /></>,
-	// This computer: its code and what it holds (the owner, 2026-11-02: "some
-	// other fitting symbol, not a key").
+	// This computer: its code and what it holds.
 	computer: <path d="M4.5 13.5V5.5A1 1 0 0 1 5.5 4.5H14.5A1 1 0 0 1 15.5 5.5V13.5M2.5 15.5H17.5" />,
-	// Power: signing out (the owner, 2026-11-02: "a power button, not this arrow").
+	// Power: signing out.
 	power: <path d="M10 3V9.5M6.11 5.5A6.25 6.25 0 1 0 13.89 5.5" />,
 	more: <path d="M5 10H5.01M10 10H10.01M15 10H15.01" strokeWidth="2.25" />,
 	alert: <><path d="M10 3.25L17.5 16.25H2.5L10 3.25Z" /><path d="M10 8.25V11.25M10 13.75H10.01" /></>,
@@ -62,7 +60,7 @@ const paths = {
 	link: <><path d="M8.5 11.5L11.5 8.5" /><path d="M9.25 6.25L10.6 4.9C11.9 3.6 14 3.6 15.3 4.9C16.6 6.2 16.6 8.3 15.3 9.6L13.75 11.15" /><path d="M10.75 13.75L9.4 15.1C8.1 16.4 6 16.4 4.7 15.1C3.4 13.8 3.4 11.7 4.7 10.4L6.25 8.85" /></>,
 	return: <><path d="M7.5 5L3.5 9L7.5 13" /><path d="M3.75 9H12C14.2 9 16 10.8 16 13V15" /></>,
 	attach: <path d="M14.5 9.25L9.6 14.15C8.2 15.55 5.95 15.55 4.55 14.15C3.15 12.75 3.15 10.5 4.55 9.1L10.1 3.55C11.05 2.6 12.6 2.6 13.55 3.55C14.5 4.5 14.5 6.05 13.55 7L8.15 12.4C7.7 12.85 6.95 12.85 6.5 12.4C6.05 11.95 6.05 11.2 6.5 10.75L11.25 6" />,
-	// A gear, never rays that read as a sun (the owner, 2026-11-02).
+	// A gear, never rays that read as a sun.
 	settings: <><path d="M8.47 4.3L8.75 2.5H11.25L11.53 4.3A5.9 5.9 0 0 1 12.95 4.89L14.41 3.81L16.19 5.59L15.11 7.05A5.9 5.9 0 0 1 15.7 8.47L17.5 8.75V11.25L15.7 11.53A5.9 5.9 0 0 1 15.11 12.95L16.19 14.41L14.41 16.19L12.95 15.11A5.9 5.9 0 0 1 11.53 15.7L11.25 17.5H8.75L8.47 15.7A5.9 5.9 0 0 1 7.05 15.11L5.59 16.19L3.81 14.41L4.89 12.95A5.9 5.9 0 0 1 4.3 11.53L2.5 11.25V8.75L4.3 8.47A5.9 5.9 0 0 1 4.89 7.05L3.81 5.59L5.59 3.81L7.05 4.89A5.9 5.9 0 0 1 8.47 4.3Z" /><circle cx="10" cy="10" r="2.5" /></>,
 	download: <><path d="M10 3.5V12.5M6.5 9L10 12.5L13.5 9" /><path d="M4 14.5V16H16V14.5" /></>,
 	print: <><path d="M6 7V3.5H14V7" /><rect x="3.5" y="7" width="13" height="6.5" rx="1.5" /><path d="M6 11.5H14V16.5H6V11.5Z" /></>,
@@ -70,7 +68,7 @@ const paths = {
 	play: <path d="M7 5.5L14.5 10L7 14.5V5.5Z" />,
 	pause: <path d="M7.5 5.5V14.5M12.5 5.5V14.5" />,
 	shield: <path d="M10 2.75L16 5V9.5C16 13.2 13.4 16.2 10 17.25C6.6 16.2 4 13.2 4 9.5V5L10 2.75Z" />,
-	// What an AI provider sees of a conversation (D-233).
+	// What an AI provider sees of a conversation.
 	eye: <><path d="M2.5 10C4.2 6.5 6.9 4.75 10 4.75C13.1 4.75 15.8 6.5 17.5 10C15.8 13.5 13.1 15.25 10 15.25C6.9 15.25 4.2 13.5 2.5 10Z" /><circle cx="10" cy="10" r="2.5" /></>,
 	// What is typed out of sight, shown again: the eye crossed through.
 	eye_off: <><path d="M2.5 10C4.2 6.5 6.9 4.75 10 4.75C13.1 4.75 15.8 6.5 17.5 10C15.8 13.5 13.1 15.25 10 15.25C6.9 15.25 4.2 13.5 2.5 10Z" /><circle cx="10" cy="10" r="2.5" /><path d="M3.75 3.75L16.25 16.25" /></>,

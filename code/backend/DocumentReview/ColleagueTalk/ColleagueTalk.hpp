@@ -8,15 +8,14 @@
 
 #include <nlohmann/json.hpp>
 
-// A colleague's talk (the owner, 2026-10-26; D-129): every message to an AI
-// colleague is answered first by one light call that carries who the colleague
-// is (its role, D-101's second layer), how a colleague talks in a chat, its
-// tools on a line, and the conversation's latest messages - nothing of any
-// Matter. "The model decides, and we give it as much data as it asks for": what
-// the colleague needs it asks for with a tool and gets only that, earlier
-// messages too, and work on the documents it takes on with `work`, which the
-// assignment loop then carries out with the full brief (D-121). "Hi!" costs one
-// call of a few hundred tokens ("a couple of hundred at most", the owner).
+// A colleague's talk: every message to an AI colleague is answered first by one
+// light call that carries who the colleague is, how a colleague talks in a
+// chat, its tools on a line, and the conversation's latest messages - nothing
+// of any Matter. "The model decides, and we give it as much data as it asks
+// for": what the colleague needs it asks for with a tool and gets only that,
+// earlier messages too, and work on the documents it takes on with `work`,
+// which the assignment loop then carries out with the full brief. "Hi!" costs
+// one call of a few hundred tokens.
 //
 // Pure: the model and what the tools reach are given by the caller, so a test
 // runs a whole conversation without a provider or a Matter. The prompt only
@@ -45,16 +44,16 @@ struct TalkLine {
 	// files it attaches and the place in a document it is about ("It is about
 	// section 2.1 (Use and Disclosure) of “…”, which reads: “…”"). An ask from
 	// the Office pane is its words with its place: shown its words alone, a
-	// colleague did not know which copy of the NDA the lawyer was in
-	// (2026-10-26). Empty for a message with neither.
+	// colleague did not know which copy of the NDA the lawyer was in. Empty
+	// for a message with neither.
 	std::string carries;
 	// The document its place is in, where it has one: what its words name is
 	// read with that document first.
 	std::string placeDocumentId;
 };
 
-// A message of the colleague's other conversations a new message may need
-// (D-203): where it was said - a thread's title, or the member's personal
+// A message of the colleague's other conversations a new message may
+// need: where it was said - a thread's title, or the member's personal
 // chat -, by whom, when, and its words.
 struct RecallCandidate {
 	std::string where;
@@ -75,14 +74,13 @@ struct RecalledPassage {
 
 struct TalkInput {
 	// Who the colleague is in the firm (Agent/ColleagueBrief's identity): its
-	// office, practice and area - of the whole firm, never of one Matter (the
-	// owner, 2026-10-26: "she exists within the whole firm"). Always the first
-	// thing sent.
+	// office, practice and area - of the whole firm, never of one Matter.
+	// Always the first thing sent.
 	std::string brief;
-	// What it remembers that it may use here (D-159): its own notes, one memory
-	// across every conversation it has in the firm, numbered "M1", "M2" so it
-	// can forget one; empty when it has none it may use here. It follows the
-	// brief, so every talk of the colleague shares the brief's cache.
+	// What it remembers that it may use here: its own notes, one memory across
+	// every conversation it has in the firm, numbered "M1", "M2" so it can
+	// forget one; empty when it has none it may use here. It follows the brief,
+	// so every talk of the colleague shares the brief's cache.
 	std::string memory;
 	std::string agentName;
 	// The member the colleague talks with: their name, their office
@@ -91,8 +89,8 @@ struct TalkInput {
 	std::string personName;
 	std::string personRole;
 	std::string personStanding;
-	// The member's personal chat with the colleague (D-042), or a thread of a
-	// Matter, named by the Matter and the thread's title.
+	// The member's personal chat with the colleague, or a thread of a Matter,
+	// named by the Matter and the thread's title.
 	bool isPersonalChat = true;
 	std::string matterName;
 	std::string threadTitle;
@@ -108,12 +106,12 @@ struct TalkInput {
 	// it answers only if it has something to add; a reaction, or nothing, does.
 	bool isToAll = false;
 	// What its other conversations hold for the new message, found here by the
-	// words they share before the model is called (D-203): sent after the new
-	// message, so what comes before it stays the provider's cache.
+	// words they share before the model is called: sent after the new message,
+	// so what comes before it stays the provider's cache.
 	std::vector<RecalledPassage> recalled;
-	// Whether the talk keeps its notes in its own answer ("remember" and
-	// "forget", D-159). A colleague whose memory a model of its own gathers
-	// after it answered (D-206) is asked for none: its notes are only used.
+	// Whether the talk keeps its notes in its own answer. A colleague whose
+	// memory a model of its own gathers after it answered is asked for
+	// none: its notes are only used.
 	bool asksMemory = true;
 };
 
@@ -171,15 +169,13 @@ struct TalkSources {
 	std::function<ToolAnswer(long long from)> history;
 	// Told once, when the colleague first looks something up: it is at work
 	// from then on, and `said` is what it tells them as it starts ("Let me
-	// check the NDA."), empty where it said nothing (the owner, 2026-10-26: "if
-	// the model asks for tools, switch to work, say a phrase first - better
-	// from the API too - work, then give the final answer").
+	// check the NDA."), empty where it said nothing.
 	std::function<void(const std::string& said)> working;
 };
 
-// A note the colleague keeps from the conversation, as it says it (D-159): of
-// a kind - rule, preference, fact, decision or commitment - about the firm,
-// the conversation's Matter, or the member it talks with ("person").
+// A note the colleague keeps from the conversation, as it says it: of a kind
+// - rule, preference, fact, decision or commitment - about the firm, the
+// conversation's Matter, or the member it talks with ("person").
 struct TalkMemory {
 	std::string kind;
 	std::string about;
@@ -193,8 +189,8 @@ struct TalkAsked {
 	bool isAnswered = false;
 	std::string text;
 	std::string failure;
-	// The model cannot be asked now for a cause that clears by itself (D-169):
-	// the talk is interrupted, never failed, and asked again later.
+	// The model cannot be asked now for a cause that clears by itself: the
+	// talk is interrupted, never failed, and asked again later.
 	bool isUnavailable = false;
 	long long inputTokens = 0;
 	long long outputTokens = 0;
@@ -233,7 +229,7 @@ struct TalkCall {
 	// round. A provider finds what an earlier call kept only near where this
 	// one asks it to keep (twenty blocks back at most), so a later round marks
 	// where the round before ended: its third round once found none of its
-	// second, a passage a part, and paid to keep it all again (2026-10-26).
+	// second, a passage a part, and paid to keep it all again.
 	std::size_t previousParts = 0;
 	// Counts from 1.
 	int round = 1;
@@ -253,12 +249,12 @@ struct TalkOutcome {
 	// takes work on, `said` being what it says as it does; "silent": a message
 	// to everyone it had nothing to add to; "failed": no answer could be had;
 	// "interrupted": the model could not be asked now, for a cause that clears
-	// by itself (D-169) - asked again later, nothing said meanwhile.
+	// by itself - asked again later, nothing said meanwhile.
 	std::string status = "failed";
 	std::string said;
 	std::string work;
 	// The Matter the work is for, as the colleague named it in a personal chat,
-	// where no Matter is the conversation's own (D-157); empty otherwise.
+	// where no Matter is the conversation's own; empty otherwise.
 	std::string workMatter;
 	std::string failure;
 	// What it told them as it started looking things up (TalkSources::working);
@@ -269,13 +265,11 @@ struct TalkOutcome {
 	std::string startedMessageId;
 	// Its reactions, with its words or in their place: each the message's id
 	// and the reaction (talkReactions) - to any message the talk showed it but
-	// its own (the owner, 2026-10-26: "they may react to any message of the
-	// chat, economically - they hold its whole context anyway"). At most
-	// kMostReactions.
+	// its own. At most kMostReactions.
 	std::vector<std::pair<std::string, std::string>> reactions;
 	// What it keeps in its memory from this conversation, at most
 	// kMostRemembered, and the notes it forgets ("M3"), within the answer it
-	// gives anyway: no call of its own (D-159).
+	// gives anyway: no call of its own.
 	std::vector<TalkMemory> remembered;
 	std::vector<std::string> forgotten;
 	int rounds = 0;
@@ -322,21 +316,21 @@ std::string talkPrompt(const TalkInput& input);
 // again the next time.
 std::string lineFor(const TalkLine& line, std::size_t number);
 
-// The answer's shape: one JSON object, "say" its message, "react" its
-// reaction, "calls" the tools it calls now, and "remember" and "forget" what it
-// keeps in its memory and what it lets go (D-159). Asked of the model, it keeps an
-// answer that does not think on its task: without it a model with no thinking
-// read Singularity's envelope as the question (2026-10-26).
+// The answer's shape: one JSON object, "say" its message, "react" its reaction,
+// "calls" the tools it calls now, and "remember" and "forget" what it keeps in its
+// memory and what it lets go. Asked of the model, it keeps an answer that does not
+// think on its task: without it a model with no thinking read Singularity's
+// envelope as the question.
 nlohmann::json talkSchema();
 // The same, with no "remember" or "forget" where the talk keeps no notes of
-// its own (TalkInput::asksMemory, D-206).
+// its own.
 nlohmann::json talkSchema(bool asksMemory);
 
 // What a colleague keeps of a talk, gathered by a model of its own once it
-// has answered (D-206): its notes that hold here, numbered as in the talk,
-// and the exchange - what was new to it, and what it answered. Asked as a
-// short call: the notes to keep, at most kMostRemembered, and the numbers of
-// notes the exchange shows wrong.
+// has answered: its notes that hold here, numbered as in the talk, and the
+// exchange - what was new to it, and what it answered. Asked as a short
+// call: the notes to keep, at most kMostRemembered, and the numbers of notes
+// the exchange shows wrong.
 struct MemoryAsk {
 	std::string agentName;
 	// TalkInput::memory: "M1 ...", one note a line; empty for none.

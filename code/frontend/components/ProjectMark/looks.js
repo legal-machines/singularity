@@ -8,7 +8,7 @@ export const projectColors = Object.values(pigments);
 
 // What a member chose for a project's mark: its colour, and an icon or its
 // initials. Shown at once from here; a Matter of the firm keeps it with
-// itself (D-200), and the prototype's Matters keep it in memory.
+// itself, and the prototype's Matters keep it in memory.
 const chosen = new Map();
 const listeners = new Set();
 let version = 0;

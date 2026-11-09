@@ -1,16 +1,15 @@
 import { characters } from "./characters.js";
 
-// An AI colleague's face lives on one clock for the whole window, at 24
-// frames a second (the Agent Family's motion, other/agent-motion/CLAUDE-
-// HANDOFF.md; D-063, D-069). Each colleague is in one of three states - at
-// rest, thinking, working - and plays that state's loop again and again. When
-// its presence changes (D-013), it finishes the loop under way and goes by the
-// state's own route: the loop's next first frame is the route's first frame,
-// and the route's last frame is the new loop's first, which then goes on from
-// its second, so no frame shows twice. A route already begun is never cut: a
-// later change waits for it and is routed on from where it ends, the latest
-// one kept. At rest, now and then and right after it is pointed at, it makes
-// one of its two gestures, each from rest and back to it.
+// An AI colleague's face lives on one clock for the whole window, at 24 frames
+// a second. Each colleague is in one of three states - at rest, thinking,
+// working - and plays that state's loop again and again. When its presence
+// changes, it finishes the loop under way and goes by the state's own route:
+// the loop's next first frame is the route's first frame, and the route's last
+// frame is the new loop's first, which then goes on from its second, so no
+// frame shows twice. A route already begun is never cut: a later change waits
+// for it and is routed on from where it ends, the latest one kept. At rest,
+// now and then and right after it is pointed at, it makes one of its two
+// gestures, each from rest and back to it.
 //
 // Every face of one colleague shows the same frame at the same moment, drawn
 // from the atlas of its own resolution; a face that joins later joins the
@@ -39,7 +38,7 @@ export function stateOfPresence(presence) {
 }
 
 // 112 pixels while the face is drawn at no more than 112 device pixels,
-// otherwise 160 (CLAUDE-HANDOFF.md, "Which resolution to use").
+// otherwise 160.
 export function resolutionFor(size, ratio = 1) {
 	return size * ratio <= 112 ? "112" : "160";
 }
@@ -52,10 +51,10 @@ let manifest = null;
 let manifestLoad = null;
 
 // The motion manifest comes as a classic script (deploy/frontend's
-// character-manifest-script plugin), never by fetch(): the packaged window
-// opens the page from disk, where WebView2 on Windows refuses fetch() of a
-// file (2026-11-02: no colleague moved on Windows), but a script runs.
-// characters-v4 itself stays exactly as the motion package ships it.
+// character-manifest-script plugin), never by fetch: the packaged window
+// opens the page from disk, where WebView2 on Windows refuses fetch of a
+// file, but a script runs. characters-v4 itself stays exactly as the
+// motion package ships it.
 const MANIFEST_SCRIPT = "characters-v4-manifest.js";
 
 function readManifest() {
@@ -337,8 +336,8 @@ export function join(memberId, species, presence, face) {
 	};
 }
 
-// What the backend says the colleague is doing (D-013): taken up at the end
-// of the loop or route under way.
+// What the backend says the colleague is doing: taken up at the end of the
+// loop or route under way.
 export function report(memberId, presence) {
 	reported.set(memberId, presence);
 	const life = lives.get(memberId);

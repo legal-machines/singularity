@@ -643,6 +643,55 @@
         }
       },
       "_order": 345
+    },
+    {
+      "name": "chat.sourceIcons",
+      "policy": "worker",
+      "params": {
+        "sites": "string[]"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "icons"
+        ],
+        "properties": {
+          "icons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "_order": 360
+    },
+    {
+      "name": "chat.stopColleagues",
+      "policy": "worker",
+      "params": {
+        "chatId": "string"
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "chatId",
+          "ended"
+        ],
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "ended": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "_order": 361
     }
   ]
 }

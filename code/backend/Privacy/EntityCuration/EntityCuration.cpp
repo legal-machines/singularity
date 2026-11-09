@@ -52,9 +52,9 @@ std::string resolve_ambiguity_same(
 	ProjectEntity &survivor = require_entity(matter, survivor_id);
 	for (const std::string &alias : absorbed_aliases) {
 		addUnique(survivor.aliases, alias);
-		// A user-confirmed merge is itself the explicit correction
-		// (PRIVACY_CONTRACT.md): every alias it brings across is locked so a
-		// later automatic pass never moves it back off the survivor.
+		// A user-confirmed merge is itself the explicit correction: every
+		// alias it brings across is locked so a later automatic pass never
+		// moves it back off the survivor.
 		addUnique(survivor.locked_aliases, alias);
 	}
 	for (const std::string &key : absorbed_context_keys) addUnique(survivor.context_keys, key);

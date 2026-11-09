@@ -1,8 +1,7 @@
-/* A page's parts one under another, each a panel in Apple's grouped manner
-   (the owner, 2026-11-02: "add panels, not two columns, one after another, in
-   Apple's and Twist's style"): a part's name in plain words over a soft
-   ground with round corners, no frame, no capitals, no lines between rows.
-   The profile and the Matter read the same way. */
+/* A page's parts one under another, each a panel in Apple's grouped manner: a
+   part's name in plain words over a soft ground with round corners, no frame,
+   no capitals, no lines between rows. The profile and the Matter read the
+   same way. */
 .stack {
 	display: flex;
 	flex-direction: column;
@@ -60,8 +59,7 @@
 }
 
 /* The panel's pieces - rows, facts, a note and its list - stand apart by
-   room alone, with no lines between them (the owner, 2026-11-02: "without
-   horizontal lines"). */
+   room alone, with no lines between them. */
 .panel {
 	padding: 6px 0;
 }

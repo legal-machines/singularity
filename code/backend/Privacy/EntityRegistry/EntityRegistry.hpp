@@ -10,16 +10,14 @@
 
 namespace singularity::privacy {
 
-// Real AI-accessible Document coverage (PRIVACY_CONTRACT.md /
-// phase-10-privacy-entities-coverage.md's "94% / 45 of 48 AI-accessible
-// documents"). `total` is every Document already AI-ready (Document/Types/
-// MatterDocument.hpp's document_lifecycle_state() == Ready) - Documents still
-// Processing/Unsupported/NeedsAttention were never AI-accessible in the first
-// place and are correctly excluded from both numerator and denominator, not
-// counted against protection. `ready` is the subset of those whose own
-// protection preprocessing is current (see is_protection_current() below).
-// This is a processing-completeness ratio, never anonymization accuracy -
-// callers must not relabel it.
+// Real AI-accessible Document coverage. `total` is every Document already
+// AI-ready (Document/Types/ MatterDocument.hpp's document_lifecycle_state ==
+// Ready) - Documents still Processing/Unsupported/NeedsAttention were never
+// AI-accessible in the first place and are correctly excluded from both
+// numerator and denominator, not counted against protection. `ready` is the
+// subset of those whose own protection preprocessing is current (see
+// is_protection_current below). This is a processing-completeness ratio,
+// never anonymization accuracy - callers must not relabel it.
 struct ProjectCoverage {
 	long long ready = 0;
 	long long total = 0;
@@ -65,6 +63,13 @@ struct AttentionDocument {
 // count view. Order is stable (creation order) so a pseudonym's numbering is
 // always readable top to bottom.
 [[nodiscard]] std::vector<ProjectEntity> list_active_entities(const matters::Matter &matter);
+
+// The names that identify the client of `matter`, for telling whether words
+// name it: its own name, and the canonical names and aliases of its people,
+// companies, addresses and identifiers. Each is a name only when one of its
+// words is no ordinary word of the language, so a firm's rule is never taken
+// for a client's words.
+[[nodiscard]] std::vector<std::string> identifying_names(const matters::Matter &matter);
 
 [[nodiscard]] std::optional<ProjectEntity> find_entity(const matters::Matter &matter, const std::string &entity_id);
 
@@ -116,12 +121,11 @@ void record_occurrence(matters::Matter &matter, const std::string &entity_id,
 [[nodiscard]] std::vector<std::string> protection_values(const matters::Matter &matter, const ProjectEntity &entity);
 
 // The symbol each identity of the Project stands under in every request and
-// every document of it (the owner, 2026-11-02: "one map for the whole
-// project, for prompt messages and documents alike"; D-235): "[[Org3]]" is
-// the same organisation wherever it stands. Numbered per kind of symbol in the
-// order the identities came, merged ones included so a number is never given
-// again. Derived from the registry on every request, never stored; what an
-// AI provider reads is still only the symbol.
+// every document of it: "[[Org3]]" is the same organisation wherever it
+// stands. Numbered per kind of symbol in the order the identities came, merged
+// ones included so a number is never given again. Derived from the registry on
+// every request, never stored; what an AI provider reads is still only the
+// symbol.
 [[nodiscard]] std::map<std::string, std::string> project_entity_symbols(const matters::Matter &matter);
 
 } // namespace singularity::privacy

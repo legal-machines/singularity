@@ -1,5 +1,5 @@
-/* Whether a Matter travels (MatterTravel, D-137): one quiet line under its
-   name, before its sections. */
+/* Whether a Matter travels: one quiet line under its name, before its
+   sections. */
 .travel {
 	margin: -12px 0 20px;
 	font: var(--type-small);
@@ -60,11 +60,11 @@
 	border-radius: 10px;
 }
 
-/* The check of one of the firm's computers (D-205): the eight digits both
-   computers show, large, in figures of one width so the two groups line up
-   as they are read side by side; the line under them asks the one question.
-   While the other computer is awaited the same place holds quiet dots, so
-   nothing moves when the number comes. */
+/* The check of one of the firm's computers: the eight digits both computers
+   show, large, in figures of one width so the two groups line up as they
+   are read side by side; the line under them asks the one question. While
+   the other computer is awaited the same place holds quiet dots, so nothing
+   moves when the number comes. */
 
 .check {
 	display: grid;

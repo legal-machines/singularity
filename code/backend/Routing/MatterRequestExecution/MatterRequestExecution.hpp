@@ -91,7 +91,7 @@ using SourcePicker = std::function<SourcePickReply(const SourcePickCall &)>;
 void set_source_picker(SourcePicker picker);
 // Test-only: called on the running thread the moment a change's approval has
 // been put to the lawyer and recorded, before the run returns - where a
-// lawyer's quick decision lands (Beta 1 #125, LIFE-1). Never set in the app.
+// lawyer's quick decision lands. Never set in the app.
 using ApprovalFiledHook = std::function<void(const std::string &project_id, const std::string &operation_id,
 	const std::string &approval_id)>;
 void set_approval_filed_hook_for_testing(ApprovalFiledHook hook);
@@ -222,8 +222,8 @@ void preserve_concurrent_operation_state(const matters::MatterTask &current, mat
 [[nodiscard]] std::string approval_floor(const matters::MatterTask &task, const std::string &requested_by);
 
 // True when `instruction` only confirms the proposal it follows and asks for
-// nothing new - "Go ahead and create the amendment.", "Apply it.", "Да,
-// создавай." - so the change the lawyer was just shown is put to them again
+// nothing new - "Go ahead and create the amendment.", "Apply it.", "…,
+// …" - so the change the lawyer was just shown is put to them again
 // instead of being drafted anew. Every word of it must be a word of
 // confirmation, a word with no request in it ("please", "the", "it") or a word
 // the proposal itself already uses (`proposal_words`: its request, title,

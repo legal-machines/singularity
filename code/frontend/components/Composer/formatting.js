@@ -1,7 +1,6 @@
-// The reply box's formatting keys (the owner, 2026-11-02: "Ctrl+B is
-// understood properly"): the box keeps plain words, and a key puts the
-// markdown marks around what is selected, which every message then draws as
-// what they mean (MessageText) - or takes them away when they are already
+// The reply box's formatting keys: the box keeps plain words, and a key puts
+// the markdown marks around what is selected, which every message then draws
+// as what they mean (MessageText) - or takes them away when they are already
 // there. With nothing selected, the marks go in with the caret between them.
 // The command key is Command on a Mac and Ctrl elsewhere.
 export const FORMAT_KEYS = { KeyB: "**", KeyI: "_", KeyE: "`" };

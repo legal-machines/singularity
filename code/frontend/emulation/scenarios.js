@@ -1,17 +1,17 @@
 import { familyOf } from "../data/practices.js";
 
-// MOCK DATA - the work onboarding's second page shows (D-162): the member
-// gives Kitsune a goal in their own practice, Kitsune answers with its plan
-// and one file, hands Evelyn her part, and Evelyn takes it. Each practice the
+// MOCK DATA - the work onboarding's second page shows: the member gives
+// Kitsune a goal in their own practice, Kitsune answers with its plan and one
+// file, hands Evelyn her part, and Evelyn takes it. Each practice the
 // dictionary knows (data/practices.js) names the work a lawyer of that
 // practice does; a few practices that are one work share it. Each plays the
 // same four messages, each as long as the deal's own, so the page keeps its
 // layout. The one file is the document a lawyer would send: a plan, memo,
-// term sheet, checklist or letter in Word, a tracker, matrix or chart of
-// many rows in Excel. Evelyn Hart is the firm's employment senior associate,
-// so her part is always the people's side of the work. The clients and
-// people are fictional, under US law (AG-12, D-134): Halvane Robotics, with
-// Sablewood and Kestrel, and a few others where a practice has other clients.
+// term sheet, checklist or letter in Word, a tracker, matrix or chart of many
+// rows in Excel. Evelyn Hart is the firm's employment senior associate, so
+// her part is always the people's side of the work. The clients and people
+// are fictional, under US law: Halvane Robotics, with Sablewood and Kestrel,
+// and a few others where a practice has other clients.
 export const SCENARIOS = {
 	// Corporate and transactions.
 	ma: {

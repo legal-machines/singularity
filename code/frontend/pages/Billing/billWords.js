@@ -58,13 +58,14 @@ export function providerWords(id) {
 	return PROVIDERS[said.toLowerCase()] ?? said.charAt(0).toUpperCase() + said.slice(1);
 }
 
-// What a request was for, as its bill line says it (D-252): the thread it
+// What a request was for, as its bill line says it: the thread it
 // answered in, or the kind of work it was.
 export function requestWords(request, threadTitle = "") {
 	if (request.operationRole == "research") return "Web research";
 	switch (request.operationType) {
+		// An AI colleague's own talk or work, said by the thread it worked for.
 		case "document_review":
-			return "Document review";
+			return threadTitle.trim() != "" ? `In “${threadTitle.trim()}”` : "Document review";
 		case "agent_run":
 			return "Data room watch";
 		case "review_table":
@@ -103,8 +104,8 @@ export function shortPrint(sha256) {
 }
 
 // "$0.0521" from micros: the amount as the provider reported it, to the
-// millionth where it has one, never rounded to a cent (D-252). A bill's total
-// is in cents (costText); each request and call on it is exact.
+// millionth where it has one, never rounded to a cent. A bill's total is in
+// cents (costText); each request and call on it is exact.
 export function exactCostText(micros, currency) {
 	const amount = micros / 1000000;
 	try {
@@ -114,8 +115,8 @@ export function exactCostText(micros, currency) {
 	}
 }
 
-// One model call's evidence in a line (D-252): the provider's own id for the
-// request, who served it, its tokens and its cost as the provider reported it.
+// One model call's evidence in a line: the provider's own id for the request,
+// who served it, its tokens and its cost as the provider reported it.
 export function callWords(call, costText) {
 	const parts = [];
 	const provider = providerWords(call.providerId);
@@ -128,7 +129,7 @@ export function callWords(call, costText) {
 	if (call.costMicros != null && (call.costCurrency ?? "") != "") {
 		parts.push(`${costText(call.costMicros, call.costCurrency)} ${call.costClassification == "estimated" ? "estimated from the price list" : "as reported"}`);
 	}
-	// What the provider's own record says, once asked (D-252).
+	// What the provider's own record says, once asked.
 	const confirmed = confirmationWords(call, costText);
 	if (confirmed != null) parts.push(confirmed);
 	return parts.join(", ");
@@ -145,9 +146,9 @@ export function confirmationWords(call, costText) {
 }
 
 // A request's evidence as text a lawyer can send a client to confirm the bill
-// line (D-252): when, on which model, the provider's own id for each call, its
-// tokens and cost as reported, and the fingerprints of exactly what was sent
-// and what came back. Nothing of what the request said.
+// line: when, on which model, the provider's own id for each call, its tokens
+// and cost as reported, and the fingerprints of exactly what was sent and what
+// came back. Nothing of what the request said.
 export function evidenceText(request, { matterName, what, costText }) {
 	const lines = [`${what}, ${matterName}`, `Ran ${request.time}`];
 	if (request.calls.length == 0) {

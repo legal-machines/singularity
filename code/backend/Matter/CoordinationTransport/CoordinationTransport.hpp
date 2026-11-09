@@ -7,8 +7,8 @@
 
 namespace singularity::matter::coordination::transport {
 
-// The bytes of one sealed envelope (D-123): a transport carries them and
-// never reads inside.
+// The bytes of one sealed envelope: a transport carries them and never
+// reads inside.
 using SealedBytes = std::vector<std::uint8_t>;
 
 // What an envelope is known by wherever it travels: BLAKE2b-256 of its sealed
@@ -17,9 +17,9 @@ using SealedBytes = std::vector<std::uint8_t>;
 std::string envelope_id(const SealedBytes& bytes);
 
 // A way a firm's computers pass sealed envelopes to each other directly, never
-// through Legal Machines (D-124): the firm's own folder, the office network,
-// a direct link across the internet. Each keeps its own cursor and cleans up
-// after itself; none knows what it carries.
+// through Legal Machines: the firm's own folder, the office network, a direct
+// link across the internet. Each keeps its own cursor and cleans up after
+// itself; none knows what it carries.
 class Transport {
 public:
 	virtual ~Transport() = default;

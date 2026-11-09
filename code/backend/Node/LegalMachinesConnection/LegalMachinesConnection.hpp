@@ -11,11 +11,11 @@ namespace singularity::node {
 // session and, later, everything an account brings. One address, named once.
 inline constexpr const char *kLegalMachinesApiBase = "https://legalmachines.org/singularity/api";
 
-// Whether this installation can reach Legal Machines right now - the first
-// thing Singularity checks as it opens. Today that is reachability: any answer from
-// the service is a connection, and nothing but the request itself is sent. It
-// is the one place a signed-in session handshake will be added (BB-05), so the
-// startup screen's "connecting to Legal Machines" never has to change.
+// Whether this installation can reach Legal Machines right now - the first thing
+// Singularity checks as it opens. Today that is reachability: any answer from the
+// service is a connection, and nothing but the request itself is sent. It is the one
+// place a signed-in session handshake will be added, so the startup screen's
+// "connecting to Legal Machines" never has to change.
 //
 // Never throws and never waits longer than kConnectionTimeoutSeconds: being
 // offline is an ordinary state of a local-first product, not an error, and Singularity

@@ -88,8 +88,6 @@ std::shared_ptr<DirectTransport> DirectTransport::shared(const noise::KeyPair& s
 	link::DirectLink::Options options;
 	options.self = self;
 	options.port = kPreferredPort;
-	// Public STUN servers, which the owner allowed (D-123, D-124): they learn
-	// this computer's outside address and nothing else.
 	options.stunServers = {"stun.l.google.com:19302", "stun.cloudflare.com:3478"};
 	options.relay = std::move(relay);
 	try {
@@ -215,7 +213,7 @@ std::vector<std::string> DirectTransport::candidates() const {
 		found.push_back(std::string(kScheme) + (isSix ? "[" + host + "]" : host) + ":" + port);
 	}
 	// And the address its router shows outside, as a STUN server saw it: a
-	// computer behind another router calls it there (D-124).
+	// computer behind another router calls it there.
 	for (const std::string& address : link_.public_addresses()) {
 		const std::string candidate = std::string(kScheme) + address;
 		if (std::find(found.begin(), found.end(), candidate) == found.end()) found.push_back(candidate);

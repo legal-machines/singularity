@@ -52,7 +52,7 @@ export function placeOf(hash) {
 	if (kind == "profile" && id != null) return { kind: "profile", memberId: id };
 	if (kind == "hire") return { kind: "hire" };
 	// The model accounts were a page of their own before they were Settings'
-	// API keys (2026-11-02): an old address opens them there.
+	// API keys: an old address opens them there.
 	if (kind == "models") return { kind: "settings", tab: "keys" };
 	if (kind == "settings") return id == "keys" ? { kind: "settings", tab: "keys" } : { kind: "settings" };
 	if (kind == "calendar") return { kind: "calendar", tab: id == "time" ? "time" : "calendar" };

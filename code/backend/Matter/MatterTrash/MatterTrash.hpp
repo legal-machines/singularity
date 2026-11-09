@@ -4,13 +4,12 @@
 #include <string>
 #include <vector>
 
-// Matters deleted from this computer go to its Trash for 30 days first (the
-// owner, 2026-11-04: "Matters can be cleared away, they go to the Trash and
-// are kept there for 30 days"). A Matter in the Trash leaves every list here
-// and comes back whole with Restore. After 30 days, or with Delete now, it is
-// deleted from this computer as before (D-214): it stops travelling here and
-// leaves the list; its folder and documents stay where they are, and the
-// firm's other computers keep it.
+// Matters deleted from this computer go to its Trash for 30 days first. A
+// Matter in the Trash leaves every list here and comes back whole with
+// Restore. After 30 days, or with Delete now, it is deleted from this
+// computer as before: it stops travelling here and leaves the list; its
+// folder and documents stay where they are, and the firm's other computers
+// keep it.
 //
 // Kept beside the workspace's list of Matters, in
 // .singularity-workspace/trashed-matters.json: this computer's own, never in

@@ -16,7 +16,7 @@
 }
 
 /* What waits for the member reads in plain ink, as Status's "yours" does:
-   a decision or a review is ordinary work, never an alarm (D-174). */
+   a decision or a review is ordinary work, never an alarm. */
 .yours {
 	color: var(--ink);
 	font-weight: 500;

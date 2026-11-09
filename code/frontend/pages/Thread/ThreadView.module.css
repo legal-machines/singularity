@@ -2,6 +2,8 @@
    between the posts and nothing but the posts. */
 
 .view {
+	/* A conversation's column, wherever a thread is shown. */
+	--column: var(--conversation-column);
 	position: relative;
 	display: flex;
 	flex: 1;
@@ -20,7 +22,7 @@
 }
 
 /* The thread stands in the header search's column, the inbox's (tokens.css,
-   --column), 16px in (the owner, 2026-10-24: "fit it into this rectangle"). */
+   --column), 16px in. */
 .thread {
 	max-width: var(--column);
 	margin: 0 auto;
@@ -91,7 +93,7 @@
 }
 
 /* A further message of the same person: apart enough to read as a message
-   of its own, its files close under its words (the owner, 2026-11-02). */
+   of its own, its files close under its words. */
 .post_more {
 	--post-top: 8px;
 	padding-top: 20px;
@@ -184,8 +186,7 @@
 
 /* The message a reply answers: one quiet line over its words, the sign of a
    reply, who wrote it and its first words; a press goes to it. No box and no
-   stripe (the owner, 2026-10-24: "a complete ban on such things, it is AI
-   slop"). */
+   stripe. */
 .quote {
 	display: flex;
 	align-items: baseline;
@@ -310,7 +311,7 @@
 }
 
 /* What stopped, said in words of the brick that marks a real problem: no dot
-   before them (UI-17). */
+   before them. */
 .stopped {
 	margin-top: 12px;
 	font: 400 14px/21px var(--font-sans);
@@ -380,7 +381,11 @@
 	bottom: 0;
 	left: 0;
 	z-index: 1;
-	padding: 4px 16px 20px;
+	/* The thread's own column, the reply box exactly as wide as a post's
+	   words: in from the faces' column, a face and its gap. */
+	max-width: var(--column);
+	margin: 0 auto;
+	padding: 4px 16px 20px calc(16px + 52px);
 	pointer-events: none;
 }
 

@@ -1,4 +1,6 @@
 #include "Provider/ProviderRegistry/ProviderRegistry.hpp"
+
+#include "Provider/CredentialStore/CredentialStore.hpp"
 #include "Routing/Observability/OperationEvent.hpp"
 
 #include "Platform/HttpClient/HttpClient.hpp"
@@ -61,8 +63,7 @@ public:
 
 // A request's body as text: a byte that is not UTF-8 in it - a letter cut in
 // two by something that clipped its words - goes as U+FFFD, never failing the
-// whole request (2026-11-05: "The model could not be asked:
-// [json.exception.type_error.316] invalid UTF-8 byte at index 2257").
+// whole request.
 std::string body_text(const Json &body) {
   return body.dump(-1, ' ', false, Json::error_handler_t::replace);
 }
@@ -93,8 +94,9 @@ std::string answer_first(const Json &body) {
 // An OpenAI-compatible answer read as it is written ("stream": true): its
 // server-sent events, put back together into the one response object a request
 // without "stream" is answered with, so it is read exactly as that one is.
-// Each piece of the model's own output is told to `text` as it arrives - never
-// once the output has written `withheld` (a provider echoing the credential).
+// The model's own output is told to `text` as it arrives, up to where it could
+// be the beginning of `withheld` (the credential, which a misbehaving provider
+// may echo split over pieces), and never once it has written `withheld`.
 class ChatCompletionStream {
 public:
   ChatCompletionStream(std::function<void(std::string_view)> text, std::string withheld)
@@ -141,6 +143,25 @@ public:
   }
 
 private:
+  // Tells what the model wrote that can no longer be the start of the
+  // credential: an end that could still begin it waits for the next piece. A
+  // key echoed over three pieces had its first two shown while the answer was
+  // written.
+  void tell_settled() {
+    std::size_t held = 0;
+    for (std::size_t length = std::min(withheld_.size() > 0 ? withheld_.size() - 1 : 0, content_.size()); length > 0;
+         --length) {
+      if (content_.compare(content_.size() - length, length, withheld_, 0, length) == 0) {
+        held = length;
+        break;
+      }
+    }
+    const std::size_t settled = content_.size() - held;
+    if (settled <= told_) return;
+    text_(std::string_view(content_).substr(told_, settled - told_));
+    told_ = settled;
+  }
+
   void read_line(std::string_view line) {
     // Comments (": OPENROUTER PROCESSING") keep the connection alive.
     if (line.empty() || line.front() == ':') return;
@@ -168,7 +189,7 @@ private:
         if (!withheld_.empty() && content_.find(withheld_, content_.size() > written.size() + withheld_.size()
                 ? content_.size() - written.size() - withheld_.size() : 0) != std::string::npos)
           silenced_ = true;
-        if (!silenced_ && text_ && !written.empty()) text_(written);
+        if (!silenced_ && text_ && !written.empty()) tell_settled();
       }
       if (delta.contains("refusal") && delta.at("refusal").is_string())
         refusal_ += delta.at("refusal").get<std::string>();
@@ -198,6 +219,8 @@ private:
   std::string content_;
   bool hasContent_ = false;
   bool silenced_ = false;
+  // How much of the content has been told.
+  std::size_t told_ = 0;
   std::string refusal_;
   std::optional<std::string> finish_;
   std::map<int, Json> toolCalls_;
@@ -231,7 +254,7 @@ std::string openai_style_root(const std::string &provider_id, const std::optiona
 // How a connection reached through the generic path is named in what the
 // lawyer reads: a service known by its address by its own name ("OpenRouter
 // says this account does not have enough credit"), any other as "This
-// endpoint" (2026-10-31: "Add credit to your This endpoint account").
+// endpoint".
 std::string generic_service_name(const std::string &root) {
   if (root.find("openrouter.ai") != std::string::npos) return "OpenRouter";
   return "This endpoint";
@@ -1007,8 +1030,8 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
     }
   }
   // A firm's confidential work goes only to endpoints that keep nothing of it
-  // and train on none of it (D-116): OpenRouter routes it among the endpoints
-  // that do not collect what they are sent, whatever the account allows. Which
+  // and train on none of it: OpenRouter routes it among the endpoints that do
+  // not collect what they are sent, whatever the account allows. Which
   // endpoint served it is kept with the call's usage.
   if (root.find("openrouter.ai") != std::string::npos) {
     body["provider"]["data_collection"] = "deny";
@@ -1035,7 +1058,7 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
     if (!isOpenRouter) body["stream_options"] = Json{{"include_usage", true}};
   }
 
-  // The member's pictures, after the words, as image inputs (D-256).
+  // The member's pictures, after the words, as image inputs.
   std::vector<std::string> pictureDigests;
   if (const std::shared_ptr<const std::vector<InputPicture>> pictures = current_input_pictures();
       pictures && pictures->empty() == false) {
@@ -1072,7 +1095,7 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
   // A model that takes no forced tool choice (Claude Sonnet 5.5 and Opus 5.5
   // turn "required" and a named tool away) is asked once more with "auto": the
   // tools stay strict, and what comes back is checked by the caller exactly as
-  // before, a turn with no tool call included (D-116).
+  // before, a turn with no tool call included.
   if (response.status == 400 && tool_control && tool_control->tool_choice != ToolChoicePolicy::Auto) {
     const auto rejected = Json::parse(response.body, nullptr, false);
     const std::optional<std::string> reason = extract_error_message(rejected);
@@ -1167,7 +1190,7 @@ GenerationResult generate_openai_style(const std::string &provider_display_name,
   const auto &first_choice = payload.at("choices").at(0);
   GenerationResult result;
   // The request as the provider's records name it, and the answer's
-  // fingerprint: the evidence a bill's line rests on (D-252).
+  // fingerprint: the evidence a bill's line rests on.
   if (payload.contains("id") && payload.at("id").is_string()) result.response_id = payload.at("id").get<std::string>();
   result.response_sha256 = platform::sha256_hex_digest(response.body);
   if (first_choice.contains("message") && first_choice.at("message").contains("content") &&
@@ -1234,7 +1257,7 @@ GenerationResult generate_anthropic(const std::string &api_key, const std::strin
                                     const FinalPayloadValidator &final_payload_validator,
 								    IProviderTransport &transport,
 								    std::optional<std::uint64_t> maximum_output_tokens) {
-  // The member's pictures, before the words, as Anthropic reads them best (D-256).
+  // The member's pictures, before the words, as Anthropic reads them best.
   Json content = prompt;
   std::vector<std::string> pictureDigests;
   if (const std::shared_ptr<const std::vector<InputPicture>> pictures = current_input_pictures();
@@ -1367,6 +1390,9 @@ bool is_known_provider(const std::string &provider_id) {
 
 bool is_valid_custom_provider_id(const std::string &provider_id) {
   if (provider_id.empty() || provider_id.size() > 40) return false;
+  // Connected under one of Singularity's own secrets, a provider's key wrote
+  // over it, and disconnecting it removed it.
+  if (platform::is_reserved_credential_name(provider_id)) return false;
   static constexpr std::array<const char *, 5> kReserved{
       "openai", "anthropic", "openai_compatible", "google", "local"};
   if (std::find(kReserved.begin(), kReserved.end(), provider_id) != kReserved.end()) return false;

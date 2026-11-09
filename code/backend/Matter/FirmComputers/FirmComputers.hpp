@@ -7,11 +7,11 @@
 
 namespace singularity::matter::firm_computers {
 
-// The firm's computers (D-205). A computer signed in to one of the firm's
-// seats says itself to Legal Machines - its device key, its X25519 key signed
-// by the device key, and where its direct link may be reached - and finds the
-// firm's other computers there. Nothing here trusts what Legal Machines lists:
-// a computer counts as the firm's only once a lawyer here has checked it with
+// The firm's computers. A computer signed in to one of the firm's seats says
+// itself to Legal Machines - its device key, its X25519 key signed by the
+// device key, and where its direct link may be reached - and finds the firm's
+// other computers there. Nothing here trusts what Legal Machines lists: a
+// computer counts as the firm's only once a lawyer here has checked it with
 // its own lawyer, by a number both computers show.
 //
 // The check is commit-then-reveal, as Bluetooth's numeric comparison is: each
@@ -36,6 +36,13 @@ struct Computer {
 	std::string signature;
 	std::vector<std::string> addresses;
 	std::string announced_at;
+	// The organisation a lawyer here checked it in, by Legal Machines' id: it
+	// counts as the firm's only while this computer is signed in to that very
+	// organisation, never to another of the same name. Empty in a check kept
+	// before checks named theirs: such a one counts only where the listing of
+	// the organisation signed in to lists it, and is then kept as that
+	// organisation's.
+	std::string organisation_id = {};
 };
 
 struct Message {
@@ -52,6 +59,9 @@ struct Environment {
 	std::function<std::string()> coordination_key;
 	// The seat signed in here; empty when none.
 	std::function<std::string()> seat_id;
+	// The organisation of that seat, by Legal Machines' id; empty when none.
+	// The listing, the checks and what counts are that organisation's alone.
+	std::function<std::string()> organisation_id;
 	std::function<std::vector<std::string>()> candidates;
 	std::function<std::string(const std::string &message)> sign;
 	std::function<bool(const std::string &key, const std::string &message, const std::string &signature)> verify;
@@ -136,10 +146,13 @@ void cancel(const std::string &device_id);
 // whatever Legal Machines lists since: a computer listed with other keys is a
 // new one to check, never put in its place - and their addresses now. None
 // that Legal Machines no longer lists (its seat removed): taking trust away
-// is the one thing it may do. Never asks Legal Machines.
+// is the one thing it may do. Only the organisation's this computer is signed
+// in to, each with its id; none when it is signed in to none. Never asks
+// Legal Machines.
 std::vector<Computer> checked();
-// Every computer a lawyer here checked, as this computer keeps it - listed by
-// Legal Machines now or not: what a seat's removal refuses (D-214).
+// Every computer a lawyer here checked in the organisation signed in to, as
+// this computer keeps it - listed by Legal Machines now or not: what a seat's
+// removal refuses. Another organisation's checks are never its.
 std::vector<Computer> checked_records();
 
 // One pass of the background: this computer said again when due, the listing

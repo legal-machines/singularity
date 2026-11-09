@@ -7,10 +7,10 @@ import { when } from "./words.js";
 
 import styles from "./pane.module.css";
 
-// Singularity in PowerPoint (D-112): the Matter of the deck the lawyer is in,
-// at the slide selected. The deck stays in PowerPoint; the Matter, its thread
-// and its colleagues belong to Singularity, and the pane shows only what
-// concerns this deck and the slide selected:
+// Singularity in PowerPoint: the Matter of the deck the lawyer is in, at the
+// slide selected. The deck stays in PowerPoint; the Matter, its thread and its
+// colleagues belong to Singularity, and the pane shows only what concerns this
+// deck and the slide selected.
 //   - the slide, its words, what the thread said about it, and a word to a
 //     colleague about it, which goes to the Matter's thread like any message,
 //     with the slide - its number, title and words - as its place;

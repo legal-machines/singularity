@@ -5,11 +5,10 @@ import styles from "./Tooltip.module.css";
 
 // One layer shows the label of whatever the pointer rests on or the keyboard
 // reaches, for every element that carries `data-tooltip` - its words alone,
-// never a keyboard shortcut (the owner, 2026-11-02: "never show hotkey
-// symbols"). It waits a moment under the pointer and none under the
-// keyboard, stands below the element or above it where there is no room,
-// and never covers an open menu. A screen reader hears the element's own
-// label, so the layer is hidden from it.
+// never a keyboard shortcut. It waits a moment under the pointer and none
+// under the keyboard, stands below the element or above it where there is no
+// room, and never covers an open menu. A screen reader hears the element's
+// own label, so the layer is hidden from it.
 const DELAY = 450;
 const GAP = 6;
 const MARGIN = 8;

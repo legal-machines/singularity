@@ -1,8 +1,7 @@
 // What a message's words say as markdown, read into blocks and inline pieces
-// for MessageText to draw (the owner, 2026-11-02: "texts in threads and chats
-// support all md tags, but the md itself is not shown"). Nothing here makes
-// HTML: every piece becomes a React element, so a message can never inject
-// markup, and a link goes only where http(s) or mailto takes it.
+// for MessageText to draw. Nothing here makes HTML: every piece becomes a
+// React element, so a message can never inject markup, and a link goes only
+// where http(s) or mailto takes it.
 //
 // Blocks: paragraphs (a single line break stays a line break, as in any
 // messenger), headings (#), quotes (>), lists - plain (-, *, +) and numbered,
@@ -153,6 +152,14 @@ export function parseBlocks(text) {
 }
 
 const ESCAPABLE = "\\`*_~[]()#+-.!|>";
+
+// A web source a colleague's words cite, where they cite it: its number
+// between two marks of Unicode's private use, as native.js writes the
+// backend's citation into the words - never anything a person types. Several
+// side by side are one citation of several sources.
+export const CITE_OPEN = "\uE000";
+export const CITE_CLOSE = "\uE001";
+const CITED = /^\uE000(\d{1,4})\uE001/;
 const ADDRESS = /^(?:https?:\/\/|mailto:)[^\s<>"]+/i;
 
 export function isSafeAddress(address) {
@@ -205,6 +212,22 @@ export function parseInline(text, { inLink = false } = {}) {
 	while (at < source.length) {
 		const character = source[at];
 		const rest = source.slice(at);
+		if (character == CITE_OPEN) {
+			const cited = CITED.exec(rest);
+			if (cited != null) {
+				const last = pieces[pieces.length - 1];
+				const number = Number(cited[1]);
+				if (last?.type == "cite") last.numbers.push(number);
+				else if (last?.type == "text" && /\s$/.test(last.text) && pieces[pieces.length - 2]?.type == "cite" && last.text.trim() == "") {
+					pieces.pop();
+					pieces[pieces.length - 1].numbers.push(number);
+				} else pieces.push({ type: "cite", numbers: [number] });
+				at += cited[0].length;
+				continue;
+			}
+			at += 1;
+			continue;
+		}
 		if (character == "\\" && ESCAPABLE.includes(source[at + 1] ?? "")) {
 			pushText(pieces, source[at + 1]);
 			at += 2;

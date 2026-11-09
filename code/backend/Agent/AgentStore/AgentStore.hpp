@@ -70,10 +70,10 @@ void save_text(const std::string &agent_id, const std::string &sha256, const std
 // Drops every kept reading whose digest is not in `keep`.
 void prune_texts(const std::string &agent_id, const std::set<std::string> &keep);
 
-// Where a colleague's records travel to the firm's other computers (D-203):
-// the firm's own record, and each Matter's own folder. The application
-// installs them (Bridge/NativeBridge); with none installed a colleague's
-// records stay in its own folder on this computer, as before.
+// Where a colleague's records travel to the firm's other computers: the
+// firm's own record, and each Matter's own folder. The application installs
+// them (Bridge/NativeBridge); with none installed a colleague's records
+// stay in its own folder on this computer, as before.
 struct SharedPlaces {
 	// The firm's record's folder here; none while it cannot be kept.
 	std::function<std::optional<std::filesystem::path>()> firm;
@@ -89,8 +89,8 @@ struct SharedPlaces {
 void install_shared_places(SharedPlaces places);
 const SharedPlaces &shared_places();
 
-// What every computer of the firm holds of each of its colleagues (D-203), in
-// the firm's record (`.lm/Agents/<agent id>/Colleague.json`): who it is, its
+// What every computer of the firm holds of each of its colleagues, in the
+// firm's record (`.lm/Agents/<agent id>/Colleague.json`): who it is, its
 // office, how it works and what it does, its model, its status and who
 // answers for it - never its runs or the work in its hands. The computer that
 // runs a colleague writes it as the colleague's settings change; every other
@@ -115,17 +115,17 @@ struct FirmColleague {
 	std::string written_by;
 };
 std::vector<FirmColleague> firm_colleagues();
-// A colleague the firm let go (D-214): its own record here goes, with its runs
-// and its work; with `tell_firm`, the firm's record keeps that it is gone
-// (status "deleted"), so the copies on the firm's other computers go too. Its
-// words stay in the threads where it wrote them.
+// A colleague the firm let go: its own record here goes, with its runs and its
+// work; with `tell_firm`, the firm's record keeps that it is gone (status
+// "deleted"), so the copies on the firm's other computers go too. Its words
+// stay in the threads where it wrote them.
 void forget_agent(const std::string &agent_id, bool tell_firm);
 // Writes each of `agents` that is the firm's into the firm's record where what
 // it holds of it changed; one unchanged is not written again. Never throws.
 void publish_firm_colleagues(const std::vector<Agent> &agents);
 
 // An administrator's change of a colleague made on a computer that does not
-// run it (D-219), in the firm's record (`.lm/Agents/<agent id>/Edits/
+// run it, in the firm's record (`.lm/Agents/<agent id>/Edits/
 // <device>.json`), each computer writing only its own file. It is signed with
 // that computer's device key, since a file in the record does not prove which
 // computer wrote it; the computer that runs the colleague takes it only from
@@ -156,13 +156,13 @@ std::vector<ColleagueEdit> colleague_edits(const std::string &agent_id);
 std::map<std::string, std::string> taken_colleague_edits(const std::string &agent_id);
 void save_taken_colleague_edits(const std::string &agent_id, const std::map<std::string, std::string> &taken);
 
-// A colleague's notes as every computer wrote them (D-159), oldest first, each
+// A colleague's notes as every computer wrote them, oldest first, each
 // computer writing only its own file, so nothing one computer wrote is ever
-// rewritten by another. Where each travels (D-203): a Matter's note in that
-// Matter's folder (`.lm/Agents/<agent id>/Memory/<device>.json`), so only that
-// Matter's computers hold it; the firm's and a member's in the firm's record,
-// at the same place; a note no shared place can hold, in
-// Agents/<agent id>/memory/<device>.json here.
+// rewritten by another. Where each travels: a Matter's note in that Matter's
+// folder (`.lm/Agents/<agent id>/Memory/<device>.json`), so only that Matter's
+// computers hold it; the firm's and a member's in the firm's record, at the
+// same place; a note no shared place can hold, in Agents/<agent
+// id>/memory/<device>.json here.
 std::vector<MemoryNote> load_memory_notes(const std::string &agent_id);
 std::vector<MemoryNote> load_own_memory_notes(const std::string &agent_id, const std::string &device_id);
 void save_own_memory_notes(const std::string &agent_id, const std::string &device_id, const std::vector<MemoryNote> &notes);

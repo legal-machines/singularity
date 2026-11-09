@@ -109,7 +109,7 @@ Json outbound_call_json(const protected_api::papinian::OutboundCall &call) {
 			{"modelId", call.model_id},
 			{"protectionMode", call.protection_mode},
 			{"markers", std::move(markers)},
-			// The pictures it carried as they are, unmasked (D-256).
+			// The pictures it carried as they are, unmasked.
 			{"pictures", std::move(pictures)},
 			{"categoryCounts", call.category_counts},
 			{"url", call.url.empty() ? Json(nullptr) : Json(call.url)},

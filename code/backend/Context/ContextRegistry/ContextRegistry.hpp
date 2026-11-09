@@ -11,10 +11,9 @@
 namespace singularity::context {
 
 // Read/query access over one Project's canonical Context items and its
-// distinct suggestion queue (phase-12-context-model-authority.md's
-// "Canonical memory versus suggestions"). Every query is a plain projection
-// over `matter.context_items`/`matter.context_suggestions`; mutation lives
-// in ContextCuration.hpp so this stays the same read-only shape as
+// distinct suggestion queue. Every query is a plain projection over
+// `matter.context_items`/`matter.context_suggestions`; mutation lives in
+// ContextCuration.hpp so this stays the same read-only shape as
 // Privacy/EntityRegistry.hpp.
 
 // Every canonical item, stable creation order (oldest first) so a Context

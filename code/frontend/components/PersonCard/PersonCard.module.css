@@ -24,7 +24,6 @@
 	color: var(--ink);
 }
 
-/* The position a shade darker than its practice, as D-058 sets them. */
 .role {
 	font: 400 13px/18px var(--font-sans);
 	color: var(--ink-2);

@@ -15,11 +15,11 @@
 namespace singularity::platform {
 namespace {
 
-// Keys live in the desktop keyring - the Secret Service that GNOME Keyring,
-// KDE Wallet and KeePassXC provide - through libsecret: encrypted by the
-// keyring, unlocked with the desktop session, and never in a file of Singularity's
-// own. Where no keyring can be reached, a key is refused; it is
-// never kept anywhere else (AG-SEC-1).
+// Keys live in the desktop keyring - the Secret Service that GNOME Keyring, KDE
+// Wallet and KeePassXC provide - through libsecret: encrypted by the keyring,
+// unlocked with the desktop session, and never in a file of Singularity's own.
+// Where no keyring can be reached, a key is refused; it is never kept anywhere
+// else.
 //
 // Each key is one item of this schema, found by the application's slug (so a
 // development build and a test keep apart from the released app, as their

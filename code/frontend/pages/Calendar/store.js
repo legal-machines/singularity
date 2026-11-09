@@ -6,10 +6,10 @@ import { hasNative, shownBillables, shownCalendarEvents } from "../../data/nativ
 import { matters, viewerId } from "../../data/workspace.js";
 import { addMinutes, minutesBetween } from "./dates.js";
 
-// The calendar's state for this session (D-076): its calendars, which of them
-// are shown, the connected accounts and the events. The time the member
-// records is one event and one time entry, so billing counts it at once
-// (D-075). Nothing is written to the backend in the prototype (PROD-2).
+// The calendar's state for this session: its calendars, which of them are
+// shown, the connected accounts and the events. The time the member records
+// is one event and one time entry, so billing counts it at once. Nothing is
+// written to the backend in the prototype.
 
 function timeEvent(entry) {
 	const matter = matters.find(item => item.id == entry.matterId);
@@ -27,10 +27,9 @@ function timeEvent(entry) {
 }
 
 // In the app, the calendars that are real here: the member's own time,
-// which the backend keeps on each Matter (D-181), and the AI colleagues'
-// working time from the Matter's record. The prototype's member, deadlines,
-// holidays and mail accounts are Marlowe Finch's, never this firm's
-// (2026-10-31).
+// which the backend keeps on each Matter, and the AI colleagues' working
+// time from the Matter's record. The prototype's member, deadlines,
+// holidays and mail accounts are Marlowe Finch's, never this firm's.
 const realCalendars = ["cal_time", "cal_colleagues"];
 
 let state = {
@@ -142,7 +141,7 @@ export function toggleCalendar(calendarId) {
 }
 
 // Connecting an account, simulated in the prototype: a Google account brings
-// its sample calendar (D-079).
+// its sample calendar.
 export function connectAccount(accountId) {
 	const accountsNext = state.accounts.map(item => (item.id == accountId ? { ...item, connected: true } : item));
 	if (accountId == "google" && !state.calendars.some(item => item.id == googleSample.calendar.id)) {

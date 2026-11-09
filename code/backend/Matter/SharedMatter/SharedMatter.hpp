@@ -46,15 +46,22 @@ namespace singularity::matter {
 struct SharedDeviceKey {
 	std::string device_id;
 	std::string public_key;
-	// Asks to join the Matter through the firm's coordination (D-123): its
-	// lawyer is to compare its code and confirm it.
+	// Asks to join the Matter through the firm's coordination: its lawyer
+	// is to compare its code and confirm it.
 	bool is_asking = false;
 };
 
 struct SharedMember {
 	std::string actor_id;
 	std::string name;
+	// The organisation's name, as they state it: for the eyes only.
 	std::string organisation;
+	// The organisation they were signed in to when they wrote the record, by
+	// Legal Machines' id: whether they are of one firm with this computer's
+	// member is told by it alone, never by the name, which two firms may
+	// share. Empty in a record written signed in to none, or before records
+	// named it: such a member is of no firm here.
+	std::string organisation_id;
 	// Their place in the firm, as they state it (organisation::MemberOffice):
 	// their position on the firm's scale and their practice; empty where they
 	// stated none.
@@ -68,18 +75,17 @@ struct SharedMember {
 	std::vector<SharedDeviceKey> device_keys;
 	std::string first_seen_at;
 	std::string last_seen_at;
-	// The photo they show the firm (D-163): a data URL of a small JPEG or PNG,
-	// empty without one or where the record's is not a photo
-	// (is_member_photo).
+	// The photo they show the firm: a data URL of a small JPEG or PNG, empty
+	// without one or where the record's is not a photo (is_member_photo).
 	std::string photo;
 	// Their own words for what they do, from the firm's record of who sits in
-	// their seat (D-209); never in a Matter's record.
+	// their seat; never in a Matter's record.
 	std::string title;
 	// What they would have the firm know of them, from the same record.
 	std::string about;
-	// A lawyer this computer gave the Matter to by choosing them (D-205), with
-	// no record of their own in it yet: invited, until their computer has it
-	// and opens it.
+	// A lawyer this computer gave the Matter to by choosing them, with no
+	// record of their own in it yet: invited, until their computer has it and
+	// opens it.
 	bool is_invited = false;
 };
 
@@ -101,23 +107,28 @@ std::vector<SharedMember> load_members(const std::filesystem::path &project_fold
 // when it starts; without one, none is stated.
 void set_own_office_source(std::function<organisation::MemberOffice()> source);
 organisation::MemberOffice own_office();
-// The photo the person at this computer shows the firm (D-163), from where the
+// The photo the person at this computer shows the firm, from where the
 // application keeps it (Organisation/OrganisationProduction): it travels in
 // their member record as their office does. Without a source, none.
 void set_own_photo_source(std::function<std::string()> source);
 std::string own_photo();
-// The firm's seal on a Matter (D-167): `.lm/Seal.json`, a statement that a
-// computer of the firm made or keeps this Matter for its organisation, signed
-// with that computer's own key (Platform/DeviceKey). It travels with the
-// Matter between the firm's computers, and only a Matter whose seal is the
-// firm's is offered or opened here as the firm's: a `.lm` copied in from
-// outside, or written by hand, is not.
+// The organisation the person at this computer is signed in to, by Legal
+// Machines' id, from where the application keeps it: it travels in their
+// member record. Without a source, none.
+void set_own_organisation_source(std::function<std::string()> source);
+std::string own_organisation_id();
+// The firm's seal on a Matter: `.lm/Seal.json`, a statement that a computer
+// of the firm made or keeps this Matter for its organisation, signed with
+// that computer's own key (Platform/DeviceKey). It travels with the Matter
+// between the firm's computers, and only a Matter whose seal is the firm's is
+// offered or opened here as the firm's: a `.lm` copied in from outside, or
+// written by hand, is not.
 enum class MatterSealState {
 	// Sealed for this organisation, for this Matter, unchanged, by this
 	// computer or by a computer confirmed here (set_seal_trust).
 	Ours,
 	// The same, by a computer no one here has confirmed yet: its person is
-	// confirmed from what they wrote in the Matter (D-142).
+	// confirmed from what they wrote in the Matter.
 	Unconfirmed,
 	// Sealed, and the signature holds, but for another organisation.
 	OtherOrganisation,
@@ -150,8 +161,8 @@ void keep_seal(const std::filesystem::path &project_folder, const std::string &m
 void set_seal_trust(std::function<SealComputerTrust(const std::string &actor_id, const std::string &public_key)> trust);
 // Whether this computer carries the Matter `matter_id` in `folder` by the
 // firm's exchange: its lawyer accepted the Matter's key from a computer they
-// confirmed (D-123). The application installs Matter/MatterCoordination's.
-// Without it, none.
+// confirmed. The application installs Matter/MatterCoordination's. Without
+// it, none.
 void set_seal_carrier(std::function<bool(const std::string &matter_id, const std::filesystem::path &folder)> carries);
 // Whether the Matter in `folder` is the firm's, so that it is offered here
 // when it is not listed: its seal is Ours, or the firm's exchange carries it.
@@ -169,12 +180,12 @@ std::string picture_type(const std::string &bytes);
 // by everyone who shares the Matter, so nothing else in it is believed.
 bool is_member_photo(const std::string &photo);
 // Whether anyone but `my_actor_id` has opened this Matter from their own
-// computer: its data is then theirs too (Beta 1 #142).
+// computer: its data is then theirs too.
 bool has_other_members(const std::filesystem::path &project_folder, const std::string &my_actor_id);
 
-// A computer that asks to join the Matter through the firm's coordination
-// (D-123), by the device key its request was signed with. It holds no Matter
-// yet, so none of the Matter's records names it.
+// A computer that asks to join the Matter through the firm's coordination,
+// by the device key its request was signed with. It holds no Matter yet, so
+// none of the Matter's records names it.
 struct AskingDevice {
 	std::string actor_id;
 	std::string device_id;

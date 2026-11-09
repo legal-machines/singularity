@@ -48,7 +48,7 @@ matters::WorkProductType create_type(CreateTypeCommand command);
 matters::WorkProductObject create(CreateWorkProductCommand command);
 // An empty `type_id` or `title` is the result's own: decided here from the
 // result (its document's kind and title, a change it wrote, its typed rows,
-// else its request), the same whoever keeps it (Beta 1 #270).
+// else its request), the same whoever keeps it.
 matters::WorkProductObject retain_task_result(const std::string& project_id,
 		const std::string& task_id, const std::string& type_id, std::string title);
 matters::WorkProductObject update(UpdateWorkProductCommand command);

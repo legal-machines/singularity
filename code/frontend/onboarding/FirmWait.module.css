@@ -1,8 +1,8 @@
-/* The check on a colleague's new computer (FirmWait, D-205): the eight
-   digits both computers show, large and centred under the words, in figures
-   of one width so the two groups line up as they are read side by side.
-   While the other computer is awaited the same place holds quiet dots, so
-   nothing moves when the number comes. */
+/* The check on a colleague's new computer: the eight digits both computers
+   show, large and centred under the words, in figures of one width so the
+   two groups line up as they are read side by side. While the other
+   computer is awaited the same place holds quiet dots, so nothing moves
+   when the number comes. */
 
 .check {
 	display: grid;

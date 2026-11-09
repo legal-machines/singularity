@@ -110,12 +110,11 @@ svg {
 }
 
 /* A page's scrolling area marked data-fade-edge dissolves what scrolls under
-   the window's band (the owner, 2026-10-24: "not going under the panel: it
-   dissolves"); one marked "both" also dissolves what goes on under the reply
-   box below it, never cut by a hard edge ("here the chat must not be cut
-   off"). Each fade (tokens.css, --scroll-fade, its shape) is drawn by the
-   scroll itself through a registered length: the top's slides in over the
-   first 64px of scrolling, the bottom's, 40px tall, slides away over the
+   the window's band; one marked "both" also dissolves what goes on under the
+   reply box below it, never cut by a hard edge ("here the chat must not be
+   cut off"). Each fade (tokens.css, --scroll-fade, its shape) is drawn by
+   the scroll itself through a registered length: the top's slides in over
+   the first 64px of scrolling, the bottom's, 40px tall, slides away over the
    last 40px, so the first and the last of the content stand clear at rest.
    An area too short to scroll has neither. */
 @property --fade-top {

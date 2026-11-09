@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 
-// What Windows must allow Singularity, asked in onboarding and checked (D-244):
+// What Windows must allow Singularity, asked in onboarding and checked.
 // - "firewall": Windows Defender Firewall's own alert, "Allow Singularity to
 //   communicate on these networks", which comes up the first time Singularity's
 //   program opens a port others may reach, so the firm's computers reach this

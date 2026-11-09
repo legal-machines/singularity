@@ -27,14 +27,14 @@ const START = PAGES.findIndex((page) => page.id === PREVIEW || ["office", "outlo
 // Browser-only design previews: no account is created or marked as signed in.
 const WELCOME_PREVIEW = import.meta.env.DEV && !window.nativeApp && ["welcome", "welcome-sign-in"].includes(PREVIEW);
 
-// Onboarding (D-125, D-133, D-134). Its first page signs in, on white opposite
-// the living painting. Then each page shows the app at work on the right, in
-// the app's own emulation, and asks on the left for what the app needs here.
-// When the last completes, the page dissolves, then onComplete hands the
-// window to the app, so the window's move to its main size is never seen
-// half-drawn. A colleague's new computer waits for the firm first, on a page
-// of its own (FirmWait, D-205): at onboarding's end, and with `hold` before
-// the app when it opens still new to the firm.
+// Onboarding. Its first page signs in, on white opposite the living painting.
+// Then each page shows the app at work on the right, in the app's own
+// emulation, and asks on the left for what the app needs here. When the last
+// completes, the page dissolves, then onComplete hands the window to the app,
+// so the window's move to its main size is never seen half-drawn. A
+// colleague's new computer waits for the firm first, on a page of its own: at
+// onboarding's end, and with `hold` before the app when it opens still new to
+// the firm.
 export function Onboarding({ onComplete, hold = false }) {
 	const [page, setPage] = useState(START >= 0 ? START : null);
 	// Signed in already - the app restarted after sign-in, before the slides
@@ -50,12 +50,12 @@ export function Onboarding({ onComplete, hold = false }) {
 	const [leaving, setLeaving] = useState(false);
 	const [joined, setJoined] = useState(false);
 	// What the computer does not allow Singularity yet, by key: the slide that
-	// asks names only those, and is left out when there are none (D-249). Read
-	// once, before the slides.
+	// asks names only those, and is left out when there are none. Read once,
+	// before the slides.
 	const [missingPermissions, setMissingPermissions] = useState(null);
 	const pages = pagesFor({ isMember: joined, missingPermissions });
 	// Signed in: the welcome with the organisation's name, before the slides
-	// or, for a member who has been here, the app (the owner, 2026-10-29).
+	// or, for a member who has been here, the app.
 	const [welcome, setWelcome] = useState(WELCOME_PREVIEW ? { name: "Marlowe Finch LLP", returning: PREVIEW === "welcome-sign-in", celebrate: PREVIEW === "welcome" } : null);
 	const timer = useRef(null);
 
@@ -78,7 +78,7 @@ export function Onboarding({ onComplete, hold = false }) {
 				if (!current) return;
 				if (state?.signedIn) {
 					// After a restart a colleague who joined is still shown a
-					// member's slides: the backend says what the seat may do (D-184).
+					// member's slides: the backend says what the seat may do.
 					window.nativeApp.getOrganisation?.().then(
 						(organisation) => current && organisation?.viewer?.may?.connectModels === false && setJoined(true),
 						() => {},
@@ -128,10 +128,10 @@ export function Onboarding({ onComplete, hold = false }) {
 	// Signed in, the organisation is welcomed by its name. Then a member who has
 	// been here (their name and position are kept on this computer) goes
 	// straight back to work; anyone else is shown the app and asked what it
-	// needs, slide by slide (D-134, D-136).
+	// needs, slide by slide.
 	const signedIn = async ({ organisationName, registered, joined } = {}) => {
 		// A colleague who joined the firm is not shown the administrator's
-		// set-up: models and AI colleagues are the firm's (D-184).
+		// set-up: models and AI colleagues are the firm's.
 		setJoined(Boolean(joined));
 		let returning = false;
 		try {
@@ -143,7 +143,7 @@ export function Onboarding({ onComplete, hold = false }) {
 		}
 		// A seat that went through onboarding on this computer before, with its
 		// data here, goes straight back to work: signing it in marks onboarding
-		// complete here (the owner, 2026-11-05, D-250).
+		// complete here.
 		try {
 			if ((await window.nativeApp?.getOnboardingStatus?.())?.completed === true) returning = true;
 		} catch {
@@ -183,10 +183,9 @@ export function Onboarding({ onComplete, hold = false }) {
 		leave();
 	};
 
-	// Where the page carries the window's caption (Windows, D-049), a strip along
-	// its top drags the window and its buttons stand at the right, drawn light
-	// over the painting and dark over the app (2026-10-29: the window could only
-	// be closed with Alt+F4).
+	// Where the page carries the window's caption, a strip along its top drags
+	// the window and its buttons stand at the right, drawn light over the
+	// painting and dark over the app.
 	const captionInPage = window.nativeApp?.windowFrame == "page" || document.documentElement.dataset.nativeWindowFrame == "page";
 	const preview = page != null && !pages[page].scene ? pages[page].preview ?? pages[page].ask : null;
 	// The system's questions the picture shows: those of the slide's own rows.

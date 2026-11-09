@@ -6,11 +6,11 @@
 #include <vector>
 
 // What a change to a clause did, word by word, and what of it its explanation
-// leaves unsaid (D-102). A colleague answers for the whole of its edit - the
-// words it took out as well as the words it put in - so an explanation that
-// leaves an edit unsaid is completed from the edit itself, never guessed.
-// And what one version of an agreement changes against another, clause by
-// clause (D-111): the other side's changes in a clean copy.
+// leaves unsaid. A colleague answers for the whole of its edit - the words it
+// took out as well as the words it put in - so an explanation that leaves an
+// edit unsaid is completed from the edit itself, never guessed. And what one
+// version of an agreement changes against another, clause by clause: the
+// other side's changes in a clean copy.
 namespace singularity::document_intelligence {
 
 // One place where a clause changed: the words there before and after it,

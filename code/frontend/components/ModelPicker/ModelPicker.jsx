@@ -5,11 +5,9 @@ import { Input } from "../Field/Field.jsx";
 
 import styles from "./ModelPicker.module.css";
 
-// Who made a model, from what its id and name say (the owner, 2026-11-02:
-// "a search, and categories - gather them by the keywords that are there,
-// OpenAI, Anthropic and so on"): an account's own id's prefix first
-// ("openai/gpt-6", "anthropic/claude-…"), else the words of its name; a model
-// on this computer is this computer's.
+// Who made a model, from what its id and name say: an account's own id's
+// prefix first ("openai/gpt-6", "anthropic/claude-…"), else the words of its
+// name; a model on this computer is this computer's.
 const MAKERS = {
 	openai: "OpenAI", anthropic: "Anthropic", google: "Google", "meta-llama": "Meta", meta: "Meta", mistralai: "Mistral",
 	mistral: "Mistral", qwen: "Qwen", deepseek: "DeepSeek", "x-ai": "xAI", xai: "xAI", amazon: "Amazon", cohere: "Cohere",
@@ -45,8 +43,7 @@ function shownName(model) {
 const MOST_MAKERS = 12;
 
 // Words as the search compares them: letters and digits only, so "gpt4"
-// finds "gpt-4o" and "4.1" finds "gpt-4.1" (the owner, 2026-11-02: "make the
-// search smart").
+// finds "gpt-4o" and "4.1" finds "gpt-4.1".
 function plain(words) {
 	return (words ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 }

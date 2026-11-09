@@ -1,8 +1,8 @@
-// The practices of law, by the names an American firm gives them (D-058), and
-// the ways lawyers type them: abbreviations, synonyms, British and American
-// words, the singular and the plural. A member who types "MA" means
-// "Mergers & Acquisitions", and the field says so once they leave it (D-166).
-// What is not recognised is left exactly as typed.
+// The practices of law, by the names an American firm gives them, and the
+// ways lawyers type them: abbreviations, synonyms, British and American
+// words, the singular and the plural. A member who types "MA" means "Mergers
+// & Acquisitions", and the field says so once they leave it. What is not
+// recognised is left exactly as typed.
 //
 // Each practice also names the work onboarding's demonstration plays for it
 // (emulation/scenarios.js): its own, or the one it shares with a practice

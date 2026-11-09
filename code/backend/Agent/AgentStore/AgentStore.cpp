@@ -473,7 +473,7 @@ std::vector<FirmColleague> firm_colleagues() {
 			colleague.office.ranks_with = text_of(*office, "ranksWith");
 			colleague.office.practice = text_of(*office, "practice");
 			colleague.office.area = text_of(*office, "area");
-			// No member it answers to is read (D-223): one kept before is none now.
+			// No member it answers to is read: one kept before is none now.
 		}
 		colleague.model_provider_id = text_of(*value, "modelProviderId");
 		colleague.model_id = text_of(*value, "modelId");
@@ -749,8 +749,6 @@ Agent agent_from_json(const Json &value) {
 		agent.office.ranks_with = text_of(office, "ranksWith");
 		agent.office.practice = text_of(office, "practice");
 		agent.office.area = text_of(office, "area");
-		// A member it "answered to", kept before D-223, is read as none, so its
-		// next save and the firm's record hold none.
 	}
 	agent.source_root = text_of(value, "sourceRoot");
 	agent.trigger = agent_trigger_from_string(text_of(value, "trigger")).value_or(AgentTrigger::Manual);
@@ -1053,6 +1051,7 @@ Json assignment_to_json(const AgentAssignment &assignment) {
 		{"finishedAt", assignment.finished_at},
 		{"attempts", assignment.attempts},
 		{"message", assignment.message},
+		{"foldedMessageIds", assignment.folded_message_ids},
 	};
 }
 
@@ -1067,6 +1066,9 @@ AgentAssignment assignment_from_json(const Json &value) {
 	assignment.number = number_of<int>(value, "number", 0);
 	assignment.chat_id = text_of(value, "chatId");
 	assignment.reply_to_message_id = text_of(value, "replyToMessageId");
+	if (value.contains("foldedMessageIds") && value.at("foldedMessageIds").is_array())
+		for (const Json &id : value.at("foldedMessageIds"))
+			if (id.is_string()) assignment.folded_message_ids.push_back(id.get<std::string>());
 	assignment.instruction = text_of(value, "instruction");
 	assignment.given_by_actor_id = text_of(value, "givenByActorId");
 	assignment.given_by_name = text_of(value, "givenByName");
@@ -1125,13 +1127,13 @@ std::optional<Agent> load_agent(const std::string &agent_id) {
 void save_agent(const Agent &agent) {
 	if (agent.format_version > kAgentFormatVersion) throw AgentDataTooNew();
 	write_json(agent_folder(agent.id) / "agent.json", agent_to_json(agent));
-	// What every computer of the firm holds of it (D-203); a record that cannot
-	// be written now is written with its next change.
+	// What every computer of the firm holds of it; a record that cannot be
+	// written now is written with its next change.
 	try {
 		publish_colleague(agent);
 	} catch (const std::exception &) {
 	}
-	// Whoever shows the colleague reads it again (Beta 1 #263).
+	// Whoever shows the colleague reads it again.
 	platform::events::publish("agent.changed", nlohmann::json{{"agentId", agent.id}, {"matterId", agent.matter_id}});
 }
 

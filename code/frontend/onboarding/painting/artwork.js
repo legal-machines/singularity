@@ -5,10 +5,10 @@ import { OBJECTS_ONBOARDING } from "./composition.js";
 // files the page draws. The packaged window opens the page from disk
 // (file://), where WebView2 counts each file as an origin of its own: a part
 // drawn from its file tainted its canvas, WebGL refused it, and on Windows the
-// painting stood still as its poster (2026-11-04). An image decoded from bytes
-// the page holds is never another origin's, on any system. A script runs from
-// disk where fetch() of a file is refused, as the colleagues' motion manifest
-// does (components/Avatar/life.js).
+// painting stood still as its poster. An image decoded from bytes the page
+// holds is never another origin's, on any system. A script runs from disk
+// where fetch of a file is refused, as the colleagues' motion manifest does
+// (components/Avatar/life.js).
 const PARTS_SCRIPT = "painting/parts.js";
 
 let partsLoad = null;

@@ -236,8 +236,8 @@ namespace {
 
 // The memory brief folds other values into one text. When a person keeps one of
 // them from AI, or removes it, at or after the moment the brief was written,
-// the brief may still carry it (Beta 1 #77). Timestamps are kept to the second,
-// so "at" counts too: in a tie the brief is held back, the safe side.
+// the brief may still carry it. Timestamps are kept to the second, so "at"
+// counts too: in a tie the brief is held back, the safe side.
 bool brief_outdated_by_withdrawal(const matters::Matter &matter, const ContextItem &brief) {
 	if (brief.label != kMemoryBriefLabel || brief.authority != ContextItemAuthority::AutomaticallyDerived) return false;
 	for (const ContextItem &other : matter.context_items)

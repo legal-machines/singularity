@@ -1,10 +1,7 @@
 // A design partner's work log of one conversation or thread, sent to Legal
-// Machines (D-257; the owner, 2026-11-05: "for design partners, in threads and
-// chats, a button: share logs with Legal Machines ... full logs of the models'
-// work, so you can understand what to improve and what went wrong"). This
-// computer keeps the model calls of each chat while its seat's firm is a
-// design partner; the member chooses to send one chat's, which the native side
-// seals to Legal Machines' keys and sends (account.shareWorkLog).
+// Machines. This computer keeps the model calls of each chat while its seat's
+// firm is a design partner; the member chooses to send one chat's, which the
+// native side seals to Legal Machines' keys and sends (account.shareWorkLog).
 
 import { nativeApp } from "./native.js";
 

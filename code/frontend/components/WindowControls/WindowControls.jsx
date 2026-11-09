@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 
 import styles from "./WindowControls.module.css";
 
-// Minimize, maximize and close, where the page carries the window's caption
-// (Windows, D-049), drawn as the app's own (the owner, 2026-10-24: "make
-// custom Windows buttons", so the header's search can run its full width):
-// three small buttons in the middle of the title band, each a fine line
-// drawing on a 16-pixel grid. They run the window's own commands, so they do
-// what Windows' buttons do. macOS and Linux keep their native controls, and
-// this draws nothing there.
+// Minimize, maximize and close, where the page carries the window's caption,
+// drawn as the app's own: three small buttons in the middle of the title
+// band, each a fine line drawing on a 16-pixel grid. They run the window's
+// own commands, so they do what Windows' buttons do. macOS and Linux keep
+// their native controls, and this draws nothing there.
 const glyphs = {
 	minimize: <path d="M4 8.5H12" />,
 	maximize: <rect x="4.25" y="4.25" width="7.5" height="7.5" rx="1.5" />,

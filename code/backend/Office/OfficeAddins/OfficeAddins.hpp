@@ -2,10 +2,10 @@
 
 #include <string>
 
-// Singularity's add-ins for Word, Excel and Outlook (D-105): their manifests,
-// which tell the Office application where the pane comes from - Singularity
-// on this computer, at https://localhost on one fixed port - and which button
-// opens it. One pane serves the three; it knows from Office which one it is in.
+// Singularity's add-ins for Word, Excel and Outlook: their manifests, which
+// tell the Office application where the pane comes from - Singularity on this
+// computer, at https://localhost on one fixed port - and which button opens it.
+// One pane serves the three; it knows from Office which one it is in.
 namespace singularity::office {
 
 // The port Singularity's Office connection listens on, on 127.0.0.1 only. It

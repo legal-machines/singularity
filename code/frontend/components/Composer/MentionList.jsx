@@ -7,12 +7,12 @@ import { Icon } from "../Icon/Icon.jsx";
 
 import styles from "./MentionList.module.css";
 
-// Whom a message can name, as the member types @ (the owner, 2026-10-26):
-// the conversation's members, people and AI colleagues together, each with
-// face, name and place in the firm (UI-5), and "all" first where more than
-// two can be named. It stands over the box, beside where the words begin, and
-// the words stay in the box: Up and Down move, Enter or Tab names the one
-// marked, Escape closes, a press names one.
+// Whom a message can name, as the member types @: the conversation's members,
+// people and AI colleagues together, each with face, name and place in the
+// firm, and "all" first where more than two can be named. It stands over the
+// box, beside where the words begin, and the words stay in the box: Up and
+// Down move, Enter or Tab names the one marked, Escape closes, a press names
+// one.
 export function MentionList({ id, anchor, options, active, onPick, onPoint }) {
 	const listRef = useRef(null);
 	const [place, setPlace] = useState(null);

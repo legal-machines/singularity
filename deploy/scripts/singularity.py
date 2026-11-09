@@ -26,9 +26,9 @@ CONTAINER_IMAGES = {
     "linux": "singularity-linux-x64-builder:0.0.2",
     "windows": "singularity-windows-x64-builder:0.0.2",
 }
-# The hosts that build the Linux and Windows packages in those containers
-# (AG-11). Docker runs the linux/amd64 images natively on a Linux host - WSL
-# on a Windows computer among them - and emulated on Apple silicon.
+# The hosts that build the Linux and Windows packages in those containers.
+# Docker runs the linux/amd64 images natively on a Linux host - WSL on a
+# Windows computer among them - and emulated on Apple silicon.
 CONTAINER_HOSTS = ("macos", "linux")
 # A release builds local inference's llama.cpp runtime for every computer it
 # may run on, not for the one building it (deploy/backend/cmake/LocalInferenceRuntime.cmake).
@@ -51,14 +51,14 @@ def configure_utf8_stdio() -> None:
 
 def require_command(command: str) -> None:
     if shutil.which(command) is None:
-        raise RuntimeError(f"Не найдена обязательная команда: {command}")
+        raise RuntimeError(f"A required command was not found: {command}")
 
 
 def cmake_value(name: str) -> str:
     content = METADATA.read_text(encoding="utf-8")
     match = re.search(rf'^set\({re.escape(name)} "([^"]+)"\)$', content, re.MULTILINE)
     if not match:
-        raise RuntimeError(f"Не найдено значение {name} в {METADATA}")
+        raise RuntimeError(f"No value for {name} in {METADATA}")
     return match.group(1)
 
 
@@ -66,7 +66,7 @@ def host_platform() -> str:
     try:
         return HOST_PLATFORMS[platform.system()]
     except KeyError as error:
-        raise RuntimeError(f"Неподдерживаемая ОС: {platform.system()}") from error
+        raise RuntimeError(f"Unsupported operating system: {platform.system()}") from error
 
 
 def resolve_platform(requested: str) -> str:
@@ -96,10 +96,10 @@ def build_container_image(target: str) -> str:
 def uses_container(command: str, target: str, host: str) -> bool:
     """Whether `command` builds `target`'s package in its container on `host`.
 
-    A Linux release is built in its container (AG-11), from a Linux host too,
+    A Linux release is built in its container, from a Linux host too,
     so every Linux package comes from the same image. The Windows release is
     built natively on a Windows PC with MSVC and the CUDA toolkit
-    (deploy/scripts/build-windows.ps1, D-193), so local inference keeps the
+    (deploy/scripts/build-windows.ps1), so local inference keeps the
     GPU; from another OS its container builds only the CPU-only cross check.
     """
     if command != "release" or target not in CONTAINER_IMAGES:
@@ -110,7 +110,7 @@ def uses_container(command: str, target: str, host: str) -> bool:
 def build_container_package(target: str, *, clean_build: bool) -> None:
     if host_platform() not in CONTAINER_HOSTS:
         raise RuntimeError(
-            "Контейнерная сборка Windows/Linux идёт с macOS или Linux host; на Windows запустите её из WSL"
+            "The Windows and Linux container builds run on a macOS or Linux host; on Windows, run them from WSL"
         )
     require_command("docker")
     if clean_build:
@@ -165,16 +165,16 @@ def prepare_container_folders(target: str, backend: Path = BACKEND) -> None:
                if folder.exists() and not os.access(folder, os.W_OK)]
     if blocked:
         raise RuntimeError(
-            "Папки сборки принадлежат другому пользователю после прежней контейнерной сборки ("
+            "The build folders belong to another user after an earlier container build ("
             + ", ".join(str(folder) for folder in blocked)
-            + "); верните их себе: sudo chown -R $(id -u):$(id -g) deploy/backend/build deploy/backend/out"
+            + "); take them back with: sudo chown -R $(id -u):$(id -g) deploy/backend/build deploy/backend/out"
         )
 
 
 def built_linux_package() -> Path:
     packages = sorted((BACKEND / "out" / "linux").glob("*.deb"), key=lambda path: path.stat().st_mtime)
     if not packages:
-        raise RuntimeError(f"Linux-пакет не найден в {BACKEND / 'out' / 'linux'}")
+        raise RuntimeError(f"No Linux package found in {BACKEND / 'out' / 'linux'}")
     return packages[-1]
 
 
@@ -249,15 +249,15 @@ def container_user_arguments(target: str) -> list[str]:
 def remove_tree(path: Path, *, expected_names: set[str]) -> None:
     resolved = path.expanduser().resolve(strict=False)
     if resolved.name not in expected_names:
-        raise RuntimeError(f"Отказ от очистки неожиданного пути: {resolved}")
+        raise RuntimeError(f"Refusing to clean an unexpected path: {resolved}")
     if not resolved.exists() and not resolved.is_symlink():
-        print(f"Пропуск (нет данных): {resolved}")
+        print(f"Skipped (no data): {resolved}")
         return
     if resolved.is_symlink() or resolved.is_file():
         resolved.unlink()
     else:
         shutil.rmtree(resolved)
-    print(f"Удалено: {resolved}")
+    print(f"Removed: {resolved}")
 
 
 def app_data_paths(target: str) -> list[Path]:
@@ -276,8 +276,8 @@ def app_data_paths(target: str) -> list[Path]:
         appdata = os.environ.get("APPDATA")
         local_appdata = os.environ.get("LOCALAPPDATA")
         if not appdata:
-            raise RuntimeError("APPDATA не задан; безопасно определить данные приложения нельзя")
-        # The preferences roam; this computer's own data stays local (D-040).
+            raise RuntimeError("APPDATA is not set, so the application's data cannot be found safely")
+        # The preferences roam; this computer's own data stays local.
         data_name = cmake_value("NATIVE_APP_DATA_NAME")
         paths = [Path(appdata) / slug]
         if local_appdata:
@@ -291,7 +291,7 @@ def app_data_paths(target: str) -> list[Path]:
 
 
 def clean_app_data(target: str) -> None:
-    print("Очистка только app-owned данных Singularity; Matter directories и .singularity-workspace не удаляются.")
+    print("Cleaning only Singularity's own app data; Matter folders and .singularity-workspace stay.")
     allowed = {
         cmake_value("NATIVE_APP_SLUG"),
         cmake_value("NATIVE_APP_IDENTIFIER"),
@@ -312,13 +312,13 @@ LINUX_CREDENTIAL_SCHEMA = "ai.legalmachines.singularity.Credential"
 def clear_linux_keyring_credentials() -> None:
     slug = cmake_value("NATIVE_APP_SLUG")
     if shutil.which("secret-tool") is None:
-        print("Ключи моделей в связке ключей (keyring) не удалены: нужна команда secret-tool (пакет libsecret-tools).")
+        print("Model keys in the keyring were not removed: the secret-tool command is needed (package libsecret-tools).")
         return
     subprocess.run(
         ["secret-tool", "clear", "xdg:schema", LINUX_CREDENTIAL_SCHEMA, "application", slug],
         check=False,
     )
-    print(f"Ключи моделей {slug} удалены из связки ключей (keyring).")
+    print(f"Model keys of {slug} were removed from the keyring.")
 
 
 def clean_build_outputs(target: str, mode: str) -> None:
@@ -376,7 +376,7 @@ def build_native(target: str, mode: str) -> Path:
     run_checked(build_command, BACKEND)
     executable = native_executable(target, mode)
     if not executable.is_file():
-        raise RuntimeError(f"Нативный executable не найден: {executable}")
+        raise RuntimeError(f"Native executable not found: {executable}")
     if target == "macos":
         refresh_macos_bundle_icon(executable.parents[2])
     return executable
@@ -397,17 +397,52 @@ def refresh_macos_bundle_icon(bundle: Path) -> None:
         subprocess.run([str(LSREGISTER), "-f", str(bundle)], check=False)
 
 
+def is_port_taken(port: int) -> bool:
+    """Whether something on this computer already answers on, or holds, the port."""
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+            return True
+    except OSError:
+        pass
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        probe.bind(("127.0.0.1", port))
+        return False
+    except OSError:
+        return True
+    finally:
+        probe.close()
+
+
+def free_dev_port(first: int = DEV_PORT, tries: int = 20) -> int:
+    """The first port from `first` that nothing holds. Another project's dev server
+    on Singularity's port once had the Debug window open on its own page
+    (2026-11-08): Singularity's server never shares a port, it takes the next."""
+    for port in range(first, first + tries):
+        if not is_port_taken(port):
+            return port
+    raise RuntimeError(f"Ports {first} to {first + tries - 1} are all in use on this computer: close another dev server, "
+                       "then run dev.py again")
+
+
 def wait_for_vite(process: subprocess.Popen[bytes], port: int, timeout: float = 20.0) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:
-            raise RuntimeError(f"Vite завершился до открытия порта {port}")
+            raise RuntimeError(f"Vite ended before it opened port {port}")
         try:
             with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                return
+                pass
         except OSError:
             time.sleep(0.1)
-    raise RuntimeError(f"Vite не открыл порт {port} за 20 секунд")
+            continue
+        # What answers is ours only while our Vite still runs: one that could not
+        # have the port ends at once.
+        time.sleep(0.5)
+        if process.poll() is not None:
+            raise RuntimeError(f"Vite ended after port {port} answered: another program holds it")
+        return
+    raise RuntimeError(f"Vite did not open port {port} within {int(timeout)} seconds")
 
 
 def stop_dev_server(process: subprocess.Popen[bytes]) -> None:
@@ -446,16 +481,18 @@ def launch_development(executable: Path, onboarding: str | None = None) -> int:
     # is POSIX-only; the equivalent problem does not arise from Windows' own
     # different job-object/console-group model, so it is applied only there.
     popen_kwargs = {"start_new_session": True} if os.name == "posix" else {}
-    vite = subprocess.Popen([npm_command(), "run", "dev"], cwd=FRONTEND, **popen_kwargs)
+    port = free_dev_port()
+    if port != DEV_PORT:
+        print(f"Port {DEV_PORT} is in use by another program; Singularity's frontend runs on {port}")
+    vite = subprocess.Popen([npm_command(), "run", "dev", "--", "--port", str(port)], cwd=FRONTEND, **popen_kwargs)
     try:
-        wait_for_vite(vite, DEV_PORT)
+        wait_for_vite(vite, port)
         environment = os.environ.copy()
-        environment["NATIVE_APP_DEV_SERVER_URL"] = f"http://127.0.0.1:{DEV_PORT}"
+        environment["NATIVE_APP_DEV_SERVER_URL"] = f"http://127.0.0.1:{port}"
         if onboarding is not None:
             # "1" begins onboarding afresh, "0" marks it complete: a
             # development build records that, and the window and the page
-            # open on onboarding or on the app (D-133,
-            # code/backend/Platform/ApplicationMain).
+            # open on onboarding or on the app.
             environment["NATIVE_APP_ONBOARDING"] = onboarding
         return subprocess.run([str(executable)], cwd=ROOT, env=environment, **popen_kwargs).returncode
     except KeyboardInterrupt:
@@ -468,7 +505,7 @@ def execute_build(args: argparse.Namespace) -> int:
     target = resolve_platform(args.platform)
     if target == "all":
         if args.command != "release" or host_platform() != "macos":
-            raise RuntimeError("--platform all доступен только для release на macOS")
+            raise RuntimeError("--platform all is available only for release on macOS")
         require_command("cmake")
         require_command("npm")
         if args.clean_data:
@@ -481,19 +518,19 @@ def execute_build(args: argparse.Namespace) -> int:
         run_checked(["cpack", "--preset", "macos"], BACKEND)
         build_container_package("linux", clean_build=args.clean_build)
         build_container_package("windows", clean_build=args.clean_build)
-        print(f"Готовое macOS приложение: {executable}")
-        print("Windows здесь собран только как CPU-проверка (windows-cross); установщик Windows "
-              "собирается нативно на Windows-ПК с MSVC и CUDA (D-193).")
-        print(f"Все локальные packages: {BACKEND / 'out'}")
+        print(f"macOS app built: {executable}")
+        print("Windows is built here only as a CPU check (windows-cross); the Windows installer "
+              "is built natively on a Windows PC with MSVC and CUDA.")
+        print(f"All local packages: {BACKEND / 'out'}")
         return 0
     if uses_container(args.command, target, host_platform()):
         require_command("npm")
         prepare_frontend("release")
         build_container_package(target, clean_build=args.clean_build)
-        print(f"Установщик/пакет: {BACKEND / 'out' / target}")
+        print(f"Installer or package: {BACKEND / 'out' / target}")
         return 0
     if target != host_platform():
-        raise RuntimeError(f"Нельзя собрать {target} на host-ОС {host_platform()}")
+        raise RuntimeError(f"Cannot build {target} on a {host_platform()} host")
     require_command("cmake")
     require_command("npm")
     if args.clean_data:
@@ -506,10 +543,10 @@ def execute_build(args: argparse.Namespace) -> int:
         preset = preset_name(target, "release")
         run_checked(["ctest", "--preset", preset], BACKEND)
         run_checked(["cpack", "--preset", preset], BACKEND)
-        print(f"Готовое приложение: {executable}")
-        print(f"Установщик/пакет: {BACKEND / 'out' / target}")
+        print(f"App built: {executable}")
+        print(f"Installer or package: {BACKEND / 'out' / target}")
         return 0
-    print(f"Готовая dev-сборка: {executable}")
+    print(f"Development build ready: {executable}")
     return 0 if args.no_run else launch_development(executable, onboarding=args.onboarding)
 
 
@@ -520,13 +557,13 @@ def parser() -> argparse.ArgumentParser:
         command = subcommands.add_parser(name)
         platforms = ("auto", "macos", "windows", "linux", "all") if name == "release" else ("auto", "macos", "windows", "linux")
         command.add_argument("--platform", choices=platforms, default="auto")
-        command.add_argument("--clean-data", action="store_true", help="Удалить app-owned настройки, credentials и caches")
-        command.add_argument("--clean-build", action="store_true", help="Удалить старые build/package artifacts")
+        command.add_argument("--clean-data", action="store_true", help="Remove Singularity's own settings, credentials and caches")
+        command.add_argument("--clean-build", action="store_true", help="Remove old build and package outputs")
         if name == "dev":
-            command.add_argument("--no-run", action="store_true", help="Только собрать, не запускать приложение и Vite")
+            command.add_argument("--no-run", action="store_true", help="Build only; start neither the app nor Vite")
             start = command.add_mutually_exclusive_group()
-            start.add_argument("--onboarding", dest="onboarding", action="store_const", const="1", help="Начать онбординг заново: окно 1080×720 и вход")
-            start.add_argument("--skip-onboarding", dest="onboarding", action="store_const", const="0", help="Пропустить онбординг: сразу приложение")
+            start.add_argument("--onboarding", dest="onboarding", action="store_const", const="1", help="Start onboarding again: the 1080×720 window and sign-in")
+            start.add_argument("--skip-onboarding", dest="onboarding", action="store_const", const="0", help="Skip onboarding: open the app directly")
     clean = subcommands.add_parser("clean-data")
     clean.add_argument("--platform", choices=("auto", "macos", "windows", "linux"), default="auto")
     return result
@@ -537,7 +574,7 @@ def main() -> int:
     if args.command == "clean-data":
         target = resolve_platform(args.platform)
         if target != host_platform():
-            raise RuntimeError("clean-data можно выполнить только для текущей host-ОС")
+            raise RuntimeError("clean-data runs only for this host's operating system")
         clean_app_data(target)
         return 0
     return execute_build(args)
@@ -548,10 +585,10 @@ def cli() -> None:
     try:
         raise SystemExit(main())
     except KeyboardInterrupt:
-        print("\nСборка отменена пользователем.", file=sys.stderr)
+        print("\nBuild cancelled.", file=sys.stderr)
         raise SystemExit(130)
     except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
-        print(f"Ошибка: {error}", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         raise SystemExit(1)
 
 

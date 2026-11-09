@@ -5,10 +5,9 @@
 #include <string>
 #include <vector>
 
-// The organisation read, built from plain facts (Beta 1 #273). The facts come
-// from the domains that own them (Organisation/OrganisationProduction); this
-// part reads no domain and no file, so every rule below is tested on facts
-// alone.
+// The organisation read, built from plain facts. The facts come from the
+// domains that own them (Organisation/OrganisationProduction); this part
+// reads no domain and no file, so every rule below is tested on facts alone.
 namespace singularity::organisation {
 
 struct PersonFacts {

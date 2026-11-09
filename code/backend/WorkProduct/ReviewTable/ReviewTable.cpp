@@ -333,15 +333,15 @@ std::set<std::string> numbers_in(const std::string &text) {
 }
 
 // Whether every word the alignment skipped or changed, on either side, may
-// differ without changing what the clause says (Beta 1 #78). An alignment
-// exists for a party or a figure written another way, so only these may differ:
-// an article, a figure word (the numbers themselves are compared apart), a
-// word of a party's role ("the other party", "the Supplier"), or a name or
-// defined term written with a capital letter after the text's first word. A
-// lower-case word that carries meaning - "indirect", "solely", "prior",
-// "written" - may not: a quote that drops one says less than the document.
-// Text outside ASCII has no capital this test can read, so it never counts as a
-// name here, and such a quote reads as worded differently: the safe side.
+// differ without changing what the clause says. An alignment exists for a party
+// or a figure written another way, so only these may differ: an article, a
+// figure word (the numbers themselves are compared apart), a word of a party's
+// role ("the other party", "the Supplier"), or a name or defined term written
+// with a capital letter after the text's first word. A lower-case word that
+// carries meaning - "indirect", "solely", "prior", "written" - may not: a quote
+// that drops one says less than the document. Text outside ASCII has no capital
+// this test can read, so it never counts as a name here, and such a quote reads
+// as worded differently: the safe side.
 bool differences_keep_meaning(const std::string &quote, const std::string &found) {
 	static const std::set<std::string> interchangeable = {"a", "an", "the", "s",
 		"party", "parties", "other", "supplier", "customer", "company", "seller", "buyer", "vendor", "client",
@@ -515,7 +515,7 @@ std::string failure_reason(providers::TaskErrorCode code, const std::string &mod
 // run asked, which the table keeps only to say what answered it (and each row
 // keeps its own). A model retired, disconnected or uninstalled is then put
 // right where the lawyer chooses models, and a Matter moved to another model
-// moves its tables with it (RT-1). Kept to this computer's own model when the
+// moves its tables with it. Kept to this computer's own model when the
 // table's work stays here.
 routing::ModelTarget model_for(const std::string &project_id, const std::optional<routing::ModelTarget> &named,
 		bool local_only) {

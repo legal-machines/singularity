@@ -35,19 +35,19 @@ const std::array<LegalForm, 24> trailingLegalForms = {{
 		{"incorporated", "inc"}, {"inc.", "inc"}, {"inc", "inc"},
 		{"corporation", "corp"}, {"corp.", "corp"}, {"corp", "corp"},
 		{"gmbh", "gmbh"}, {"plc", "plc"}, {"llp", "llp"}, {"s.a.", "sa"}, {"sa", "sa"},
-		{"ооо", "ooo"}, {"зао", "zao"}, {"оао", "oao"}, {"пао", "pao"}, {"ао", "ao"}, {"ип", "ip"},
-		{"нко", "nko"},
+		{"\320\276\320\276\320\276", "ooo"}, {"\320\267\320\260\320\276", "zao"}, {"\320\276\320\260\320\276", "oao"}, {"\320\277\320\260\320\276", "pao"}, {"\320\260\320\276", "ao"}, {"\320\270\320\277", "ip"},
+		{"\320\275\320\272\320\276", "nko"},
 }};
 
 const std::array<LegalForm, 12> leadingLegalForms = {{
-		{"общество с ограниченной ответственностью", "ooo"},
-		{"публичное акционерное общество", "pao"},
-		{"закрытое акционерное общество", "zao"},
-		{"открытое акционерное общество", "oao"},
-		{"непубличное акционерное общество", "ao"},
-		{"акционерное общество", "ao"},
-		{"индивидуальный предприниматель", "ip"},
-		{"ооо", "ooo"}, {"зао", "zao"}, {"оао", "oao"}, {"пао", "pao"}, {"ао", "ao"},
+		{"\320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276 \321\201 \320\276\320\263\321\200\320\260\320\275\320\270\321\207\320\265\320\275\320\275\320\276\320\271 \320\276\321\202\320\262\320\265\321\202\321\201\321\202\320\262\320\265\320\275\320\275\320\276\321\201\321\202\321\214\321\216", "ooo"},
+		{"\320\277\321\203\320\261\320\273\320\270\321\207\320\275\320\276\320\265 \320\260\320\272\321\206\320\270\320\276\320\275\320\265\321\200\320\275\320\276\320\265 \320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276", "pao"},
+		{"\320\267\320\260\320\272\321\200\321\213\321\202\320\276\320\265 \320\260\320\272\321\206\320\270\320\276\320\275\320\265\321\200\320\275\320\276\320\265 \320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276", "zao"},
+		{"\320\276\321\202\320\272\321\200\321\213\321\202\320\276\320\265 \320\260\320\272\321\206\320\270\320\276\320\275\320\265\321\200\320\275\320\276\320\265 \320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276", "oao"},
+		{"\320\275\320\265\320\277\321\203\320\261\320\273\320\270\321\207\320\275\320\276\320\265 \320\260\320\272\321\206\320\270\320\276\320\275\320\265\321\200\320\275\320\276\320\265 \320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276", "ao"},
+		{"\320\260\320\272\321\206\320\270\320\276\320\275\320\265\321\200\320\275\320\276\320\265 \320\276\320\261\321\211\320\265\321\201\321\202\320\262\320\276", "ao"},
+		{"\320\270\320\275\320\264\320\270\320\262\320\270\320\264\321\203\320\260\320\273\321\214\320\275\321\213\320\271 \320\277\321\200\320\265\320\264\320\277\321\200\320\270\320\275\320\270\320\274\320\260\321\202\320\265\320\273\321\214", "ip"},
+		{"\320\276\320\276\320\276", "ooo"}, {"\320\267\320\260\320\276", "zao"}, {"\320\276\320\260\320\276", "oao"}, {"\320\277\320\260\320\276", "pao"}, {"\320\260\320\276", "ao"},
 }};
 
 std::string folded(const std::string &value, bool strip_marks) {
@@ -61,7 +61,7 @@ std::string trimmed(const std::string &value) {
 	return value.substr(first, last - first + 1);
 }
 
-// Quotation marks never distinguish a name: «Ромашка», "Ромашка" and Ромашка are
+// Quotation marks never distinguish a name: «…» and … are
 // one surface form. Commas become spaces so a form after a comma is still a
 // trailing token ("Example Holdings, LLC").
 std::string without_quotes_and_commas(const std::string &value) {
@@ -146,12 +146,12 @@ bool compatible_legal_forms(const std::string &a, const std::string &b) {
 // policy, applied after Unicode case folding, so only lower-case letters remain.
 std::string transliteratedCyrillic(const std::string &value) {
 	static const std::vector<std::pair<std::string, std::string>> table = {
-			{"ё", "e"}, {"ж", "zh"}, {"ц", "ts"}, {"ч", "ch"}, {"ш", "sh"}, {"щ", "shch"},
-			{"ю", "yu"}, {"я", "ya"}, {"х", "kh"}, {"а", "a"}, {"б", "b"}, {"в", "v"},
-			{"г", "g"}, {"д", "d"}, {"е", "e"}, {"з", "z"}, {"и", "i"}, {"й", "i"},
-			{"к", "k"}, {"л", "l"}, {"м", "m"}, {"н", "n"}, {"о", "o"}, {"п", "p"},
-			{"р", "r"}, {"с", "s"}, {"т", "t"}, {"у", "u"}, {"ф", "f"}, {"ы", "y"},
-			{"э", "e"}, {"ъ", ""}, {"ь", ""},
+			{"\321\221", "e"}, {"\320\266", "zh"}, {"\321\206", "ts"}, {"\321\207", "ch"}, {"\321\210", "sh"}, {"\321\211", "shch"},
+			{"\321\216", "yu"}, {"\321\217", "ya"}, {"\321\205", "kh"}, {"\320\260", "a"}, {"\320\261", "b"}, {"\320\262", "v"},
+			{"\320\263", "g"}, {"\320\264", "d"}, {"\320\265", "e"}, {"\320\267", "z"}, {"\320\270", "i"}, {"\320\271", "i"},
+			{"\320\272", "k"}, {"\320\273", "l"}, {"\320\274", "m"}, {"\320\275", "n"}, {"\320\276", "o"}, {"\320\277", "p"},
+			{"\321\200", "r"}, {"\321\201", "s"}, {"\321\202", "t"}, {"\321\203", "u"}, {"\321\204", "f"}, {"\321\213", "y"},
+			{"\321\215", "e"}, {"\321\212", ""}, {"\321\214", ""},
 	};
 	std::string result;
 	std::size_t index = 0;
@@ -280,7 +280,7 @@ std::string withoutPossessive(std::string token) {
 bool isHonorific(const std::string &token) {
 	static const std::set<std::string> honorifics{
 		"mr", "mrs", "ms", "miss", "mx", "dr", "prof", "professor", "sir", "madam", "hon", "judge", "justice",
-		"atty", "attorney", "г-н", "г-жа", "господин", "госпожа", "д-р",
+		"atty", "attorney", "\320\263-\320\275", "\320\263-\320\266\320\260", "\320\263\320\276\321\201\320\277\320\276\320\264\320\270\320\275", "\320\263\320\276\321\201\320\277\320\276\320\266\320\260", "\320\264-\321\200",
 	};
 	return honorifics.count(token) > 0;
 }
@@ -298,8 +298,8 @@ bool isNameSuffix(const std::string &token) {
 // "Mr. Holt's" -> {"holt"}; "Victor Pham, M.D." -> {"victor", "pham"}.
 // A Russian person's name in one shape - given name, patronymic, surname, each
 // in the nominative, an initial kept as its letter - whatever order and case
-// the text writes it in: «Зайцевой Ольги Николаевны», «О. Н. Зайцева» and
-// «Зайцева О. Н.» are [ольга, николаевна, зайцева] and [о, н, зайцева]. Nothing
+// the text writes it in: «…» and
+// «…» are […] and […]. Nothing
 // when the words do not read as one Russian name (live R1, 27 Sep 2026: the
 // preamble's name and the signature's initials became two people).
 std::optional<std::vector<std::string>> russianNameTokens(const std::string &value) {
@@ -313,7 +313,7 @@ std::optional<std::vector<std::string>> russianNameTokens(const std::string &val
 	const std::optional<names::NameParts> nominative =
 		names::name_parts(names::declined(value, names::Case::Nominative, names::gender_of(value)));
 	const names::NameParts &parts = nominative && !nominative->surname.empty() ? *nominative : *written;
-	// Each initial's letter: «О.», «Н.» or «О.Н.».
+	// Each initial's letter: «…» or «…».
 	std::vector<std::string> initials;
 	for (const std::string &written_initials : parts.initials)
 		for (std::size_t from = 0; from < written_initials.size();) {
@@ -436,8 +436,8 @@ bool hasDistinctiveWord(const std::vector<std::string> &tokens) {
 int titleGender(const std::string &value) {
 	for (const std::string &token : tokensOf(surface_alias_key(value))) {
 		const std::string bare = withoutPossessive(token);
-		if (bare == "mr" || bare == "sir" || bare == "господин" || bare == "г-н") return 1;
-		if (bare == "mrs" || bare == "ms" || bare == "miss" || bare == "madam" || bare == "госпожа" || bare == "г-жа") return 2;
+		if (bare == "mr" || bare == "sir" || bare == "\320\263\320\276\321\201\320\277\320\276\320\264\320\270\320\275" || bare == "\320\263-\320\275") return 1;
+		if (bare == "mrs" || bare == "ms" || bare == "miss" || bare == "madam" || bare == "\320\263\320\276\321\201\320\277\320\276\320\266\320\260" || bare == "\320\263-\320\266\320\260") return 2;
 	}
 	return 0;
 }
@@ -473,7 +473,7 @@ bool samePersonNameVariant(const std::vector<std::string> &shortTokens, const st
 	if (isFullPersonName(shortTokens) == false || isFullPersonName(longTokens) == false) return false;
 	if (shortTokens.size() > longTokens.size()) return false;
 	if (namePartsAgree(shortTokens.front(), longTokens.front()) == false) return false;
-	// A Russian surname in another case is the same surname («Лебедеву А. И.»).
+	// A Russian surname in another case is the same surname («…»).
 	if (!singularity::context::russian_names::same_surname(shortTokens.back(), longTokens.back())) return false;
 	std::size_t at = 1;
 	for (std::size_t index = 1; index + 1 < longTokens.size() && at + 1 < shortTokens.size(); ++index)
@@ -700,7 +700,7 @@ ResolutionOutcome resolve_mention(matters::Matter &matter, const DetectedMention
 	}
 	// 1b. Otherwise the same name with a compatible legal form ("Ltd" and
 	// "Limited", or a form on one side only) - attached only when exactly one
-	// entity qualifies. Different forms ("plc" and "Limited", "ООО" and "АО") are
+	// entity qualifies. Different forms ("plc" and "Limited", "…" and "…") are
 	// never merged: they fall through to review below.
 	const NameParts parts = name_parts(mention.value);
 	std::vector<ProjectEntity *> compatibleMatches;

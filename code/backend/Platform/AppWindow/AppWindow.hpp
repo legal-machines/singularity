@@ -181,9 +181,8 @@ public:
   void on_quit_request(std::function<void()> quit);
 
   /*
-   * Ends the window's event loop as closing the window does: run() returns
-   * and Singularity ends the ordinary way (Restart now, D-261). Call on the
-   * window's thread.
+   * Ends the window's event loop as closing the window does: run returns
+   * and Singularity ends the ordinary way. Call on the window's thread.
    */
   void close();
 
@@ -286,19 +285,18 @@ public:
    * Enables the platform-specific integrated titlebar.
    *
    * macOS:
-   *   Keeps native traffic lights while allowing frontend content to extend
-   *   underneath a transparent titlebar.
+   * Keeps native traffic lights while allowing frontend content to extend
+   * underneath a transparent titlebar.
    *
-   * Windows:
-   *   Puts the caption in the page (D-049): Windows draws no caption strip,
-   *   the page's header rows drag the window (CSS app-region) and the page
-   *   draws minimize, maximize and close at the right of its header
-   *   (frame(), run_caption_command()). The side and bottom borders and a
-   *   strip along the top edge still resize the window. Where the installed
-   *   WebView2 cannot let a page drag its window, the standard caption stays.
+   * Windows: Puts the caption in the page: Windows draws no caption strip,
+   * the page's header rows drag the window (CSS app-region) and the page
+   * draws minimize, maximize and close at the right of its header (frame,
+   * run_caption_command). The side and bottom borders and a strip along the
+   * top edge still resize the window. Where the installed WebView2 cannot let
+   * a page drag its window, the standard caption stays.
    *
    * Linux:
-   *   Uses GTK client-side decorations.
+   * Uses GTK client-side decorations.
    *
    * The implementation is idempotent and is intended to remain compatible
    * with later runtime window resizing.

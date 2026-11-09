@@ -105,6 +105,15 @@
 	cursor: default;
 }
 
+/* The colleagues' Stop in the send's place: the send's own ink, a square in
+   it. */
+.stop_mark {
+	width: 10px;
+	height: 10px;
+	background: currentColor;
+	border-radius: 2px;
+}
+
 /* The emoji, six to a row. */
 .emoji {
 	display: grid;

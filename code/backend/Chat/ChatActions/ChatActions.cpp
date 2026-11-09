@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <map>
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <fstream>
 #include <set>
@@ -244,6 +245,9 @@ matters::ChatList list(const std::string &project_id) {
   const auto workspace_path = node::require_active_workspace_path();
   auto found = matters::load_matter(workspace_path, project_id);
   if (!found) throw std::runtime_error("This Project is no longer available.");
+  // A Matter whose data cannot be read just now is refused, never listed as
+  // one with no threads.
+  matters::require_readable(*found);
 
   matters::ChatList result;
   result.project_id = found->id;
@@ -598,8 +602,8 @@ std::string lowered(const std::string &word) {
 bool is_small_word(const std::string &folded) {
   static const std::set<std::string> small{"a", "about", "after", "against", "an", "and", "as", "at", "before",
     "between", "but", "by", "concerning", "for", "from", "in", "into", "nor", "of", "on", "or", "over", "per", "re",
-    "regarding", "the", "to", "under", "upon", "via", "vs", "with", "without", "в", "во", "и", "к", "до", "для",
-    "за", "из", "на", "о", "об", "от", "по", "при", "с", "со"};
+    "regarding", "the", "to", "under", "upon", "via", "vs", "with", "without", "\320\262", "\320\262\320\276", "\320\270", "\320\272", "\320\264\320\276", "\320\264\320\273\321\217",
+    "\320\267\320\260", "\320\270\320\267", "\320\275\320\260", "\320\276", "\320\276\320\261", "\320\276\321\202", "\320\277\320\276", "\320\277\321\200\320\270", "\321\201", "\321\201\320\276"};
   return small.count(folded) > 0;
 }
 
@@ -858,7 +862,10 @@ std::string post_agent_message(const std::string &project_id, const std::string 
   auto found_project = matters::load_matter(workspace_path, project_id);
   if (!found_project) throw std::runtime_error("This Project is no longer available.");
   const auto found_chat = find_chat(*found_project, chat_id);
-  if (found_chat == found_project->chats.end()) throw std::runtime_error("This Chat is no longer available.");
+  // A colleague posts into a deleted thread no more than a member does:
+  // posted, the message brought the thread back (Cursor's bug hunt, 2026-11-08).
+  if (found_chat == found_project->chats.end() || !found_chat->deleted_at.empty())
+    throw std::runtime_error("This Chat is no longer available.");
   const std::string now = workspaces::current_timestamp();
   matters::MatterTask message;
   message.id = matters::generate_task_id();
@@ -881,6 +888,12 @@ std::string post_agent_message(const std::string &project_id, const std::string 
   message.answer_option = carried.answer_option;
   message.place = carried.place;
   message.mentions = carried.mentions;
+  for (const research::ExternalEvidenceReference &source : extras.external_evidence) {
+    if (source.evidence_id.empty() || source.url.empty()) continue;
+    const bool isKept = std::any_of(message.external_evidence.begin(), message.external_evidence.end(),
+        [&](const research::ExternalEvidenceReference &kept) { return kept.evidence_id == source.evidence_id; });
+    if (!isKept) message.external_evidence.push_back(source);
+  }
   message.status = matters::TaskStatus::Success;
   // A colleague who writes in a closed thread reopens it, as a person's reply
   // does, and the thread says who reopened it.
@@ -979,7 +992,7 @@ std::string place_words(const matters::Matter &project, const matters::DocumentP
     isWorkbook = is_workbook(entry);
     isPresentation = is_presentation(entry);
   }
-  // A slide of a deck (D-112): its number, its title and what it reads.
+  // A slide of a deck: its number, its title and what it reads.
   if (isPresentation && !place.section.empty()) {
     std::string where = place.section;
     where[0] = static_cast<char>(std::tolower(static_cast<unsigned char>(where[0])));
@@ -988,8 +1001,8 @@ std::string place_words(const matters::Matter &project, const matters::DocumentP
     if (!place.quote.empty()) words += ", which reads: \u201C" + place.quote + "\u201D";
     return words;
   }
-  // Cells of a workbook (D-110): the address on its sheet, and what they hold,
-  // each under its column's heading.
+  // Cells of a workbook: the address on its sheet, and what they hold, each
+  // under its column's heading.
   if (isWorkbook && !place.section.empty()) {
     const bool isOne = place.section.find(':') == std::string::npos;
     std::string words = std::string(isOne ? "the cell " : "the cells ") + place.section;
@@ -1247,8 +1260,19 @@ ChatDeletionImpact deletion_impact(const std::string &project_id, const std::str
   return impact;
 }
 
-matters::Matter delete_chat(const std::string &project_id, const std::string &chat_id, long long expected_revision) {
-  if (expected_revision < 1) throw std::runtime_error("This Chat revision is invalid.");
+namespace {
+
+std::mutex &deleted_listener_mutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+std::function<void(const std::string &, const std::string &)> &deleted_listener() {
+  static std::function<void(const std::string &, const std::string &)> listener;
+  return listener;
+}
+
+matters::Matter delete_chat_saved(const std::string &project_id, const std::string &chat_id, long long expected_revision) {
   const persistence::PersistenceLock lock(persistence::persistence_mutex());
   const auto workspace_path = node::require_active_workspace_path();
   auto found_project = matters::load_matter(workspace_path, project_id);
@@ -1276,6 +1300,36 @@ matters::Matter delete_chat(const std::string &project_id, const std::string &ch
   found_project->updated_at = timestamp;
   matters::save_matter(workspace_path, *found_project);
   return *found_project;
+}
+
+} // namespace
+
+void set_deleted_listener(std::function<void(const std::string &project_id, const std::string &chat_id)> listener) {
+  const std::lock_guard<std::mutex> lock(deleted_listener_mutex());
+  deleted_listener() = std::move(listener);
+}
+
+matters::Matter delete_chat(const std::string &project_id, const std::string &chat_id, long long expected_revision) {
+  if (expected_revision < 1) throw std::runtime_error("This Chat revision is invalid.");
+  matters::Matter deleted = delete_chat_saved(project_id, chat_id, expected_revision);
+  // Told with the store free: the colleagues lock their own store to end the
+  // work given in the thread, and a scheduler holding theirs may be waiting
+  // for this one. Work left waiting in a deleted thread was answered in the
+  // colleague's own thread.
+  std::function<void(const std::string &, const std::string &)> listener;
+  {
+    const std::lock_guard<std::mutex> lock(deleted_listener_mutex());
+    listener = deleted_listener();
+  }
+  if (listener) {
+    try {
+      listener(project_id, chat_id);
+    } catch (const std::exception &) {
+      // The thread is deleted either way; work that still names it ends when
+      // its turn comes (Agent/AgentProduction run_task).
+    }
+  }
+  return deleted;
 }
 
 matters::Matter restore(const std::string &project_id, const std::string &chat_id) {

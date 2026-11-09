@@ -12,16 +12,16 @@ import styles from "./ShareWorkLog.module.css";
 
 // Whether a conversation or thread offers its work log: where the seat's own
 // record says this computer keeps one, on a design partner's seat with a build
-// that can seal it to Legal Machines (D-257).
+// that can seal it to Legal Machines.
 export function useCanShareWorkLog() {
 	const facts = useSeatFacts();
 	return facts.workLogs == true && canShareWorkLogs();
 }
 
 // A design partner's member sends Legal Machines one conversation's or
-// thread's work log (D-257): what it holds and how it is protected are said
-// before anything goes, the Diagnostics Consent is asked once for this seat,
-// and nothing leaves this computer unsealed.
+// thread's work log: what it holds and how it is protected are said before
+// anything goes, the Diagnostics Consent is asked once for this seat, and
+// nothing leaves this computer unsealed.
 export function ShareWorkLogDialog({ matterId, chatId, title, messages, onClose }) {
 	const [preview, setPreview] = useState(null);
 	const [problem, setProblem] = useState(null);
@@ -67,7 +67,7 @@ export function ShareWorkLogDialog({ matterId, chatId, title, messages, onClose 
 	}
 
 	// The consent Send waits on, and what went wrong, over the actions, never
-	// under the scroll, as the bug report's (the owner, 2026-11-05).
+	// under the scroll, as the bug report's.
 	const asksConsent = preview?.canSend == true && needsConsent;
 	const footnote = asksConsent || problem != null ? (
 		<>

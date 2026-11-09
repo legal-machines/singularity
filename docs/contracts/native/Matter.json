@@ -174,7 +174,8 @@
       "policy": "worker",
       "params": {
         "name": "string",
-        "folderToken": "string | undefined"
+        "folderToken": "string | undefined",
+        "openExisting": "boolean | undefined"
       },
       "result": "Project",
       "_order": 176

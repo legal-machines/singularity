@@ -120,9 +120,9 @@ public:
   // made it instead of to a person.
   std::optional<ToolAttempt> validate(const ToolExecutionContext &context, const ToolIntent &intent);
   ToolAttempt wait_for_approval(const std::string &approvalId);
-  // As wait_for_approval(), for at most `limit` (Beta 1 #14). Nothing when it
-  // passes with no decision: the approval is then withdrawn under the same lock,
-  // so a decision is either taken here or lands on the operation's kept place
+  // As wait_for_approval, for at most `limit`. Nothing when it passes with no
+  // decision: the approval is then withdrawn under the same lock, so a decision
+  // is either taken here or lands on the operation's kept place
   // (ResearchPause.hpp) - never both, never lost.
   std::optional<ToolAttempt> wait_for_approval_for(const std::string &approvalId, std::chrono::milliseconds limit);
   // Executes `intent` without asking again, because the caller already
@@ -256,40 +256,39 @@ PermissionDisposition permission_for(const ProjectActionPermissionState &permiss
 // True when the words ask to see a change before it is made - "show me
 // first", "don't change it yet", "do not modify the NDA", "make no changes",
 // "before changing anything, show me", "I want to approve it", "get my
-// approval before editing", "once I give the go-ahead", "покажи сначала", "не
-// вноси изменения в файл", "покажи, а потом внесём", "пришли на
-// согласование". A fixed, bounded list of English and Russian phrasings,
+// approval before editing", "once I give the go-ahead", "…", "…
+// …". A fixed, bounded list of English and Russian phrasings,
 // matched word by word within one clause; an ordinary instruction that only
 // limits a change ("fix the typo, don't change anything else", "renumber the
-// clauses without changing the text", "формулировки не меняй") is not one of
+// clauses without changing the text", "…") is not one of
 // them, nor one that asks for the change it proposes ("propose a redline and
 // apply it") or for a new document to review ("draft a new NDA for my
 // review"), nor one that says there is no need to ask ("no need to show me
-// first", "without my approval", "без моего согласования").
+// first", "without my approval", "…").
 [[nodiscard]] bool asks_to_see_changes_first(const std::string &words);
 // True when `quote` is the lawyer's own words asking for something: found word
 // for word - case, accents and punctuation aside - in one of `messages`, its
 // parts in order where it leaves words out ("…"). A quote of fewer than three
 // words counts only as the whole of a message ("Yes, do it."). Only a sentence
 // that asks for work on a document can be quoted: a request ("Restore the
-// cap.", "Верни лимит."), a request put politely ("Could you restore the
+// cap.", "…"), a request put politely ("Could you restore the
 // cap?", "Do you mind updating clause 5?", "Can clause 9 be tightened?",
-// "Можешь вернуть лимит?"), a want or a requirement stated ("I'd like clause 9
-// updated.", "The governing law needs to be New York.", "Срок должен быть 60
-// дней.") or a consent ("Yes, go ahead."). A question ("What's the cap?",
-// "Какой срок?"), a question whether a change may or should be made ("Can we
+// "…"), a want or a requirement stated ("I'd like clause 9
+// updated.", "The governing law needs to be New York.", "… 60
+// …") or a consent ("Yes, go ahead."). A question ("What's the cap?",
+// "…"), a question whether a change may or should be made ("Can we
 // delete clause 14 without breaching the SPA?", "Would you change anything in
-// clause 9?", "Можно ли удалить пункт 14?"), a request to be told ("Can you
+// clause 9?", "… 14?"), a request to be told ("Can you
 // tell me what the cap is?", "Review the NDA and tell me whether the cap is
-// market.", "Подскажи срок.") and a statement ask for nothing and are never
+// market.", "…") and a statement ask for nothing and are never
 // such a quote.
 [[nodiscard]] bool quotes_lawyer(const std::string &quote, const std::vector<std::string> &messages);
 // True when `after`, written in place of `before`, takes out what `before`
 // said rather than rewording it: nothing is left, most of its words are gone
 // ("[Reserved.]" for a clause), what is left says only that nothing is there
-// ("0", "N/A", "Intentionally omitted", "Исключён"), or a word that limits it
-// is dropped ("shall not be liable" as "shall be liable", "не менее" as
-// "менее"). "Sixty (60) days" as "thirty (30) days" only rewords. Read the
+// ("0", "N/A", "Intentionally omitted", "…"), or a word that limits it
+// is dropped ("shall not be liable" as "shall be liable", "…" as
+// "…"). "Sixty (60) days" as "thirty (30) days" only rewords. Read the
 // same way as the lawyer's words, case and accents aside.
 [[nodiscard]] bool takes_out_substance(const std::string &before, const std::string &after);
 // True when `after`, written in place of `before`, says anything `before` did

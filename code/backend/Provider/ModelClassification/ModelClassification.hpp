@@ -85,7 +85,7 @@ struct ModelDescriptor {
   std::vector<std::string> input_modalities;
 };
 
-// Whether `model` of `provider_id` reads pictures (D-256): what the provider
+// Whether `model` of `provider_id` reads pictures: what the provider
 // reported, where it did; every model Anthropic serves does; a local model
 // here does not. std::nullopt where nothing says, and the picture is sent.
 std::optional<bool> takes_pictures(const std::string &provider_id, const ModelDescriptor &model);

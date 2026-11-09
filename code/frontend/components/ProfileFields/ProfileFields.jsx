@@ -10,11 +10,11 @@ import { POSITIONS } from "../../onboarding/tour/pages.js";
 
 import styles from "./ProfileFields.module.css";
 
-// Who sits in a seat, as the firm says it (D-209): their photo, their name,
-// their role on the firm's scale, their own words for their position, their
-// practice, and a few lines about them (the owner, 2026-11-02). Kept in the
-// firm's own record, never at Legal Machines. The value is { name, rank,
-// title, practice, about, photo }; every change goes to onChange whole.
+// Who sits in a seat, as the firm says it: their photo, their name, their
+// role on the firm's scale, their own words for their position, their
+// practice, and a few lines about them. Kept in the firm's own record,
+// never at Legal Machines. The value is { name, rank, title, practice,
+// about, photo }; every change goes to onChange whole.
 export function emptyProfile() {
 	return { name: "", rank: "", title: "", practice: "", about: "", photo: null };
 }
@@ -92,10 +92,8 @@ export function ProfileFields({ value, onChange, disabled = false, autoFocus = f
 	);
 }
 
-// A few lines about the person, a profile's second step (the owner,
-// 2026-11-02: "the colleague's description must be edited too"): what they
-// would have the firm know of them, at most 600 characters, their line breaks
-// kept.
+// A few lines about the person, a profile's second step: what they would have
+// the firm know of them, at most 600 characters, their line breaks kept.
 export function AboutFields({ value, onChange, disabled = false, placeholder = "" }) {
 	return (
 		<div className={styles.fields}>
@@ -107,15 +105,13 @@ export function AboutFields({ value, onChange, disabled = false, placeholder = "
 	);
 }
 
-// An AI colleague's profile, edited as a lawyer's is (the owner, 2026-11-02:
-// "editing AI colleagues' profiles must be as easy as editing the lawyers'",
-// and "split it into slides, as onboarding was, so that everything fits"), in
-// two steps. Its profile first, a lawyer's fields: its face where a person's
-// photo stands, changed in place among the faces; its name; the role it
-// ranks with and its own words for its position on a line; its practice.
-// Then its work: its area, what it does and how it works - its hiring's
-// words. The value is { name, character, ranksWith, title, practice, area,
-// goal, manner }; every change goes to onChange whole.
+// An AI colleague's profile, edited as a lawyer's is, in two steps. Its
+// profile first, a lawyer's fields: its face where a person's photo stands,
+// changed in place among the faces; its name; the role it ranks with and its
+// own words for its position on a line; its practice. Then its work: its
+// area, what it does and how it works - its hiring's words. The value is {
+// name, character, ranksWith, title, practice, area, goal, manner }; every
+// change goes to onChange whole.
 const FACES = Object.keys(characters);
 
 export function ColleagueProfileFields({ value, onChange, disabled = false }) {

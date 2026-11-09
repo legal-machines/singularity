@@ -1,6 +1,6 @@
 #include "Platform/SeatPasswordStore/SeatPasswordStore.hpp"
 
-// macOS and Linux keep no seat password yet (D-243). On the Mac, the system's
+// macOS and Linux keep no seat password yet. On the Mac, the system's
 // Passwords app takes a password for legalmachines.org only from an app signed
 // with a Developer ID and associated domains, which Singularity has not yet; a
 // login-keychain item of an ad hoc signed build would ask the person again

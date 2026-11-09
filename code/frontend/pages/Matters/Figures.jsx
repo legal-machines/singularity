@@ -3,8 +3,8 @@ import { Icon } from "../../components/Icon/Icon.jsx";
 import styles from "./Figures.module.css";
 
 // What a Matter holds and what its work came to, each a small sign and its
-// figure, its words on hover (D-222): on the Matters page beside its name,
-// and under its name on its own page.
+// figure, its words on hover: on the Matters page beside its name, and
+// under its name on its own page.
 export function Figures({ figures }) {
 	if (figures.length == 0) return null;
 	return (

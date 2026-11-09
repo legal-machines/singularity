@@ -59,7 +59,7 @@ struct ProjectEntityProtectionHint {
 	// aliases): masked as they are. The rest an automatic pass recorded, and the
 	// Guard masks them only while they still name an identity.
 	std::vector<std::string> curated_values;
-	// The symbol it stands under in every request of the Project (D-235).
+	// The symbol it stands under in every request of the Project.
 	std::string symbol;
 };
 
@@ -134,13 +134,13 @@ struct OutboundPreviewCaptured {
 
 // Runs the security-sensitive part of the real provider path. The request
 // mapping is confined to this stack frame and is neither returned nor passed
-// to the provider transport.
-// The pictures of the member's own that the exact body carries (D-256): each
-// image in it - an OpenAI-style data URL, an Anthropic base64 source - must
-// be one the member attached to this request (Provider/Types/InputPictures),
-// in the order the provider adapter reported it, or the request is refused
-// (ProtectedPayloadLeakDetected) and nothing is sent, whatever the protection.
-// The final check of every provider call applies it.
+// to the provider transport. The pictures of the member's own that the exact
+// body carries: each image in it - an OpenAI-style data URL, an Anthropic
+// base64 source - must be one the member attached to this request
+// (Provider/Types/InputPictures), in the order the provider adapter reported
+// it, or the request is refused (ProtectedPayloadLeakDetected) and nothing is
+// sent, whatever the protection. The final check of every provider call
+// applies it.
 std::vector<protected_api::papinian::OutboundPicture> hold_pictures_to_the_members(
 		const providers::FinalPayloadView &payload);
 

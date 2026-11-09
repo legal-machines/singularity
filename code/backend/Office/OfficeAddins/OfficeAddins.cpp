@@ -55,9 +55,8 @@ std::string icon() {
 // Excel's group has its own icon and names its pane; Outlook's schema allows
 // neither (its Action holds only the page). The pane's name is the one Office
 // opens with a file that asks for it (Office.AutoShowTaskpaneWithDocument), as
-// Singularity's own file does (Office/OfficeApps, D-191): the button's pane
-// and that one are one pane.
-// A pane that pins (`pins`) stays open as the person moves from one letter to
+// Singularity's own file does: the button's pane and that one are one pane. A
+// pane that pins (`pins`) stays open as the person moves from one letter to
 // the next, and follows the one selected (Outlook, VersionOverrides 1.1).
 std::string group(const std::string &tab, const std::string &id, bool is_documents, bool pins = false) {
 	std::ostringstream text;

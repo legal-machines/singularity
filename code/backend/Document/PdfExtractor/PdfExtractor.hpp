@@ -17,25 +17,31 @@ extract_pdf_document(const DocumentExtractionRequest &request);
 
 [[nodiscard]] std::string pdf_extractor_version();
 
-// Whether this computer can read a scanned page's words (D-114): on Windows,
-// when Windows has a text recognition language; elsewhere, not yet.
+// Whether this computer can read a scanned page's words: on Windows, when
+// Windows has a text recognition language; elsewhere, not yet.
 [[nodiscard]] bool pdf_text_recognition_available();
 
 // A picture file's words - a photographed page, a scan saved as PNG, JPEG or
-// TIFF - read by the same text recognition (D-115). Nothing where this computer
-// cannot read them, or where the picture holds no words.
+// TIFF - read by the same text recognition. Nothing where this computer cannot
+// read them, or where the picture holds no words.
 [[nodiscard]] std::optional<std::string> recognize_image_text(const std::filesystem::path &path);
 
-// A picture file as a model reads it (D-256): one every provider takes as it
-// is goes as it is (ModelPictureRules.hpp); a phone's HEIC or HEIF photograph,
-// a TIFF or BMP scan, one too large, or one its file turns, is redrawn where
-// this computer can - by macOS's ImageIO, by Windows's own imaging - upright,
-// at most picture::kRedrawnLongEdge pixels on its long edge, as PNG where it
-// has transparency and fits, as JPEG otherwise. Nothing where it cannot be, or
+// The words a picture may show, as this computer's text recognition reads
+// them: each reading's likeliest few, its lettering laid on its ground first,
+// however few - for what a colleague's web search may name, a stylised logo's
+// word read near enough. Nothing where this computer reads none.
+[[nodiscard]] std::vector<std::string> picture_word_readings(const std::filesystem::path &path);
+
+// A picture file as a model reads it: one every provider takes as it is goes
+// as it is (ModelPictureRules.hpp); a phone's HEIC or HEIF photograph, a TIFF
+// or BMP scan, one too large, or one its file turns, is redrawn where this
+// computer can - by macOS's ImageIO, by Windows's own imaging - upright, at
+// most picture::kRedrawnLongEdge pixels on its long edge, as PNG where it has
+// transparency and fits, as JPEG otherwise. Nothing where it cannot be, or
 // where the file is no picture.
 [[nodiscard]] std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path);
 
-// ---- Work on a PDF, always in a copy (D-115) ---------------------------------------
+// ---- Work on a PDF, always in a copy ---------------------------------------
 //
 // A passage of a PDF a colleague marks: its words as the page holds them, found
 // as a lawyer reads them (Platform/PhraseMatch: typography, spacing and case

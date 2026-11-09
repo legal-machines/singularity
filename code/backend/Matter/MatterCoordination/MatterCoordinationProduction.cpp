@@ -26,6 +26,20 @@
 
 namespace singularity::matter::coordination {
 
+std::string signed_in_organisation_id() {
+	static std::mutex mutex;
+	static std::string kept;
+	static std::chrono::steady_clock::time_point read_at {};
+	const std::lock_guard<std::mutex> lock(mutex);
+	const auto now = std::chrono::steady_clock::now();
+	if (read_at == std::chrono::steady_clock::time_point {} || now - read_at >= std::chrono::minutes(1)) {
+		const platform::AppSettings settings = platform::load_app_settings();
+		kept = settings.account.has_value() == true ? settings.account->organisation_id : std::string();
+		read_at = now;
+	}
+	return kept;
+}
+
 Environment production_environment() {
 	Environment environment;
 	environment.records = platform::computer_records_directory() / "Coordination.json";
@@ -40,7 +54,7 @@ Environment production_environment() {
 	environment.person_name = []() { return platform::resolve_actor_identity().display_name.value_or(std::string()); };
 	// The keys - this computer's own for coordination and each Matter's - are in
 	// the credential store, beside the providers' keys: never in a setting, a
-	// Matter, a log or the firm's folder (AG-SEC-9).
+	// Matter, a log or the firm's folder.
 	environment.secret = [](const std::string &name) -> std::optional<std::string> {
 		try {
 			return platform::get_provider_credential(name);
@@ -49,15 +63,15 @@ Environment production_environment() {
 		}
 	};
 	environment.keep_secret = [](const std::string &name, const std::string &value) { platform::set_provider_credential(name, value); };
-	// The direct link between the firm's computers (D-124, D-127), and the
-	// firm's own folder where the lawyer chose one. The engine asks for them only
-	// once this computer shares or joins a Matter: nothing binds a network port
-	// for a lawyer who never did.
+	// The direct link between the firm's computers, and the firm's own folder
+	// where the lawyer chose one. The engine asks for them only once this
+	// computer shares or joins a Matter: nothing binds a network port for a
+	// lawyer who never did.
 	environment.transports = [](const std::filesystem::path &firm_folder, const seal::ComputerKeys &keys) {
 		std::vector<std::shared_ptr<transport::Transport>> carriers;
 		try {
 			// Legal Machines' relay, for the firm's computers no direct way
-			// reaches (D-242): opened with the seat's session and this computer's
+			// reaches: opened with the seat's session and this computer's
 			// coordination key, made once with the program's link.
 			std::shared_ptr<transport::link::Relay> relay;
 			if (!transport::DirectTransport::existing()) {
@@ -75,7 +89,7 @@ Environment production_environment() {
 				transport::DirectTransport::shared(transport::noise::key_pair_from_secret(keys.secret), relay);
 			// What comes over the link is taken at once, not at the next round:
 			// a message on the office network shows as a socket that pushes
-			// would show it (the owner, 2026-10-26).
+			// would show it.
 			direct->on_arrival([]() { wake(); });
 			carriers.push_back(direct);
 		} catch (const std::exception &) {
@@ -88,24 +102,14 @@ Environment production_environment() {
 		return carriers;
 	};
 	environment.now = []() { return workspaces::current_timestamp(); };
-	// The organisation's name, as this computer's member record in a Matter
-	// states it (Matter/SharedMatter): the firm's record goes only to the
-	// computers whose members' records name the same (D-203).
-	environment.organisation_name = []() { return platform::resolve_actor_identity().organisation_name.value_or(std::string()); };
-	// The organisation this computer's member signed in to, whose firm's record
-	// it carries (D-203): read from the settings at most once a minute.
-	environment.organisation_id = []() {
-		static std::mutex mutex;
-		static std::string kept;
-		static std::chrono::steady_clock::time_point read_at {};
-		const std::lock_guard<std::mutex> lock(mutex);
-		const auto now = std::chrono::steady_clock::now();
-		if (read_at == std::chrono::steady_clock::time_point {} || now - read_at >= std::chrono::minutes(1)) {
-			const platform::AppSettings settings = platform::load_app_settings();
-			kept = settings.account.has_value() == true ? settings.account->organisation_id : std::string();
-			read_at = now;
-		}
-		return kept;
+	// The organisation this computer's member signed in to, by Legal Machines'
+	// id: whose firm's record it carries, and the one firm its computers are
+	// of. Read from the settings at most once a minute.
+	environment.organisation_id = []() { return signed_in_organisation_id(); };
+	// A Matter sealed for another organisation is not carried while this
+	// computer is signed in to a different one.
+	environment.is_other_organisations = [](const std::filesystem::path &folder, const std::string &matter_id) {
+		return matter::matter_seal_state(folder, matter_id, signed_in_organisation_id()) == matter::MatterSealState::OtherOrganisation;
 	};
 	// Where the direct link may be reached, for this computer's address cards;
 	// what another computer's checked card says, for the link to reach it.
@@ -114,13 +118,13 @@ Environment production_environment() {
 		return direct ? direct->candidates() : std::vector<std::string>();
 	};
 	// The computers of a Matter the direct link holds a live encrypted session
-	// with now (D-137); none before this computer shares or joins a Matter.
+	// with now; none before this computer shares or joins a Matter.
 	environment.connected = [](const std::string &matter_id) {
 		const std::shared_ptr<transport::DirectTransport> direct = transport::DirectTransport::existing();
 		return direct ? direct->connected_devices(matter_id) : std::vector<std::string>();
 	};
 	// What the direct link carries of a Matter to each computer, and that
-	// computer confirmed; and what came of it that waits for its key (D-207).
+	// computer confirmed; and what came of it that waits for its key.
 	environment.sending = [](const std::string &matter_id) {
 		std::vector<Transfer> going;
 		const std::shared_ptr<transport::DirectTransport> direct = transport::DirectTransport::existing();
@@ -148,7 +152,7 @@ Environment production_environment() {
 		direct->learn(card.matter_id, transport::DirectTransport::Peer{card.device_id, *key, card.candidates});
 	};
 	// A computer of the Matter is known by the device key its member record
-	// states, once the person here confirmed it as that member's (D-095).
+	// states, once the person here confirmed it as that member's.
 	environment.confirmed_device_key = [](const std::filesystem::path &matter_folder,
 			const std::string &device_id) -> std::optional<std::string> {
 		for (const matter::SharedMember &member : matter::load_members(matter_folder)) {
@@ -161,7 +165,7 @@ Environment production_environment() {
 	environment.refused_device_key = [](const std::string &device_key) { return tools::is_refused_key(device_key); };
 	// A computer whose code the person here compared when taking the Matter
 	// counts as its member's, once exactly one member's record states its key;
-	// a decision the person already made about it stands (D-142).
+	// a decision the person already made about it stands.
 	environment.compared_when_taken = [](const std::filesystem::path &matter_folder, const std::string &device_key) {
 		std::vector<std::string> actors;
 		for (const matter::SharedMember &member : matter::load_members(matter_folder)) {
@@ -176,27 +180,26 @@ Environment production_environment() {
 		return tools::counts_as_theirs(actors.front(), device_key);
 	};
 	// Who a Matter's computer is, by its member records: a personal channel's
-	// key goes only to a computer the person here confirmed as its member's
-	// (D-128).
+	// key goes only to a computer the person here confirmed as its member's.
 	environment.confirmed_computer = [](const std::filesystem::path &matter_folder,
 			const std::string &device_id) -> std::optional<ConfirmedComputer> {
 		for (const matter::SharedMember &member : matter::load_members(matter_folder)) {
 			for (const matter::SharedDeviceKey &key : member.device_keys) {
 				if (key.device_id != device_id || tools::counts_as_theirs(member.actor_id, key.public_key) == false) continue;
 				if (tools::is_refused_key(key.public_key) == true) return std::nullopt;
-				return ConfirmedComputer{member.actor_id, key.public_key, member.organisation};
+				return ConfirmedComputer{member.actor_id, key.public_key, member.organisation_id};
 			}
 		}
 		return std::nullopt;
 	};
-	// The firm's computers a lawyer here checked by their number (D-205): the
-	// firm's, for its record and the members' personal channels. Never asks
-	// Legal Machines: the listing as the background last read it.
+	// The firm's computers a lawyer here checked by their number: the firm's,
+	// for its record and the members' personal channels. Never asks Legal
+	// Machines: the listing as the background last read it.
 	environment.checked_firm_computers = []() { return firm_computers::checked_for_coordination(); };
-	// The firm's model accounts (D-210): each connected here, with its key from
-	// the credential store, for the firm's computers checked here; and one they
+	// The firm's model accounts: each connected here, with its key from the
+	// credential store, for the firm's computers checked here; and one they
 	// gave, kept in this computer's settings and credential store, the key never
-	// anywhere else (AG-SEC-1).
+	// anywhere else.
 	environment.accounts_here = []() {
 		std::vector<FirmAccount> accounts;
 		platform::AppSettings settings;
@@ -216,6 +219,10 @@ Environment production_environment() {
 		return accounts;
 	};
 	environment.keep_account = [](const FirmAccount &account, bool removed) {
+		// An account the firm's other computer sends is a provider's: one named
+		// as Singularity's own secret - this computer's coordination key, a
+		// Matter's key - is never written or removed (Cursor's bug hunt, 2026-11-08).
+		if (platform::is_reserved_credential_name(account.provider_id)) return;
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
 		platform::AppSettings settings = platform::load_app_settings();
 		auto &providers = settings.local_node_setup.connected_providers;
@@ -237,7 +244,7 @@ Environment production_environment() {
 		platform::save_app_settings(settings);
 	};
 	// An AI colleague's card as the computer that runs it signed it, and the
-	// colleagues this computer runs (D-128).
+	// colleagues this computer runs.
 	environment.agent_host_claim = [](const std::filesystem::path &matter_folder,
 			const std::string &agent_id) -> std::optional<AgentHostClaim> {
 		for (const agents::AgentCard &card : agents::load_agent_cards(matter_folder)) {
@@ -252,7 +259,7 @@ Environment production_environment() {
 		try {
 			for (const agents::Agent &agent : agents::load_agents()) {
 				// A copy of the firm's colleague speaks for it in no channel: the
-				// computer that runs it does (D-213).
+				// computer that runs it does.
 				if (agent.status != agents::AgentStatus::Draft && agent.is_firm_copy == false) ids.push_back(agent.id);
 			}
 		} catch (const std::exception &) {

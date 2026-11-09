@@ -9,8 +9,6 @@ import { LOOP, SIZE } from './scene.js';
 // Taken as it is from the Singularity brand study
 // (sites/public/experiments/singularity-brand/living-painting.js), with
 // renderer.js, scene.js, environment.js and pointer.js from the site's painting.
-// Onboarding plays the painting half as fast again as the site, its camera
-// breathing as there: the owner's word, "let the animation play more actively".
 const PACE=1.5;
 
 export function mountEntryPainting(panel) {

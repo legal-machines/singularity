@@ -565,7 +565,7 @@ IntegrityReport checkDraftIntegrity(const LegalDocument& source, const LegalDocu
 	settle(completeness);
 	settle(unchanged);
 	// Said of what was read: "All 0 numbered clauses" and "Sections 1 to 0" once
-	// stood under a lease whose clauses were read as paragraphs (2026-10-30).
+	// stood under a lease whose clauses were read as paragraphs.
 	completeness.summary = completeness.state == "passed"
 		? (numbered == 0 ? std::string("Every part of the source is in the draft, in its order.")
 			: "All " + std::to_string(numbered) + " numbered clauses and headings of the source are in the draft, in their order.")

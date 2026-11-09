@@ -13,12 +13,12 @@ import styles from "./pane.module.css";
 
 const native = () => window.nativeApp;
 
-// Singularity in Outlook (D-105, D-106): the Matter of the letter open now.
-// A letter read is filed to its Matter on the evidence Singularity shows -
-// never by guess - and its attachments go to the Matter and to a colleague
-// from there. A reply being written gets the version the Matter holds now,
-// and is checked before the person sends it with Outlook's own Send.
-// Singularity sends nothing.
+// Singularity in Outlook: the Matter of the letter open now. A letter read
+// is filed to its Matter on the evidence Singularity shows - never by guess
+// - and its attachments go to the Matter and to a colleague from there. A
+// reply being written gets the version the Matter holds now, and is checked
+// before the person sends it with Outlook's own Send. Singularity sends
+// nothing.
 export function OutlookPane() {
 	const [mode, setMode] = useState(letterMode());
 	const [turn, setTurn] = useState(0);
@@ -62,8 +62,8 @@ function ReadLetter() {
 		return () => { if (typeof off == "function") off(); };
 	}, []);
 
-	// One Matter's intake files it by a rule (D-228): filed as Outlook shows it,
-	// with no press, and then read as filed.
+	// One Matter's intake files it by a rule: filed as Outlook shows it, with no
+	// press, and then read as filed.
 	useEffect(() => {
 		if (letter == null || where?.outcome != "rule") return;
 		const matter = where.matters[0];

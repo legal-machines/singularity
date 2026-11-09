@@ -6,20 +6,17 @@ import { Icon } from "../Icon/Icon.jsx";
 
 import styles from "./Menu.module.css";
 
-// A menu, as a desktop menu behaves (DESIGN.md, FOLIO-24): it opens beside
-// what opened it, itself in focus and no item lit until the pointer or a key
-// reaches one (the owner, 2026-11-02: "don't autofocus one of the options
-// just because the menu was opened"); Up and Down move, Home and End
-// jump, a letter finds the item that starts with it, Enter or Space chooses,
-// Right opens an item's submenu and Left closes it, Escape closes the menu
-// and gives the focus back. A press outside closes it. Each item may carry
-// an icon, a hint on its right (a date, a code), a check, or a submenu;
-// `heading` and `separator` items group the rest. A group runs on at the
-// sidebar's pitch, with no line and no gap, and no item shows a keyboard
-// shortcut (the owner, 2026-11-02: "never show hotkey symbols", "remove the
-// horizontal line", "the green distance must be the same as the red").
-// With `matchAnchorWidth` it is exactly as wide as what opened it, edge to
-// edge, as the account's menu is the member's row's (the owner, 2026-11-02).
+// A menu, as a desktop menu behaves: it opens beside what opened it, itself
+// in focus and no item lit until the pointer or a key reaches one; Up and
+// Down move, Home and End jump, a letter finds the item that starts with it,
+// Enter or Space chooses, Right opens an item's submenu and Left closes it,
+// Escape closes the menu and gives the focus back. A press outside closes
+// it. Each item may carry an icon, a hint on its right (a date, a code), a
+// check, or a submenu; `heading` and `separator` items group the rest. A
+// group runs on at the sidebar's pitch, with no line and no gap, and no item
+// shows a keyboard shortcut. With `matchAnchorWidth` it is exactly as wide
+// as what opened it, edge to edge, as the account's menu is the member's
+// row's.
 export function Menu({ anchor, items, label, placement = "bottom-start", minWidth = 200, matchAnchorWidth = false, onClose, isSubmenu = false }) {
 	const menuRef = useRef(null);
 	const [place, setPlace] = useState(null);
@@ -94,7 +91,7 @@ export function Menu({ anchor, items, label, placement = "bottom-start", minWidt
 				if (item.separator) return null;
 				if (item.heading != null) return <div key={`heading-${index}`} className={styles.heading} role="presentation">{item.heading}</div>;
 				// A fact about what the menu is for, not an act: when a message was
-				// sent and when it reached the other (D-212). Read, never chosen.
+				// sent and when it reached the other. Read, never chosen.
 				if (item.info != null) {
 					return (
 						<div key={item.key ?? `info-${index}`} className={`${styles.item} ${styles.info}`} role="none">

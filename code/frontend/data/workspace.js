@@ -1,12 +1,9 @@
 // MOCK DATA - Marlowe Finch LLP, a fictional US law firm, and its client
-// Halvane Robotics, a fictional US company (AG-12, D-052), on the morning of
-// the NDA working day. The firm's people come from
-// the owner's fixture, public/mock/team/manifest.json. Nothing here is read
-// from, or written to, the backend (PROD-2).
+// Halvane Robotics, a fictional US company, on the morning of the NDA
+// working day. Nothing here is read from, or written to, the backend.
 
 export const mockNow = "2026-10-23T10:05:00";
 
-// The firm's logo is the mark the owner chose for the prototype (D-052).
 export const organisation = { name: "Marlowe Finch LLP", shortName: "Marlowe Finch", initial: "M", logo: "mock/marlowe-finch-logo.png" };
 
 // The member at this computer: the prototype's Evelyn until the backend says
@@ -18,9 +15,8 @@ export function becomeViewer(memberId) {
 	viewerId = memberId;
 }
 
-// The firm itself in the app: the name it registered with, and its initial
-// as its mark until it gives the app a logo (2026-10-29: a new firm was shown
-// as Marlowe Finch).
+// The firm itself in the app: the name it registered with, and its initial as
+// its mark until it gives the app a logo.
 export function becomeOrganisation(name) {
 	const words = (name ?? "").trim();
 	if (words == "") return;
@@ -31,10 +27,10 @@ export function becomeOrganisation(name) {
 }
 
 // What the member at this computer may do in the firm. A right comes from the
-// member's role (PHIL-2); in the prototype the member may hire AI colleagues,
-// so the process can be seen (D-071). In the app the backend says it: the
-// firm's administrative account hires its AI colleagues and connects its
-// model accounts, a colleague who joined does neither (D-184).
+// member's role; in the prototype the member may hire AI colleagues, so the
+// process can be seen. In the app the backend says it: the firm's
+// administrative account hires its AI colleagues and connects its model
+// accounts, a colleague who joined does neither.
 export const viewerMay = { hire: true, connectModels: true, manageSeats: true };
 
 // The rights the backend gave the member at this computer (organisation.get's
@@ -46,23 +42,19 @@ export function becomeViewerRights(may) {
 	if (typeof may.manageSeats == "boolean") viewerMay.manageSeats = may.manageSeats;
 }
 
-// People and AI colleagues are members of one firm, with the same fields
-// (UI-5), a practice among them, named as a US firm names its practices:
-// a person's practice group, as the fixture gives it, and the practice an AI
-// colleague works in (D-058). An AI colleague ranks with the position its
-// role holds, on the firm's one scale (D-059, PHIL-2). Kitsune ranks with the
-// partners, while the title of Partner belongs to people (D-060). The people
-// are Marlowe Finch LLP's, from the owner's fixture
-// (public/mock/team/profiles.json, D-052), each with its portrait cut for
-// avatars (public/mock/team/avatars/). An AI colleague's face is its species
-// of the Agent Family (D-063). It also carries its standing duties, remit
-// and record, which its profile shows beside its personal chat.
+// People and AI colleagues are members of one firm, with the same fields, a
+// practice among them, named as a US firm names its practices: a person's
+// practice group, as the fixture gives it, and the practice an AI colleague
+// works in. An AI colleague ranks with the position its role holds, on the
+// firm's one scale. Kitsune ranks with the partners, while the title of
+// Partner belongs to people. An AI colleague's face is its species of the
+// Agent Family. It also carries its standing duties, remit and record, which
+// its profile shows beside its personal chat.
 //
 // Each portrait is cut from the fixture's original in three sizes, 64, 128
-// and 256 pixels a side, and a face is drawn from the one nearest its size
-// on the screen (components/Avatar): shrunk five or six times over in a
-// moving layer, a 256-pixel picture breaks into grain (the owner,
-// 2026-10-31).
+// and 256 pixels a side, and a face is drawn from the one nearest its size on
+// the screen (components/Avatar): shrunk five or six times over in a moving
+// layer, a 256-pixel picture breaks into grain.
 const portrait = name => ({
 	photo: `mock/team/avatars/${name}-256.webp`,
 	photoSet: [64, 128, 256].map(side => `mock/team/avatars/${name}-${side}.webp ${side}w`).join(", "),
@@ -282,11 +274,11 @@ export const general = {
 	memberIds: members.map(member => member.id),
 };
 
-// Each Matter is one client's whole project, walled by client (ORG-6): an
+// Each Matter is one client's whole project, walled by client: an
 // acquisition, a launch, a lawsuit. The questions inside it are its threads:
-// an NDA, a letter of intent, a liability cap (the owner, 2026-10-24). A
-// project goes by a code name, as firms name their deals, and says what it
-// is in its description; its mark is its initials or an icon.
+// an NDA, a letter of intent, a liability cap. A project goes by a code
+// name, as firms name their deals, and says what it is in its description;
+// its mark is its initials or an icon.
 export const matters = [
 	{
 		id: "x_sablewood",
@@ -315,9 +307,9 @@ export const matters = [
 	},
 ];
 
-// Versioned results with their evidence (ORG-3): what changed, the clause
-// each change rests on, the sources and what could not be checked. A
-// version never changes.
+// Versioned results with their evidence: what changed, the clause each
+// change rests on, the sources and what could not be checked. A version
+// never changes.
 export const workProducts = {
 	wp_sablewood_v1: {
 		title: "Sablewood NDA mark-up",
@@ -383,8 +375,8 @@ export const workProducts = {
 };
 
 // What a colleague asks the member, as a junior lawyer asks the lead what to
-// do next with a draft (the owner, 2026-10-24): the question, what follows
-// each answer, and nothing done until the member answers.
+// do next with a draft: the question, what follows each answer, and nothing
+// done until the member answers.
 export const decisions = {
 	d_sablewood: {
 		kind: "ask",
@@ -410,7 +402,7 @@ export const decisions = {
 };
 
 // Topic threads: a title, an opening post and its discussion, closed with a
-// conclusion (ORG-13).
+// conclusion.
 export const threads = [
 	{
 		id: "t_sablewood",
@@ -592,7 +584,7 @@ export const reactions = {
 };
 
 // The viewer's inbox: one row per thread. What waits for the viewer leads,
-// then what is due, then what the viewer was addressed for (ORG-14).
+// then what is due, then what the viewer was addressed for.
 export const inbox = [
 	{ threadId: "t_sablewood", isUnread: true },
 	{ threadId: "t_sablewood_loi", isUnread: true },
@@ -602,7 +594,7 @@ export const inbox = [
 ];
 
 // Personal chats: one durable chat with each member, AI colleagues included.
-// Talk about a client's work is filed to its Matter (D-042, ORG-16).
+// Talk about a client's work is filed to its Matter.
 export const chats = [
 	{
 		memberId: "m_juno",
@@ -630,7 +622,7 @@ export const chats = [
 			{ id: "c_m1", authorId: "m_noah", at: "2026-10-23T09:14:00", matterId: "x_orbis", text: "Put the Orbis cap question in the thread. They want an answer today." },
 			{ id: "c_m2", authorId: "m_evelyn", at: "2026-10-23T09:15:00", matterId: "x_orbis", text: "Will look before lunch." },
 			// It names no agreement, so it waits in the Inbox's Unsorted until the
-			// member files it (the owner, 2026-10-24).
+			// member files it.
 			{ id: "c_m3", authorId: "m_noah", at: "2026-10-23T09:44:00", matterId: null, isUnsorted: true, text: "A distributor in Texas is asking whether last year's price list still binds them. Do you know which agreement that falls under?" },
 		],
 	},
@@ -665,9 +657,9 @@ export const chats = [
 ];
 
 // What each AI colleague is doing. "yours" waits for the viewer, "working" is
-// work under way, "waiting" waits on someone else, "idle" concerns the
-// viewer in nothing (ORG-14). `presence` is what its character acts out, as
-// the backend reports it on every AI colleague (D-013).
+// work under way, "waiting" waits on someone else, "idle" concerns the viewer
+// in nothing. `presence` is what its character acts out, as the backend
+// reports it on every AI colleague.
 export const colleagueStates = {
 	m_juno: { text: "Asks whether to send Sablewood v2", kind: "yours", presence: "explain" },
 	m_teodor: { text: "Watches the EU and US dual-use lists", kind: "idle", presence: "rest" },
@@ -697,6 +689,5 @@ export const documents = {
 
 // This module keeps the window's state. While the window runs it is never
 // swapped for a fresh copy, which would start empty: a change to it reloads
-// the window (2026-10-26: a hot swap left the Mac's window with no Matter, so
-// it read nothing and every post was refused).
+// the window.
 if (import.meta.hot) import.meta.hot.decline();

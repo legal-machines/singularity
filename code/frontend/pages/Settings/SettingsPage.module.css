@@ -26,7 +26,7 @@
 	padding: 0 clamp(24px, 3.5vw, 64px);
 }
 
-/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s (UI-23). */
+/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s. */
 .head {
 	padding-top: calc(var(--sidebar-label-baseline) - 28.3px + var(--firm-row));
 }
@@ -120,7 +120,7 @@
 	text-wrap: pretty;
 }
 
-/* A code in letters of one width (UI-27). */
+/* A code in letters of one width. */
 .code {
 	font-family: var(--font-code);
 	font-weight: 500;
@@ -138,8 +138,8 @@
 	color: var(--ink-3);
 }
 
-/* The seat's password and two-step sign-in (D-215): their dialogs' fields one
-   under another, the authenticator's QR code centred, the recovery codes in two
+/* The seat's password and two-step sign-in: their dialogs' fields one under
+   another, the authenticator's QR code centred, the recovery codes in two
    columns in the type codes are read in. */
 .dialog_fields {
 	display: flex;
@@ -153,11 +153,11 @@
 	color: var(--accent);
 }
 
-/* Two-step sign-in turned on as onboarding turns it on (the owner, 2026-11-02):
-   each step's one thing in the middle of the dialog - the QR code and its key,
-   the six cells of the code, the recovery codes and the ways to keep them -
-   with onboarding's own code cells in this window's colours, and the dots of
-   the steps at the dialog's foot, before its buttons. */
+/* Two-step sign-in turned on as onboarding turns it on: each step's one thing
+   in the middle of the dialog - the QR code and its key, the six cells of the
+   code, the recovery codes and the ways to keep them - with onboarding's own
+   code cells in this window's colours, and the dots of the steps at the
+   dialog's foot, before its buttons. */
 .two_step {
 	--entry-ink: var(--ink);
 	--entry-muted: var(--ink-3);
@@ -171,8 +171,8 @@
 	justify-content: center;
 }
 
-/* Confirming it's you (D-218) is a form: its fields and what went wrong run
-   the dialog's width, on the title's edge, as the password dialog's do. */
+/* Confirming it's you is a form: its fields and what went wrong run the
+   dialog's width, on the title's edge, as the password dialog's do. */
 .two_step_form {
 	align-items: stretch;
 }
@@ -291,7 +291,7 @@ nav.steps {
 	margin-top: 4px;
 }
 
-/* Where no account is connected, for a colleague who joined (D-184). */
+/* Where no account is connected, for a colleague who joined. */
 .none {
 	font: var(--type-body);
 	color: var(--ink-2);

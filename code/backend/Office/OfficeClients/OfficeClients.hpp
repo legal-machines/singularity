@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
-// Who may use Singularity's Office connection (D-105, its security review in
-// docs/OFFICE.md). Reaching the loopback port proves nothing: any program on
-// this computer can. So a pane is paired once, as a device is:
+// Who may use Singularity's Office connection. Reaching the loopback port
+// proves nothing: any program on this computer can. So a pane is paired once,
+// as a device is.
 //
 //   1. the pane asks to pair, for Word, Excel or Outlook; it is shown a code,
 //      and is handed a one-time secret only it holds;
@@ -70,6 +70,11 @@ struct PairedClient {
 	std::string expires_at;
 	std::string token_sha256;
 };
+
+// Whether any of `clients` is a pane of Word, Excel or PowerPoint: one that
+// reached Singularity through its add-in for documents, which is then in Office
+// whatever version of Singularity placed it.
+bool has_document_pane(const std::vector<PairedClient> &clients);
 
 class OfficeClients final {
 public:

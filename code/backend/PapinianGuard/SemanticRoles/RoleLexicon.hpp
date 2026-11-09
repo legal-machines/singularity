@@ -14,20 +14,19 @@
 
 // The role lexicons (DESIGN4 §5.2): the legal-general words a label, a table
 // header or a clause caption names a figure's role with - "Liability Cap",
-// «Ставка неустойки», "Paid" - each under its closed universal class (LIMIT,
+// «…», "Paid" - each under its closed universal class (LIMIT,
 // PENALTY, PAID ...), and the plain vocabulary of a table's labels ("Month",
-// «Премия», "Net Sales") under VOCAB. Data files beside this header
+// «…», "Net Sales") under VOCAB. Data files beside this header
 // (role_lexicon_en.txt, role_lexicon_ru.txt), staged into the app's Resources;
 // never a name of a party, a product or a place.
 //
-// Header-only, so Papinian Guard's detection (the owner-approved label
-// exemption, DESIGN4 §6.8) and SemanticRoles read one lexicon without either
-// linking the other. When no file can be read the lexicon is empty: no role
-// class is named and no label is let through - the masking stays as it is.
+// Header-only, so Papinian Guard's detection and SemanticRoles read one
+// lexicon without either linking the other. When no file can be read the
+// lexicon is empty: no role class is named and no label is let through - the
+// masking stays as it is.
 namespace singularity::protected_api::papinian::roles {
 
 // One phrase of a class: its words' stems, folded ("liability", "cap";
-// «ставк», «неустойк»).
 struct LexiconPhrase {
 	std::string role_class;
 	std::vector<std::string> stems;
@@ -42,7 +41,7 @@ struct RoleLexicon {
 
 namespace lexicon_detail {
 
-// Case-folded (utf8proc), "ё" read as "е": how every label and stem is compared.
+// Case-folded (utf8proc), "…" read as "…": how every label and stem is compared.
 inline std::string fold(std::string_view text) {
 	utf8proc_uint8_t *folded = nullptr;
 	const utf8proc_ssize_t size = utf8proc_map(reinterpret_cast<const utf8proc_uint8_t *>(text.data()),
@@ -57,8 +56,7 @@ inline std::string fold(std::string_view text) {
 }
 
 // Words of a text, folded: letters and digits of any script; everything else
-// separates. "Base Rent", «Ставка неустойки (по договору)» -> base, rent;
-// ставка, неустойки, по, договору.
+// separates. "Base Rent", «…» -> base, rent;
 inline std::vector<std::string> folded_words(std::string_view text) {
 	const std::string folded = fold(text);
 	std::vector<std::string> words;
@@ -158,7 +156,7 @@ inline void read_into(const std::filesystem::path &path, RoleLexicon &lexicon) {
 
 // Whether a folded word is a form of a folded stem: the stem itself, or the
 // stem with an inflection after it (a Russian ending, an English plural or
-// "-ed"/"-ing"): «неустойки» of «неустойк», "invoiced" of "invoice".
+// "-ed"/"-ing"): «…» of «…», "invoiced" of "invoice".
 [[nodiscard]] inline bool word_of_stem(const std::string &word, const std::string &stem) {
 	if (word == stem) return true;
 	if (stem.size() < 3 || word.size() <= stem.size() || word.compare(0, stem.size(), stem) != 0) return false;

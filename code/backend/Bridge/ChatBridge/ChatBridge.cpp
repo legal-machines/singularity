@@ -140,8 +140,8 @@ nlohmann::json create(const nlohmann::json &params) {
 nlohmann::json save_ai_setup(const nlohmann::json &params) {
   const std::string matter_id = params.at("matterId").get<std::string>();
   const std::string chat_id = params.at("chatId").get<std::string>();
-  // Only what this save changes is checked (Beta 1 #41): the overrides the
-  // Chat keeps now are what it is compared with.
+  // Only what this save changes is checked: the overrides the Chat keeps
+  // now are what it is compared with.
   std::vector<routing::RoleAssignmentEntry> previous;
   {
     const persistence::PersistenceLock lock(persistence::persistence_mutex());

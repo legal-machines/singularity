@@ -3,9 +3,9 @@ import { useSyncExternalStore } from "react";
 import { hasNative, nativeApp } from "./native.js";
 import { matters } from "./workspace.js";
 
-// The time members record on the firm's Matters (D-181), as the backend keeps
-// it in each Matter's own data: read for a Matter when its page, the calendar
-// or the time sheet asks, and again whenever the backend says the Matter
+// The time members record on the firm's Matters, as the backend keeps it in
+// each Matter's own data: read for a Matter when its page, the calendar or
+// the time sheet asks, and again whenever the backend says the Matter
 // changed, so an entry recorded on another of the firm's computers arrives as
 // its threads do. Nothing is kept here as a second truth: what the window
 // shows is what the backend listed last.
@@ -214,10 +214,10 @@ export async function readMatterUsage(uiMatterId, month) {
 	return nativeApp().getUsageSummary(period.start, period.end, realMatterId);
 }
 
-// The month's AI work as a statement for the Matter's client (D-252): a PDF
-// to send with the invoice and its signed file anyone can check, written and
-// signed by this computer into the folder the lawyer chooses. Null when they
-// chose none.
+// The month's AI work as a statement for the Matter's client: a PDF to send
+// with the invoice and its signed file anyone can check, written and signed
+// by this computer into the folder the lawyer chooses. Null when they chose
+// none.
 export function canSaveWorkStatement() {
 	return hasNative() && typeof nativeApp()?.saveWorkStatement == "function";
 }
@@ -227,7 +227,7 @@ export async function saveWorkStatement(uiMatterId, month) {
 	if (hasNative() == false || realMatterId == null) throw new Error("This Matter's statement is made on a computer that holds it.");
 	const period = monthPeriod(month);
 	// Each OpenRouter cost confirmed by its own record, and this computer's
-	// record timestamped, before the statement is signed (D-252).
+	// record timestamped, before the statement is signed.
 	await confirmWorkCosts(uiMatterId, month).catch(() => null);
 	const saved = await nativeApp().saveWorkStatement(realMatterId, period.start, period.end, monthText(month));
 	return saved?.saved == true ? saved : null;
@@ -235,9 +235,9 @@ export async function saveWorkStatement(uiMatterId, month) {
 
 // Asks OpenRouter for its own record of each of the month's OpenRouter calls
 // on the Matter not confirmed yet, and Legal Machines to timestamp this
-// computer's work record (usage.confirmCosts, D-252): { confirmed, waiting,
-// stamped }, or null where this build cannot. Once a minute for a Matter and
-// month at most, unless `isAgain`.
+// computer's work record: { confirmed, waiting, stamped }, or null where
+// this build cannot. Once a minute for a Matter and month at most, unless
+// `isAgain`.
 const confirmedAt = new Map();
 export async function confirmWorkCosts(uiMatterId, month, isAgain = true) {
 	const realMatterId = realIdOf(uiMatterId);
@@ -252,9 +252,9 @@ export async function confirmWorkCosts(uiMatterId, month, isAgain = true) {
 // What Usage counted, as a bill reads it: the requests, the tokens, the cost
 // in each currency as the providers charged or estimated it, how many requests
 // have no cost recorded, and the requests that reached no model (a colleague
-// asked while no model account was connected), so the bill lists every
-// request it counts; and the requests by whose work they were (D-252), the
-// reader's own marked by `actorId`.
+// asked while no model account was connected), so the bill lists every request
+// it counts; and the requests by whose work they were, the reader's own marked
+// by `actorId`.
 export function usageOnBill(summary, actorId = state.actorId) {
 	if (summary == null) return null;
 	const counts = summary.classificationCounts ?? {};
@@ -287,9 +287,9 @@ export function usageOnBill(summary, actorId = state.actorId) {
 	};
 }
 
-// One request as its bill line reads it (D-252): when it ran, what for, on
-// which model, who asked or that the colleague began it itself, its cost as
-// the provider reported or estimated it, and each model call's evidence.
+// One request as its bill line reads it: when it ran, what for, on which
+// model, who asked or that the colleague began it itself, its cost as the
+// provider reported or estimated it, and each model call's evidence.
 function requestOnBill(operation) {
 	const usage = operation.usage ?? {};
 	const isPriced = operation.costClassification == "actual" || operation.costClassification == "estimated";

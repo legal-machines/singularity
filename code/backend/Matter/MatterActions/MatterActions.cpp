@@ -55,8 +55,8 @@ std::string intake_address(const std::string &text) {
   return address;
 }
 
-// The rules of a Matter's intake as kept (D-228): both addresses real, each
-// rule once, at most fifty. A rule with an address that is none is refused.
+// The rules of a Matter's intake as kept: both addresses real, each rule
+// once, at most fifty. A rule with an address that is none is refused.
 std::vector<correspondence::IntakeRule> normalized_intake(const std::vector<correspondence::IntakeRule> &rules) {
   constexpr std::size_t kMostRules = 50;
   std::vector<correspondence::IntakeRule> kept;
@@ -79,9 +79,7 @@ auto find(std::vector<matters::Matter> &list, const std::string &id) {
 
 // The Matters removed from this computer's list. Their folders stay where they
 // are, so the search for the firm's Matters would offer each again as one that
-// arrived (the owner, 2026-11-02: "I deleted this d from the computer myself,
-// and here it is - it should not be"); it offers none of these. Opening one's
-// folder brings it back.
+// arrived; it offers none of these. Opening one's folder brings it back.
 std::filesystem::path removed_here_path(const std::filesystem::path &workspace_path) {
   return workspace_path / ".singularity-workspace" / "removed-matters.json";
 }
@@ -250,19 +248,15 @@ void tell_reconciled(const std::string &id) {
 	}
 }
 
-// The watcher callback: runs the same two persisted phases every steady-
-// state list_documents() call does - a detect phase then
-// process_project_documents(), both declared in MatterActions.hpp - but
-// fire-and-forget on a background thread with nothing to return to. A Matter
-// that has since been removed, or a transient I/O error, is silently skipped
-// rather than crashing the watcher thread. The next external change (or the
-// next explicit list_documents() call) recovers from any transient failure
-// here; see Sec.7 of phase-08-documents-filesystem-states.md - correctness
-// never depends on any one watcher callback succeeding. Running the two
-// phases as two separate persisted calls here too (not a single combined
-// function) is what makes a real external edit's Changed/Processing window
-// genuinely observable in production - see detect_project_documents()'s own
-// comment.
+// The watcher callback: runs the same two persisted phases every steady- state
+// list_documents call does - a detect phase then process_project_documents,
+// both declared in MatterActions.hpp - but fire-and-forget on a background
+// thread with nothing to return to. A Matter that has since been removed, or a
+// transient I/O error, is silently skipped rather than crashing the watcher
+// thread. Running the two phases as two separate persisted calls here too (not
+// a single combined function) is what makes a real external edit's
+// Changed/Processing window genuinely observable in production - see
+// detect_project_documents's own comment.
 //
 // Phase 08 correction round 3, item 1: which detect phase runs depends on
 // whether the OS-reported event coverage for this notification is
@@ -304,9 +298,9 @@ matters::Matter reconcile_from_watcher_report_for_testing(
 	return require_matter(id);
 }
 
-// matters::load_matters() is already the full .lm-aware facade (D-002): for
-// a Matter cut over to portable .lm truth it returns .lm's own canonical
-// state, not a legacy snapshot - see MatterRepository.hpp.
+// matters::load_matters is already the full .lm-aware facade: for a Matter
+// cut over to portable .lm truth it returns .lm's own canonical state, not
+// a legacy snapshot - see MatterRepository.hpp.
 std::vector<matters::Matter> list() {
   const persistence::PersistenceLock lock(persistence::persistence_mutex());
   // A Node nobody has set up yet has no Projects - Home then offers the first
@@ -314,10 +308,25 @@ std::vector<matters::Matter> list() {
   const auto workspace = node::configured_workspace_path();
   if (!workspace) return {};
   std::vector<matters::Matter> all = matters::load_matters(*workspace);
-  // The member's desk is no Matter of the firm (D-157), nor is a personal
-  // conversation (D-042).
+  // The member's desk is no Matter of the firm, nor is a personal
+  // conversation.
   all.erase(std::remove_if(all.begin(), all.end(),
       [](const matters::Matter &entry) { return is_desk(entry) || is_personal_project(entry); }), all.end());
+  return all;
+}
+
+std::vector<matters::Matter> listed() {
+  std::vector<matters::Matter> all = list();
+  const MatterSealHooks hooks = installed_seal_hooks();
+  if (!hooks.is_other_organisations) return all;
+  all.erase(std::remove_if(all.begin(), all.end(), [&hooks](const matters::Matter &entry) {
+    if (!entry.directory_path || entry.directory_path->empty()) return false;
+    try {
+      return hooks.is_other_organisations(std::filesystem::u8path(*entry.directory_path), entry.id);
+    } catch (const std::exception &) {
+      return false;
+    }
+  }), all.end());
   return all;
 }
 
@@ -430,12 +439,11 @@ matters::Matter update(UpdateMatter command) {
   auto all = matters::load_matters(workspace_path);
   const auto found = find(all, command.id);
   if (found == all.end()) throw std::runtime_error("This matter no longer exists.");
-  // STAT-3: a Project's name, description and instructions live in its own
-  // `.lm` data, which is canonical. While that data cannot be read, such a
-  // change has nowhere to go: accepting it into matters.json would show the
-  // person their edit and then lose it the moment the folder came back. It is
-  // refused out loud instead. Relinking a moved folder stays available, because
-  // the locator is all the workspace itself keeps.
+  // While that data cannot be read, such a change has nowhere to go: accepting
+  // it into matters.json would show the person their edit and then lose it the
+  // moment the folder came back. It is refused out loud instead. Relinking a
+  // moved folder stays available, because the locator is all the workspace
+  // itself keeps.
   const bool changesProjectContent = (command.name.supplied && command.name.value)
       || command.description.supplied || command.instructions.supplied || command.appearance.has_value()
       || command.archived.has_value() || command.correspondence_intake.has_value();
@@ -524,6 +532,29 @@ std::vector<matters::Matter> remove(const std::string &id) {
   return all;
 }
 
+std::optional<FolderMatter> matter_in_folder(const std::filesystem::path &folder,
+    const std::function<bool(const std::string &)> &is_in_trash) {
+  std::error_code error;
+  if (std::filesystem::exists(folder / ".lm", error) == false) return std::nullopt;
+  FolderMatter found;
+  found.state = "away";
+  try {
+    const std::string canonical = std::filesystem::weakly_canonical(folder).u8string();
+    const persistence::PersistenceLock lock(persistence::persistence_mutex());
+    const persistence::ProjectRecord record = persistence::load_project(canonical);
+    found.id = record.project.id;
+    found.name = record.project.name;
+    if (is_in_trash && is_in_trash(found.id)) found.state = "trashed";
+    if (found.state == "away")
+      for (const matters::Matter &listed : matters::load_matters(node::require_active_workspace_path()))
+        if (listed.id == found.id) found.state = "listed";
+  } catch (const std::exception &) {
+    // Unreadable data: a Matter is there, its name unknown; it opens as any
+    // folder of one does, which says what is wrong with it.
+  }
+  return found;
+}
+
 matters::Matter create_or_open_from_folder(const std::string &selected_path) {
   const std::filesystem::path path(selected_path);
   workspaces::validate_directory(path);
@@ -565,7 +596,7 @@ matters::Matter create_or_open_from_folder(const std::string &selected_path) {
       matters::save_matters(workspace_path, all);
       return reload(id);
     }
-    // A Matter not listed here enters only with the firm's seal (D-167).
+    // A Matter not listed here enters only with the firm's seal.
     const MatterSealHooks sealHooks = installed_seal_hooks();
     if (sealHooks.may_open && sealHooks.may_open(canonical, id) == false) throw std::runtime_error(unsealed_refusal());
     matters::Matter locator;
@@ -612,6 +643,34 @@ bool is_personal_project(const matters::Matter &matter) {
   return folder.filename().u8string().rfind("pc_", 0) == 0 && folder.parent_path().filename().u8string() == "Personal";
 }
 
+// A Matter's own folder, where its .lm can carry a record to its other
+// computers: never the desk's or a personal conversation's.
+static std::optional<std::filesystem::path> records_folder_in(const matters::Matter &matter) {
+  if (is_desk(matter) || is_personal_project(matter)) return std::nullopt;
+  if (matter.data_state != matters::ProjectDataState::Ready || !matter.directory_path || matter.directory_path->empty())
+    return std::nullopt;
+  const std::filesystem::path folder = std::filesystem::u8path(*matter.directory_path);
+  if (persistence::has_project_data(folder) == false) return std::nullopt;
+  return folder;
+}
+
+std::optional<std::filesystem::path> records_folder_of(const std::string &matter_id) {
+  if (matter_id.empty() == true) return std::nullopt;
+  const persistence::PersistenceLock lock(persistence::persistence_mutex());
+  const auto workspace = node::configured_workspace_path();
+  if (!workspace) return std::nullopt;
+  const std::optional<matters::Matter> found = matters::load_matter(*workspace, matter_id);
+  if (!found) return std::nullopt;
+  return records_folder_in(*found);
+}
+
+std::vector<std::filesystem::path> records_folders() {
+  std::vector<std::filesystem::path> folders;
+  for (const matters::Matter &matter : list())
+    if (const auto folder = records_folder_in(matter); folder.has_value() == true) folders.push_back(*folder);
+  return folders;
+}
+
 namespace {
 
 // How many times a personal conversation's project is made while files the
@@ -652,12 +711,10 @@ matters::Matter open_personal_project(const std::filesystem::path &folder, const
     // What travelled in the channel before its conversation was made here -
     // the offers of Matters a colleague shared (MatterOffers, .lm/Offers) -
     // stands where the project's data goes, and that data moves only onto an
-    // absent place (ProjectStore; 2026-11-05: "Windows error 183", and a
-    // folder that is not empty refuses a rename on macOS and Linux too). It is
-    // set aside while the project is made, and put back into it, never
-    // replacing what stands there. A file the coordination brings meanwhile
-    // makes a new .lm of its own: it is put back too, and the project is made
-    // again, a few times at most.
+    // absent place. It is set aside while the project is made, and put back
+    // into it, never replacing what stands there. A file the coordination
+    // brings meanwhile makes a new .lm of its own: it is put back too, and the
+    // project is made again, a few times at most.
     for (int attempt = 1; persistence::has_project_data(canonical) == false; ++attempt) {
       const fs::path data = fs::u8path(canonical) / ".lm";
       std::optional<fs::path> aside;
@@ -800,8 +857,8 @@ matters::Matter detect_project_documents(const std::string& id) {
 	// The folder is read - every file stat'd and hashed - before the persistence
 	// lock is taken: a large data room, a network share or a cloud drive still
 	// downloading holds up only this Matter, never every other Matter, chat and
-	// agent while it is read (SCAN-1). What changed in the record meanwhile is
-	// read again under the lock (reconcile_folder_observation).
+	// agent while it is read. What changed in the record meanwhile is read again
+	// under the lock (reconcile_folder_observation).
 	std::optional<matters::Matter> readAgainst;
 	{
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
@@ -1098,14 +1155,20 @@ std::vector<std::string> documents_being_read(const std::string &id) {
 	return pending;
 }
 
-// A request goes on without documents still being read only while a pass is
-// reading them: one is started, on a thread of its own, when none runs. Its
-// failure is its own - what it could not read stays pending for the next pass.
-void read_pending_in_background(const std::string &id) {
+} // namespace
+
+// A pass is started on a thread of its own when none runs; one already running
+// is asked for one more round, so a document registered after its round began
+// is read before it ends. Its failure is its own - what it could not read stays
+// pending for the next pass.
+void read_documents_in_background(const std::string &id) {
 	{
 		const std::lock_guard<std::mutex> lock(extraction_registry_mutex);
 		const auto running = extraction_passes.find(id);
-		if (running != extraction_passes.end() && running->second.isRunning == true) return;
+		if (running != extraction_passes.end() && running->second.isRunning == true) {
+			running->second.isRerunRequested = true;
+			return;
+		}
 	}
 	std::thread([id] {
 		try {
@@ -1114,8 +1177,6 @@ void read_pending_in_background(const std::string &id) {
 		}
 	}).detach();
 }
-
-} // namespace
 
 matters::Matter process_project_documents(const std::string& id) {
 	return process_documents_outside_lock(id, std::nullopt);
@@ -1192,7 +1253,7 @@ DocumentReadingWait wait_for_needed_documents_read(const std::string &id,
 	} else if (pending.size() <= kFewDocumentsForARequest) {
 		awaited.insert(pending.begin(), pending.end());
 	}
-	if (awaited.size() < pending.size()) read_pending_in_background(id);
+	if (awaited.size() < pending.size()) read_documents_in_background(id);
 	if (!awaited.empty()) {
 		result.awaited_count = awaited.size();
 		if (on_waiting) on_waiting(awaited.size());
@@ -1385,6 +1446,18 @@ matters::Matter list_documents_for_request(const std::string &id) {
 	return afterDetect;
 }
 
+matters::Matter list_documents_without_waiting(const std::string &id) {
+	const bool watcherAlreadyActive = is_watched(id);
+	const matters::Matter listed =
+			watcherAlreadyActive == true ? read_project_documents(id) : detect_project_documents(id);
+	watch_project_folder(id, listed);
+	if (watcherAlreadyActive == false) tell_reconciled(id);
+	if (std::any_of(listed.documents.begin(), listed.documents.end(),
+			[](const matters::MatterDocument &document) { return is_pending_reading(document); }))
+		read_documents_in_background(id);
+	return listed;
+}
+
 // A watcher is taken out of the table under the lock and destroyed after it:
 // destroying one waits for a callback it may still be running (Platform/
 // FileSystemWatcher), and that wait must never hold the lock a callback or
@@ -1544,8 +1617,8 @@ ProjectDataStatus set_up_project_data(const std::string &id, bool start_empty) {
       throw matters::ProjectDataError(entry.data_state,
           "Singularity can't access this Project's folder, so nothing was set up and nothing was changed. Restore access "
           "to the folder, then try again.");
-    // MIG-5: data this build is too old to read is not missing data. Setting it
-    // up again would write an empty Project over work that is perfectly fine.
+    // Setting it up again would write an empty Project over work that is
+    // perfectly fine.
     if (entry.data_state_reason == "requires_newer_version")
       throw matters::ProjectDataError(entry.data_state,
           "This Project was saved by a newer version of Singularity, so nothing was set up and nothing was changed. "
@@ -1718,14 +1791,8 @@ std::string prepare_project_data_clean_copy(
   return destination.u8string();
 }
 
-// Deletes .lm only. Never writes name/description/instructions or any other
-// .lm-owned content back into matters.json afterward: doing so would recreate
-// exactly the second authoritative Project snapshot D-002 forbids, right at
-// the moment .lm truth is removed. matters.json already holds nothing but
-// this Matter's locator (id/directoryPath - see MatterRepository.cpp's
-// locator_stub()) while cut over, so there is nothing to "restore" here; a
-// restart reads that same bare locator, never a resurrected snapshot. User
-// documents are untouched - only the .lm folder itself is removed.
+// Deletes .lm only. User documents are untouched - only the .lm folder itself
+// is removed.
 namespace {
 std::mutex &removal_guard_mutex() {
   static std::mutex mutex;
@@ -1811,25 +1878,22 @@ std::vector<persistence::ProjectSummary> discover_projects_for_scope(const platf
   if (scope.roots.empty()) return {};
   // The walk reads only the folders' listings and can take minutes over a
   // large folder, a home or a Desktop: it runs before the store's lock, so
-  // every other read goes on meanwhile (2026-11-02: what the sidebar's
-  // Matters said last waited minutes behind a walk of the Desktop). What it
-  // found is read under the lock.
+  // every other read goes on meanwhile. What it found is read under the
+  // lock.
   const std::vector<std::filesystem::path> folders = persistence::find_project_folders(scope.roots);
   // Each Matter found is read through the store's own cache, which keeps its
   // own lock, and never under the store's: a first read of many Matters takes
   // seconds, and the firm's exchange and every other read wait for nothing
-  // meanwhile (2026-11-02: a thread archived on another computer stood 66
-  // seconds on its way here behind such a read). Only the list it changes is
-  // changed under the lock.
+  // meanwhile. Only the list it changes is changed under the lock.
   const std::vector<persistence::ProjectSummary> discovered = persistence::summarize_project_folders(folders);
   {
     const persistence::PersistenceLock lock(persistence::persistence_mutex());
     (void)reconcile_relocated_projects(discovered);
   }
   // What was found is offered as the firm's only when it is: listed here
-  // already, or sealed by one of the firm's computers (D-167). A `.lm` from
-  // outside the organisation, or written by hand, stays where it is, unoffered.
-  // A Matter the member removed from this computer is never offered again.
+  // already, or sealed by one of the firm's computers. A `.lm` from outside the
+  // organisation, or written by hand, stays where it is, unoffered. A Matter
+  // the member removed from this computer is never offered again.
   const MatterSealHooks hooks = installed_seal_hooks();
   std::set<std::string> listed;
   std::set<std::string> removed;

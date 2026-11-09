@@ -4,9 +4,11 @@
 #include "Platform/ActorIdentity/ActorIdentity.hpp"
 #include "Platform/DiskSpace/DiskSpace.hpp"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -18,9 +20,9 @@ namespace singularity::persistence {
 // A same-object conflict found while replaying a persisted operation whose
 // recorded base value no longer matched the state produced by an earlier
 // operation. Both competing values are kept, never just a count, so a later
-// human merge-review surface (COLLABORATION_CONTRACT.md) can show what each
-// writer intended and let a person keep/use/combine - this type is only the
-// durable data that surface will read; it implements no review UI itself.
+// human merge-review surface can show what each writer intended and let a
+// person keep/use/combine - this type is only the durable data that surface
+// will read; it implements no review UI itself.
 struct ProjectConflict {
 	std::string id;
   std::string collection; // empty for a top-level Project field conflict
@@ -45,8 +47,8 @@ struct ProjectRecord {
   long long conflict_count = 0;
   std::vector<ProjectConflict> conflicts;
   // Operation files that could not be read as an operation and so were not
-  // replayed (D-032): half brought in by a sync client, cut short by a crash,
-  // or damaged. Each is left exactly where it is, and read again once it
+  // replayed: half brought in by a sync client, cut short by a crash, or
+  // damaged. Each is left exactly where it is, and read again once it
   // changes. Their file names only.
   std::vector<std::string> unreadable_operations;
 };
@@ -87,12 +89,11 @@ public:
 	explicit ProjectDataAccessDenied(const std::string &message) : std::runtime_error(message) {}
 };
 
-// MIG-5: this Project's data was written by a NEWER Singularity than the one
-// reading it. Nothing is wrong with the data, and nothing about it should be
-// repaired, started over or removed - the person needs a newer Singularity, and
-// until then this build must not touch it. Distinct from damage precisely so
-// the product can say that instead of steering someone towards a destructive
-// action against perfectly good data.
+// Nothing is wrong with the data, and nothing about it should be repaired,
+// started over or removed - the person needs a newer Singularity, and until
+// then this build must not touch it. Distinct from damage precisely so the
+// product can say that instead of steering someone towards a destructive action
+// against perfectly good data.
 class ProjectDataRequiresNewerVersion final : public std::runtime_error {
 public:
 	explicit ProjectDataRequiresNewerVersion(const std::string &message) : std::runtime_error(message) {}
@@ -134,6 +135,12 @@ void reset_project_access_counts_for_testing();
 // Test-only: the free space every save of Project data reads instead of the
 // disk's own answer, or the disk's again when unset.
 void set_available_space_for_testing(std::optional<std::uintmax_t> bytes);
+// Test-only: told while a Project is read, once its Base has been checked
+// against the manifest's checksum and before it is parsed; unset with {}.
+void set_after_base_checked_for_testing(std::function<void()> told);
+// Test-only: how long a read is refused when a step this process read before
+// cannot be read now (load_project()); returns the window it replaces.
+std::chrono::milliseconds set_unreadable_step_window_for_testing(std::chrono::milliseconds window);
 ProjectRecord initialize_project(const std::filesystem::path &projectPath, const matters::Matter &project,
     const platform::ActorIdentity &actor,
     const std::optional<std::filesystem::path> &legacySource = std::nullopt);

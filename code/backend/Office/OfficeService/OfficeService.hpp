@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-// Singularity in Word, Excel and Outlook on this computer (D-105): whether
-// the person connected them, and what that took - the certificate the system
+// Singularity in Word, Excel and Outlook on this computer: whether the
+// person connected them, and what that took - the certificate the system
 // trusts for the panes, the add-ins Office knows, and the connection that
 // serves the panes while Singularity is open.
 //
@@ -39,6 +39,11 @@ struct OfficeStatus {
 	std::string connected_at;
 	// What stands in the way, in a sentence, when something does.
 	std::string problem;
+	// "waiting" when the last Connect found Word, Excel and PowerPoint never
+	// opened on this Mac, so Office has no folder for the add-in yet; "opened"
+	// once one of them has been since, and Connect can add it now; "none"
+	// otherwise. A first opening is a step, not a failure.
+	std::string first_opening = "none";
 };
 
 // The bridge's carrier for the connection; installed once the window's bridge is.
@@ -57,10 +62,10 @@ OfficeStatus office_status();
 OfficeStatus connect_office();
 
 // The certificate the panes are reached with, as onboarding asks it before
-// Office is connected (D-244, key "officeCertificate"), so connecting asks
-// nothing more. Not needed where neither Word, Excel, PowerPoint nor Outlook
-// is installed; allowed once this user's system trusts it; denied when the
-// person said no in this run. Never asks, never throws.
+// Office is connected, so connecting asks nothing more. Not needed where
+// neither Word, Excel, PowerPoint nor Outlook is installed; allowed once
+// this user's system trusts it; denied when the person said no in this run.
+// Never asks, never throws.
 platform::system_permissions::Permission office_certificate_permission();
 
 // Makes the certificate as connect_office does, when there is none or it ends
@@ -75,9 +80,9 @@ platform::system_permissions::Permission ask_office_certificate_trust();
 bool open_office_certificate_settings();
 
 // Opens the application the person is connecting, from Singularity's window
-// only (D-191): Word, Excel and PowerPoint with Singularity's own file, whose
-// pane opens and asks to connect by itself, Outlook as it is. Only once
-// Office is connected here and its panes are served. Never throws.
+// only: Word, Excel and PowerPoint with Singularity's own file, whose pane
+// opens and asks to connect by itself, Outlook as it is. Only once Office is
+// connected here and its panes are served. Never throws.
 OpenedApp open_office_app(OfficeApp app);
 
 // Stops serving the panes, removes the add-ins from Word and Excel and every

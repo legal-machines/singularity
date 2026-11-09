@@ -13,8 +13,9 @@ with what it found. A person gives it a goal and bounds, not steps.
   documents, in the Matter's own folder. The firm's computers share a Matter directly, sealed end to end, and no file
   of the firm passes through a server of Legal Machines.
 - **Papinian Guard.** Before any request reaches an external model, Papinian Guard takes the client's names, figures
-  and other protected facts out of it on the lawyer's computer, and puts them back into the answer there. When
-  protection cannot run, nothing is sent.
+  and other protected facts out of it on the lawyer's computer, and puts them back into the answer there. A picture a
+  member attaches is the one thing that leaves unmasked, and only by that member's own Send, with a note saying so in
+  view. When protection cannot run, nothing is sent.
 - **Models.** The firm connects its own model accounts (OpenAI, Anthropic, Google, OpenRouter and others), and runs
   local models on its own computers through Singularity's local inference, built on llama.cpp.
 - **Office.** Add-ins for Word, Excel, PowerPoint and Outlook work with the same Matters.

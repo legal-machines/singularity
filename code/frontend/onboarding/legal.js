@@ -1,6 +1,6 @@
-// Singularity's legal documents (D-144, D-145): the site serves the version
-// last published in the Internal Lab, Admin > Legal, at these addresses.
-// The native bridge opens a link with a target in the default browser.
+// Singularity's legal documents: the site serves the version last published
+// in the Internal Lab, Admin > Legal, at these addresses. The native bridge
+// opens a link with a target in the default browser.
 const LEGAL = "https://legalmachines.org/singularity/legal";
 
 export const LEGAL_LINKS = {
@@ -12,13 +12,13 @@ export const LEGAL_LINKS = {
 	privacy: `${LEGAL}/privacy`,
 	personalData: `${LEGAL}/personal-data-consent`,
 	// A design partner's seat accepts it before its first bug report or work
-	// log (D-257).
+	// log.
 	diagnostics: `${LEGAL}/diagnostics-consent`,
 };
 
 // Each document's title as the site publishes it. The protection model comes
 // from Legal Machines under the Software License Agreement's section 4, which
-// the firm accepts before anything downloads (D-195).
+// the firm accepts before anything downloads.
 export const LEGAL_TITLES = {
 	licence: "Software License Agreement",
 	licenceModels: "Software License Agreement, section 4",
@@ -28,6 +28,6 @@ export const LEGAL_TITLES = {
 	diagnostics: "Diagnostics Consent",
 };
 
-// The published results of client data protection's latest test (D-195):
-// what the protection slide's figure rests on, open to anyone.
+// The published results of client data protection's latest test: what
+// the protection slide's figure rests on, open to anyone.
 export const PROTECTION_TEST = "https://legalmachines.org/disclosure/protection-test";

@@ -28,11 +28,11 @@ matters::Matter create(const std::string& matter_id, std::string title,
 // dialog. Returns only the created ProjectChat.
 matters::MatterChat create(const std::string &project_id);
 
-// The chat a personal conversation of two members is held in (D-042): the
-// first of its project's chats that stands, by when it was begun and then by
-// id, so both members' computers read the same one; made when `make` and there
-// is none. "" when there is none and none is made. Throws when the project is
-// not on this computer.
+// The chat a personal conversation of two members is held in: the first of its
+// project's chats that stands, by when it was begun and then by id, so both
+// members' computers read the same one; made when `make` and there is none. ""
+// when there is none and none is made. Throws when the project is not on this
+// computer.
 std::string conversation_chat(const std::string &project_id, bool make);
 // Every chat of the conversation's project that stands, the conversation's own
 // first: two computers that began it at once each began one, and what either
@@ -45,9 +45,9 @@ matters::MatterChat rename(const std::string &project_id, const std::string &cha
                            std::string title, long long expected_revision,
                            matters::ChatTitleAuthority authority = matters::ChatTitleAuthority::User);
 
-// A thread archived or restored (D-214): it leaves the Matter's threads for
-// its Archived ones, or comes back, for every computer of the Matter; nothing
-// in it changes.
+// A thread archived or restored: it leaves the Matter's threads for its
+// Archived ones, or comes back, for every computer of the Matter; nothing in
+// it changes.
 matters::MatterChat set_archived(const std::string &project_id, const std::string &chat_id, bool archived);
 
 // A short, readable title for a Chat, derived from its first request: the
@@ -88,12 +88,11 @@ bool apply_generated_title_if_default(const std::string &project_id, const std::
 [[nodiscard]] std::string chat_title_from_reply(const std::string &reply, const std::string &first_message = {});
 
 // Persists this Chat's explicit AI Setup differences from the effective
-// Project setup (Phase 06, AI_SETUP_CONTRACT.md). `overrides` replaces the
-// full override set for this Chat - an empty vector is "Reset to Project
-// setup". A Chat override only affects subsequent operations in that Chat;
-// it never rewrites the provenance of already-completed tasks. Each entry
-// is validated against Routing::AiSetup's real role-compatibility rules
-// before it is persisted.
+// Project setup. `overrides` replaces the full override set for this Chat
+// - an empty vector is "Reset to Project setup". A Chat override only
+// affects subsequent operations in that Chat; it never rewrites the
+// provenance of already-completed tasks. Each entry is validated against
+// Routing::AiSetup's real role-compatibility rules before it is persisted.
 matters::Matter save_ai_setup_overrides(const std::string &matter_id, const std::string &chat_id,
                                         std::vector<matters::AiSetupRoleOverride> overrides);
 
@@ -139,24 +138,28 @@ struct MessageExtras {
   std::string answer_option;
   // The place in one of the Matter's documents the message is about.
   matters::DocumentPlace place;
-  // Whom an AI colleague's message addresses (D-168): the people (by actor id)
-  // and AI colleagues (by agent id) it names with "@", as a person's message
-  // names them. A person named finds it among what asks them.
+  // Whom an AI colleague's message addresses: the people (by actor id) and AI
+  // colleagues (by agent id) it names with "@", as a person's message names
+  // them. A person named finds it among what asks them.
   std::vector<std::string> mentions;
+  // An AI colleague's message: the web sources its work found, kept with
+  // it. The thread shows each its words cite ([EXTERNAL:...]) beside those
+  // words, and lists them all as what the work searched.
+  std::vector<research::ExternalEvidenceReference> external_evidence;
 };
 
 // A place in a document as a colleague reads it: "Section 2.1 (Purpose) of
 // "NDA.docx", where it reads: "...""; for cells of a workbook, "the cells
-// A2:M2 of the Contracts sheet of "Tracker.xlsx", which hold: "..."" (D-110);
-// empty for no place.
+// A2:M2 of the Contracts sheet of "Tracker.xlsx", which hold: "...""; empty
+// for no place.
 std::string place_words(const matters::Matter &project, const matters::DocumentPlace &place);
 
-// Whether a document is a workbook, whose places are cells, never clauses
-// (D-110).
+// Whether a document is a workbook, whose places are cells, never
+// clauses.
 bool is_workbook(const matters::MatterDocument &document);
 
 // Whether a document is a deck, whose places are slides: "slide 2 (Key
-// commercial terms) of "Status.pptx", which reads: "..."" (D-112).
+// commercial terms) of "Status.pptx", which reads: "..."".
 bool is_presentation(const matters::MatterDocument &document);
 
 // A person's message as the colleagues it names take it up as work: its words,
@@ -167,8 +170,8 @@ std::string words_for_colleagues(const std::string &project_id, const matters::M
 
 // Whom a person's message addresses among the colleagues: those it names (@),
 // and the colleague whose message it replies to - a reply is addressed as a
-// mention is (the owner, 2026-10-26: "she should react to replies too"). The
-// one replied to is named directly: it stands first, before any "all".
+// mention is. The one replied to is named directly: it stands first, before
+// any "all".
 std::vector<std::string> addressed_colleagues(const matters::Matter &project, const matters::MatterTask &message);
 std::vector<std::string> addressed_colleagues(const std::string &project_id, const matters::MatterTask &message);
 
@@ -189,12 +192,11 @@ matters::MatterTask post_member_message(const std::string &project_id, const std
 // changed or deleted only by its author, and only where its author writes - the
 // person at this computer, for a message this computer signed. A deleted
 // message keeps its place in the thread, without its words or what it carried.
-// Both sign the message again (Chat/MessageProvenance).
-// A thread's closing, with its conclusion, or its reopening, by the person at
-// this computer (D-088): a record of its own in the thread, signed like a
-// message, and never edited or deleted afterwards. Closing a closed thread or
-// reopening an open one is refused. A reply to a closed thread reopens it
-// without a record.
+// Both sign the message again (Chat/MessageProvenance). A thread's closing,
+// with its conclusion, or its reopening, by the person at this computer: a
+// record of its own in the thread, signed like a message, and never edited or
+// deleted afterwards. Closing a closed thread or reopening an open one is
+// refused. A reply to a closed thread reopens it without a record.
 matters::MatterTask close_thread(const std::string &project_id, const std::string &chat_id,
                                  const std::string &conclusion);
 matters::MatterTask reopen_thread(const std::string &project_id, const std::string &chat_id);
@@ -212,26 +214,24 @@ std::map<std::string, std::vector<std::string>> react_to_message(const std::stri
                                                                  const std::string &message_id,
                                                                  const std::string &emoji);
 // An AI colleague's reaction to a message, as a person's is kept, under the
-// colleague's own id (the owner, 2026-10-26: "teach the AI agents to put
-// reactions on messages"): put once, never taken back by putting it again.
+// colleague's own id: put once, never taken back by putting it again.
 std::map<std::string, std::vector<std::string>> react_as_colleague(const std::string &project_id, const std::string &chat_id,
                                                                    const std::string &message_id, const std::string &agent_id,
                                                                    const std::string &emoji);
 
 // The messages of a chat that other people wrote, marked as having reached
-// the member at this computer now (D-212), each one not marked so before: a
+// the member at this computer now, each one not marked so before: a
 // messenger's "received", kept in the chat's own record, so its author sees
 // it too. The window says so once it has read them. Returns how many it
 // marked; nothing is written when none was new.
 std::size_t mark_received(const std::string &project_id, const std::string &chat_id);
 
-// Phase 27's real backend dependency check before Chat deletion
-// (phase-27-chat-lifecycle-observe.md's "Delete Chat"). Counts only what a
-// person would otherwise wrongly believe is about to disappear: this Chat's
-// own turn history (real MatterTasks this Chat groups, which do become
-// inaccessible through Chat once the Chat itself is deleted) versus the
-// independent, already-copied Work Product/Issues and Project Context items
-// created from those operations (WorkProductOrigin::ChatTask/Finding,
+// Phase 27's real backend dependency check before Chat deletion. Counts only
+// what a person would otherwise wrongly believe is about to disappear: this
+// Chat's own turn history (real MatterTasks this Chat groups, which do
+// become inaccessible through Chat once the Chat itself is deleted) versus
+// the independent, already-copied Work Product/Issues and Project Context
+// items created from those operations (WorkProductOrigin::ChatTask/Finding,
 // ContextItemSource::chat_operation_id) - which this deletion never removes.
 struct ChatDeletionImpact {
   int turn_count = 0;
@@ -248,11 +248,15 @@ ChatDeletionImpact deletion_impact(const std::string &project_id, const std::str
 // Work Product whose origin task's chat_id no longer names a real Chat).
 // `expected_revision` is the same optimistic-concurrency guard rename() uses.
 matters::Matter delete_chat(const std::string &project_id, const std::string &chat_id, long long expected_revision);
+// Told once a thread is deleted here, after the deletion is saved and with the
+// store free: the colleagues end the work given in it (Agent/AgentActions
+// withdraw_work_in_deleted_chat), installed by the Bridge as the app starts.
+void set_deleted_listener(std::function<void(const std::string &project_id, const std::string &chat_id)> listener);
 
 // One real backend text match over this Chat title/prompts/response text -
-// Phase 27's "Search" (phase-27-chat-lifecycle-observe.md). Unicode-safe
-// case-insensitive substring search, never a frontend-only filter dressed
-// up as full search. `match_location` is "title", "prompt" or "response".
+// Phase 27's "Search". Unicode-safe case-insensitive substring search,
+// never a frontend-only filter dressed up as full search. `match_location`
+// is "title", "prompt" or "response".
 struct ChatSearchMatch {
   std::string chat_id;
   std::string chat_title;
@@ -291,14 +295,14 @@ ChatCompactionResult compact(const std::string &project_id, const std::string &c
 
 std::vector<ChatSearchMatch> search(const std::string &project_id, const std::string &query);
 
-// What a member has read of each conversation (D-202): for each - a thread or
-// a direct message, by its chat's id - the time of the latest message they
-// have seen there. Kept in the firm's record (D-203), each computer writing
-// only its own file of each member's marks (`.lm/ReadMarks/<member>/<device>.json`)
-// and every computer of the member reading the latest of all; with no firm's
-// record installed, with the member's preferences here (ReadMarks.json),
-// which are still read. A key is at most 120 letters of [A-Za-z0-9_.:-], a
-// time at most 40 of an ISO time's; others are refused.
+// What a member has read of each conversation: for each - a thread or a direct
+// message, by its chat's id - the time of the latest message they have seen there.
+// Kept in the firm's record, each computer writing only its own file of each
+// member's marks (`.lm/ReadMarks/<member>/<device>.json`) and every computer of the
+// member reading the latest of all; with no firm's record installed, with the
+// member's preferences here (ReadMarks.json), which are still read. A key is at
+// most 120 letters of [A-Za-z0-9_.:-], a time at most 40 of an ISO time's; others
+// are refused.
 struct ReadMarksPlace {
 	// The firm's record's folder here; none while it cannot be kept.
 	std::function<std::optional<std::filesystem::path>()> firm;

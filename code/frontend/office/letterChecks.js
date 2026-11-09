@@ -1,8 +1,8 @@
-// What Outlook's pane says of a reply before the person sends it (D-106): the
-// version of each agreement the Matter holds now, and what to raise - an
-// attachment that is not that version, words that say something is attached
-// when nothing is, a recipient who has not written in the Matter before.
-// Pure: it reads what it is given.
+// What Outlook's pane says of a reply before the person sends it: the version
+// of each agreement the Matter holds now, and what to raise - an attachment
+// that is not that version, words that say something is attached when nothing
+// is, a recipient who has not written in the Matter before. Pure: it reads
+// what it is given.
 
 // The versions the Matter holds now, one for each agreement a colleague
 // reviewed: the latest accepted, else the latest waiting for a decision.

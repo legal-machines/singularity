@@ -19,26 +19,24 @@ import { byFirmOrder, nameAsSeen, officeLine, positionLevels, positionOf } from 
 import styles from "./TeamPage.module.css";
 
 // The team: every member of the firm, people and AI colleagues in one list,
-// in the firm's order, by position, then by surname (D-059). An AI colleague
-// stands with the position its role holds, so Kitsune stands with the
-// partners. Its face lives, and its line says what it is doing. The list
-// stands on the page itself, in groups by position, each named in plain
-// words, with no frame, no labels in capitals and no lines between its rows
-// (the owner, 2026-11-02: "kickers and borders are AI slop; the division by
-// categories is needed, and filters - in our style, in Twist's spirit"); over
-// it, as over Inbox, which members it shows. Each row says its member's
-// office in one phrase, as the conversation's head does.
+// in the firm's order, by position, then by surname. An AI colleague stands
+// with the position its role holds, so Kitsune stands with the partners. Its
+// face lives, and its line says what it is doing. The list stands on the page
+// itself, in groups by position, each named in plain words, with no frame, no
+// labels in capitals and no lines between its rows; over it, as over Inbox,
+// which members it shows. Each row says its member's office in one phrase, as
+// the conversation's head does.
 export function TeamPage({ state }) {
 	const { open } = useNavigation();
 	const [isAdding, setAdding] = useState(false);
 	// Who sits in each seat is read again as the team opens: a colleague's
-	// profile may have come from the firm's record since (D-209).
+	// profile may have come from the firm's record since.
 	useEffect(() => {
 		if (hasNative() && isEmulation == false) refreshFirm();
 	}, []);
 	// The firm's own members in the app; the prototype's in a plain browser.
 	// The team at work in its order; the archived apart at its foot, the
-	// removed not at all (D-214).
+	// removed not at all.
 	const everyone = teamMembers().filter(member => !isEmulation || ["m_themis", "m_gabriel", "m_evelyn", DEMO_MEMBER].includes(member.id))
 		.filter(member => member.isRemoved != true);
 	const archived = everyone.filter(member => member.isArchived == true).sort(byFirmOrder);
@@ -140,7 +138,7 @@ function MemberRow({ member, state, isArchived = false, onOpen }) {
 					{line != "" ? <span className={styles.member_line}>{line}</span> : null}
 				</span>
 				{/* What it does now, or when they are back, as a word in its own
-				    colour, never in a frame (the owner's rule: status as words). */}
+				    colour, never in a frame. */}
 				{isEmulation ? null : now != null ? <span className={styles.member_now} data-tone={now.kind == "yours" ? "yours" : now.kind == "working" ? "work" : "plain"}>{now.text}</span>
 					: away != null ? <span className={styles.member_now} data-tone="time">{away}</span> : null}
 			</button>
@@ -148,14 +146,14 @@ function MemberRow({ member, state, isArchived = false, onOpen }) {
 	);
 }
 
-// The administrator adds a colleague (D-204), on a roomy page: the three
-// things the colleague signs in with - the firm's email, the seat's login and
-// its password - shown before the seat is made. The login is drawn here from
-// the set Legal Machines draws from, never typed, so no one puts a person's
-// name in it; the password is drawn too, strong, and either may be drawn
-// again (the owner, 2026-11-02: no password of one's own). Once Legal Machines
-// makes the seat, the same page hands them over; a press on the login or the
-// password copies both. Who the colleague is stays in the firm.
+// The administrator adds a colleague, on a roomy page: the three things the
+// colleague signs in with - the firm's email, the seat's login and its
+// password - shown before the seat is made. The login is drawn here from the
+// set Legal Machines draws from, never typed, so no one puts a person's name
+// in it; the password is drawn too, strong, and either may be drawn again.
+// Once Legal Machines makes the seat, the same page hands them over; a press
+// on the login or the password copies both. Who the colleague is stays in the
+// firm.
 const JURISTS = [
 	"ulpian", "gaius", "paulus", "papinian", "modestinus", "justinian", "tribonian", "scaevola", "labeo", "proculus",
 	"sabinus", "celsus", "julianus", "marcellus", "florentinus", "hermogenian", "africanus", "pomponius", "callistratus", "marcianus",
@@ -181,7 +179,7 @@ export function suggestedPassword() {
 }
 
 function AddColleagueDialog({ onClose }) {
-	// Who they are, then their sign-in, then the hand-over (D-209).
+	// Who they are, then their sign-in, then the hand-over.
 	const [step, setStep] = useState("who");
 	const [profile, setProfile] = useState(emptyProfile);
 	const [seatId, setSeatId] = useState(drawSeatId);
@@ -227,8 +225,6 @@ function AddColleagueDialog({ onClose }) {
 		}
 	}
 
-	// The login and password copy together, as the owner asked them written
-	// (2026-11-02): "login: …" over "pass: …".
 	const credentials = `login: ${seatId}\npass: ${password}`;
 	const copyCredentials = () => copy(credentials, "The login and password are copied.");
 	const firstName = profile.name.trim().split(/\s+/)[0] ?? "";
@@ -295,10 +291,10 @@ function AddColleagueDialog({ onClose }) {
 	);
 }
 
-// A colleague's sign-in given again (D-214): a new password for their seat,
-// drawn as one is when a colleague is added, or their archived seat made again
-// with one. Shown before it is set, then handed over as Add a colleague does;
-// the password is never shown again.
+// A colleague's sign-in given again: a new password for their seat, drawn as
+// one is when a colleague is added, or their archived seat made again with
+// one. Shown before it is set, then handed over as Add a colleague does; the
+// password is never shown again.
 export function SeatPasswordDialog({ member, seatId, isRestoring = false, onSet, onClose }) {
 	const [password, setPassword] = useState(suggestedPassword);
 	const [isSetting, setSetting] = useState(false);
@@ -389,7 +385,7 @@ function SignInLine({ label, again, againLabel, children }) {
 
 // The firm's email as this computer keeps it, from the account signed in
 // here; one signed in before it was kept asks Legal Machines, which keeps it
-// here from then on (D-204).
+// here from then on.
 function useFirmEmail() {
 	const [email, setEmail] = useState(null);
 	useEffect(() => {

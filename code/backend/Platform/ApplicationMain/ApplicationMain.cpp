@@ -50,8 +50,8 @@ bool is_allowed_development_url(const std::string &url) {
 }
 
 // Whether the window opens on onboarding: until onboarding is complete, as
-// Settings record it (D-133). The page asks onboarding.getStatus, which reads
-// the same record, so the window's size and the page always agree. In a
+// Settings record it. The page asks onboarding.getStatus, which reads the
+// same record, so the window's size and the page always agree. In a
 // development build NATIVE_APP_ONBOARDING=1 begins onboarding afresh and
 // NATIVE_APP_ONBOARDING=0 marks it complete, by that same record.
 bool opens_on_onboarding() {
@@ -81,18 +81,18 @@ bool opens_on_onboarding() {
 }
 
 // How long Singularity waits, as it closes, for its work to record where it
-// stood (Beta 1 #55, #239).
+// stood.
 constexpr std::chrono::seconds kClosingPatience{5};
 
 // Singularity ends here, whichever way it was asked to: its window closed, or
 // on macOS the Quit item, the Dock, an AppleScript quit or logging out.
-// shutdown() records what was running and joins the workers, for
+// shutdown records what was running and joins the workers, for
 // kClosingPatience at most, and the process then ends without static
 // destructors: a thread still finishing - a local generation, a document being
 // read - never finds its objects destroyed. The local runtime ends with this
 // process (Platform/ChildProcess). A version of Singularity readied to install
-// is handed over last, once the work has stopped (Node/AppUpdate, D-261). A
-// second caller waits here until the first ends it.
+// is handed over last, once the work has stopped. A second caller waits here
+// until the first ends it.
 [[noreturn]] void end_application(singularity::bridge::NativeBridge &bridge) {
   static std::once_flag once;
   std::call_once(once, [&bridge] {
@@ -130,8 +130,8 @@ int run_application() {
 
   /*
    * Onboarding's fixed 1080 by 720 window until onboarding is complete, the
-   * main geometry after it (D-133). onboarding.complete moves the running
-   * window from the one to the other (Bridge/NativeBridge).
+   * main geometry after it. onboarding.complete moves the running window
+   * from the one to the other (Bridge/NativeBridge).
    */
   const bool onboarding_window = opens_on_onboarding();
   if (onboarding_window) {
@@ -166,9 +166,9 @@ int run_application() {
   singularity::bridge::NativeBridge bridge(window);
   bridge.install();
 
-  // Singularity in Word, Excel and Outlook (Office/OfficeService, D-105):
-  // the Office connection carries the same Native API as the window, and
-  // serves the panes again when the person connected Office on this computer.
+  // Singularity in Word, Excel and Outlook: the Office connection carries the
+  // same Native API as the window, and serves the panes again when the person
+  // connected Office on this computer.
   {
     singularity::office::Carrier carrier;
     carrier.call = [&bridge](const std::string &method, const std::string &params) {
@@ -273,7 +273,7 @@ int run_application() {
 #if !defined(NDEBUG)
 // Development and acceptance tools only (deploy/frontend/native-dev-host.mjs,
 // deploy/scripts/native_contract_parity_acceptance.py): one bridge method, run
-// in this second process. A release build has none of it (D-025).
+// in this second process. A release build has none of it.
 int run_native_call(const std::string &method, const std::string &params) {
 	try {
 		singularity::app::AppWindow window(false);
@@ -305,10 +305,10 @@ int main(int argc, char **argv) {
 #if !defined(_WIN32)
 	if (argc == 4 && std::string(argv[1]) == "--native-call") {
 #if defined(NDEBUG)
-		// A release build runs no bridge method for another process (Beta 1
-		// #210, D-025): only the window's own page reaches the bridge, so
-		// nothing outside it - an AI app with a shell among them - can approve
-		// a draft, change a Matter's mode or remove its data.
+		// A release build runs no bridge method for another process: only the
+		// window's own page reaches the bridge, so nothing outside it - an AI
+		// app with a shell among them - can approve a draft, change a Matter's
+		// mode or remove its data.
 		std::cerr << NATIVE_APP_DISPLAY_NAME << ": this build does not run bridge methods from the command line.\n";
 		return 2;
 #else

@@ -939,7 +939,7 @@ inline TurnContract compile_turn_contract(const TurnContractInput &input) {
 			// Sequenced exactly like ResearchDiscovery/ResearchRetrieval above:
 			// a real methodology deck governs how this same turn's own
 			// draft.upsert must assess its target field (see the golden
-			// request's own "согласно правилам оценки рисков в файле ..." -
+			// request's own "…" -
 			// the delegated methodology IS the professional grading rule), so
 			// a turn with NOTHING yet revealed genuinely has only one honest
 			// next action - reveal one slide - never a real choice between
@@ -1007,7 +1007,7 @@ inline TurnContract compile_turn_contract(const TurnContractInput &input) {
 	// professionally distinct research question as though it were a repeat
 	// of the first. A real Gemini 2.5 Flash/OpenRouter acceptance scenario
 	// (captured_http_replay.cpp's own two-distinct-query fault-injection
-	// fixture: "аспект риска А" and "аспект риска Б" - two real, different
+	// fixture: "…" and "…" - two real, different
 	// sub-questions the same request legitimately raises) proved this
 	// concretely. Appended - never substituted - once the operation has
 	// moved past the initial research phases into ongoing work, so the

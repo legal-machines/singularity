@@ -21,12 +21,13 @@ import { Answers as AskAnswers, Result } from "../../components/Result/Result.js
 import { AddButton, DraftTray, sizeOf, useResultDraft } from "../../components/Result/ResultDraft.jsx";
 import { DropOverlay } from "../../components/FileDrop/DropOverlay.jsx";
 import { useWindowFileDrop } from "../../components/FileDrop/windowDrop.js";
+import { pastedFiles, pasteWordsWithoutObjects } from "../../components/FileDrop/paste.js";
 import { Faces } from "../../components/Faces/Faces.jsx";
 import { PersonButton } from "../../components/PersonCard/PersonCard.jsx";
 import { AssignmentBlock, AssignmentDetails, DecisionList, PostReview, RealFiles, resultDocumentIdsOf } from "../../components/Review/Review.jsx";
 import { ProjectBand } from "../../components/ProjectMark/ProjectMark.jsx";
 import { toast } from "../../components/Toast/toast.js";
-import { addDocumentFromComputer, addDroppedToMatter, protectionProjectOfChat, assignmentOfPost, closeRealThread, colleaguesTypingIn, confirmMemberComputer, decisionsOfPost, decideReview, decideWritten, deleteRealPostWithUndo, editRealPost, postToThread, reactToRealPost, realDocuments, reopenRealThread, showPlace, unconfirmedComputersOf, watchRealChat } from "../../data/native.js";
+import { addDocumentFromComputer, addDroppedToMatter, addPastedToMatter, protectionProjectOfChat, assignmentOfPost, closeRealThread, colleaguesTypingIn, colleaguesWorkingIn, confirmMemberComputer, decisionsOfPost, decideReview, decideWritten, deleteRealPostWithUndo, editRealPost, postToThread, reactToRealPost, realDocuments, reopenRealThread, showPlace, stopColleaguesIn, unconfirmedComputersOf, useRealWork, watchRealChat } from "../../data/native.js";
 import { decisions, viewerId, workProducts } from "../../data/workspace.js";
 import { findThread, isThreadClosed, threadEvents } from "../threadState.js";
 import { findMatter, findMember, firstName, formatMoment } from "../words.js";
@@ -48,7 +49,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	const isClosed = isThreadClosed(thread, state);
 	const people = thread.participantIds.map(findMember);
 	// Whom a message here can name: the Matter's members, people and AI
-	// colleagues together, the member at this computer apart (UI-5).
+	// colleagues together, the member at this computer apart.
 	const mentionables = (matter?.memberIds ?? thread.participantIds).map(findMember)
 		.filter(member => member != null && member.id != viewerId);
 	const ownScrollRef = useRef(null);
@@ -58,7 +59,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	// A real thread (data/native.js): the backend's, and what it supports.
 	const isReal = thread.isReal == true;
 	// What the lawyer is returning with comments: a review's version, or a
-	// document a colleague wrote (D-143); whom it goes back to, and how.
+	// document a colleague wrote; whom it goes back to, and how.
 	const [returning, setReturning] = useState(null);
 	const actions = {
 		onReact,
@@ -89,7 +90,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	// A long thread draws its latest messages first and the earlier ones as the
 	// reader scrolls up to them, a batch at a time, the words in view staying put:
 	// a due diligence of six colleagues drew several hundred messages, with their
-	// files and faces, at once, and the thread took long to open (2026-11-03).
+	// files and faces, at once, and the thread took long to open.
 	const shownAtFirst = 40;
 	const shownMore = 40;
 	const [shown, setShown] = useState({ threadId, base: null, batches: 0 });
@@ -135,8 +136,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 
 	// A new message is shown as it comes - from another computer, a colleague or
 	// the member - to a reader at the thread's latest words, and always after the
-	// member's own; one who scrolled up to read stays where they are (the
-	// owner, 2026-10-26: a message from the Mac stood below the window's edge).
+	// member's own; one who scrolled up to read stays where they are.
 	const isAtEnd = useRef(true);
 	const latest = events.at(-1);
 	useEffect(() => {
@@ -159,8 +159,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 		isAtEnd.current = true;
 	}, [latest?.id, events.length]);
 
-	// The reply box stands over the thread's foot, as a personal chat's does
-	// (the owner, 2026-11-02: "make the logic of hiding by the chat as in DMs"):
+	// The reply box stands over the thread's foot, as a personal chat's does:
 	// what scrolls goes under it, and the room it takes is kept at the thread's
 	// end so the last message scrolls clear of it; a reader at the end stays
 	// there as the box grows.
@@ -185,9 +184,7 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 	return (
 		<div ref={viewRef} className={styles.view} style={{ "--reply-room": `${replyRoom}px` }} data-demonstration={isEmulation || undefined}
 			data-file-drop={isReal == true && !isEmulation ? "" : undefined}>
-			{/* No fade at its top or foot, as a personal chat has none (the owner,
-			    2026-11-02: "remove these clouds at the top and bottom in threads,
-			    as it is done in DMs"). */}
+			{/* No fade at its top or foot, as a personal chat has none. */}
 			<div ref={scrollRef} className={styles.scroll}>
 				<article className={styles.thread}>
 					{!isEmulation ? <header ref={placeholderRef} className={`${styles.head} ${styles.head_room}`} aria-hidden="true">
@@ -277,11 +274,10 @@ export function ThreadView({ threadId, state, onDecide, onReply, onReact, onEdit
 
 // Who writes an answer here now, as a messenger shows it: "Kitsune is typing"
 // and its running dots, under the latest post, in the column of the posts'
-// words (the owner, 2026-10-26).
-// A colleague at work on its reply says so in words once it has worked ten
-// seconds, as a message of its own, in place of "is typing" (the owner,
-// 2026-11-02; D-236): a line that fits what was asked, in its language, the
-// same on every computer. Its reply takes its place when it comes.
+// words. A colleague at work on its reply says so in words once it has worked
+// ten seconds, as a message of its own, in place of "is typing": a line that
+// fits what was asked, in its language, the same on every computer. Its reply
+// takes its place when it comes.
 function HoldingPosts({ memberIds, thread }) {
 	const since = useRef(new Map());
 	const [, setTick] = useState(0);
@@ -348,19 +344,18 @@ function Event({ event, previous, thread, state, onDecide, actions }) {
 // The reactions a message takes in one press.
 const QUICK_REACTIONS = ["👍", "✅", "👀", "🙏", "❓"];
 
-// A message and what a member can do with it (the owner, 2026-10-24: "I must
-// be able to do something with messages and interact with them"). Under the
-// pointer it lightens and shows its tools: react, reply with it quoted, and
-// more, which a right-click opens as well: copy its text, mark the thread
-// unread from here, and for the member's own, edit or delete it. Its
-// reactions stand under it; a press on one adds the member's or takes it back.
+// A message and what a member can do with it. Under the pointer it lightens
+// and shows its tools: react, reply with it quoted, and more, which a
+// right-click opens as well: copy its text, mark the thread unread from here,
+// and for the member's own, edit or delete it. Its reactions stand under it; a
+// press on one adds the member's or takes it back.
 function Post({ event, previous, thread, state, onDecide, onReact, onQuote, onEditPost, onDeletePost, onMarkUnread, onAnswer, onReturnReview, onReturnWritten }) {
-	// Read as an AI provider receives it, from the thread's corner (D-233).
+	// Read as an AI provider receives it, from the thread's corner.
 	const isProviderView = useProviderView(thread.real?.chatId);
 	const { open } = useNavigation();
 	const author = findMember(event.authorId);
 	// In onboarding's demonstration a post shows the files the scene gives it to
-	// show (D-162), and the deal's two of the first page.
+	// show, and the deal's two of the first page.
 	const shownFiles = isEmulation ? event.files?.filter(file => file.isShownInDemo == true || ["DD workplan.xlsx", "Closing memorandum.docx"].includes(file.name)) : event.files;
 	const work = event.workProductId != null ? workProducts[event.workProductId] : null;
 	const isOwn = event.authorId == viewerId;
@@ -370,18 +365,18 @@ function Post({ event, previous, thread, state, onDecide, onReact, onQuote, onEd
 	const [isShowingHistory, setShowingHistory] = useState(false);
 	const [picker, setPicker] = useState(null);
 	const menu = useMenu();
-	// The same tools for every message, a person's or a colleague's (the owner,
-	// 2026-10-24). In a real thread the backend keeps the reactions, the edit
-	// and the deletion, and the rule is its own: only a message's author changes
-	// it, on the computer that wrote it.
+	// The same tools for every message, a person's or a colleague's. In a real
+	// thread the backend keeps the reactions, the edit and the deletion, and the
+	// rule is its own: only a message's author changes it, on the computer that
+	// wrote it.
 	const isReal = event.isReal == true;
 	const chatId = thread.real?.chatId;
 	// The assignment whose card stands under this message, and the decisions
-	// it puts to the lawyer (D-120).
+	// it puts to the lawyer.
 	const assignment = isReal ? assignmentOfPost(event) : null;
 	const decided = isReal ? decisionsOfPost(event) : [];
 	// A draft the assignment's card shows as a result is shown there once, not
-	// again as a file of the message (D-174).
+	// again as a file of the message.
 	const cardDocuments = assignment != null ? resultDocumentIdsOf(assignment) : new Set();
 	const shownRealFiles = (event.realFiles ?? []).filter(file => cardDocuments.has(file.documentId) == false);
 	const reactionsOf = isReal ? (event.realReactions ?? {}) : (state.reactions[event.id] ?? {});
@@ -417,7 +412,7 @@ function Post({ event, previous, thread, state, onDecide, onReact, onQuote, onEd
 		isGone ? null : { key: "react", label: "React", icon: "smile", submenu: QUICK_REACTIONS.map(emoji => ({ key: emoji, label: emoji, checked: (reactionsOf[emoji] ?? []).includes(viewerId), onSelect: () => react(emoji) })) },
 		isGone ? null : { key: "reply", label: "Reply", icon: "reply", onSelect: () => onQuote(event) },
 		isGone ? null : { key: "copy", label: "Copy text", icon: "copy", onSelect: copy },
-		// How the work was done, kept off the page (D-238).
+		// How the work was done, kept off the page.
 		isReal && isGone == false && assignment != null ? { key: "history", label: "Work history", icon: "history", onSelect: () => setShowingHistory(true) } : null,
 		{ key: "unread", label: "Mark unread from here", icon: "inbox", onSelect: () => { onMarkUnread(thread.id); toast("Marked unread from here."); } },
 		canChange && isGone == false ? { separator: true } : null,
@@ -468,7 +463,7 @@ function Post({ event, previous, thread, state, onDecide, onReact, onQuote, onEd
 						<div className={styles.text} data-selectable="">
 							{isProviderView
 								? <MaskedText projectId={protectionProjectOfChat(chatId)} text={event.paragraphs.join("\n\n")} />
-								: <MessageText text={event.paragraphs.join("\n\n")} />}
+								: <MessageText text={event.cited?.text ?? event.paragraphs.join("\n\n")} sources={event.cited?.sources} />}
 						</div>
 					)
 				)}
@@ -546,8 +541,8 @@ function Post({ event, previous, thread, state, onDecide, onReact, onQuote, onEd
 // Under a message that names a colleague running on this computer, sent from
 // a computer the person here has not confirmed as its author's: the colleague
 // does not take it up until they compare that computer's code with its owner
-// and confirm it (D-123, Chat/MessageProvenance). Confirming it once is for
-// everything the author asks from it.
+// and confirm it. Confirming it once is for everything the author asks from
+// it.
 function HeldNote({ post, author }) {
 	const [computers, setComputers] = useState(null);
 	const [isReading, setReading] = useState(false);
@@ -636,8 +631,8 @@ function Quote({ quote }) {
 // goes to it - in Word, where it is connected here (Office.json).
 function PlaceQuote({ place }) {
 	const { open } = useNavigation();
-	// Cells of a workbook read as cells, with their sheet (D-110); a slide of a
-	// deck as that slide, with its title (D-112).
+	// Cells of a workbook read as cells, with their sheet; a slide of a deck as
+	// that slide, with its title.
 	const isWorkbook = /\.(xlsx|xlsm|xls|csv)$/i.test(place.documentName ?? "");
 	const isDeck = /\.(pptx|ppt)$/i.test(place.documentName ?? "");
 	const where = isWorkbook && place.section
@@ -720,16 +715,14 @@ function Answers({ thread, decisionId, decision, choice, quote, onDecide }) {
 }
 
 // The reply. Its words name whom it reaches; Enter sends it, Shift+Enter starts
-// a new line (the owner, 2026-11-02).
-// Closing the thread is a mode of its own: what is written becomes the
-// conclusion, and the send closes the thread.
-// Files dragged onto the thread go into the Matter's documents and with the
-// reply (the owner, 2026-11-04: drag and drop must work reliably).
+// a new line. Closing the thread is a mode of its own: what is written becomes
+// the conclusion, and the send closes the thread. Files dragged onto the thread
+// go into the Matter's documents and with the reply.
 const MOST_DROPPED_ATTACHED = 20;
 
 function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, chatId, quote, onClearQuote, onSend, onClose, returning, onStopReturning, onReturn, dropTarget, onDropping }) {
 	// Read as an AI provider receives it: the draft too, as it would go out,
-	// before it is sent (D-233).
+	// before it is sent.
 	const isProviderView = useProviderView(chatId);
 	const [draft, setDraft] = useState("");
 	const fieldRef = useRef(null);
@@ -750,6 +743,42 @@ function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, ch
 			toast(error?.message ?? "The files could not be added. Try again.", { tone: "seal" });
 		}
 	});
+
+	// While a colleague works on what this thread gave it, the empty box's
+	// send is their Stop: they end that work at once and wait for the next.
+	// The page reads the colleagues afresh as they change.
+	useRealWork();
+	const canStop = isReal == true && isReturning == false && isClosing == false && handIn.hasFiles == false
+		&& colleaguesWorkingIn(chatId).length > 0;
+	async function stopColleagues() {
+		try {
+			await stopColleaguesIn(chatId);
+		} catch (error) {
+			toast(error?.message ?? "The work could not be stopped. Try again.", { tone: "seal" });
+		}
+	}
+
+	// A file pasted into the reply box goes with the reply, as one dropped
+	// does; pasted words lose the marks a copied file leaves in them.
+	async function onPaste(event) {
+		const files = pastedFiles(event);
+		if (files.length == 0) {
+			pasteWordsWithoutObjects(event);
+			return;
+		}
+		event.preventDefault();
+		if (isReal != true || isReturning) return;
+		try {
+			const added = await addPastedToMatter(files);
+			if (added.length == 0) throw new Error("The files could not be added. Try again.");
+			for (const document of added.slice(0, MOST_DROPPED_ATTACHED)) {
+				handIn.addFile({ name: document.displayName ?? document.name, documentId: document.id, size: document.sizeBytes ? sizeOf(document.sizeBytes) : undefined });
+			}
+			fieldRef.current?.focus();
+		} catch (error) {
+			toast(error?.message ?? "The files could not be added. Try again.", { tone: "seal" });
+		}
+	}
 
 	// Replying to a message, or returning a version, takes the member to the
 	// reply box.
@@ -797,7 +826,7 @@ function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, ch
 		: names.length == 1 ? names[0] : "the Matter's team: @ names who it is for";
 
 	return (
-		<div className={styles.composer} data-print="hide" data-reply-box="">
+		<div className={styles.composer} data-print="hide" data-reply-box="" onPaste={onPaste}>
 			{quote != null ? (
 				<div className={styles.composer_quote}>
 					<span className={styles.composer_quote_text}>
@@ -843,6 +872,8 @@ function Composer({ isClosed, isReal, isEmpty, names, mentionables, matterId, ch
 				)}
 				submit={isReturning ? <ComposerAction disabled={draft.trim() == "" || isSending} tooltip={`Return ${returning.what}`} onClick={send}>Return</ComposerAction>
 					: isClosing ? <ComposerAction disabled={draft.trim() == ""} tooltip="Close the thread" onClick={send}>Close thread</ComposerAction> : undefined}
+				onStop={canStop ? stopColleagues : null}
+				stopLabel="Stop the work here"
 			/>
 		</div>
 	);

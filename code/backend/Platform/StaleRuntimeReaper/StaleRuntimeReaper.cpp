@@ -37,7 +37,6 @@ namespace singularity::platform::stale_runtime {
 
 namespace {
 
-// Where the owner's pid begins in a runtime's slot folder name, or npos.
 // LocalInference/GenerativeRuntime names the folder "local-inference-slots-
 // <owner pid>-<hex>"; releases before it named it "<word>-runtime-slots-
 // <owner pid>-<hex>", so a runtime one of them left is still recognised.

@@ -10,11 +10,10 @@ import styles from "./Toast.module.css";
 const LEAVE_MS = 220;
 
 // What the window tells the member comes in from the top, centred over the
-// sheet in the window's band, as onboarding's notices do (the owner,
-// 2026-11-02: "notifications inside the app must come from the top the same
-// way as in onboarding"): on a G2 ground in a soft colour - sage for what
-// went as asked, Legal Machines' brick for what went wrong - in white words,
-// and goes back up the way it came. Read out politely as they come.
+// sheet in the window's band, as onboarding's notices do: on a G2 ground in
+// a soft colour - sage for what went as asked, Legal Machines' brick for
+// what went wrong - in white words, and goes back up the way it came. Read
+// out politely as they come.
 export function Toaster() {
 	const items = useToasts();
 	const shown = useLeaving(items);
@@ -49,7 +48,7 @@ export function Toaster() {
 }
 
 // A toast's colour: brick for what went wrong; graphite for what is still
-// going on or waits (a notice, D-207); sage for what went as asked.
+// going on or waits; sage for what went as asked.
 function toneOf(tone) {
 	if (tone == "seal" || tone == "problem") return "problem";
 	if (tone == "working" || tone == "waiting") return "working";

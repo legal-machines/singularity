@@ -53,8 +53,8 @@ bool is_one_line(const std::string &value) {
 	});
 }
 
-// A seat's id as Legal Machines writes it (D-204): small letters and digits
-// joined by hyphens, a folder's name as it stands.
+// A seat's id as Legal Machines writes it: small letters and digits joined
+// by hyphens, a folder's name as it stands.
 bool is_seat_id(const std::string &value) {
 	if (value.empty() || value.size() > 64 || value.front() == '-' || value.back() == '-') return false;
 	bool hasHyphen = false;

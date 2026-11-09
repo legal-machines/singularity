@@ -52,8 +52,8 @@ const std::set<std::string> &excel_methods() {
 	return methods;
 }
 
-// A deck's pane (D-112): its Matter, its thread and the slide's words, and the
-// deck opened from a place in the thread.
+// A deck's pane: its Matter, its thread and the slide's words, and the deck
+// opened from a place in the thread.
 const std::set<std::string> &powerpoint_methods() {
 	static const std::set<std::string> methods = {"matter.readDocumentView", "office.openDocument"};
 	return methods;
@@ -125,6 +125,10 @@ const char *word_of(ClientKind kind) {
 		case ClientKind::powerpoint: return "powerpoint";
 		default: return "outlook";
 	}
+}
+
+bool has_document_pane(const std::vector<PairedClient> &clients) {
+	return std::any_of(clients.begin(), clients.end(), [](const PairedClient &client) { return client.kind != ClientKind::outlook; });
 }
 
 bool may_call(ClientKind kind, const std::string &method) {

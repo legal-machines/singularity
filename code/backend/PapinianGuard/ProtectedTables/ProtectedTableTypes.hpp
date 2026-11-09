@@ -59,8 +59,6 @@ struct TableRow {
 	std::vector<TableCell> cells;
 };
 
-// A column whose body cells all hold one formula shape, translated to their
-// row: "=Bn-Cn-Dn" is `subtract` over {B, C, D}.
 struct ColumnFormula {
 	std::string pattern;
 	std::vector<std::string> inputs;

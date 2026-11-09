@@ -70,8 +70,8 @@ struct OperationRecord {
   // next boundary exactly like a Stop, but the record says what really
   // happened - never "you stopped this request".
   bool interrupted_by_shutdown = false;
-  // The run returned its thread and waits for the lawyer at the place it kept
-  // (Beta 1 #14): its pause is kept, never discarded as a finished run's is.
+  // The run returned its thread and waits for the lawyer at the place it
+  // kept: its pause is kept, never discarded as a finished run's is.
   bool kept_for_lawyer = false;
   std::optional<std::string> task_id;
   std::string message;
@@ -144,19 +144,16 @@ bool is_terminal(ChatOperationState state) {
 
 // Real product bug (caught live, this session's own restart-durability
 // acceptance): the reported ChatOperationState alone cannot tell
-// begin_operation()/resume_chat_operation() whether a call is genuinely
-// executing right now versus merely left at a non-terminal state by an
-// earlier call that has already fully returned - record_approval_response()
-// durably records a decision and marks the record Working so a live status
-// poll shows progress, but nothing is actually parked in a thread waiting for
-// it - every approval design here is non-blocking (AdvancedWorkflow's own
-// synchronous wait was removed with EXEC-2, for the same reason: an answer
-// held in one process is lost the moment that process ends) - and the
-// following resume_operation() bridge call was being wrongly refused as a
-// "still running" double-send. `actively_executing` is the real, precise
-// signal: true only for the exact span run_chat_request() is inside
-// run_task(), false at every other time regardless of what state string is
-// showing.
+// begin_operation/resume_chat_operation whether a call is genuinely executing
+// right now versus merely left at a non-terminal state by an earlier call
+// that has already fully returned - record_approval_response durably records
+// a decision and marks the record Working so a live status poll shows
+// progress, but nothing is actually parked in a thread waiting for it - every
+// approval design here is non-blocking - and the following resume_operation
+// bridge call was being wrongly refused as a "still running" double-send.
+// `actively_executing` is the real, precise signal: true only for the exact
+// span run_chat_request is inside run_task, false at every other time
+// regardless of what state string is showing.
 struct ActiveExecutionGuard {
 	OperationRegistry &state;
 	std::string operation_id;
@@ -406,7 +403,7 @@ std::string persist_new_operation(const std::string &operation_id,
 	// An AI colleague's answer - its own run, a thread where it answers, a
 	// request carrying on one of its operations - is the colleague's, and may do
 	// what the Matter's own mode lets any member do: never less because it is an
-	// AI (the owner, 2026-10-30; D-158).
+	// AI.
 	tools::OperationAuthority authority;
 	authority.actor_id = platform::resolve_actor_identity().actor_id;
 	authority.local_only = composition.local_only;
@@ -470,8 +467,8 @@ std::string persist_new_operation(const std::string &operation_id,
 	return task_id;
 }
 
-// Whoever shows this operation reads it again, instead of polling (Beta 1
-// #263): ids and the state only (Platform/Events).
+// Whoever shows this operation reads it again, instead of polling: ids
+// and the state only (Platform/Events).
 void publish_operation_changed(const std::string &project_id, const std::string &operation_id,
 		std::optional<ChatOperationState> state_value) {
 	nlohmann::json payload{{"projectId", project_id}, {"operationId", operation_id}};
@@ -859,8 +856,8 @@ bool record_kept_wait(const std::string &project_id, const std::string &operatio
 }
 
 // Whether the run that just returned waits for the lawyer at its kept place:
-// nobody decided its question or web search in the time it may hold its thread
-// (Beta 1 #14). The state it waits in and the words for it, or nothing.
+// nobody decided its question or web search in the time it may hold its
+// thread. The state it waits in and the words for it, or nothing.
 std::optional<std::pair<ChatOperationState, std::string>> kept_wait_of(const std::string &project_id,
 		const std::string &operation_id) noexcept {
 	try {
@@ -1101,10 +1098,10 @@ KeptHere works_only_here(const std::string &operation_id, const ChatRequestCompo
 	return unconfirmed ? KeptHere::OriginUnconfirmed : KeptHere::No;
 }
 
-// Where work kept on this computer runs (Beta 1 #44), decided once for the
-// send and for the composer's state alike: why it is kept here, the local model
-// it runs on, whether that model must be set for this request (AI Setup would
-// choose a cloud one), or the sentence it stops with.
+// Where work kept on this computer runs, decided once for the send and for the
+// composer's state alike: why it is kept here, the local model it runs on,
+// whether that model must be set for this request (AI Setup would choose a
+// cloud one), or the sentence it stops with.
 struct KeptHereDecision {
 	KeptHere kept = KeptHere::No;
 	std::optional<routing::ModelTarget> model;
@@ -1223,7 +1220,7 @@ ChatExecutionOutcome run_chat_operation(const std::string &operation_id,
 	routing::observability::ExecutionProgressTracker liveProgress(true, true, false);
 	const LiveProgressAttachment liveProgressAttachment(registry(), operation_id, &liveProgress);
 	// Each step the run takes is said to whoever shows it, at most four times a
-	// second; its state changes are said as they happen (Beta 1 #263).
+	// second; its state changes are said as they happen.
 	auto stepSaidAt = std::make_shared<std::chrono::steady_clock::time_point>();
 	const routing::observability::ScopedEventSink stepEvents(
 		[projectId = composition.project_id, operation_id, stepSaidAt](const routing::observability::OperationEvent &) {
@@ -1414,7 +1411,7 @@ ChatExecutionOutcome run_chat_operation(const std::string &operation_id,
 			return outcome;
 		}
 		// It ended on its way out of a wait nobody decided in time: it waits at
-		// its kept place (Beta 1 #14).
+		// its kept place.
 		if (const auto kept = kept_wait_of(composition.project_id, operation_id)) {
 			outcome.state = kept->first;
 			outcome.message = kept->second;
@@ -1500,8 +1497,7 @@ ChatExecutionOutcome run_chat_operation(const std::string &operation_id,
 
 	// Nobody decided this run's question or web search in the time it may hold
 	// its thread: it waits at the place it kept, as Singularity closing would
-	// leave it, and the decision resumes it with no model call made twice
-	// (Beta 1 #14).
+	// leave it, and the decision resumes it with no model call made twice.
 	if (const auto kept = kept_wait_of(composition.project_id, operation_id)) {
 		outcome.state = kept->first;
 		outcome.message = kept->second;
@@ -1798,8 +1794,8 @@ void set_agent_works_only_here(std::function<bool(const std::string &agent_id)> 
 
 // A run that returned at its kept place leaves no live record: its status, its
 // answer and its Stop read the operation's record and the place, as they do
-// after a restart (Beta 1 #14). A decision that came meanwhile has marked it
-// resuming, and the run that carries it on is under way.
+// after a restart. A decision that came meanwhile has marked it resuming, and
+// the run that carries it on is under way.
 ChatExecutionOutcome after_kept_wait(const std::string &operation_id, ChatExecutionOutcome outcome) {
 	OperationRegistry &state = registry();
 	const std::lock_guard<std::mutex> lock(state.mutex);
@@ -1856,14 +1852,12 @@ ChatExecutionOutcome resume_chat_operation(const std::string &project_id,
 			settle_unstarted_resume(project_id, operation_id, finished);
 			return finished;
 		}
-		// IDEM-2: a change whose commit is already durable is never applied a
-		// second time - but "the file was written" is not the same fact as "the
-		// turn was finished". An operation interrupted between its commit and
-		// its own completion has a changed document and no result: no answer in
-		// the Chat, no Work Product, no lineage. Reporting that as Completed
-		// leaves the lawyer with a silently edited document and nothing saying
-		// so. It is finished here instead, from its own record, with zero model
-		// calls (execute_task_attempt()'s commitAlreadyRecovered path).
+		// An operation interrupted between its commit and its own completion
+		// has a changed document and no result: no answer in the Chat, no Work
+		// Product, no lineage. Reporting that as Completed leaves the lawyer
+		// with a silently edited document and nothing saying so. It is finished
+		// here instead, from its own record, with zero model calls
+		// (execute_task_attempt's commitAlreadyRecovered path).
 		const bool turnFinished = saved == ChatOperationState::Completed
 			&& task->status == matters::TaskStatus::Success && task->response_text.has_value();
 		if (turnFinished) {
@@ -1916,7 +1910,7 @@ ChatExecutionOutcome resume_chat_operation(const std::string &project_id,
 		// it goes on able to, or the question it continues would not be read.
 		if (pausedDecision) composition.can_ask_lawyer = true;
 		// Work an AI colleague began itself goes on as nobody watches it: a next
-		// wait keeps its place and returns again (Beta 1 #14).
+		// wait keeps its place and returns again.
 		composition.unattended = task->agent_initiated;
 	} catch (...) {
 		settle_unstarted_resume(project_id, operation_id, std::nullopt);
@@ -1947,8 +1941,7 @@ ChatExecutionOutcome rerun_chat_task(const std::string &project_id, const std::s
 				? routing::matter_request_execution::works_only_here_refusal(*project, *original->agent_operation_id)
 				: routing::matter_request_execution::kWorksOnlyHereModelRefused);
 		composition.local_only = keptHere;
-		// Asking the same model again would write a written change twice. (Run
-		// with another model redoes the same piece of work in place - SLR-3.)
+		// Asking the same model again would write a written change twice.
 		if (!revision && !request.model_target && matters::has_committed_document_change(*original))
 			throw std::runtime_error("Its change is already in the document, so running it again would write it twice. Write a follow-up instead.");
 		if (request.model_target) {
@@ -2106,8 +2099,6 @@ std::vector<ChatOperationSummary> list_operations(const std::string &project_id)
 			// it still waits, and its record says so (restore_kept_wait).
 			if (keptWait && restore_kept_wait(task, *keptWait)) changed = true;
 			if (!executing && !is_terminal(saved) && !awaitingDecision && !keptWait && !runsElsewhere) {
-				// STAT-2: an operation nothing is executing any more is interrupted,
-				// durably and once - never left reading as if it were still working.
 				// A pending approval stays answerable: its decision lives on this
 				// operation's own checkpoint, not in the process that asked for it.
 				// When the work really stopped is its last recorded step, not this
@@ -2673,11 +2664,11 @@ bool paused_decision_awaits_resume(const std::string &project_id, const std::str
 	}
 	const std::optional<Json> pause = load_pause(project_id, operation_id);
 	if (pause && research::is_decided_pause(*pause)) return true;
-	// A change to a Project document the lawyer approved while nothing ran it
-	// is written by carrying its operation on. That is part of the decision
-	// itself, so no client has to ask for it, and one that closes before asking
-	// never leaves an approved change unwritten (Beta 1 #262). A rejected change
-	// needs nothing more: its operation ended with the decision.
+	// A change to a Project document the lawyer approved while nothing ran it is
+	// written by carrying its operation on. That is part of the decision itself,
+	// so no client has to ask for it, and one that closes before asking never
+	// leaves an approved change unwritten. A rejected change needs nothing more:
+	// its operation ended with the decision.
 	const persistence::PersistenceLock lock(persistence::persistence_mutex());
 	auto project = matters::load_matter(node::require_active_workspace_path(), project_id);
 	const matters::MatterTask *task = !project ? nullptr : find_operation_task(*project, operation_id);
@@ -2735,9 +2726,9 @@ ChatOperationStatus record_approval_response(const std::string &project_id, cons
 	// over it. A change to a Project document is never waited on by a thread -
 	// it waits on the operation's checkpoint once the run returns - so a quick
 	// approval of one was lost, and the turn read as completed with nothing
-	// written (Beta 1 #125, LIFE-1). Such a decision is refused as a moment's
-	// wait, and the change stays in front of the lawyer, to decide again. A web
-	// search the research loop waits on is taken at once, as it always was.
+	// written. Such a decision is refused as a moment's wait, and the change
+	// stays in front of the lawyer, to decide again. A web search the research
+	// loop waits on is taken at once, as it always was.
 	if (live_wait && waiting && waiting->approval_id == approval_id
 			&& !tools::production_tool_broker().is_awaited(approval_id))
 		throw tools::ApprovalRefused("change_still_preparing",

@@ -14,6 +14,12 @@
 	color: var(--ink-3);
 }
 
+/* A message's words until the Guard has read them: as written, quieter, in
+   a light bubble or a dark one alike. */
+.quiet {
+	opacity: 0.55;
+}
+
 .problem {
 	font: var(--type-small);
 	color: var(--accent-ink);

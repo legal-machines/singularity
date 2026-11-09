@@ -10,9 +10,8 @@
 namespace singularity::routing {
 
 void validate_role_model_assignment(AiSetupRole role, const ModelTarget &target) {
-  // SET-2: a role Singularity fills itself is not a setting. Accepting an
-  // assignment the runtime then ignores would leave a person believing they
-  // had changed what protects their data.
+  // Accepting an assignment the runtime then ignores would leave a person
+  // believing they had changed what protects their data.
   if (!is_role_assignable(role)) {
     throw std::runtime_error(fixed_role_reason(role));
   }

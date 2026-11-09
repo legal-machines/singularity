@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A test feed for Singularity's self-installing update (D-261), never the site's.
+"""A test feed for Singularity's self-installing update, never the site's.
 
 It writes, in one folder, latest.json - a release exactly as the site answers
 /singularity/api/releases/latest, signed with publish.py's own SiteEntry text -

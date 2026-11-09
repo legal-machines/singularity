@@ -14,8 +14,8 @@
 
 namespace singularity::agents {
 
-// The most colleagues that work at once on one computer (D-170): their runs wait
-// on the model's answers, not on this computer, so several cost little.
+// The most colleagues that work at once on one computer: their runs wait on the
+// model's answers, not on this computer, so several cost little.
 constexpr int kMostRunsAtOnce = 4;
 namespace {
 
@@ -69,7 +69,7 @@ std::optional<std::string> timed_trigger(const Agent &agent, bool is_opening,
 	if (agent.status != AgentStatus::Active) return std::nullopt;
 	// A run that did not finish is tried again half an hour after it began,
 	// never at every wake, and after each one more in a row twice as long, up to
-	// a day: it keeps trying on its own (D-158).
+	// a day: it keeps trying on its own.
 	const auto lastAttempt = agent.last_attempt_at.has_value() == true ? parse_agent_timestamp(*agent.last_attempt_at) : std::nullopt;
 	const int doublings = std::min(std::max(agent.failed_in_a_row - 1, 0), 6);
 	const auto retryWait = std::min<std::chrono::minutes>(kSafetyCheckEvery * (1 << doublings),
@@ -217,7 +217,7 @@ void AgentScheduler::release_own_runs(const std::string &agent_id) {
 	wake_.notify_all();
 }
 
-void AgentScheduler::request_check(const std::string &agent_id, const std::string &trigger) {
+void AgentScheduler::request_check(const std::string &agent_id, const std::string &trigger, bool on_a_copy) {
 	{
 		const std::lock_guard<std::mutex> lock(mutex_);
 		held_.erase(agent_id);
@@ -231,11 +231,11 @@ void AgentScheduler::request_check(const std::string &agent_id, const std::strin
 			running->second.cancelled->store(true);
 			yielded_.insert(agent_id);
 		}
-		for (const auto &[queued, ignored] : requested_)
-			if (queued == agent_id) return;
+		for (const Due &queued : requested_)
+			if (queued.agent_id == agent_id) return;
 		// The run asked for is the one running now: it is not made twice.
 		if (running != running_.end() && running->second.trigger == trigger) return;
-		requested_.push_back({agent_id, trigger});
+		requested_.push_back({agent_id, trigger, on_a_copy});
 	}
 	wake_.notify_all();
 }
@@ -243,7 +243,7 @@ void AgentScheduler::request_check(const std::string &agent_id, const std::strin
 bool AgentScheduler::cancel_check(const std::string &agent_id) {
 	const std::lock_guard<std::mutex> lock(mutex_);
 	requested_.erase(std::remove_if(requested_.begin(), requested_.end(),
-		[&](const std::pair<std::string, std::string> &item) { return item.first == agent_id; }), requested_.end());
+		[&](const Due &item) { return item.agent_id == agent_id; }), requested_.end());
 	const auto running = running_.find(agent_id);
 	if (running == running_.end() || !running->second.cancelled) return false;
 	stopped_by_lawyer_.insert(agent_id);
@@ -254,8 +254,8 @@ bool AgentScheduler::cancel_check(const std::string &agent_id) {
 bool AgentScheduler::is_checking(const std::string &agent_id) const {
 	const std::lock_guard<std::mutex> lock(mutex_);
 	if (running_.count(agent_id) > 0) return true;
-	for (const auto &[queued, ignored] : requested_)
-		if (queued == agent_id) return true;
+	for (const Due &queued : requested_)
+		if (queued.agent_id == agent_id) return true;
 	return false;
 }
 
@@ -390,8 +390,8 @@ void AgentScheduler::sync_watchers() {
 		if (watch) watch->stop();
 }
 
-std::deque<std::pair<std::string, std::string>> AgentScheduler::due_checks() {
-	std::deque<std::pair<std::string, std::string>> due;
+std::deque<AgentScheduler::Due> AgentScheduler::due_checks() {
+	std::deque<Due> due;
 	std::vector<Agent> agents;
 	{
 		const std::lock_guard<std::mutex> lock(agent_store_mutex());
@@ -402,8 +402,8 @@ std::deque<std::pair<std::string, std::string>> AgentScheduler::due_checks() {
 	const std::lock_guard<std::mutex> lock(mutex_);
 	due.swap(requested_);
 	const auto isQueued = [&](const std::string &id) {
-		for (const auto &[queued, ignored] : due)
-			if (queued == id) return true;
+		for (const Due &queued : due)
+			if (queued.agent_id == id) return true;
 		return false;
 	};
 	for (const Agent &agent : agents) {
@@ -414,8 +414,8 @@ std::deque<std::pair<std::string, std::string>> AgentScheduler::due_checks() {
 			if (steadyNow < held->second) continue;
 			held_.erase(held);
 		}
-		// Its model could not be asked a moment ago (D-169): it asks again once
-		// its wait is over, not every pass.
+		// Its model could not be asked a moment ago: it asks again once its
+		// wait is over, not every pass.
 		const auto waiting = waiting_for_model_.find(agent.id);
 		if (waiting != waiting_for_model_.end() && steadyNow < waiting->second.first) continue;
 		std::optional<std::string> own;
@@ -435,18 +435,21 @@ std::deque<std::pair<std::string, std::string>> AgentScheduler::due_checks() {
 		// was closed.
 		const bool hasWork = agent.status == AgentStatus::Active && agent.waiting_work.empty() == false;
 		if (hasWork == true && (own.has_value() == false || is_first_pass_ == false)) {
-			due.push_back({agent.id, "assignment"});
+			due.push_back({agent.id, "assignment", false});
 			continue;
 		}
 		if (own.has_value() == false) continue;
 		if (isNoticedChange == true) noticed_.erase(agent.id);
-		due.push_back({agent.id, *own});
+		// Decided on the copy read above: decided again as it begins (execute).
+		due.push_back({agent.id, *own, true});
 	}
 	is_first_pass_ = false;
 	return due;
 }
 
-void AgentScheduler::execute(const std::string &agent_id, const std::string &trigger) {
+void AgentScheduler::execute(const Due &due) {
+	const std::string &agent_id = due.agent_id;
+	const std::string &trigger = due.trigger;
 	// Nothing new begins once Singularity is closing (Platform/AppLifecycle).
 	if (platform::lifecycle::is_closing()) return;
 	const bool isAssignment = trigger == "assignment";
@@ -460,6 +463,13 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 		// A first run is made once: asked for twice - by its creation and by
 		// the scheduler's own look - the second finds the first made.
 		if (trigger == "first" && loaded->last_check_at.has_value() == true) return;
+		// Decided on a copy of the agent read before now - the look's, which a
+		// run may have changed since, as a first run that could not finish does
+		// in stamping its attempt - it is decided again on the agent as it is: a
+		// run that is no longer due is not made (a first run made twice after one
+		// that failed, seen under load, 2026-11-08).
+		if (due.on_a_copy == true && trigger != "change" && trigger != "assignment"
+				&& timed_trigger(*loaded, trigger == "catch_up", std::chrono::system_clock::now(), started_at_).has_value() == false) return;
 		agent = *loaded;
 		if (isAssignment == true) {
 			// The work given first is done first. Work withdrawn, or whose
@@ -485,7 +495,7 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 			save_assignment(*work);
 		}
 		// A run the colleague makes on its own counts toward its day's record,
-		// never toward a limit: it works as much as its work needs (D-158).
+		// never toward a limit: it works as much as its work needs.
 		if (trigger != "manual" && trigger != "first" && isAssignment == false) {
 			const std::string today = local_day(std::chrono::system_clock::now(), "%Y-%m-%d");
 			if (agent.automatic_runs_day != today) {
@@ -501,7 +511,7 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 		save_agent(agent);
 	}
 	// Its stop: the one its run was given as it was dispatched, so a Stop said
-	// meanwhile holds (D-170).
+	// meanwhile holds.
 	std::shared_ptr<std::atomic<bool>> cancelled;
 	{
 		const std::lock_guard<std::mutex> lock(mutex_);
@@ -512,33 +522,50 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 		cancelled = running.cancelled;
 	}
 	// The team sees it at work from the moment it begins, on every computer
-	// that opens the Matter: its card says so (the owner, 2026-10-24).
+	// that opens the Matter: its card says so.
 	publish_card(agent_id);
-	const AgentRun run = isAssignment == true
+	AgentRun run = isAssignment == true
 		? run_agent_assignment(agent, *work, runId, runner_dependencies(), cancelled.get())
 		: run_agent_check(agent, runId, trigger, runner_dependencies(), cancelled.get());
 	bool gaveWay = false;
 	bool closedOn = false;
 	bool isClosing = false;
+	bool isStoppedAsInterrupted = false;
 	{
 		const std::lock_guard<std::mutex> lock(mutex_);
 		gaveWay = yielded_.erase(agent_id) > 0;
 		const bool stoppedByLawyer = stopped_by_lawyer_.erase(agent_id) > 0;
-		// Singularity closed on this run (Beta 1 #16): stop() says it is stopping
-		// before it cancels the run, under this lock, so a run it cut short is
-		// told apart from the lawyer's Stop and from a run that gave way.
+		// A run the lawyer stopped is stopped, however it ended: a model request
+		// the Stop cut short can end as interrupted, and its work went back to
+		// the head of the line.
+		if (stoppedByLawyer == true && run.status == "interrupted") {
+			run.status = "cancelled";
+			run.error_code = "agent.cancelled";
+			run.error_message = "The work was stopped before it was done.";
+			isStoppedAsInterrupted = true;
+		}
+		// Singularity closed on this run: stop says it is stopping before it
+		// cancels the run, under this lock, so a run it cut short is told apart
+		// from the lawyer's Stop and from a run that gave way.
 		isClosing = is_stopping_ || platform::lifecycle::is_closing();
 		closedOn = run.status == "interrupted"
 			|| (isClosing && run.status != "completed" && !stoppedByLawyer && !gaveWay);
 		// A run that reached its model ends any wait for it.
 		if (run.status != "interrupted") waiting_for_model_.erase(agent_id);
 	}
-	// Interrupted while Singularity stays open: its model could not be asked
-	// for a cause that clears by itself (D-169). The work it was given goes back
-	// to the head of its line, as work a closing cut short does at the next
-	// launch, and it asks again after a wait that doubles each time - half a
-	// minute, then a minute, up to ten - so a locked Mac or a dropped network
-	// costs a lawyer nothing but the wait.
+	if (isStoppedAsInterrupted == true) {
+		const std::lock_guard<std::mutex> lock(agent_store_mutex());
+		try {
+			save_run(run);
+		} catch (const std::exception &) {
+		}
+	}
+	// Interrupted while Singularity stays open: its model could not be asked for
+	// a cause that clears by itself. The work it was given goes back to the head
+	// of its line, as work a closing cut short does at the next launch, and it
+	// asks again after a wait that doubles each time - half a minute, then a
+	// minute, up to ten - so a locked Mac or a dropped network costs a lawyer
+	// nothing but the wait.
 	if (closedOn == true && isClosing == false && isAssignment == true && work.has_value() == true) {
 		{
 			const std::lock_guard<std::mutex> lock(agent_store_mutex());
@@ -615,8 +642,8 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 			// A cause that does not go away never costs a run every half hour:
 			// each own run in a row that could not finish makes it wait longer
 			// before the next (timed_trigger). It never pauses itself: a member
-			// is not stopped for a cause outside them (D-158). Work it was given
-			// says nothing of its own runs.
+			// is not stopped for a cause outside them. Work it was given says
+			// nothing of its own runs.
 			if (run.status == "failed" && isAssignment == false) {
 				current->failed_in_a_row += 1;
 			} else if (run.status == "completed" && isAssignment == false) {
@@ -638,11 +665,11 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 				current->spend += *cost;
 				if (currency.empty() == false) current->spend_currency = currency;
 			}
-			// A task's first run makes the agent's own chat; later runs answer there.
-			if (current->chat_id.has_value() == false && run.task.has_value() == true && run.task->chat_id.empty() == false)
-				current->chat_id = run.task->chat_id;
-			// Its next time is set by its own runs; work given in between
-			// never moves it.
+			// Its own chat is kept the moment it is made (AgentProduction
+			// open_thread_of), never taken from a run: a run answers where it was
+			// named, and a Matter's thread taken for its own left that Matter's
+			// threads. Its next time is set by its own runs; work given in
+			// between never moves it.
 			if (isAssignment == false && current->trigger == AgentTrigger::Daily && current->status == AgentStatus::Active)
 				current->next_check_at = next_daily_check(current->daily_minute, std::chrono::system_clock::now());
 			if (isAssignment == false && current->trigger == AgentTrigger::Weekly && current->status == AgentStatus::Active)
@@ -687,6 +714,15 @@ void AgentScheduler::execute(const std::string &agent_id, const std::string &tri
 		}
 		for (const Agent &follower : followers) request_check(follower.id, "after_agent");
 	}
+	// Work a colleague gave as a part of its own: once its parts have ended,
+	// that colleague is given its work back, to finish what it was asked
+	// (finding f-lead-not-woken).
+	if (work.has_value() == true) {
+		try {
+			(void)give_back_after_part(*work);
+		} catch (const std::exception &) {
+		}
+	}
 	// The next piece of work it was given, at once.
 	if (hasMoreWork == true) request_check(agent_id, "assignment");
 	agents_changed();
@@ -696,8 +732,8 @@ void AgentScheduler::open_missing_chats() {
 	// A colleague whose chat could not open at its last try is tried again at
 	// every wake until it opens: onboarding hires the first colleague before
 	// the Matters folder is chosen, and with no desk yet its chat waited five
-	// minutes or a restart, so its member could not write to it (2026-11-05:
-	// "Pasha can't be written to from this computer yet"). With no folder a
+	// minutes or a restart, so its member could not write to it (it said it
+	// could not be written to from this computer yet). With no folder a
 	// try makes nothing.
 	for (const std::string &agentId : colleagues_awaiting_chat()) open_own_chat(agentId);
 	// At the first wake, then every five minutes at most: every colleague with
@@ -719,8 +755,8 @@ void AgentScheduler::open_missing_chats() {
 	}
 	for (const std::string &agentId : missing) open_own_chat(agentId);
 	// What every computer of the firm holds of its colleagues, written where it
-	// changed since (D-203): a colleague hired before the firm's record was
-	// kept reaches it too.
+	// changed since: a colleague hired before the firm's record was kept
+	// reaches it too.
 	publish_firm_colleagues(agents);
 }
 
@@ -773,7 +809,7 @@ void AgentScheduler::loop() {
 		sync_watchers();
 		// A colleague's own chat opens as it is hired; one that could not open
 		// then - no workspace yet, a desk not made - opens now, so its members
-		// can write to it (D-157). Each once a run of the program.
+		// can write to it. Each once a run of the program.
 		open_missing_chats();
 		show_colleagues_where_carried();
 		std::function<void()> periodic;
@@ -787,32 +823,34 @@ void AgentScheduler::loop() {
 			} catch (const std::exception &) {
 			}
 		}
-		std::deque<std::pair<std::string, std::string>> due;
+		std::deque<Due> due;
 		try {
 			due = due_checks();
 		} catch (const std::exception &) {
 		}
-		for (const auto &[agentId, trigger] : due) {
+		for (const Due &item : due) {
+			const std::string &agentId = item.agent_id;
+			const std::string &trigger = item.trigger;
 			if (platform::lifecycle::is_closing()) break;
 			{
 				const std::lock_guard<std::mutex> lock(mutex_);
 				if (is_stopping_ == true) return;
 				// One run at a time for each colleague, and so many at once on this
 				// computer: what is due for one at work, or past that, waits for a
-				// run to end (D-170).
+				// run to end.
 				if (running_.count(agentId) > 0 || static_cast<int>(running_.size()) >= kMostRunsAtOnce) {
 					const bool isKept = std::any_of(later_.begin(), later_.end(),
-						[&](const std::pair<std::string, std::string> &kept) { return kept.first == agentId && kept.second == trigger; });
-					if (isKept == false) later_.push_back({agentId, trigger});
+						[&](const Due &kept) { return kept.agent_id == agentId && kept.trigger == trigger; });
+					if (isKept == false) later_.push_back(item);
 					continue;
 				}
 				running_[agentId] = Running{trigger, std::make_shared<std::atomic<bool>>(false)};
 				++workers_;
 			}
 			// Each run on a thread of its own, beside the others.
-			std::thread([this, agentId = agentId, trigger = trigger]() {
+			std::thread([this, item, agentId = agentId]() {
 				try {
-					execute(agentId, trigger);
+					execute(item);
 				} catch (const std::exception &) {
 				}
 				{
@@ -842,8 +880,7 @@ void AgentScheduler::loop() {
 // computers, which reach this one with the Matter - is taken up apart from the
 // runs, which the loop makes one after another: a colleague at work on a long
 // run still has the next request recorded, in its order, and begins it when
-// the run ends (2026-10-29: Priya's request to Unicorn waited unrecorded for
-// the whole of a deck run of more than half an hour).
+// the run ends.
 void AgentScheduler::listen() {
 	for (;;) {
 		if (platform::lifecycle::is_closing() == false) {

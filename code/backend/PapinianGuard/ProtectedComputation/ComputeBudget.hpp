@@ -3,9 +3,7 @@
 #include <cstddef>
 
 // How much protected computation one answer, one task and one matter may ask
-// for (DESIGN4 §1.4, §8.3, §9.2). Header-only: every limit of the protected
-// computation protocol is here, so a budget is read in one place and raised,
-// if ever, by the owner's decision in one place.
+// for (DESIGN4 §1.4, §8.3, §9.2).
 //
 // The observation limits are the privacy bound itself (DESIGN4 §8.4): at most
 // four charged observations about any one hidden fact for the life of the

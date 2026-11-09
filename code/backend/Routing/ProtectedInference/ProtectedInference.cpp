@@ -238,16 +238,14 @@ JsonRestoreOutcome restore_json_strings(const protected_api::papinian::PapinianG
 }
 
 // A literal Singularity's own protocol issues: a handle ("I1", "T12", "D2") or a
-// lower-case identifier ("leave_unchanged", "create_content"), dotted ones
-// among them - a colleague's tool, "work.give", "document.read" (2026-11-02:
-// every piece of a colleague's work stopped because "work" was a protected
-// spelling in that request; D-237). It is asked only of the enum and const
-// strings of a request's own schemas (collect_schema_literals), which
-// Singularity builds from fixed lists of its own words; text a person or a
-// document supplied never reaches it, so a dotted value of theirs
-// ("anna.ivanova") is still read by every other check. It cannot carry
-// Project text, and a protected term that happens to equal one (a custom term
-// "I1") is handled by response restoration, not treated as a schema leak.
+// lower-case identifier ("leave_unchanged", "create_content"), dotted ones among
+// them - a colleague's tool, "work.give", "document.read". It is asked only of
+// the enum and const strings of a request's own schemas
+// (collect_schema_literals), which Singularity builds from fixed lists of its
+// own words; text a person or a document supplied never reaches it, so a dotted
+// value of theirs ("anna.ivanova") is still read by every other check. It cannot
+// carry Project text, and a protected term that happens to equal one (a custom
+// term "I1") is handled by response restoration, not treated as a schema leak.
 bool is_protocol_literal(const std::string &literal) {
 	if (literal.empty()) return false;
 	std::size_t letters = 0;
@@ -283,7 +281,7 @@ void collect_schema_literals(const nlohmann::json &value, std::vector<std::strin
 }
 
 // Every picture or file a provider body carries, as the base64 it carries it
-// in (D-256): a data URL of bytes anywhere (an OpenAI-style image_url) and an
+// in: a data URL of bytes anywhere (an OpenAI-style image_url) and an
 // Anthropic block's base64 source. Everything else a body holds is words.
 void collect_body_pictures(const nlohmann::json &value, std::vector<std::string> &pictures) {
 	if (value.is_object()) {
@@ -1027,8 +1025,8 @@ protected_api::papinian::GuardValidation validate_planned_leaves(
 
 // Repair before refusing. A writing of a value the frozen table holds can
 // still stand in a transformed leaf where the transform did not reach it: a
-// name glued to a number the transform masked ("№ 1ДС" in a history heading
-// became "№ [[E11]]ДС"), a value beside a symbol it never stood beside in the
+// name glued to a number the transform masked ("…" in a history heading
+// became "…"), a value beside a symbol it never stood beside in the
 // source. Each such place is masked with its row's own symbol, span by span,
 // exactly where validation reads it; the table is never changed. What is
 // left is refused by the validation that follows.
@@ -1293,9 +1291,9 @@ struct RoleLegend {
 	protected_api::papinian::semantic::Language language = protected_api::papinian::semantic::Language::English;
 };
 
-// `isConversation`: a colleague's talk (ModelVisibleTurn::is_conversation,
-// D-130). Its instruction says what a symbol is in a conversation's few words,
-// and adds each of the full instruction's sentences for what its symbols hold
+// `isConversation`: a colleague's talk. Its instruction says what a symbol is
+// in a conversation's few words, and adds each of the full instruction's
+// sentences for what its symbols hold
 // - units and dates, ranges, days of the year, relations, figures in words,
 // roles - but never the push to write a name wherever an answer can: in a
 // conversation that made the colleague greet the person by name at every
@@ -1350,7 +1348,7 @@ nlohmann::json protection_legend(
 			hasValues = hasValues || !unit.empty() || entry.value->kind == semantic::Kind::Date
 				|| entry.value->kind == semantic::Kind::DayOfYear;
 			// How the material writes this figure when it writes it with its words
-			// ("828 000 (восемьсот двадцать восемь тысяч) рублей"): a figure put in
+			// ("…"): a figure put in
 			// its place is asked for in the same form ([[Amount9.digitsandwords]]).
 			const std::size_t open = entry.original.find(" (");
 			if ((open != std::string::npos
@@ -2241,7 +2239,7 @@ bool carries_computable_symbol(const std::string &prompt,
 
 } // namespace
 
-// The pictures of the member's own that the exact body carries (D-256), or a
+// The pictures of the member's own that the exact body carries, or a
 // refusal: a picture in a body that is not one the member attached to this
 // request and sent is never sent, whatever the protection.
 std::vector<protected_api::papinian::OutboundPicture> hold_pictures_to_the_members(
@@ -2619,7 +2617,7 @@ ProtectedGenerationResult execute_protected_generation(
 	}
     if (!protected_request.validation.masking_complete) {
       // Why it stopped, for whoever reads this computer's log: which check, the
-      // kind of each value and where it stood - never a value (AG-SEC-3).
+      // kind of each value and where it stood - never a value.
       {
         std::string kinds;
         for (const auto &occurrence : protected_request.validation.occurrences)
@@ -2656,12 +2654,12 @@ ProtectedGenerationResult execute_protected_generation(
 	}
 	bool final_payload_validated = false;
 	std::string final_payload_sha256;
-	// The member's pictures the validated body carried as they are (D-256).
+	// The member's pictures the validated body carried as they are.
 	std::vector<protected_api::papinian::OutboundPicture> sent_pictures;
-	// A design partner's computer keeps this call in its chat's work log
-	// (Node/WorkLog, D-257): the body exactly as it leaves, once the final
-	// check below has let it through - never a body it refused, never the text
-	// before protection, never the mapping (AG-SEC-3).
+	// A design partner's computer keeps this call in its chat's work log: the
+	// body exactly as it leaves, once the final check below has let it through
+	// - never a body it refused, never the text before protection, never the
+	// mapping.
 	std::optional<std::string> workLogBody;
 
   const providers::FinalPayloadValidator validate_final_payload =
@@ -2689,7 +2687,7 @@ ProtectedGenerationResult execute_protected_generation(
 				throw providers::TaskError(providers::TaskErrorCode::ProtectedPayloadLeakDetected,
 					"Singularity blocked the request because its execution control plane changed before provider delivery.");
 		}
-		// No picture but the member's own, protection on or off (D-256).
+		// No picture but the member's own, protection on or off.
 		sent_pictures = hold_pictures_to_the_members(payload);
 		if (!protection_active) { emitValidatedBody(); final_payload_validated = true; keepForWorkLog(); return; }
         protected_api::papinian::GuardValidation validation;
@@ -2782,11 +2780,11 @@ ProtectedGenerationResult execute_protected_generation(
 		call.model_id = model_id;
 		call.protection_mode = protected_api::to_string(policy.mode);
 		call.payload_sha256 = final_payload_sha256;
-		// Each picture that left as it is, by its name, size and SHA-256 (D-256).
+		// Each picture that left as it is, by its name, size and SHA-256.
 		call.pictures = sent_pictures;
-		// The evidence a bill's line rests on (D-252): the request as the
-		// provider's records name it, the answer's fingerprint, and this call's
-		// own tokens and cost as the provider reported them.
+		// The evidence a bill's line rests on: the request as the provider's
+		// records name it, the answer's fingerprint, and this call's own tokens
+		// and cost as the provider reported them.
 		if (answered != nullptr) {
 			call.provider_request_id = answered->response_id;
 			call.response_sha256 = answered->response_sha256;
@@ -2915,8 +2913,8 @@ ProtectedGenerationResult execute_protected_generation(
 	liveScope.emplace(std::move(restored));
   }
   providers::GenerationResult generation;
-	// The call as its chat's work log keeps it, on a design partner's computer
-	// (D-257): what went, the answer as read before anything was restored, or
+	// The call as its chat's work log keeps it, on a design partner's
+	// computer: what went, the answer as read before anything was restored, or
 	// what failed.
 	const auto workLogStarted = std::chrono::steady_clock::now();
 	const std::string workLogAt = node::work_log::wanted() == true ? node::work_log::now_text() : std::string();
@@ -3029,7 +3027,7 @@ ProtectedGenerationResult execute_protected_generation(
 	// (refused it, timed out, broke off) may still have reached the provider:
 	// it is recorded as sent, never assumed to have stayed here.
 	if (final_payload_validated == true && isOutboundCallNoted == false) noteOutboundCall(nullptr);
-	// And kept, with what failed, in a design partner's work log (D-257).
+	// And kept, with what failed, in a design partner's work log.
 	if (workLogBody.has_value() == true) {
 		std::string failure = "The call failed.";
 		try {
@@ -3282,7 +3280,7 @@ ProtectedGenerationResult execute_protected_generation(
 	std::size_t proseFieldsEmptied = 0;
 	// A document's fields are in the language the model declared for it
 	// ("language": "ru"), never a guess from a field that mixes scripts: a gap
-	// in a Russian letter reads «[сумма уточняется]».
+	// in a Russian letter reads «…».
 	std::optional<semantic::Language> declaredLanguage;
 	if (finalStructure.is_object() && finalStructure.contains("artifactAction") && finalStructure.at("artifactAction").is_object()
 			&& finalStructure.at("artifactAction").contains("language")

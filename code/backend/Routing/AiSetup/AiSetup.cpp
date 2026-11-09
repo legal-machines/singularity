@@ -187,9 +187,9 @@ const TaskProfile &conversational_reasoning_profile() {
 }
 
 const TaskProfile &drafting_profile() {
-  // Drafting is task-specific (AI_SETUP_CONTRACT.md) - it never runs
-  // automatically after every Reasoning operation, and this profile is only
-  // ever selected for a real drafting stage, not a normal conversational one.
+  // Drafting is task-specific - it never runs automatically after every
+  // Reasoning operation, and this profile is only ever selected for a real
+  // drafting stage, not a normal conversational one.
   static const TaskProfile profile{
       {AiSetupRole::Drafting},
       {AiSetupRole::Anonymization, AiSetupRole::Context},

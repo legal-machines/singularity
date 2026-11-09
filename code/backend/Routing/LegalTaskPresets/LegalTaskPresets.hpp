@@ -35,10 +35,10 @@ inline constexpr int kDefaultLegalTaskPresetVersion = 1;
 
 // The one current (highest-version) preset per id, in registry order,
 // excluding General - the exact list Chat's composer offers through
-// progressive disclosure (phase-22-chat-tasks-ai-setup.md's "Legal task").
-// General is never chosen explicitly; an unset legal task always resolves
-// to it instead (kDefaultLegalTaskPresetId/Version above). Backend truth
-// only - a frontend caller must read this instead of hardcoding its own
+// progressive disclosure. General is never chosen explicitly; an unset
+// legal task always resolves to it instead
+// (kDefaultLegalTaskPresetId/Version above). Backend truth only - a
+// frontend caller must read this instead of hardcoding its own
 // id/version/name list.
 const std::vector<LegalTaskPreset> &selectable_legal_task_presets();
 

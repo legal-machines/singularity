@@ -27,13 +27,12 @@ const SHIFT_COMMAND_KEYS = new Set(["KeyI", "KeyJ", "KeyC", "KeyP", "KeyR", "Key
 // With Option on macOS: Safari's developer keys.
 const OPTION_COMMAND_KEYS = new Set(["KeyI", "KeyJ", "KeyC", "KeyU"]);
 
-// Singularity is an application, not a web page (the owner, 2026-10-24:
-// "forbid everything a browser does"). None of the web view's own behaviour
-// reaches a member: no browser menu on a right click, no print, save, find,
-// reload, zoom, page source or developer tools from the keyboard or the
-// wheel, no picture or page dragged away, no autoscroll, no list of saved
-// entries under a field. A text field keeps the system's editing menu, as in
-// any application, and text a member selected in a post, a chat or a
+// Singularity is an application, not a web page. None of the web view's own
+// behaviour reaches a member: no browser menu on a right click, no print,
+// save, find, reload, zoom, page source or developer tools from the keyboard
+// or the wheel, no picture or page dragged away, no autoscroll, no list of
+// saved entries under a field. A text field keeps the system's editing menu,
+// as in any application, and text a member selected in a post, a chat or a
 // document offers Copy.
 export function AppBehaviour() {
 	const [copy, setCopy] = useState(null);

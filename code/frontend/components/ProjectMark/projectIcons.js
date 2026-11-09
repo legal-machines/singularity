@@ -1,7 +1,6 @@
 // The icons a project's mark may carry instead of its initials: 64 of the
 // icons of Museum UI 1.2.0-snapshot.4, Legal Machines' own design system, and
-// nothing else of it (the owner, 2026-10-24: "icons may be taken from Museum
-// UI, but only the icons"). Each is a stroke drawing on a 24-unit square.
+// nothing else of it. Each is a stroke drawing on a 24-unit square.
 export const projectIcons = [
 	{ id: "scales", label: "Scales", path: "M12.08968 4.177495L12.08968 19.335389M8.300206 19.335389L15.879154 19.335389M4.510733 7.966968L19.668627 7.966968M5.458101 7.966968L3.08968 13.651179L7.826522 13.651179ZM18.721259 7.966968L16.352838 13.651179L21.08968 13.651179ZM3.08968 13.651179A2.368421 2.368421 0 0 0 7.826522 13.651179M16.352838 13.651179A2.368421 2.368421 0 0 0 21.08968 13.651179" },
 	{ id: "court", label: "Court", path: "M3.109823 8.435946L12.109823 2.810946L21.109823 8.435946L3.109823 8.435946M5.359823 9.560946L5.359823 17.435946M12.109823 9.560946L12.109823 17.435946M18.859823 9.560946L18.859823 17.435946M3.109823 20.810946L21.109823 20.810946" },

@@ -55,9 +55,7 @@ private:
 // Registers a Stop's abort for one WinHTTP request while it runs. Closing the
 // request handle is how WinHTTP cancels a synchronous request from another
 // thread: WinHttpSendRequest, WinHttpReceiveResponse or WinHttpReadData then
-// fail at once. The abort runs under the token's lock and the scope's end
-// takes that lock (clear_abort), so the handle is closed either by the abort or
-// by its owner, never both, and never after the owner let it go.
+// fail at once.
 class RequestAbortScope final {
 public:
   RequestAbortScope(const std::shared_ptr<HttpCancelToken> &token, WinHttpHandle &request)

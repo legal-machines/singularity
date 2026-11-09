@@ -97,7 +97,7 @@ struct ProposedChange {
 	std::string writeNote;
 	// How its clause reads in the saved draft, every tracked change accepted,
 	// as Word holds it: read back from the file once it is written, never
-	// taken from what was proposed (D-102).
+	// taken from what was proposed.
 	std::string readBack;
 };
 
@@ -119,9 +119,9 @@ struct UnresolvedPoint {
 	std::string kind;
 	std::string description;
 	std::vector<std::string> blockIds;
-	// For "needs_lawyer", the decision as the lawyer takes it (D-120): why it
-	// matters, the lawyer's options with the colleague's recommendation first
-	// where it has one, and whether accepting or sending the draft waits on it.
+	// For "needs_lawyer", the decision as the lawyer takes it: why it matters,
+	// the lawyer's options with the colleague's recommendation first where it
+	// has one, and whether accepting or sending the draft waits on it.
 	std::string why;
 	std::vector<std::string> options;
 	bool isRecommended = false;
@@ -132,10 +132,10 @@ struct UnresolvedPoint {
 	bool isConfirmedByStructure = false;
 };
 
-// A comment in the agreement's margin, by the colleague, on one clause (D-117):
-// a Word comment in the draft, read by whoever the mark-up goes to - most
-// often the other side - so it is written to them, never to the lawyer alone,
-// whose points are unresolved ones.
+// A comment in the agreement's margin, by the colleague, on one clause: a Word
+// comment in the draft, read by whoever the mark-up goes to - most often the
+// other side - so it is written to them, never to the lawyer alone, whose
+// points are unresolved ones.
 struct MarginComment {
 	std::string blockId;
 	std::string clauseNumber;
@@ -203,8 +203,8 @@ TableRewrite rewriteOfTable(const std::vector<TableRowReading>& rows, const std:
 //   the unresolved points, whether the model saw it or not.
 //
 // `request` is what the lawyer asked of this review, in their words: a clause
-// the other side changed is struck whole only where it asks for that clause
-// to go; otherwise a strike of it is their change undone (D-117).
+// the other side changed is struck whole only where it asks for that clause to
+// go; otherwise a strike of it is their change undone.
 ValidatedReview validateReviewAnswer(const std::string& answer, const LegalDocument& document,
 	const std::vector<ReviewPosition>& positions, const std::string& request = std::string());
 

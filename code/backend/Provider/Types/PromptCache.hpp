@@ -11,11 +11,10 @@ namespace singularity::providers {
 // What a provider may keep of a conversation's prompt between its calls
 // (prompt caching): a conversation whose prompt only grows is asked with the
 // beginning it already sent, and the provider reads that beginning from its
-// cache at a tenth of the input price instead of reading it again (the
-// owner, 2026-10-26: "economically"; Hermes Agent and OpenClaw keep their
-// conversations so). Installed for one piece of work (PromptCacheScope) on
-// the thread that does it, as GenerationStream is; a provider that keeps no
-// cache, or a prompt not given in parts, ignores it.
+// cache at a tenth of the input price instead of reading it again. Installed
+// for one piece of work (PromptCacheScope) on the thread that does it, as
+// GenerationStream is; a provider that keeps no cache, or a prompt not given
+// in parts, ignores it.
 //
 // Nothing of the conversation is in it: the session is a random key that
 // keeps the conversation's calls on one endpoint, and the breakpoints are

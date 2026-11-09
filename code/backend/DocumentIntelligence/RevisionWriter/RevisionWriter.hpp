@@ -38,12 +38,12 @@ struct RevisionOutcome {
 RevisionOutcome writeRevisedDocument(const std::filesystem::path& source, const std::filesystem::path& target,
 	std::vector<ProposedChange>& changes, const std::string& author);
 
-// The same, with comments for the margin (D-117): each a Word comment by
-// `author` on the paragraph of its clause, found by the clause's words where
-// they stand once, and read back on that clause by the Matter's own reader -
-// or refused, and said why. Comments are placed before the changes are
-// written, on the source's own words. A draft is kept when a change or a
-// comment is in it.
+// The same, with comments for the margin: each a Word comment by `author` on
+// the paragraph of its clause, found by the clause's words where they stand
+// once, and read back on that clause by the Matter's own reader - or
+// refused, and said why. Comments are placed before the changes are written,
+// on the source's own words. A draft is kept when a change or a comment is
+// in it.
 RevisionOutcome writeRevisedDocument(const std::filesystem::path& source, const std::filesystem::path& target,
 	std::vector<ProposedChange>& changes, std::vector<MarginComment>& comments, const std::string& author);
 

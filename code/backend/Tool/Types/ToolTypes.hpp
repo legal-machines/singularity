@@ -149,8 +149,8 @@ struct ToolExecutionContext {
 	// How long a wait on the lawyer - a question, a web search to approve -
 	// holds this request's thread once its place is kept (ResearchPause.hpp):
 	// past it, the request returns and waits there, and the decision resumes it
-	// with no model call made twice (Beta 1 #14). None: it waits in this process
-	// until decided. Set by request composition, never by a model.
+	// with no model call made twice. None: it waits in this process until
+	// decided. Set by request composition, never by a model.
 	std::optional<std::chrono::milliseconds> lawyer_wait_limit;
 	// Nobody watches this request as it runs: an AI colleague's own work. A wait
 	// whose place cannot be kept is then not held at all - a web search is

@@ -19,6 +19,8 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cstdio>
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <utility>
@@ -27,12 +29,14 @@
 namespace singularity::chat {
 namespace {
 
-// One Project, read on its own: reading a Chat never waits on, or touches,
-// any other Project of the workspace.
+// One Project, read on its own: reading a Chat never waits on, or touches, any
+// other Project of the workspace. One whose data can't be read just now is
+// refused as such, never answered as a Chat no longer there.
 matters::Matter require_project(const std::string &project_id) {
   std::optional<matters::Matter> project =
       matters::load_matter(node::require_active_workspace_path(), project_id);
   if (!project) throw std::runtime_error("This Project is no longer available.");
+  matters::require_readable(*project);
   return std::move(*project);
 }
 
@@ -335,7 +339,7 @@ ChatTurn turn_from_task(const matters::MatterTask &task, const matters::Matter &
   turn.request_coverage = task.request_coverage;
   // Phase 27's source-problem Error - real regardless of whether this
   // attempt still completed using other, usable sources (never gated by
-  // turn.status, since "Остальной Chat продолжает работать с usable
+  // turn.status, since "… Chat … usable
   // sources" is exactly the honest case: the rest of the answer succeeded).
   turn.unavailable_source_documents = task.unavailable_source_documents;
 
@@ -416,6 +420,25 @@ ChatTurn turn_from_task(const matters::MatterTask &task, const matters::Matter &
 		citation.label = reference.title.value_or(reference.domain.value_or("External source"));
 		turn.citations.push_back(std::move(citation));
 	}
+	// What an AI colleague's work read on the web and its words do not
+	// cite: listed with number 0, as what the work searched - never set
+	// beside any words.
+	if (turn.is_agent_message)
+		for (const research::ExternalEvidenceReference &reference : task.external_evidence) {
+			const bool isCited = std::any_of(external.citations.begin(), external.citations.end(),
+				[&](const research::ExternalEvidenceReference &cited) { return cited.evidence_id == reference.evidence_id; });
+			if (isCited) continue;
+			ChatCitation citation;
+			citation.number = 0;
+			citation.source_kind = "external";
+			citation.evidence_id = reference.evidence_id;
+			citation.url = reference.url;
+			citation.domain = reference.domain;
+			citation.source_class = research::to_string(reference.source_class);
+			citation.excerpt = reference.excerpt;
+			citation.label = reference.title.value_or(reference.domain.value_or("External source"));
+			turn.citations.push_back(std::move(citation));
+		}
 	// An answer that cited nothing inline, from an operation that really did read
 	// the Project's documents, used to be shown as an answer with no sources at
 	// all - so prose looked unsupported beside a typed result carrying the very
@@ -571,9 +594,184 @@ ChatConversation conversation(const std::string &project_id, const std::string &
     result.turns.push_back(turn_from_task(task, project,
         routing_log_entry != routing_log_by_operation_id.end() ? &routing_log_entry->second : nullptr));
   }
+  // Each other member's messages on this computer's clock, so a computer whose
+  // clock is wrong puts nobody's message out of its place.
+  align_member_clocks(result.turns, platform::resolve_actor_identity().actor_id);
   std::stable_sort(result.turns.begin(), result.turns.end(),
       [](const ChatTurn &left, const ChatTurn &right) { return left.created_at < right.created_at; });
   return result;
+}
+
+namespace {
+
+// A UTC stamp as Singularity writes one, from seconds since 1970.
+std::string utc_stamp(long long seconds) {
+  const long long days = (seconds >= 0 ? seconds : seconds - 86399) / 86400;
+  const long long rest = seconds - days * 86400;
+  const long long shifted = days + 719468;
+  const long long era = (shifted >= 0 ? shifted : shifted - 146096) / 146097;
+  const long long dayOfEra = shifted - era * 146097;
+  const long long yearOfEra = (dayOfEra - dayOfEra / 1460 + dayOfEra / 36524 - dayOfEra / 146096) / 365;
+  const long long dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100);
+  const long long monthIndex = (5 * dayOfYear + 2) / 153;
+  const long long day = dayOfYear - (153 * monthIndex + 2) / 5 + 1;
+  const long long month = monthIndex < 10 ? monthIndex + 3 : monthIndex - 9;
+  const long long year = yearOfEra + era * 400 + (month <= 2 ? 1 : 0);
+  char text[32];
+  std::snprintf(text, sizeof text, "%04lld-%02lld-%02lldT%02lld:%02lld:%02lldZ", year, month, day, rest / 3600, rest % 3600 / 60,
+      rest % 60);
+  return text;
+}
+
+void keep_least(std::map<std::string, long long> &kept, const std::string &actor, long long value) {
+  const auto [found, isNew] = kept.emplace(actor, value);
+  if (isNew == false && value < found->second) found->second = value;
+}
+
+}  // namespace
+
+namespace {
+
+// One message as the clocks are read from it: when its writer's clock says it
+// was written, whose it is - a member's, or an AI colleague's - what it
+// answers and quotes, and when it reached each member.
+struct Stamped {
+  std::string id;
+  std::string created_at;
+  bool is_member_message = false;
+  std::string author_actor_id;
+  std::string agent_id;
+  std::string answers_message_id;
+  std::string quote_message_id;
+  const std::map<std::string, std::string> *received = nullptr;
+};
+
+constexpr long long kTwoMinutes = 120;
+
+// Each message's time on this computer's clock, by its index. Every other
+// member's messages move by how far that member's clock runs from this one's,
+// read from when the messages of the two reached each other. An AI
+// colleague's messages stand on the clock of the computer that runs it, which
+// carries no received marks of its own: from its answers alone, what cannot
+// be is mended - an answer never comes before the message it answers, nor
+// after a member's message that replies to it.
+std::vector<std::string> on_this_clock(const std::vector<Stamped> &messages, const std::string &viewer) {
+  std::vector<std::string> stamps;
+  stamps.reserve(messages.size());
+  for (const Stamped &message : messages) stamps.push_back(message.created_at);
+  if (viewer.empty()) return stamps;
+  // For each other member: the least time from this member's message being
+  // written to its reaching them - their clock's lead plus the quickest
+  // passage -, and the least from theirs being written to its reaching here -
+  // the quickest passage less their lead.
+  std::map<std::string, long long> mineThere;
+  std::map<std::string, long long> theirsHere;
+  for (const Stamped &message : messages) {
+    if (message.is_member_message == false || message.received == nullptr) continue;
+    const std::optional<long long> written = chat::utc_seconds(message.created_at);
+    if (written.has_value() == false) continue;
+    if (message.author_actor_id.empty() || message.author_actor_id == viewer) {
+      for (const auto &[actor, at] : *message.received) {
+        if (actor.empty() || actor == viewer) continue;
+        if (const std::optional<long long> reached = chat::utc_seconds(at)) keep_least(mineThere, actor, *reached - *written);
+      }
+      continue;
+    }
+    const auto here = message.received->find(viewer);
+    if (here == message.received->end()) continue;
+    if (const std::optional<long long> reached = chat::utc_seconds(here->second))
+      keep_least(theirsHere, message.author_actor_id, *reached - *written);
+  }
+  // How far each one's clock runs ahead of this computer's (behind: less than
+  // nought).
+  std::map<std::string, long long> lead;
+  for (const auto &[actor, least] : theirsHere) {
+    const auto there = mineThere.find(actor);
+    long long ahead = 0;
+    if (there != mineThere.end()) ahead = (there->second - least) / 2;
+    // Theirs reached here before it was written: their clock is ahead by at
+    // least that much.
+    else if (least < 0) ahead = -least;
+    if (ahead >= kTwoMinutes || ahead <= -kTwoMinutes) lead[actor] = ahead;
+  }
+  for (const auto &[actor, least] : mineThere) {
+    // Only this member's reached them, before it was written by their clock:
+    // theirs is behind by at least that much.
+    if (theirsHere.count(actor) != 0 || least > -kTwoMinutes) continue;
+    lead[actor] = least;
+  }
+  // Each message's time in seconds on this clock, a member's moved by its lead.
+  std::vector<std::optional<long long>> seconds;
+  seconds.reserve(messages.size());
+  std::map<std::string, std::size_t> indexOf;
+  for (std::size_t index = 0; index < messages.size(); ++index) {
+    const Stamped &message = messages[index];
+    std::optional<long long> written = chat::utc_seconds(message.created_at);
+    if (written.has_value() && message.is_member_message && !message.author_actor_id.empty() && message.author_actor_id != viewer) {
+      const auto ahead = lead.find(message.author_actor_id);
+      if (ahead != lead.end()) *written -= ahead->second;
+    }
+    seconds.push_back(written);
+    if (!message.id.empty()) indexOf.emplace(message.id, index);
+  }
+  // A colleague's clock: how far its answers come before what they answer (it
+  // runs behind), and how far its messages come after a member's replies to
+  // them (it runs ahead); a colleague read both ways is left as it stands.
+  std::map<std::string, long long> behind;
+  std::map<std::string, long long> aheadBy;
+  for (std::size_t index = 0; index < messages.size(); ++index) {
+    const Stamped &message = messages[index];
+    if (!seconds[index].has_value()) continue;
+    if (!message.is_member_message && !message.agent_id.empty() && !message.answers_message_id.empty()) {
+      const auto answered = indexOf.find(message.answers_message_id);
+      if (answered != indexOf.end() && seconds[answered->second].has_value()) {
+        const long long gap = *seconds[index] - *seconds[answered->second];
+        if (gap <= -kTwoMinutes) keep_least(behind, message.agent_id, gap);
+      }
+    }
+    if (message.is_member_message && !message.quote_message_id.empty()) {
+      const auto quoted = indexOf.find(message.quote_message_id);
+      if (quoted == indexOf.end() || !seconds[quoted->second].has_value()) continue;
+      const Stamped &colleague = messages[quoted->second];
+      if (colleague.is_member_message || colleague.agent_id.empty()) continue;
+      const long long gap = *seconds[quoted->second] - *seconds[index];
+      if (gap >= kTwoMinutes) {
+        const auto [found, isNew] = aheadBy.emplace(colleague.agent_id, gap);
+        if (!isNew && gap > found->second) found->second = gap;
+      }
+    }
+  }
+  std::map<std::string, long long> colleagueShift;
+  for (const auto &[agent, gap] : behind)
+    if (aheadBy.count(agent) == 0) colleagueShift[agent] = -gap + 1;
+  for (const auto &[agent, gap] : aheadBy)
+    if (behind.count(agent) == 0) colleagueShift[agent] = -(gap + 1);
+  for (std::size_t index = 0; index < messages.size(); ++index) {
+    const Stamped &message = messages[index];
+    if (!seconds[index].has_value()) continue;
+    long long at = *seconds[index];
+    if (!message.is_member_message && !message.agent_id.empty()) {
+      const auto shift = colleagueShift.find(message.agent_id);
+      if (shift == colleagueShift.end()) continue;
+      at += shift->second;
+    } else if (!(message.is_member_message && lead.count(message.author_actor_id) != 0)) {
+      continue;
+    }
+    stamps[index] = utc_stamp(at);
+  }
+  return stamps;
+}
+
+}  // namespace
+
+void align_member_clocks(std::vector<ChatTurn> &turns, const std::string &viewer) {
+  std::vector<Stamped> messages;
+  messages.reserve(turns.size());
+  for (const ChatTurn &turn : turns)
+    messages.push_back(Stamped{turn.task_id, turn.created_at, turn.is_member_message, turn.author_actor_id, turn.agent_id,
+        turn.answers_message_id, turn.quote_message_id, &turn.received});
+  const std::vector<std::string> stamps = on_this_clock(messages, viewer);
+  for (std::size_t index = 0; index < turns.size(); ++index) turns[index].created_at = stamps[index];
 }
 
 namespace {
@@ -644,21 +842,43 @@ bool shows_message(const matters::MatterTask &task) {
 } // namespace
 
 std::vector<ChatLatestMessage> latest_messages(const matters::Matter &project) {
-  std::map<std::string, const matters::MatterTask *> latest;
-  for (const matters::MatterTask &task : project.tasks) {
-    if (!shows_message(task)) continue;
-    const matters::MatterTask *&kept = latest[*task.chat_id];
-    if (kept == nullptr || kept->created_at <= task.created_at) kept = &task;
+  // Each chat's messages, read on this computer's clock as its conversation reads
+  // them: the latest is the latest there, and its time is the time there, whatever
+  // the clock of the computer that wrote it.
+  std::map<std::string, std::vector<const matters::MatterTask *>> byChat;
+  for (const matters::MatterTask &task : project.tasks)
+    if (shows_message(task)) byChat[*task.chat_id].push_back(&task);
+  std::string viewer;
+  try {
+    viewer = platform::resolve_actor_identity().actor_id;
+  } catch (const std::exception &) {
+  }
+  std::map<std::string, std::pair<const matters::MatterTask *, std::string>> latest;
+  for (const auto &[chatId, tasks] : byChat) {
+    std::vector<Stamped> messages;
+    messages.reserve(tasks.size());
+    for (const matters::MatterTask *task : tasks)
+      messages.push_back(Stamped{task->id, task->created_at, task->operation_type == "member_message", task->author_actor_id,
+          task->agent_id, task->answers_message_id, task->quote_message_id, &task->received});
+    const std::vector<std::string> stamps = on_this_clock(messages, viewer);
+    std::size_t best = 0;
+    for (std::size_t index = 1; index < tasks.size(); ++index) {
+      const std::optional<long long> at = chat::utc_seconds(stamps[index]);
+      const std::optional<long long> bestAt = chat::utc_seconds(stamps[best]);
+      const bool isLater = at.has_value() && bestAt.has_value() ? *bestAt <= *at : stamps[best] <= stamps[index];
+      if (isLater) best = index;
+    }
+    latest.emplace(chatId, std::make_pair(tasks[best], stamps[best]));
   }
   std::vector<ChatLatestMessage> result;
   for (const matters::MatterChat &chat : project.chats) {
     const auto found = latest.find(chat.id);
     if (found == latest.end()) continue;
-    const matters::MatterTask &task = *found->second;
+    const matters::MatterTask &task = *found->second.first;
     ChatLatestMessage message;
     message.chat_id = chat.id;
     message.task_id = task.id;
-    message.at = task.created_at;
+    message.at = found->second.second;
     message.mentions = task.mentions;
     message.attachment_count = task.attachment_document_ids.size();
     if (task.operation_type == "member_message") {

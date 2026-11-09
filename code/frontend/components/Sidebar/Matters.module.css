@@ -1,13 +1,12 @@
-/* The firm's Matters in the sidebar (Matters.jsx, D-200): all the room
-   between the places and the member, under a heading as Recent's. Its
-   heading's letters stand an --edge below what is drawn above them: the
-   places' last icon - 18 points centred in its row, ending 2.9 inside it -
-   or Recent's last face, 22 centred in its row; the letters stand 7.5 into
-   the heading (Recent.module.css). New matter's plus ends an --edge above
-   the member's face (AccountMenu), which stands 24 below this block's own
-   foot: the block reaches as far below it as the plus ends above its row's
-   foot - its 18-point icon centred in the row, the drawing ending 3.4
-   inside it. */
+/* The firm's Matters in the sidebar: all the room between the places and
+   the member, under a heading as Recent's. Its heading's letters stand an
+   --edge below what is drawn above them: the places' last icon - 18 points
+   centred in its row, ending 2.9 inside it - or Recent's last face, 22
+   centred in its row; the letters stand 7.5 into the heading
+   (Recent.module.css). New matter's plus ends an --edge above the member's
+   face (AccountMenu), which stands 24 below this block's own foot: the
+   block reaches as far below it as the plus ends above its row's foot -
+   its 18-point icon centred in the row, the drawing ending 3.4 inside it. */
 .matters {
 	display: flex;
 	flex: 1;
@@ -33,9 +32,7 @@ nav + .matters {
 }
 
 /* The Matters scroll under one another once they fill the room, on a thin
-   scrollbar, and New matter stays pinned at their foot (the owner,
-   2026-11-02: "what happens when more Matters do not fit? It must behave
-   beautifully"). */
+   scrollbar, and New matter stays pinned at their foot. */
 .list {
 	display: flex;
 	flex: 0 1 auto;
@@ -108,9 +105,7 @@ nav + .matters {
 }
 
 /* New matter: a place's row (Sidebar.module.css, .tab) with no outline,
-   pinned to the foot of the Matters (the owner, 2026-11-02: "remove the
-   border here after all", "rebuild it so that it fits the sidebar's
-   design"). */
+   pinned to the foot of the Matters. */
 .new {
 	flex: none;
 	margin-top: auto;

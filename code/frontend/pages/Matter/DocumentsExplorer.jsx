@@ -18,20 +18,15 @@ import { findMember, formatDay, formatClock } from "../words.js";
 
 import styles from "./DocumentsExplorer.module.css";
 
-// A Matter's documents as the computer's own file browser shows a folder (the
-// owner, 2026-11-02: "the documents should be viewed as in an explorer, by
-// directories, and every file opens not inside the app but in the Office
-// applications themselves"): where one is in the Matter's folder over the
-// list; its folders first, then its files, each with when it came and its
-// size. A folder opens in place; a file opens in its own application - Word,
-// Excel, PowerPoint, a PDF's viewer - and its place in Finder or File Explorer
-// is one press away. A document is taken out of the Matter from its row too
-// (the owner, 2026-11-02: "I must be able to stop tracking a document inside
-// the app"): one no longer in the folder is no longer tracked; one still in it
-// goes to the computer's bin, as on its own page.
+// A Matter's documents as the computer's own file browser shows a folder: where
+// one is in the Matter's folder over the list; its folders first, then its
+// files, each with when it came and its size. A folder opens in place; a file
+// opens in its own application - Word, Excel, PowerPoint, a PDF's viewer - and
+// its place in Finder or File Explorer is one press away. A document is taken
+// out of the Matter from its row too: one no longer in the folder is no longer
+// tracked; one still in it goes to the computer's bin, as on its own page.
 // Files and folders dragged from Finder, File Explorer or Outlook onto the list
-// go into the folder it shows, a folder whole (the owner, 2026-11-04: "drag and
-// drop must work reliably on macOS and Windows").
+// go into the folder it shows, a folder whole.
 export function DocumentsExplorer({ matter, documents, isReal }) {
 	const { open } = useNavigation();
 	const [folder, setFolder] = useState([]);
@@ -54,7 +49,7 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 			return;
 		}
 		// Over the window, as written and as an AI provider receives it; its
-		// own application opens it from there (D-233).
+		// own application opens it from there.
 		openDocumentLens({ projectId: matter.realMatterId, documentId: item.documentId, name: item.name });
 	}
 
@@ -98,10 +93,8 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 	return (
 		<section ref={sectionRef} className={styles.explorer} aria-label={`${matter.name}: documents`} aria-busy={isAdding || undefined}
 			data-file-drop={isReal ? "" : undefined}>
-			{/* The Matter's folder in the computer's own file browser, where its
-			    name stood (the owner, 2026-11-02: "remove Add documents, and in place
-			    of Harbor make a button Show in Finder / File Explorer"); inside a
-			    folder, that folder, and the way back over the list. */}
+			{/* The Matter's folder in the computer's own file browser, where its name
+			    stood; inside a folder, that folder, and the way back over the list. */}
 			<div className={styles.bar}>
 				{isReal ? <Button size="small" icon="matter" onClick={() => showHere()}>{finder}</Button> : null}
 				{folder.length > 0 ? (
@@ -188,8 +181,7 @@ export function DocumentsExplorer({ matter, documents, isReal }) {
 
 // Who added each document, as the Matter's own record of its documents says
 // (project.sharedActivity: its latest changes, each with who made it), read
-// as the list opens and again as documents come (the owner, 2026-11-02:
-// "write who added this document - a face and a small name are enough").
+// as the list opens and again as documents come.
 function useAddedBy(matter, documents, isReal) {
 	const [byDocument, setByDocument] = useState({});
 	const realMatterId = isReal ? matter.realMatterId ?? null : null;

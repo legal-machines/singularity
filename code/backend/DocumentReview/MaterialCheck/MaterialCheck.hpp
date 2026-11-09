@@ -19,11 +19,11 @@ struct Matter;
 namespace singularity::document_review {
 
 // The facts a colleague's work rests on, checked across the Matter's documents
-// on the lawyer's computer (D-119; DocumentIntelligence/MaterialFacts): what a
-// part is told disagrees before it works, and what its saved draft still gets
-// wrong after. Every value of a draft is accounted for - it agrees with a
-// source, differs from one, or no document gives it - so no part is called
-// reconciled while a value it holds disagrees with the document it comes from.
+// on the lawyer's computer: what a part is told disagrees before it works, and
+// what its saved draft still gets wrong after. Every value of a draft is
+// accounted for - it agrees with a source, differs from one, or no document
+// gives it - so no part is called reconciled while a value it holds disagrees
+// with the document it comes from.
 
 // A document's statements as Singularity reads it: a Word document by its
 // clauses and its tables' rows, under their headings; a workbook by its cells,

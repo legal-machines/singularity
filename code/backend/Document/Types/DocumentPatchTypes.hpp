@@ -9,12 +9,11 @@
 
 namespace singularity::documents {
 
-// The controlled Project-mutation intent contract (phase-24-1-research-
-// document-intelligence-project-actions.md, "Controlled Project actions").
-// A model never writes files directly - it can only ever produce this intent,
-// which DocumentPatchValidator checks against live document state and the
-// format's DOCX/CSV writer (the only formats Phase 24.1C implements real
-// mutation for) applies.
+// The controlled Project-mutation intent contract. A model never writes files
+// directly - it can only ever produce this intent, which
+// DocumentPatchValidator checks against live document state and the format's
+// DOCX/CSV writer (the only formats Phase 24.1C implements real mutation for)
+// applies.
 
 // What one operation does to a document. Deliberately few, and each one is
 // something a lawyer would say out loud about their own document - not an
@@ -142,7 +141,7 @@ struct DocumentPatchOperation {
 	// production caller (DirectDocumentWork.cpp's own document-native
 	// severity presentation) only ever sets this to shading it already read
 	// from another real cell in the same live document declaring the same
-	// semantic value (e.g. an existing "Низкий"-labeled cell's own real
+	// semantic value (e.g. an existing "…"-labeled cell's own real
 	// green). Empty (the default) means "leave this cell's existing shading
 	// untouched" - exactly today's behavior for every other caller.
 	std::string new_shading_fill_hex;

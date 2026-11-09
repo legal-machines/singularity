@@ -28,9 +28,9 @@
 @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .profile, .picture { animation: none; } }
 
-/* A part, as the app sets its parts now (the owner, 2026-11-05): its name, then
-   what it holds on the page's white, apart by space alone - no card, frame,
-   small capitals or line between rows. */
+/* A part, as the app sets its parts now: its name, then what it holds on the
+   page's white, apart by space alone - no card, frame, small capitals or line
+   between rows. */
 .part { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .part_name { margin: 0; color: var(--ink); font-size: 15px; font-weight: 500; line-height: 22px; }
 .lines { display: flex; flex-direction: column; gap: 18px; margin: 0; padding: 0; list-style: none; }
@@ -50,9 +50,9 @@
 .slide { min-height: 198px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 16px; }
 .slide p, .slide span { margin: 0; color: var(--ink-3); font-size: 11px; line-height: 16px; }
 
-/* The preparation and protection slides (D-195): a clause as the lawyer reads
-   it, with a tracked change in one author's colour as Word draws it, and the
-   same clause with its symbols as it leaves for the model. */
+/* The preparation and protection slides: a clause as the lawyer reads it,
+   with a tracked change in one author's colour as Word draws it, and the same
+   clause with its symbols as it leaves for the model. */
 .clauseNumber { margin: 0 0 8px; color: var(--ink); font-size: 14px; font-weight: 500; line-height: 20px; }
 .passage { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 24px; overflow-wrap: anywhere; }
 .passage b { color: var(--ink); font-weight: 500; }
@@ -62,9 +62,9 @@
 .legend { margin: 10px 0 0; color: var(--ink-3); font-size: 12px; line-height: 18px; }
 .restored { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; color: var(--ink-3); font-size: 13px; line-height: 20px; }
 
-/* Protection's sentence on its way (D-195): rows on the page itself, no card
-   and no border; the row that leaves the computer stands on its own ground,
-   its symbols white on it, and the client's words are tinted where they stay. */
+/* Protection's sentence on its way: rows on the page itself, no card and no
+   border; the row that leaves the computer stands on its own ground, its symbols
+   white on it, and the client's words are tinted where they stay. */
 .journey { width: min(600px, 100%); display: grid; gap: 6px; animation: appear 260ms ease-out both; }
 .step { display: grid; grid-template-columns: 104px minmax(0, 1fr); column-gap: 16px; align-items: baseline; padding: 18px 20px; border-radius: 14px; }
 /* Protected, what leaves stands on a calm green: safe to send. */
@@ -83,10 +83,10 @@
 .stack { display: grid; }
 .stack > * { grid-area: 1 / 1; visibility: hidden; }
 .stack > [data-shown] { visibility: visible; }
-/* As the slide opens the picture plays once (D-198): a row not reached yet
-   keeps its place unseen, the row that leaves takes its ground as it goes,
-   and a caption comes with the step it names. A row's fullest state stands
-   in it unseen (.sizer), so it never changes height. */
+/* As the slide opens the picture plays once: a row not reached yet keeps
+   its place unseen, the row that leaves takes its ground as it goes, and a
+   caption comes with the step it names. A row's fullest state stands in it
+   unseen (.sizer), so it never changes height. */
 .step { transition: opacity 600ms ease, background-color 600ms ease; }
 .step[data-waiting] { opacity: 0; }
 .sizer { visibility: hidden; }

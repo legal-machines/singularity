@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isUnreadableNow } from "../data/unreadable.js";
+
 // What the pane shows of Singularity: the Matter a file belongs to, its
 // threads, its colleagues and their reviews - read from Singularity on this
 // computer through the same Native API the window uses
@@ -178,7 +180,9 @@ export function useConversation(matterId, chatId, version) {
 		}
 		native().listChatConversation(matterId, chatId).then(
 			read => { if (isCurrent) setConversation(read); },
-			() => { if (isCurrent) setConversation(null); },
+			// A Matter whose data can't be read just now keeps the conversation
+			// shown; a thread gone is shown gone.
+			error => { if (isCurrent && isUnreadableNow(error) == false) setConversation(null); },
 		);
 		return () => { isCurrent = false; };
 	}, [matterId, chatId, version]);
@@ -328,7 +332,7 @@ export function fileIntoMatter(matterId, name, base64) {
 	return native().fileIntoMatter(matterId, name, base64);
 }
 
-// ---- A Matter's correspondence (D-106) ------------------------------------------------
+// ---- A Matter's correspondence ------------------------------------------------
 
 // Where a letter belongs among the Matters open on this computer, with the
 // evidence for each; nothing is filed by asking.
@@ -336,9 +340,9 @@ export function suggestMatter(message) {
 	return native().suggestLetterMatter(message);
 }
 
-// Files the letter to the Matter, with the evidence the person saw.
-// Filed `byRule`, a rule of the Matter's intake files it, which the Matter
-// checks (D-228).
+// Files the letter to the Matter, with the evidence the person saw. Filed
+// `byRule`, a rule of the Matter's intake files it, which the Matter
+// checks.
 export function fileLetter(matterId, message, evidence, byRule = false) {
 	return native().fileLetter(matterId, message, evidence ?? [], "outlook", byRule ? "rule" : "person");
 }
@@ -362,7 +366,7 @@ export async function matterSummaries() {
 }
 
 // The email drafts colleagues prepared in the Matters open here, the newest
-// first, each with whether it is ready to send (D-119).
+// first, each with whether it is ready to send.
 export async function colleagueEmailDrafts() {
 	const drafts = [];
 	for (const matter of await matterSummaries()) {
@@ -390,10 +394,9 @@ export function readEmailDraft(matterId, documentId) {
 	return native().readEmailDraft(matterId, documentId);
 }
 
-// The Matter's document a file in its folder became, once Singularity has
-// read it; null when it has not within the wait. A record the folder no longer
-// answers to (one a second computer made for the same file before D-109) is
-// never the one.
+// The Matter's document a file in its folder became, once Singularity has read
+// it; null when it has not within the wait. A record the folder no longer
+// answers to is never the one.
 export async function documentAt(matterId, relativePath, seconds = 20) {
 	const wanted = (relativePath ?? "").replaceAll("\\", "/").toLowerCase();
 	const end = Date.now() + seconds * 1000;

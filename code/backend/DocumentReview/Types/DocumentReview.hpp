@@ -9,12 +9,11 @@ namespace singularity::document_review {
 // A document review an AI colleague carries out in a thread: a lawyer names
 // the colleague and asks for it, the colleague reviews the Matter's document
 // against the firm's Playbook through the Document Intelligence & Preparation
-// Layer, and hands in a revised draft for the lawyer to accept or return
-// (the owner's overnight mandate, 2026-10-24). One review may have several
-// versions: each request to revise makes the next, and every earlier one is
-// kept as it was. Kept in the Matter's own data (`.lm`, "documentReviews"),
-// so it reads the same after a restart and on every computer that opens the
-// Matter.
+// Layer, and hands in a revised draft for the lawyer to accept or return. One
+// review may have several versions: each request to revise makes the next,
+// and every earlier one is kept as it was. Kept in the Matter's own data
+// (`.lm`, "documentReviews"), so it reads the same after a restart and on
+// every computer that opens the Matter.
 
 // How one run of a version went, for the record a lawyer can open: what was
 // prepared, which model answered, what it cost and how long it took. Ids,
@@ -27,7 +26,7 @@ struct ReviewExecution {
 	std::string operationId;
 	std::string providerId;
 	std::string modelId;
-	// The provider that served the calls, as the gateway named it (D-116).
+	// The provider that served the calls, as the gateway named it.
 	std::string servedBy;
 	// "protected", "unprotected" or "local".
 	std::string destination;
@@ -88,7 +87,7 @@ struct ReviewDecision {
 	std::string messageId;
 	// What was accepted: the draft's SHA-256 when it was, and whether that is
 	// the draft as the colleague wrote it or as someone changed it since in
-	// Word, Excel or PowerPoint (D-119).
+	// Word, Excel or PowerPoint.
 	std::string sha256;
 	bool isAsWritten = true;
 	// Changes of the version the lawyer left out, by their ids: the next
@@ -123,13 +122,13 @@ struct DocumentReview {
 };
 
 // One assignment a lawyer gave a colleague in a thread, as the colleague
-// carried it out (D-115, D-119): what it understood, each step with the
-// document it worked on and the review version that keeps that step's own
-// record - what it read, proposed, wrote, checked and left (the version's
-// result, "record") - the email it drafted, and what the whole took. Kept in
-// the Matter (`.lm`, "assignmentRecords"), so it reads the same on every
-// computer that opens the Matter. A step's record is never copied here: the
-// review version is its one place.
+// carried it out: what it understood, each step with the document it worked
+// on and the review version that keeps that step's own record - what it
+// read, proposed, wrote, checked and left (the version's result, "record") -
+// the email it drafted, and what the whole took. Kept in the Matter (`.lm`,
+// "assignmentRecords"), so it reads the same on every computer that opens
+// the Matter. A step's record is never copied here: the review version is
+// its one place.
 struct AssignmentStepRecord {
 	int number = 0;
 	std::string documentId;
@@ -145,9 +144,9 @@ struct AssignmentStepRecord {
 	// ended when handed in: "completed", "unchanged", "failed", "cancelled" or
 	// "interrupted".
 	std::string status;
-	// What the result is for the lawyer (D-120): "completed", "partial" (done,
-	// with changes not written or values that do not reconcile), "blocked"
-	// (it waits for an answer), "unchanged" or "failed". Empty until handed in.
+	// What the result is for the lawyer: "completed", "partial" (done, with
+	// changes not written or values that do not reconcile), "blocked" (it waits
+	// for an answer), "unchanged" or "failed". Empty until handed in.
 	std::string outcome;
 	// What the colleague calls the document when it speaks of it: "the NDA".
 	std::string label;
@@ -161,9 +160,9 @@ struct AssignmentStepRecord {
 	// `recoveries`, in words.
 	int retries = 0;
 	std::vector<std::string> recoveries;
-	// A document the colleague wrote (D-141), with no review behind it: its
-	// SHA-256 as written, and the lawyers' decisions on it (D-143), accepted as
-	// it is or returned with what should change, as a revised draft's are.
+	// A document the colleague wrote, with no review behind it: its SHA-256 as
+	// written, and the lawyers' decisions on it, accepted as it is or returned
+	// with what should change, as a revised draft's are.
 	std::string writtenSha256;
 	std::vector<ReviewDecision> decisions;
 };
@@ -197,9 +196,9 @@ struct AssignmentEmailRecord {
 	std::vector<std::string> recoveries;
 };
 
-// What only the lawyer can decide in an assignment (D-120): the question, why it
-// matters, where, the options with the colleague's recommendation first where
-// it has one, and whether the next step waits on it - until it is answered.
+// What only the lawyer can decide in an assignment: the question, why it
+// matters, where, the options with the colleague's recommendation first where it
+// has one, and whether the next step waits on it - until it is answered.
 struct AssignmentDecision {
 	// "dec-<n>", one assignment's own.
 	std::string id;
@@ -218,8 +217,8 @@ struct AssignmentDecision {
 	// on the decision.
 	bool isRecommended = false;
 	// Why the colleague recommends its first option, in a sentence: shown once,
-	// with that option, never repeated elsewhere (D-174). Empty when it gave
-	// none, or recommends nothing.
+	// with that option, never repeated elsewhere. Empty when it gave none, or
+	// recommends nothing.
 	std::string reasoning;
 	// Accepting the draft, or sending the email, waits on it.
 	bool isBlocking = false;
@@ -235,10 +234,10 @@ struct AssignmentDecision {
 	std::string answeredAt;
 };
 
-// One call of the colleague's tools in an assignment (D-121): written before it
-// runs and its result after, so a run resumed after a stop or a restart knows
-// what was done and does nothing twice. The execution's own record, apart from
-// the thread and never shown as the conversation.
+// One call of the colleague's tools in an assignment: written before it runs
+// and its result after, so a run resumed after a stop or a restart knows what
+// was done and does nothing twice. The execution's own record, apart from the
+// thread and never shown as the conversation.
 struct AssignmentCall {
 	int turn = 0;
 	std::string tool;
@@ -257,7 +256,7 @@ struct AssignmentRecord {
 	std::string chatId;
 	std::string requestMessageId;
 	// The colleague's reply that took the work up, which the assignment's card
-	// stands under (D-120).
+	// stands under.
 	std::string ackMessageId;
 	// The colleague's last word on it, which its decisions stand under.
 	std::string summaryMessageId;

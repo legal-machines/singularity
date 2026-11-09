@@ -12,9 +12,7 @@
 namespace singularity::node::work_log_share {
 
 /*
- * A design partner's work log, sent to Legal Machines (D-257; the owner,
- * 2026-11-05: "everything goes to our server, encrypted end to end, so that
- * nobody on the server reads it, only we ourselves").
+ * A design partner's work log, sent to Legal Machines.
  *
  * One chat's calls from its work log (Node/WorkLog), with the conversation's
  * messages as the member sees them, what the member says went wrong and this

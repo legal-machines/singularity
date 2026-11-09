@@ -737,7 +737,7 @@ std::string paragraph_style_signature(const pugi::xml_node &paragraph) {
 // Unknown's reach here only ever narrows what ordinary drafting may touch,
 // never broadens it. Bold-without-shading stays HeaderLabel regardless of
 // span (a real column label is single-column; a real section-spanning
-// label like "Дополнительная информация" spans every column - both are
+// label like "…" spans every column - both are
 // genuine headers, and both are already non-editable via the same
 // Unknown-adjacent rule, so no span gate is needed there). Unshaded and
 // non-bold is ordinary body content: this document's own real title/

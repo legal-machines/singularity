@@ -1,8 +1,7 @@
 /* The Matter's sections (components/Views): as far under its mark as the
    Inbox's switch stands under the letters of its title - 61 under the
-   title's line, whose baseline stands 7.7 above its foot, so 69 (the owner,
-   2026-11-02: "make the red distance as the green", "the blue as the red");
-   the desk keeps its own room under it. */
+   title's line, whose baseline stands 7.7 above its foot, so 69; the desk
+   keeps its own room under it. */
 .toolbar {
 	display: flex;
 	align-items: center;

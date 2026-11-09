@@ -205,18 +205,18 @@ Json view_json(const AgentView &view) {
 		{"dailyTime", daily_time_of(agent.daily_minute)},
 		{"weeklyDay", agent.weekly_day},
 		{"chatId", agent.chat_id.has_value() == true ? Json(*agent.chat_id) : Json(nullptr)},
-		// Held here from the firm's record (D-213): changed on the computer that runs it.
+		// Held here from the firm's record: changed on the computer that runs it.
 		{"firmCopy", agent.is_firm_copy},
-		// Where its own chat with the member is: the Matter it was made for, in
-		// the zero state, or the member's desk for a colleague of the firm (D-157).
+		// Where its own chat with the member is: the Matter it was made for, in the
+		// zero state, or the member's desk for a colleague of the firm.
 		{"chatProjectId", agent.chat_id.has_value() == true ? Json(home_project_of(agent, runner_dependencies())) : Json(nullptr)},
 		{"modelPolicy", to_string(agent.model_policy)},
-		// The model it thinks with, as its page set it (D-185); null for the
-		// firm's default.
+		// The model it thinks with, as its page set it; null for the firm's
+		// default.
 		{"model", agent.model_id.empty() == true ? Json(nullptr)
 			: Json{{"providerId", agent.model_provider_id}, {"modelId", agent.model_id}}},
-		// What gathers its memory (D-206): the model chosen for it, null for the
-		// firm's model for context work; off, none.
+		// What gathers its memory: the model chosen for it, null for the firm's
+		// model for context work; off, none.
 		{"memoryModel", agent.memory_model_id.empty() == true ? Json(nullptr)
 			: Json{{"providerId", agent.memory_provider_id}, {"modelId", agent.memory_model_id}}},
 		{"memoryOff", agent.is_memory_off},
@@ -250,12 +250,15 @@ Json view_json(const AgentView &view) {
 		{"responsibleName", agent.responsible_name},
 		{"failedInARow", agent.failed_in_a_row},
 		{"pausedReason", agent.paused_reason},
-		// A colleague never rests for a day's limit any more (D-158); kept for the
-		// pages that read it.
+		// A colleague never rests for a day's limit any more; kept for the pages
+		// that read it.
 		{"isRestingToday", false},
 		{"spendThisMonth", agent.spend_month == month_of_this_computer() && agent.spend > 0.0 ? Json(agent.spend) : Json(nullptr)},
 		{"spendCurrency", agent.spend_currency},
 		{"assignmentsWaiting", agent.waiting_work.size()},
+		// The conversations it has work from now, so a conversation's Stop
+		// stands while it works on what was given there.
+		{"workChatIds", chats_with_work(agent, view.latest_run, view.is_running)},
 	};
 }
 
@@ -313,7 +316,7 @@ std::string guard_mode_word() {
 Json list(const Json &params) {
 	const std::optional<std::string> matterId = optional_text(params, "projectId");
 	// The firm's colleagues, each with its own chat on the member's desk: those
-	// another computer runs held here from the firm's record first (D-213).
+	// another computer runs held here from the firm's record first.
 	if (matterId.has_value() == false) {
 		take_colleague_edits();
 		adopt_firm_colleagues();
@@ -357,8 +360,8 @@ Json create(const Json &params) {
 	return view_json(create_agent(settings_from(params), actor_id()));
 }
 
-// A colleague of the firm (D-157): its name, face, office, manner and standing
-// task. It is never hired into a Matter, and nothing of its own is scheduled.
+// A colleague of the firm: its name, face, office, manner and standing task.
+// It is never hired into a Matter, and nothing of its own is scheduled.
 Json hire(const Json &params) {
 	FirmColleagueHire hire;
 	hire.name = required_text(params, "name");
@@ -387,8 +390,8 @@ Json edit(const Json &params) {
 	return view_json(edit_firm_colleague(required_text(params, "agentId"), changed));
 }
 
-// The administrator's change of a colleague from any of their computers
-// (D-219): the same words as agent.edit.
+// The administrator's change of a colleague from any of their
+// computers: the same words as agent.edit.
 Json request_edit(const Json &params) {
 	FirmColleagueHire changed;
 	changed.name = required_text(params, "name");
@@ -415,7 +418,7 @@ Json remove(const Json &params) {
 }
 
 // What a colleague remembers, each note with what it is about and who said
-// it (D-159): a member sees what it keeps, and lets go of what it should not.
+// it: a member sees what it keeps, and lets go of what it should not.
 Json memory_json(const std::string &agent_id) {
 	Json notes = Json::array();
 	for (const MemoryNote &note : memory_of(agent_id)) {
@@ -492,9 +495,9 @@ Json pause(const Json &params) {
 	return view_json(pause_agent(required_text(params, "agentId")));
 }
 
-// The model a colleague thinks with (D-185): one a connected account gives for
-// the firm's reasoning, checked as AI Setup checks it, or the firm's default
-// when none is named.
+// The model a colleague thinks with: one a connected account gives for the
+// firm's reasoning, checked as AI Setup checks it, or the firm's default when
+// none is named.
 Json set_model(const Json &params) {
 	const std::string agentId = required_text(params, "agentId");
 	const std::string providerId = optional_text(params, "providerId").value_or("");
@@ -504,9 +507,9 @@ Json set_model(const Json &params) {
 	return view_json(set_agent_model(agentId, providerId, modelId));
 }
 
-// What gathers a colleague's memory (D-206): a model a connected account
-// gives for the firm's context work, checked as AI Setup checks it; the firm's
-// own for context when none is named; none when `off`.
+// What gathers a colleague's memory: a model a connected account gives for the
+// firm's context work, checked as AI Setup checks it; the firm's own for
+// context when none is named; none when `off`.
 Json set_memory_model(const Json &params) {
 	const std::string agentId = required_text(params, "agentId");
 	const std::string providerId = optional_text(params, "providerId").value_or("");

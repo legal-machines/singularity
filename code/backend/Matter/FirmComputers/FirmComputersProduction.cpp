@@ -42,14 +42,17 @@ Environment production_environment() {
 	environment.device_key = []() { return platform::device_public_key(); };
 	environment.coordination_key = []() { return coordination::own_coordination_key(); };
 	environment.seat_id = []() { return seat_signed_in(); };
+	// Its organisation, by Legal Machines' id: the listing, the checks and what
+	// counts are that organisation's alone.
+	environment.organisation_id = []() { return coordination::signed_in_organisation_id(); };
 	environment.candidates = []() { return coordination::own_candidates(); };
 	environment.sign = [](const std::string &message) { return platform::sign_with_device_key(message); };
 	environment.verify = [](const std::string &key, const std::string &message, const std::string &signature) {
 		return platform::verify_device_signature(key, message, signature);
 	};
 	environment.nonce = []() { return platform::secure_random_hex(32); };
-	// Public keys and addresses only, never a name, a Matter or a file
-	// (AG-SEC-9).
+	// Public keys and addresses only, never a name, a Matter or a
+	// file.
 	environment.announce = [](const Computer &self) {
 		node::ListedComputer listed;
 		listed.seat_id = self.seat_id;
@@ -128,7 +131,7 @@ std::vector<coordination::CheckedFirmComputer> checked_for_coordination() {
 	std::vector<coordination::CheckedFirmComputer> found;
 	for (const Computer &computer : checked()) {
 		found.push_back(coordination::CheckedFirmComputer{"seat:" + computer.seat_id, computer.device_id, computer.device_key,
-			computer.coordination_key, computer.addresses});
+			computer.coordination_key, computer.addresses, computer.organisation_id});
 	}
 	return found;
 }

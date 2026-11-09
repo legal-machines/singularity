@@ -2,6 +2,7 @@
 #include "LocalModel/LocalThroughput/LocalThroughput.hpp"
 #include "Privacy/PrivacyActions/PrivacyActions.hpp"
 #include "Routing/InferenceExecutor/InferenceExecutor.hpp"
+#include "Routing/InferenceExecutor/LocalOnlyWork.hpp"
 
 #include "Platform/Trace/Trace.hpp"
 
@@ -225,10 +226,7 @@ std::vector<hardware::ExecutionBackend> papinian_preferred_backends() {
   return {hardware::ExecutionBackend::Cpu};
 }
 
-// Rounded from measured evidence (docs/alpha/phase-03-papinian.md's "Bundled
-// runtime and controlled native benchmark" / "Same-schema equivalence"
-// sections recorded ~1.1-1.75 GB peak RSS across CoreML and CPU runs), not
-// invented.
+// Rounded from measured evidence, not invented.
 hardware::ResourceRequirement papinian_resource_requirement() {
   hardware::ResourceRequirement requirement;
   requirement.min_ram_bytes = 1 * kGiB;
@@ -368,8 +366,8 @@ ProductionPapinianResources &production_papinian_resources() {
 }
 
 // Where real, locally-measured warm-up/memory evidence is cached and
-// compared against the previous run (docs/LOCAL_INFERENCE.md).
-// A small local JSON file, never network state.
+// compared against the previous run. A small local JSON file, never
+// network state.
 std::filesystem::path papinian_benchmark_baseline_path() {
   return platform::application_data_directory() / "HardwareProfile" / "papinian-benchmark.json";
 }
@@ -485,8 +483,8 @@ void prepare_papinian_model_at_launch() {
   const bool isInstalled = papinian && std::filesystem::is_directory(papinian->installed_path, error) && !error;
   if (isInstalled == false) {
     // Nothing to load yet. The package is fetched first, by itself only once
-    // onboarding is complete with protection on (D-198), and its own status
-    // shows the download meanwhile, or that it waits to be asked for.
+    // onboarding is complete with protection on, and its own status shows
+    // the download meanwhile, or that it waits to be asked for.
     packages.sync_required_models();
     papinian_warmup_tracker().run_once();
     return;
@@ -731,7 +729,7 @@ ResolvedGenerationInputs resolve_generation_inputs(
     target = *request.model_target;
   } else {
     // role_assignments' own "reasoning" entry is the single canonical Node
-    // default AI Setup source for Reasoning (Phase 06, AI_SETUP_CONTRACT.md)
+    // default AI Setup source for Reasoning
     // - setup.default_model is only ever a derived compatibility mirror of
     // it and is never independently consulted here, so changing the
     // canonical Reasoning assignment always changes what a real request
@@ -834,6 +832,24 @@ std::optional<std::string> research_unavailable_reason(const tools::ToolExecutio
 	return research::production_research_unavailable_reason(context);
 }
 
+tools::ToolAttempt colleague_web_step(const tools::ToolExecutionContext &context, const tools::ToolIntent &intent,
+		const protected_api::Policy &policy, bool writtenFromProtectedText) {
+	research::ensure_production_research_tools();
+	tools::ToolExecutionContext own = context;
+	// Work kept on this computer reaches no network, whatever asked.
+	if (ScopedLocalOnlyWork::is_active()) own.permission.external_network_permitted = false;
+	// A colleague's own search asks no one first; what the firm denies stays
+	// denied (permission_for).
+	if (tools::permission_for(own.permission, tools::ToolEffectClass::ExternalNetwork)
+			== tools::PermissionDisposition::RequireApproval)
+		own.permission.effective_mode = tools::ProjectActionMode::ApproveSafeActions;
+	auto protection = std::make_shared<research::ResearchCallProtection>();
+	protection->mode = policy.mode;
+	protection->written_from_protected_text = writtenFromProtectedText;
+	const research::ScopedResearchCallProtection held(protection);
+	return tools::production_tool_broker().request(own, intent);
+}
+
 std::optional<std::size_t> estimate_model_context_window_tokens(
 		const std::optional<ModelTarget> &target) {
 	const auto settings = platform::load_app_settings();
@@ -924,7 +940,7 @@ InferenceResult execute(const InferenceRequest &request) {
   if (trim(request.prompt).empty()) {
     throw std::runtime_error("Enter a prompt to run.");
   }
-	// Every model call this request makes carries the member's pictures (D-256).
+	// Every model call this request makes carries the member's pictures.
 	const providers::InputPicturesScope pictured(request.pictures);
 	if (request.research_mode == research::ResearchMode::Contradictory) {
 		throw std::runtime_error(
@@ -932,18 +948,14 @@ InferenceResult execute(const InferenceRequest &request) {
 	}
 	// Work that runs only on this computer - this thread's ScopedLocalOnlyWork,
 	// or the durable record of the operation the request belongs to
-	// (Tool/OperationAuthority), whichever thread carries it - runs on a local
-	// model, never anything else, and is never offered web research: required,
-	// it is refused in words; otherwise the request runs without it.
-	bool localOnlyWork = ScopedLocalOnlyWork::is_active();
-	if (!localOnlyWork && request.tool_execution_context) {
-		const std::optional<tools::OperationAuthority> authority = tools::operation_authority(
-			request.tool_execution_context->project_id, request.tool_execution_context->operation_id);
-		localOnlyWork = authority && authority->local_only;
-	}
+	// (Tool/OperationAuthority), named by its tool context or by its
+	// authority_operation, whichever thread carries it - runs on a local model,
+	// never anything else, whoever chose the model, and is never offered web
+	// research: required, it is refused in words; otherwise the request runs
+	// without it (is_local_only_work, LocalOnlyWork.hpp).
+	const bool localOnlyWork = is_local_only_work(request);
 	if (localOnlyWork && (!request.model_target || request.model_target->provider_id != "local"))
-		throw providers::TaskError(providers::TaskErrorCode::UnsupportedModel,
-			"This work runs only on this computer, so it was not sent to a model outside it. Nothing was sent.");
+		throw providers::TaskError(providers::TaskErrorCode::UnsupportedModel, kLocalOnlyWorkNotSent);
 	if (localOnlyWork && request.research_mode == research::ResearchMode::Required)
 		throw std::runtime_error(std::string("Web research was not run: ") + kLocalOnlyWorkResearchUnavailable);
 	const research::ResearchMode researchMode = localOnlyWork ? research::ResearchMode::Off : request.research_mode;
@@ -1433,10 +1445,10 @@ InferenceResult execute(const InferenceRequest &request) {
 			[](const std::string &prompt) { return without_instruction_sections(prompt).without; });
 	}
 	// Every search a protected call's model writes is admitted, with or
-	// without the protocol's budgets (PRIV-1): a model whose window is too
-	// small for the protocol is held to the same rule as any other, judged on
-	// what the provider wrote (its reply, kept on the table by each protected
-	// call) - and an echo of its own request is written from those bytes too.
+	// without the protocol's budgets: a model whose window is too small for
+	// the protocol is held to the same rule as any other, judged on what the
+	// provider wrote (its reply, kept on the table by each protected call) -
+	// and an echo of its own request is written from those bytes too.
 	if (protectedCall && !computeBinding.admission) {
 		computeBinding.admission = protected_api::papinian::compute::query_admission(production_guard(), operationSymbols,
 			[](const std::string &prompt) { return without_instruction_sections(prompt).without; });

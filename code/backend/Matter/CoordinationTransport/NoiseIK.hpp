@@ -7,13 +7,13 @@
 
 namespace singularity::matter::coordination::transport::noise {
 
-// How two of a firm's computers meet directly (D-124): the Noise protocol's IK
+// How two of a firm's computers meet directly: the Noise protocol's IK
 // handshake, Noise_IK_25519_ChaChaPoly_BLAKE2b (noiseprotocol.org, revision
 // 34), checked against its published test vectors. The computer that calls
 // knows the other's static X25519 key from the Matter's member record, which a
-// lawyer confirmed by its code (D-095); the one called learns the caller's key
-// from the first message and admits it only if it is a confirmed computer of
-// the Matter. No server can stand between them: none knows their keys.
+// lawyer confirmed by its code; the one called learns the caller's key from
+// the first message and admits it only if it is a confirmed computer of the
+// Matter. No server can stand between them: none knows their keys.
 
 using Bytes = std::vector<std::uint8_t>;
 using Key = std::array<std::uint8_t, 32>;

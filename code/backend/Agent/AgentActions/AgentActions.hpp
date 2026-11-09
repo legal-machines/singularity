@@ -72,30 +72,29 @@ const RunnerDependencies &runner_dependencies();
 std::function<void()> runner_take_up_mentions();
 
 AgentView create_agent(const AgentSettings &settings, const std::string &actor_id);
-// A colleague of the firm (D-156, D-157): hired with its name, its face, its
-// office and how it works, and belonging to no Matter. It takes part in a
-// Matter only when it is given work there; until then it reaches no Matter's
-// files or threads and runs nothing of its own.
+// A colleague of the firm: hired with its name, its face, its office and how
+// it works, and belonging to no Matter. It takes part in a Matter only when
+// it is given work there; until then it reaches no Matter's files or threads
+// and runs nothing of its own.
 struct FirmColleagueHire {
 	std::string name;
 	std::string character;
 	Agent::Office office;
 	std::string manner;
 	// Its standing task in the member's words, which may be empty. A colleague
-	// is always the firm's: no Matter is chosen when it is hired (the owner,
-	// 2026-10-30).
+	// is always the firm's: no Matter is chosen when it is hired.
 	std::string goal;
 };
 AgentView hire_firm_colleague(const FirmColleagueHire &hire, const std::string &actor_id);
-// The firm's administrator changes a colleague (D-214): its name, face,
-// office, manner and standing work, checked as at its hiring; one that is
+// The firm's administrator changes a colleague: its name, face, office,
+// manner and standing work, checked as at its hiring; one that is
 // archived is restored first. On the computer that runs it only - a copy
-// follows the firm's record (D-213).
+// follows the firm's record.
 AgentView edit_firm_colleague(const std::string &agent_id, const FirmColleagueHire &edit);
-// The firm's administrator changes a colleague from any of their computers
-// (D-219): one this computer runs is changed at once; one another computer
-// runs is asked of it through the firm's record, signed with this computer's
-// key, and changes once that computer takes it. Its view as it is now.
+// The firm's administrator changes a colleague from any of their computers:
+// one this computer runs is changed at once; one another computer runs is
+// asked of it through the firm's record, signed with this computer's key,
+// and changes once that computer takes it. Its view as it is now.
 AgentView request_colleague_edit(const std::string &agent_id, const FirmColleagueHire &edit);
 // On the computer that runs them: each colleague takes the newest change an
 // administrator's computer asked for that it has not taken yet - from one of
@@ -105,22 +104,22 @@ AgentView request_colleague_edit(const std::string &agent_id, const FirmColleagu
 // here is. Never throws.
 void take_colleague_edits();
 // Archived, it takes no more work and stands apart from the team, its chats
-// and its record kept; restored, it is at work again (D-214). The
-// administrator's, on the computer that runs it.
+// and its record kept; restored, it is at work again. The administrator's,
+// on the computer that runs it.
 AgentView archive_colleague(const std::string &agent_id, bool archived);
-// Let go (D-214): it is told to the Matters it worked in and to the firm's
-// record, and its own record here goes; its words stay where it wrote them.
+// Let go: it is told to the Matters it worked in and to the firm's record,
+// and its own record here goes; its words stay where it wrote them.
 void delete_colleague(const std::string &agent_id);
 
 // Each colleague of the firm at work here whose own chat on the member's desk
 // is not open yet has it opened: one hired before this computer had a desk -
 // in onboarding, before the workspace was set - would otherwise stay out of
-// Messages until it first worked (2026-10-31). Never with a lock held.
+// Messages until it first worked. Never with a lock held.
 void open_missing_desk_threads();
-// The firm's colleagues another computer runs, held here from the firm's record
-// (D-213): each one this computer does not run is kept here as a copy that
-// answers the member here in its own chat with them, its settings following
-// the record, and stops when the record no longer holds it active; one this
+// The firm's colleagues another computer runs, held here from the firm's
+// record: each one this computer does not run is kept here as a copy that
+// answers the member here in its own chat with them, its settings following the
+// record, and stops when the record no longer holds it active; one this
 // computer runs is never touched. Its chat on the desk opens as a hired one's
 // does. Never with a lock held; never throws.
 void adopt_firm_colleagues();
@@ -133,24 +132,23 @@ AgentView draft_agent_for_app(const AgentSettings &settings, const AgentRequeste
 AgentView approve_draft(const std::string &agent_id, const AgentSettings &settings, const std::string &actor_id);
 AgentView decline_draft(const std::string &agent_id);
 AgentView pause_agent(const std::string &agent_id);
-// Sets the model the colleague thinks with (D-185): a provider's model, checked
-// by the caller against what is connected, or both empty for the firm's
-// default. Its work from then on runs on it.
+// Sets the model the colleague thinks with: a provider's model, checked by the
+// caller against what is connected, or both empty for the firm's default. Its
+// work from then on runs on it.
 AgentView set_agent_model(const std::string &agent_id, const std::string &provider_id, const std::string &model_id);
-// Sets what gathers the colleague's memory (D-206): a provider's or this
-// computer's model, checked by the caller against what is connected; both
-// empty for the firm's model for context work; `off` for none, after which it
-// keeps no new notes and its notes stay as they are. The firm's administrator
-// chooses it, as the colleague's model (D-184).
+// Sets what gathers the colleague's memory: a provider's or this computer's
+// model, checked by the caller against what is connected; both empty for the
+// firm's model for context work; `off` for none, after which it keeps no new
+// notes and its notes stay as they are. The firm's administrator chooses it,
+// as the colleague's model.
 AgentView set_agent_memory_model(const std::string &agent_id, const std::string &provider_id, const std::string &model_id, bool off);
 AgentView resume_agent(const std::string &agent_id);
 AgentView stop_agent(const std::string &agent_id);
 AgentView update_agent(const std::string &agent_id, long long expected_revision, const AgentSettings &settings);
-// The colleague's office in the firm (Agent::office, D-071's second step): the
-// office it holds, the position it ranks with - one of the firm's scale
-// (Organisation/Types/FirmOffice), or none - its practice, its area and whom
-// it answers to. Its words are checked as its settings are; its thread's
-// brief and its card then say who it is now.
+// The colleague's office in the firm: the office it holds, the position it
+// ranks with - one of the firm's scale (Organisation/Types/FirmOffice), or
+// none - its practice, its area and whom it answers to. Its words are checked
+// as its settings are; its thread's brief and its card then say who it is now.
 AgentView set_agent_office(const std::string &agent_id, const Agent::Office &office);
 AgentView request_agent_run(const std::string &agent_id);
 AgentView cancel_agent_run(const std::string &agent_id);
@@ -201,21 +199,37 @@ struct MentionMessage {
 
 // Every colleague of this computer the message names takes it up as work and
 // answers in its thread, in whichever Matter of the firm it was written: a
-// colleague is the firm's, never one Matter's (D-157); the ids of those that
-// did.
-// A message already taken up is not taken up again, so a thread read again -
+// colleague is the firm's, never one Matter's; the ids of those that did. A
+// message already taken up is not taken up again, so a thread read again -
 // or synced from a colleague's computer - never sets an agent to work twice.
 std::vector<std::string> take_up_mentions(const MentionMessage &message);
 
-// --- A colleague's memory (D-159) ------------------------------------------
+// A lead's work given back. `ended` is work another colleague of this
+// computer gave in a thread as a part of its own (work.give), now done or
+// failed. Once no part that colleague gave in the thread still waits or
+// runs, it is given its work there once more - to read what came of the
+// parts and finish what it was asked - as work it gives itself, which is
+// never followed up in turn, so a round of parts ends with it. Nothing for
+// work a person gave, work stopped or withdrawn, a giver that is no
+// colleague here, or while the giver's work given back in the thread has not
+// ended. The work given back, if any.
+std::optional<AgentAssignment> give_back_after_part(const AgentAssignment &ended);
+
+// Why `agent_id` cannot take a part another colleague gives it on this
+// computer, in words, or nothing when it can (finding f-silent-refusal: a part
+// it could not take was posted to it, became no one's work, and nothing said
+// so). It cannot while no colleague works on this computer, when another of
+// the firm's computers carries it, or while it is stopped or not yet approved.
+std::optional<std::string> why_no_part(const std::string &agent_id);
+
+// --- A colleague's memory ------------------------------------------
 //
 // One memory per colleague, across every conversation and every piece of work
-// it has in the firm, gathered after each talk by a model of its own - the
-// one its page chose, else the firm's model for context work, or none when
-// its page turned it off (D-206) - and read in every talk from the cache. What
-// a note is about decides where it is used: the firm's everywhere, a Matter's
-// where that Matter's members are, a member's when that member takes part
-// (ORG-6).
+// it has in the firm, gathered after each talk by a model of its own - the one
+// its page chose, else the firm's model for context work, or none when its
+// page turned it off - and read in every talk from the cache. What a note is
+// about decides where it is used: the firm's everywhere, a Matter's where that
+// Matter's members are, a member's when that member takes part.
 
 // Where a colleague talks: the conversation's project and thread, the message
 // it answers, the Matter it is in - none in a member's personal chat - and the
@@ -258,7 +272,7 @@ void forget_memory(const std::string &agent_id, const std::string &note_id);
 
 // Opens a colleague's own chat - in the Matter it was made for, or on the
 // member's desk - where it has none yet, and brings its brief up to date where
-// it has one (D-157). Never throws; never call it with an agent lock held.
+// it has one. Never throws; never call it with an agent lock held.
 void open_own_chat(const std::string &agent_id);
 // The colleagues whose own chat could not open at their last try - no Matters
 // folder yet, as for onboarding's first colleague - which the scheduler tries
@@ -277,6 +291,20 @@ std::vector<AgentAssignment> list_assignments(const std::string &agent_id, std::
 // with every answer given by then. False for an agent not on this computer.
 [[nodiscard]] bool has_work_in_line(const std::string &agent_id, const std::string &chat_id);
 
+// A member's Stop in a conversation: every colleague on this computer ends
+// the work it was given there - the piece in hand stopped where it stands,
+// what waits withdrawn - and stays at work, waiting for what it is given
+// next. Its work from anywhere else goes on. How many pieces ended.
+std::size_t stop_work_in_chat(const std::string &chat_id);
+// A thread deleted (Chat/ChatActions set_deleted_listener): the work given in
+// it ends as a Stop ends it, the waiting work saying its thread was deleted.
+std::size_t withdraw_work_in_deleted_chat(const std::string &chat_id);
+
+// The conversations a colleague has work from now - the piece in hand, then
+// the pieces waiting - each once, so the conversation's Stop stands while it
+// works on what was given there.
+std::vector<std::string> chats_with_work(const Agent &agent, const std::optional<AgentRun> &latest_run, bool is_running);
+
 std::vector<AgentView> list_agent_views(const std::optional<std::string> &matter_id);
 AgentView agent_view(const std::string &agent_id);
 
@@ -287,9 +315,9 @@ void publish_card(const std::string &agent_id);
 // The state that sums an agent and its latest run (AgentView::state).
 std::string agent_state(const Agent &agent, const std::optional<AgentRun> &latest_run, bool is_running);
 
-// What an agent's character acts out (D-013), derived here and nowhere else
-// from its state (agent_state), whether its run is under way now and that
-// run's stage, so a page never stages work that is not happening:
+// What an agent's character acts out, derived here and nowhere else from its
+// state (agent_state), whether its run is under way now and that run's stage,
+// so a page never stages work that is not happening.
 // - greet: a draft waits for a lawyer's approval;
 // - rest, while it answers a message (stage answering): its conversation says
 //   it is typing, and its face acts out nothing;

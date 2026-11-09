@@ -23,7 +23,7 @@
 
 // A build that may try an update before it is offered: a development build
 // only. A shipping build has none of it: its binary never holds the name
-// SINGULARITY_UPDATE_FEED (docs/RELEASE_CHECKLIST.md).
+// SINGULARITY_UPDATE_FEED.
 #if !defined(NDEBUG)
 #define SINGULARITY_UPDATE_TEST_FEED 1
 #endif
@@ -41,8 +41,8 @@ const std::vector<std::string> kReleaseKeys = {
 };
 
 #if defined(SINGULARITY_UPDATE_TEST_FEED)
-// Trying an update before it is offered (D-261): SINGULARITY_UPDATE_FEED names
-// a folder holding latest.json - a release exactly as the site answers it,
+// Trying an update before it is offered: SINGULARITY_UPDATE_FEED names a
+// folder holding latest.json - a release exactly as the site answers it,
 // signed by the throwaway key SINGULARITY_UPDATE_KEY names - and its
 // installer. Everything else is checked as for the site.
 std::optional<std::filesystem::path> testFeed() {

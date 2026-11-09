@@ -8,13 +8,13 @@
 namespace singularity::providers {
 
 // The pictures a member attached to a request, sent to the model as image
-// inputs (D-256): a trademark's logo, a photographed page, a diagram. Each is
-// its file's bytes, in a form every provider here reads (PNG, JPEG, GIF or
-// WebP), with its name for the request's record, its SHA-256, and its bytes as
-// base64, which is what the body carries and what the final check holds the
-// body to (ProtectedInference): a picture in the body that is none of these is
-// never sent. Installed for one request (InputPicturesScope) on the thread that
-// makes it, as PromptCache is; a request with none carries text only.
+// inputs: a trademark's logo, a photographed page, a diagram. Each is its
+// file's bytes, in a form every provider here reads (PNG, JPEG, GIF or WebP),
+// with its name for the request's record, its SHA-256, and its bytes as base64,
+// which is what the body carries and what the final check holds the body to
+// (ProtectedInference): a picture in the body that is none of these is never
+// sent. Installed for one request (InputPicturesScope) on the thread that makes
+// it, as PromptCache is; a request with none carries text only.
 //
 // Protection masks words, not pictures: while it is on, a picture leaves as it
 // is, and only because the member pressed Send with the attachment saying so.

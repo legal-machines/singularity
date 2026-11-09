@@ -12,9 +12,9 @@
 	pointer-events: none;
 }
 
-/* Soft colours, each 4.5:1 and more against its white words (the owner,
-   2026-10-30: "a softer colour"): sage when it went as asked, the brick of
-   Legal Machines when it went wrong, ink for what to mind. */
+/* Soft colours, each 4.5:1 and more against its white words: sage when it
+   went as asked, the brick of Legal Machines when it went wrong, ink for
+   what to mind. */
 .notice {
 	--notice-ground: #3a8060;
 	position: relative;

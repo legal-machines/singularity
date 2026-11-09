@@ -1,5 +1,5 @@
 # The application's name, as the member sees it: the window, the menus, the
-# bundle, the program and the installers (D-078).
+# bundle, the program and the installers.
 set(NATIVE_APP_DISPLAY_NAME "Singularity")
 # The name of the folders where it keeps its data.
 set(NATIVE_APP_DATA_NAME "Singularity")

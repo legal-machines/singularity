@@ -21,3 +21,9 @@
 		transform: translateY(-4px) scale(0.985);
 	}
 }
+
+/* A popover opened from a dialog stands over the dialog's white: under it
+   nothing could be chosen. */
+:global(html[data-dialog-open]) .popover {
+	z-index: calc(var(--layer-dialog) + 1);
+}

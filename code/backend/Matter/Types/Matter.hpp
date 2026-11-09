@@ -92,8 +92,8 @@ struct Matter {
   std::optional<std::string> directory_path;
   std::string created_at;
   std::string updated_at;
-  // Archived (D-214): when, and by whom; empty while it is open. It stands
-  // apart from the firm's open Matters until a member restores it, and keeps
+  // Archived: when, and by whom; empty while it is open. It stands apart
+  // from the firm's open Matters until a member restores it, and keeps
   // everything it holds. Carried with the Matter to every computer of it.
   std::string archived_at;
   std::string archived_by_actor_id;
@@ -119,25 +119,24 @@ struct Matter {
 	// versions and the lawyer's decisions (DocumentReview/Types).
 	std::vector<document_review::DocumentReview> document_reviews;
 	// The assignments colleagues carried out in threads, each with its steps
-	// and its email (DocumentReview/Types, D-119).
+	// and its email.
 	std::vector<document_review::AssignmentRecord> assignment_records;
 	// The letters filed to the Matter, incoming and outgoing, each with how it
-	// was filed (Correspondence/Types, D-106).
+	// was filed.
 	std::vector<correspondence::Letter> correspondence;
 	// Its correspondence intake: the rules that file a letter here by the
-	// account it reached and the mailbox it came from (D-228).
+	// account it reached and the mailbox it came from.
 	std::vector<correspondence::IntakeRule> correspondence_intake;
-	// The time its members recorded on it, each entry whose it is (D-181).
+	// The time its members recorded on it, each entry whose it is.
 	std::vector<TimeEntry> time_entries;
   std::vector<MatterChat> chats;
   std::vector<MatterTask> tasks;
-  // Explicit Project-level AI Setup differences from the Node default
-  // (Phase 06, AI_SETUP_CONTRACT.md) - see AiSetupRoleOverride's own comment.
+  // Explicit Project-level AI Setup differences from the Node default - see
+  // AiSetupRoleOverride's own comment.
   std::vector<AiSetupRoleOverride> ai_setup_overrides;
   // Phase 10 (Privacy - entities and Project coverage) - the persistent
   // Project Entity Registry and its own local protection preprocessing
-  // state. Project-scoped like every other collection here (D-002/D-003):
-  // never a global/cross-Project store - see PRIVACY_CONTRACT.md.
+  // state.
   std::vector<privacy::ProjectEntity> entities;
   std::vector<privacy::EntityAmbiguity> entity_ambiguities;
   std::vector<privacy::DocumentProtectionStatus> document_protection;

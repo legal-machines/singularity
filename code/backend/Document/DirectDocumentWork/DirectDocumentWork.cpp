@@ -85,7 +85,7 @@ std::vector<DocumentBlockSurface> discover_document_block_surfaces(const Documen
 
 		// Consume every consecutive (header row, body row) pair immediately
 		// following this banner - the real design-partner register's shape has exactly two such
-		// pairs (Описание риска/Рекомендации, then Дополнительная информация),
+		// pairs (…, then …),
 		// but this makes no assumption about the count.
 		while (index + 1 < table.rows.size()
 				&& is_header_row(table.rows[index]) && is_body_row(table.rows[index + 1])) {
@@ -160,8 +160,8 @@ std::optional<SeverityPresentation> document_native_severity_presentation(
 	// severity to a stable English enum (high/medium/low/informational)
 	// regardless of the document's own language, so a real severity-graded
 	// document almost never uses that same English wording in its own
-	// severity cell text (the real design-partner register uses "Высокий"/
-	// "Средний"/"Низкий"/"Для информации"). A small, explicit EN<->RU
+	// severity cell text (the real design-partner register uses "…"/
+	// "…"). A small, explicit EN<->RU
 	// synonym table - never a general translation attempt - lets the same
 	// English enum value still resolve to the right real word in that real,
 	// proven document convention. Byte-exact substrings (never case-folded -
@@ -169,8 +169,8 @@ std::optional<SeverityPresentation> document_native_severity_presentation(
 	// table): both the title-case form a banner's own real word actually
 	// uses and a lower-case form are listed explicitly.
 	static const std::vector<std::pair<std::string, std::vector<std::string>>> kSeveritySynonyms{
-		{"high", {"Высок", "высок"}}, {"medium", {"Средн", "средн"}},
-		{"low", {"Низк", "низк"}}, {"informational", {"нформац"}},
+		{"high", {"\320\222\321\213\321\201\320\276\320\272", "\320\262\321\213\321\201\320\276\320\272"}}, {"medium", {"\320\241\321\200\320\265\320\264\320\275", "\321\201\321\200\320\265\320\264\320\275"}},
+		{"low", {"\320\235\320\270\320\267\320\272", "\320\275\320\270\320\267\320\272"}}, {"informational", {"\320\275\321\204\320\276\321\200\320\274\320\260\321\206"}},
 	};
 	const auto matchesSeverity = [&](const std::string &metadataText) {
 		if (contains_ascii_insensitive(metadataText, canonicalSeverity)) return true;
@@ -394,11 +394,11 @@ std::string document_native_severity_label(const std::vector<DocumentBlockSurfac
 	};
 	static const std::vector<SeverityVocabulary> kVocabularies{
 		{"High", "Medium", "Low", "Informational"},
-		{"Высокий", "Средний", "Низкий", "Для информации"},
+		{"\320\222\321\213\321\201\320\276\320\272\320\270\320\271", "\320\241\321\200\320\265\320\264\320\275\320\270\320\271", "\320\235\320\270\320\267\320\272\320\270\320\271", "\320\224\320\273\321\217 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\320\270"},
 	};
 	static const std::vector<std::pair<std::string, std::vector<std::string>>> kSeverityWords{
-		{"high", {"high", "Высок", "высок"}}, {"medium", {"medium", "Средн", "средн"}},
-		{"low", {"low", "Низк", "низк"}}, {"informational", {"informational", "нформац"}},
+		{"high", {"high", "\320\222\321\213\321\201\320\276\320\272", "\320\262\321\213\321\201\320\276\320\272"}}, {"medium", {"medium", "\320\241\321\200\320\265\320\264\320\275", "\321\201\321\200\320\265\320\264\320\275"}},
+		{"low", {"low", "\320\235\320\270\320\267\320\272", "\320\275\320\270\320\267\320\272"}}, {"informational", {"informational", "\320\275\321\204\320\276\321\200\320\274\320\260\321\206"}},
 	};
 	const auto canonicalOf = [&](const std::string &text) {
 		for (const auto &entry : kSeverityWords)
@@ -446,11 +446,11 @@ std::optional<Json> build_fill_template_operations(const std::string &documentId
 		const std::string &rationaleId, const std::optional<SeverityPresentation> &severityPresentation,
 		const std::vector<DocumentBlockSurface> &registerBlocks) {
 	const DocumentBlockSurface::Field *descriptionField =
-		find_field_by_keyword(target, {"описан", "description"});
+		find_field_by_keyword(target, {"\320\276\320\277\320\270\321\201\320\260\320\275", "description"});
 	const DocumentBlockSurface::Field *recommendationsField =
-		find_field_by_keyword(target, {"рекомендац", "recommendation"});
+		find_field_by_keyword(target, {"\321\200\320\265\320\272\320\276\320\274\320\265\320\275\320\264\320\260\321\206", "recommendation"});
 	const DocumentBlockSurface::Field *additionalField =
-		find_field_by_keyword(target, {"дополнительн", "additional"});
+		find_field_by_keyword(target, {"\320\264\320\276\320\277\320\276\320\273\320\275\320\270\321\202\320\265\320\273\321\214\320\275", "additional"});
 	if ((descriptionField == nullptr || recommendationsField == nullptr) && target.fields.size() >= 2) {
 		if (descriptionField == nullptr) descriptionField = &target.fields[0];
 		if (recommendationsField == nullptr) recommendationsField = &target.fields[1];
@@ -487,7 +487,7 @@ std::optional<Json> build_fill_template_operations(const std::string &documentId
 		addOperation(additionalField->row_key, additionalField->column_key,
 			additionalField->current_text, *content.additional_information);
 	// Title and severity are real, current text (a template's own default,
-	// e.g. "[Наименование риска]"/"Средний") - but `target` was only ever
+	// e.g. "…") - but `target` was only ever
 	// proposed once resolve_edit_surface() already confirmed this whole
 	// block's real body fields are ALL placeholders, so this is replaceable
 	// scaffolding, never an existing professional conclusion (see

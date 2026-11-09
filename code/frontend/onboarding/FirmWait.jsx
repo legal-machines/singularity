@@ -5,21 +5,16 @@ import tour from "./tour/Tour.module.css";
 import styles from "./FirmWait.module.css";
 
 // A colleague's new computer waits for the firm here, at onboarding's end and
-// before the app (the owner, 2026-11-02: "hold us at the very end of
-// onboarding, saying we wait for the sync", never a sample person's
-// profile). Its seat's profile, its colleagues and the firm's AI colleagues
-// come only from the firm's own computers, sealed, once one of them has
-// checked this one (D-205, D-209): so this page begins the check with the
+// before the app. Its seat's profile, its colleagues and the firm's AI
+// colleagues come only from the firm's own computers, sealed, once one of
+// them has checked this one: so this page begins the check with the
 // administrator's computer by itself, shows the eight digits both computers
 // show, and opens the app once the seat's profile has come. Nothing opens
-// before the firm has come (the owner, 2026-11-02: "'Open Singularity now'
-// cannot be there before the sync").
+// before the firm has come.
 //
-// Once checked, the page says where each step stands, as it stands (the
-// owner, 2026-11-05: "nothing is clear: no progress, no status, whether the
-// connection is even made; everything must be clear and work for real"):
-// the check, the computers' encrypted connection, the firm's record and what
-// of it came. A Matter a colleague shared waits here to be added, and a firm
+// Once checked, the page says where each step stands, as it stands: the
+// check, the computers' encrypted connection, the firm's record and what of
+// it came. A Matter a colleague shared waits here to be added, and a firm
 // whose record came without this seat's profile lets the member go on.
 
 const EVERY_MS = 2000;
@@ -146,7 +141,7 @@ export function FirmWait({ onDone }) {
 				const now = firmProgress({ computers, profiles: all, status, team, seatId: seat });
 				setProgress(now);
 				setFirmName((account?.organisationName ?? "").trim());
-				// A Matter a colleague shared comes by itself (D-253).
+				// A Matter a colleague shared comes by itself.
 				for (const offer of waiting?.offers ?? []) add(offer);
 				setOffers(previous => [...previous.filter(kept => !(waiting?.offers ?? []).some(offer => offer.matterId == kept.matterId && offer.fromDeviceId == kept.fromDeviceId)), ...(waiting?.offers ?? [])]);
 				setNames(Object.fromEntries(all.map(profile => [`seat:${profile.seatId}`, (profile.name ?? "").trim()])));
@@ -195,8 +190,8 @@ export function FirmWait({ onDone }) {
 	}, [phase]);
 
 	// Checked, the firm comes over the computers' own link, or through the
-	// relay where a network lets no direct way through (D-242): computers that
-	// take long to connect are told so, with what keeps it going.
+	// relay where a network lets no direct way through: computers that take
+	// long to connect are told so, with what keeps it going.
 	useEffect(() => {
 		if (phase != "coming" || progress.isConnected) {
 			setSlow(false);

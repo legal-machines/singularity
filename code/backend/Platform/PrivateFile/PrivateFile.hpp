@@ -24,14 +24,13 @@ namespace singularity::platform {
 
 // A file or folder this computer keeps for its user alone - its signing key,
 // what it recorded about an operation's authority, about trusted devices,
-// about where a message came from. On macOS and Linux that is the owner's
-// permission bits (0700 for a folder, 0600 for a file). On Windows those bits
-// do not exist, and std::filesystem::permissions only sets the read-only
-// attribute, so the same promise is an access control list that lets in only
-// the user this process runs as, SYSTEM and the Administrators group - what a
-// user's own profile folder allows, and what OpenSSH asks of a private key.
-// There a restricted folder also passes its list on to what is made inside
-// it; on macOS and Linux each file gets its own bits.
+// about where a message came from. On Windows those bits do not exist, and
+// std::filesystem::permissions only sets the read-only attribute, so the same
+// promise is an access control list that lets in only the user this process
+// runs as, SYSTEM and the Administrators group - what a user's own profile
+// folder allows, and what OpenSSH asks of a private key. There a restricted
+// folder also passes its list on to what is made inside it; on macOS and
+// Linux each file gets its own bits.
 
 #if defined(_WIN32)
 namespace private_file_detail {

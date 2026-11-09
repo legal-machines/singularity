@@ -14,11 +14,11 @@ import { findMatter, formatMoment } from "../words.js";
 import thread from "../Thread/ThreadView.module.css";
 import styles from "./MailPage.module.css";
 
-// A letter filed to the Matter (D-106), as the prototype's mail reads: who
-// wrote and to whom, the words and the files, under the Matter's band - and
-// how it came to be filed: by whom, from where, on what evidence. It is the
-// Matter's correspondence, apart from its threads; a reply goes from Outlook,
-// and Singularity sends nothing.
+// A letter filed to the Matter, as the prototype's mail reads: who wrote and
+// to whom, the words and the files, under the Matter's band - and how it came
+// to be filed: by whom, from where, on what evidence. It is the Matter's
+// correspondence, apart from its threads; a reply goes from Outlook, and
+// Singularity sends nothing.
 export function LetterPage() {
 	const { place, open } = useNavigation();
 	useRealWork();

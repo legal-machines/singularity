@@ -40,15 +40,14 @@ write_statement_bundle(const std::filesystem::path& destination_directory,
                        const nlohmann::json& statement,
                        StructuredStatementFormat structured_format);
 
-// ---- The AI work statement (D-252) --------------------------------------------------
+// ---- The AI work statement --------------------------------------------------
 
 // What a firm sends its client with the invoice: each AI request on a Matter in
 // a period - when, whose work, at whose asking, on which model, at the
 // provider's exact price - with each model call's evidence (the provider's own
 // id for it, the fingerprints of exactly what was sent and what came back),
-// signed by this computer's key. Never a word of what a request said. A PDF
-// to print, and a signed file anyone can check without sending it anywhere
-// (docs/AI_WORK_STATEMENT.md).
+// signed by this computer's key. Never a word of what a request said. A PDF to
+// print, and a signed file anyone can check without sending it anywhere.
 struct WorkStatementNames {
   std::string firm;
   std::string matter_id;
@@ -65,8 +64,8 @@ struct WorkStatementNames {
   std::map<std::string, std::string> threads;
 };
 
-// The part of this computer's work record a statement carries (D-252): for
-// each chain of its calls, the entries from its first call to the stamp that
+// The part of this computer's work record a statement carries: for each
+// chain of its calls, the entries from its first call to the stamp that
 // covers its last, and those stamps; empty when there is none to carry.
 struct WorkRecordExcerpt {
   struct Entry {
@@ -97,7 +96,7 @@ struct WorkRecordExcerpt {
                                                   const WorkRecordExcerpt& record = WorkRecordExcerpt());
 
 // The bytes a statement's signature is over: its body as JSON, its keys in
-// order, with nothing between them, in UTF-8 (docs/AI_WORK_STATEMENT.md).
+// order, with nothing between them, in UTF-8.
 [[nodiscard]] std::string work_statement_bytes(const nlohmann::json& statement);
 
 // The signed file: the statement, the SHA-256 of its bytes, and the signature
@@ -124,7 +123,7 @@ struct WorkStatementFiles {
 [[nodiscard]] WorkStatementFiles write_work_statement(const std::filesystem::path& folder,
                                                       const nlohmann::json& signed_file);
 
-// ---- This computer's work record (D-252) ---------------------------------------------
+// ---- This computer's work record ---------------------------------------------
 //
 // Every model call that leaves this computer is written into a chain as it is
 // made: each entry holds the fingerprint of the call as a statement lists it

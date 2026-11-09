@@ -117,9 +117,6 @@ nlohmann::json get_ai_setup_capabilities(const nlohmann::json &) {
         {"label", routing::display_label(role)},
         {"requiresLocalFamily", routing::requires_local_family(role)},
         {"compatibleFamilies", routing::compatible_local_families(role)},
-        // SET-2: a role Singularity fills itself is reported as such, with the
-        // reason, so the UI never offers a choice that changes nothing - and
-        // never implies a person's own privacy protection is theirs to weaken.
         {"assignable", assignable},
         {"fixedReason", assignable ? Json(nullptr) : Json(routing::fixed_role_reason(role))},
         {"eligibleModels", assignable ? std::move(eligible_models) : Json::array()},

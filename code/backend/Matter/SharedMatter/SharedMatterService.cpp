@@ -176,8 +176,7 @@ FirmTeam firm_team() {
 	{
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
 		// A colleague's new computer may have no workspace yet: no Matter is known
-		// here, and the firm's record still says who sits in each seat (D-205,
-		// D-209; the PC's walk, 2026-11-02: its Team listed no one but the member).
+		// here, and the firm's record still says who sits in each seat.
 		const std::optional<std::filesystem::path> workspace = node::configured_workspace_path();
 		if (workspace.has_value() == true) known = matters::load_matters(*workspace);
 	}

@@ -8,9 +8,8 @@
 
 /* The firm's members on the page itself, in groups by position, each named
    in plain words with its count, with no frame, no labels in capitals and no
-   lines between the rows (the owner, 2026-11-02: "kickers and borders are AI
-   slop"). A row's ground shows only under the pointer; faces and group names
-   stand on the page head's left edge. */
+   lines between the rows. A row's ground shows only under the pointer; faces
+   and group names stand on the page head's left edge. */
 .group + .group {
 	margin-top: 20px;
 }
@@ -111,7 +110,7 @@
 
 /* Onboarding's demonstration: the member introducing themselves joins the
    team as they type their name, and again in their place once they choose a
-   position (D-162). */
+   position. */
 .list > li[data-joining] {
 	animation: joining 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
@@ -132,11 +131,11 @@
 	gap: 16px;
 }
 
-/* What a colleague signs in with (D-204), on a roomy page: each thing,
-   small, over the thing itself, from the left edge, with room between them;
-   no line and no frame. The login and password are in the letters of one
-   width codes are written in (UI-27), and copy at a press, on the grey of
-   the hand under the pointer. */
+/* What a colleague signs in with, on a roomy page: each thing, small, over
+   the thing itself, from the left edge, with room between them; no line and
+   no frame. The login and password are in the letters of one width codes
+   are written in, and copy at a press, on the grey of the hand under the
+   pointer. */
 .signIn {
 	display: grid;
 	gap: 20px;

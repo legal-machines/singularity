@@ -26,8 +26,8 @@
 //
 // The values and the arithmetic are PapinianGuard/SemanticAlgebra's: an
 // operand ⟦…⟧ is one typed value however it is written ("$2.8 million",
-// "18 400 000 (восемнадцать миллионов четыреста тысяч) рублей", "0,1 % за
-// каждый день просрочки", "July 2026", "B12 = 0.001 (shown as a percentage)"),
+// "…", "0,1 % …
+// …", "July 2026", "B12 = 0.001 (shown as a percentage)"),
 // worked out exactly, and a date is the interval of days it names - "July 2026"
 // is neither before nor after "July 25, 2026", and that is never guessed. A
 // statement's head ends at its own "}}": a {{if C}}A{{else}}B{{end}} inside a
@@ -93,7 +93,7 @@ inline constexpr const char *kFactsStepInstruction =
 // Russian case and gender statements the model once wrote itself. No longer
 // sent - restoration writes each name in the form its place needs
 // (PapinianGuard/RestorationGrammar) - but a stored answer that has them is
-// still written out: {{case р [[E5]]}}, {{gender [[E5]]: именуемый|именуемая|именуемое}}.
+// still written out: {{case … [[E5]]}}, {{gender [[E5]]: …}}.
 inline constexpr const char *kRussianGrammarInstruction =
 	"In Russian, a protected name that is not in the nominative is written {{case \xD1\x80 [[E5]]}} - the "
 	"case as \xD1\x80, \xD0\xB4, \xD0\xB2, \xD1\x82 or \xD0\xBF - and a word that must agree with a protected person or company is "
@@ -142,7 +142,7 @@ struct CheckedText {
 // reason never writes a figure worked out from protected values outside ⟦ ⟧.
 // Each result is written in the language of the words on its statement's
 // line (a bilingual contract keeps both), and Russian unit words after a count
-// ("{{= …}} дня") agree with it.
+// ("…") agree with it.
 [[nodiscard]] CheckedText compute_checked(const std::string &text);
 
 // `text` as the lawyer reads it: compute_checked's text.

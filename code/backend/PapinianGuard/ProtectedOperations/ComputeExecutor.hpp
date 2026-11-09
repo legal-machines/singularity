@@ -91,9 +91,10 @@ struct Admission {
 
 // A project search, inspect or web query the model wrote (DESIGN4 §8.7):
 // Code::None when it may run, QueryLiteral otherwise. Depends only on the
-// sent text.
+// sent text. Where a figure or a word the material does not write is why,
+// `unwritten` takes it, so the model can be told which.
 [[nodiscard]] compute::Code admit_query(const std::string &query, const std::string &payload,
-	const std::vector<compute::PayloadSegment> &segments, bool web);
+	const std::vector<compute::PayloadSegment> &segments, bool web, std::string *unwritten = nullptr);
 
 // Whether `text` writes something restoration would fill in with a protected
 // value: a bracket, letters, digits - "[[Org1]]", "[Org1]", "[ Person 2 ]" -

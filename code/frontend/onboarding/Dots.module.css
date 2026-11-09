@@ -33,7 +33,7 @@
 }
 
 /* The current step is a dot drawn out into a horizontal capsule, its
-   neighbours keeping their spacing (the owner, 2026-10-29). */
+   neighbours keeping their spacing. */
 .dot[aria-current="step"] {
 	width: 30px;
 }

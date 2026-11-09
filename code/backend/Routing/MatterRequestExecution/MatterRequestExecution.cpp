@@ -438,12 +438,11 @@ void note_checkpoint_here(const std::string &matterId, const std::string &operat
 		tools::note_prepared_approval(matterId, operationId, tools::approval_binding_of_checkpoint(draft));
 }
 
-// What an attempt of this operation may do without asking: the Project's own
-// mode, the same for a person and an AI colleague (D-158), never more than this
-// computer recorded for the operation when it began. An operation this computer did not begin, or a
-// resumed step whose content it did not generate - the Project's shared .lm can
-// be written by anyone with the folder - runs ask-first: every change it would
-// make is put to the lawyer here (Tool/OperationAuthority).
+// What an attempt of this operation may do without asking: the Project's own mode, the same for a
+// person and an AI colleague, never more than this computer recorded for the operation when it
+// began. An operation this computer did not begin, or a resumed step whose content it did not
+// generate - the Project's shared .lm can be written by anyone with the folder - runs ask-first:
+// every change it would make is put to the lawyer here (Tool/OperationAuthority).
 tools::ProjectActionPermissionState authorized_permission(const matters::Matter &matter,
 		const std::string &operationId) {
 	tools::ProjectActionPermissionState permission = tools::project_action_permission(matter.id);
@@ -827,11 +826,11 @@ const std::set<std::u32string> &confirming_words() {
 		"go", "proceed", "create", "apply", "do", "make", "write", "add", "save", "approve", "approved", "confirm",
 		"confirmed", "accept", "accepted", "yes", "yeah", "yep", "ok", "okay", "sure", "fine", "agreed", "agree",
 		"finalize", "finalise", "execute", "generate", "produce", "lgtm",
-		"давай", "давайте", "создай", "создайте", "создавай", "создавайте", "создать", "примени", "примените",
-		"применяй", "применяйте", "применить", "сделай", "сделайте", "делай", "делайте", "внеси", "внесите", "вноси",
-		"вносите", "запиши", "запишите", "сохрани", "сохраните", "добавь", "добавьте", "да", "ок", "окей", "хорошо",
-		"согласен", "согласна", "согласны", "одобряю", "подтверждаю", "действуй", "действуйте", "вперёд", "годится",
-		"подходит", "оформи", "оформите"});
+		"\320\264\320\260\320\262\320\260\320\271", "\320\264\320\260\320\262\320\260\320\271\321\202\320\265", "\321\201\320\276\320\267\320\264\320\260\320\271", "\321\201\320\276\320\267\320\264\320\260\320\271\321\202\320\265", "\321\201\320\276\320\267\320\264\320\260\320\262\320\260\320\271", "\321\201\320\276\320\267\320\264\320\260\320\262\320\260\320\271\321\202\320\265", "\321\201\320\276\320\267\320\264\320\260\321\202\321\214", "\320\277\321\200\320\270\320\274\320\265\320\275\320\270", "\320\277\321\200\320\270\320\274\320\265\320\275\320\270\321\202\320\265",
+		"\320\277\321\200\320\270\320\274\320\265\320\275\321\217\320\271", "\320\277\321\200\320\270\320\274\320\265\320\275\321\217\320\271\321\202\320\265", "\320\277\321\200\320\270\320\274\320\265\320\275\320\270\321\202\321\214", "\321\201\320\264\320\265\320\273\320\260\320\271", "\321\201\320\264\320\265\320\273\320\260\320\271\321\202\320\265", "\320\264\320\265\320\273\320\260\320\271", "\320\264\320\265\320\273\320\260\320\271\321\202\320\265", "\320\262\320\275\320\265\321\201\320\270", "\320\262\320\275\320\265\321\201\320\270\321\202\320\265", "\320\262\320\275\320\276\321\201\320\270",
+		"\320\262\320\275\320\276\321\201\320\270\321\202\320\265", "\320\267\320\260\320\277\320\270\321\210\320\270", "\320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265", "\321\201\320\276\321\205\321\200\320\260\320\275\320\270", "\321\201\320\276\321\205\321\200\320\260\320\275\320\270\321\202\320\265", "\320\264\320\276\320\261\320\260\320\262\321\214", "\320\264\320\276\320\261\320\260\320\262\321\214\321\202\320\265", "\320\264\320\260", "\320\276\320\272", "\320\276\320\272\320\265\320\271", "\321\205\320\276\321\200\320\276\321\210\320\276",
+		"\321\201\320\276\320\263\320\273\320\260\321\201\320\265\320\275", "\321\201\320\276\320\263\320\273\320\260\321\201\320\275\320\260", "\321\201\320\276\320\263\320\273\320\260\321\201\320\275\321\213", "\320\276\320\264\320\276\320\261\321\200\321\217\321\216", "\320\277\320\276\320\264\321\202\320\262\320\265\321\200\320\266\320\264\320\260\321\216", "\320\264\320\265\320\271\321\201\321\202\320\262\321\203\320\271", "\320\264\320\265\320\271\321\201\321\202\320\262\321\203\320\271\321\202\320\265", "\320\262\320\277\320\265\321\200\321\221\320\264", "\320\263\320\276\320\264\320\270\321\202\321\201\321\217",
+		"\320\277\320\276\320\264\321\205\320\276\320\264\320\270\321\202", "\320\276\321\204\320\276\321\200\320\274\320\270", "\320\276\321\204\320\276\321\200\320\274\320\270\321\202\320\265"});
 	return words;
 }
 
@@ -843,47 +842,46 @@ const std::set<std::u32string> &request_free_words() {
 		"right", "away", "as", "is", "proposed", "shown", "drafted", "described", "above", "same", "your", "draft",
 		"document", "doc", "file", "change", "changes", "edit", "edits", "version", "word", "docx", "new", "separate",
 		"into", "to", "in", "for", "of", "we", "i", "discussed", "planned", "suggested", "looks", "good", "great",
-		"и", "пожалуйста", "тогда", "теперь", "так", "ну", "уже", "сейчас", "это", "этот", "эту", "эти", "его", "её",
-		"их", "всё", "документ", "документа", "файл", "файла", "изменение", "изменения", "изменений", "правку",
-		"правки", "проект", "черновик", "вариант", "версию", "как", "предложено", "предложил", "предложили",
-		"показано", "показал", "показали", "вы", "ты", "мне", "нам", "в", "во", "же", "отлично", "можно", "к", "ко",
-		"отдельный", "отдельном", "отдельным", "отдельную", "отдельной", "отдельное", "отдельно", "новый", "новом",
-		"новым", "новую", "новой", "новое", "ворд", "ворде", "файле", "документе"});
+		"\320\270", "\320\277\320\276\320\266\320\260\320\273\321\203\320\271\321\201\321\202\320\260", "\321\202\320\276\320\263\320\264\320\260", "\321\202\320\265\320\277\320\265\321\200\321\214", "\321\202\320\260\320\272", "\320\275\321\203", "\321\203\320\266\320\265", "\321\201\320\265\320\271\321\207\320\260\321\201", "\321\215\321\202\320\276", "\321\215\321\202\320\276\321\202", "\321\215\321\202\321\203", "\321\215\321\202\320\270", "\320\265\320\263\320\276", "\320\265\321\221",
+		"\320\270\321\205", "\320\262\321\201\321\221", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260", "\321\204\320\260\320\271\320\273", "\321\204\320\260\320\271\320\273\320\260", "\320\270\320\267\320\274\320\265\320\275\320\265\320\275\320\270\320\265", "\320\270\320\267\320\274\320\265\320\275\320\265\320\275\320\270\321\217", "\320\270\320\267\320\274\320\265\320\275\320\265\320\275\320\270\320\271", "\320\277\321\200\320\260\320\262\320\272\321\203",
+		"\320\277\321\200\320\260\320\262\320\272\320\270", "\320\277\321\200\320\276\320\265\320\272\321\202", "\321\207\320\265\321\200\320\275\320\276\320\262\320\270\320\272", "\320\262\320\260\321\200\320\270\320\260\320\275\321\202", "\320\262\320\265\321\200\321\201\320\270\321\216", "\320\272\320\260\320\272", "\320\277\321\200\320\265\320\264\320\273\320\276\320\266\320\265\320\275\320\276", "\320\277\321\200\320\265\320\264\320\273\320\276\320\266\320\270\320\273", "\320\277\321\200\320\265\320\264\320\273\320\276\320\266\320\270\320\273\320\270",
+		"\320\277\320\276\320\272\320\260\320\267\320\260\320\275\320\276", "\320\277\320\276\320\272\320\260\320\267\320\260\320\273", "\320\277\320\276\320\272\320\260\320\267\320\260\320\273\320\270", "\320\262\321\213", "\321\202\321\213", "\320\274\320\275\320\265", "\320\275\320\260\320\274", "\320\262", "\320\262\320\276", "\320\266\320\265", "\320\276\321\202\320\273\320\270\321\207\320\275\320\276", "\320\274\320\276\320\266\320\275\320\276", "\320\272", "\320\272\320\276",
+		"\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\213\320\271", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\274", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\213\320\274", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\203\321\216", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\271", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\265", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276", "\320\275\320\276\320\262\321\213\320\271", "\320\275\320\276\320\262\320\276\320\274",
+		"\320\275\320\276\320\262\321\213\320\274", "\320\275\320\276\320\262\321\203\321\216", "\320\275\320\276\320\262\320\276\320\271", "\320\275\320\276\320\262\320\276\320\265", "\320\262\320\276\321\200\320\264", "\320\262\320\276\321\200\320\264\320\265", "\321\204\320\260\320\271\320\273\320\265", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\265"});
 	return words;
 }
 
 // Words that send a change to a document of its own: "in a separate file",
-// "в отдельном документе" - and, with a document word, "a new document".
+// "…" - and, with a document word, "a new document".
 const std::set<std::u32string> &separate_document_words() {
 	static const std::set<std::u32string> words = folded_word_set({
-		"separate", "separately", "standalone", "copy", "отдельный", "отдельном", "отдельным", "отдельную",
-		"отдельной", "отдельное", "отдельно", "копию", "копия", "копии"});
+		"separate", "separately", "standalone", "copy", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\213\320\271", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\274", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\213\320\274", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\321\203\321\216",
+		"\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\271", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276\320\265", "\320\276\321\202\320\264\320\265\320\273\321\214\320\275\320\276", "\320\272\320\276\320\277\320\270\321\216", "\320\272\320\276\320\277\320\270\321\217", "\320\272\320\276\320\277\320\270\320\270"});
 	return words;
 }
 const std::set<std::u32string> &new_thing_words() {
 	static const std::set<std::u32string> words = folded_word_set({
-		"new", "another", "fresh", "новый", "новом", "новым", "новую", "новой", "новое", "другой", "другом",
-		"другим", "другую"});
+		"new", "another", "fresh", "\320\275\320\276\320\262\321\213\320\271", "\320\275\320\276\320\262\320\276\320\274", "\320\275\320\276\320\262\321\213\320\274", "\320\275\320\276\320\262\321\203\321\216", "\320\275\320\276\320\262\320\276\320\271", "\320\275\320\276\320\262\320\276\320\265", "\320\264\321\200\321\203\320\263\320\276\320\271", "\320\264\321\200\321\203\320\263\320\276\320\274",
+		"\320\264\321\200\321\203\320\263\320\270\320\274", "\320\264\321\200\321\203\320\263\321\203\321\216"});
 	return words;
 }
 const std::set<std::u32string> &document_words() {
 	static const std::set<std::u32string> words = folded_word_set({
-		"document", "doc", "docx", "file", "word", "документ", "документе", "документом", "документа", "файл",
-		"файле", "файлом", "файла", "ворд", "ворде"});
+		"document", "doc", "docx", "file", "word", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\265", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\276\320\274", "\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260", "\321\204\320\260\320\271\320\273",
+		"\321\204\320\260\320\271\320\273\320\265", "\321\204\320\260\320\271\320\273\320\276\320\274", "\321\204\320\260\320\271\320\273\320\260", "\320\262\320\276\321\200\320\264", "\320\262\320\276\321\200\320\264\320\265"});
 	return words;
 }
 // A place inside something that already exists: "write it into the MSA",
-// "внеси в договор".
 const std::set<std::u32string> &inside_words() {
 	static const std::set<std::u32string> words = folded_word_set({
-		"into", "in", "inside", "within", "onto", "в", "во"});
+		"into", "in", "inside", "within", "onto", "\320\262", "\320\262\320\276"});
 	return words;
 }
-// What relates one thing to another: "the amendment to the MSA", "поправка к
-// договору" - or, with nothing named before it, where a change goes ("Add it to
+// What relates one thing to another: "the amendment to the MSA", "…
+// …" - or, with nothing named before it, where a change goes ("Add it to
 // the MSA.").
 const std::set<std::u32string> &relating_words() {
-	static const std::set<std::u32string> words = folded_word_set({"to", "к", "ко"});
+	static const std::set<std::u32string> words = folded_word_set({"to", "\320\272", "\320\272\320\276"});
 	return words;
 }
 // Words a file name carries that name no document.
@@ -894,13 +892,13 @@ const std::set<std::u32string> &file_name_words() {
 }
 
 // Words that turn a confirmation into a new request: "Create it, but for $20
-// million.", "Только без пункта 3.".
+// million.", "… 3.".
 const std::set<std::u32string> &new_request_words() {
 	static const std::set<std::u32string> words = folded_word_set({
 		"but", "except", "however", "instead", "only", "without", "not", "dont", "no", "rather", "also", "unless",
 		"replace", "remove", "delete", "modify", "revise", "fix", "correct",
-		"но", "однако", "кроме", "вместо", "только", "без", "не", "нет", "также", "еще", "замени", "убери",
-		"удали", "измени", "исправь", "поправь"});
+		"\320\275\320\276", "\320\276\320\264\320\275\320\260\320\272\320\276", "\320\272\321\200\320\276\320\274\320\265", "\320\262\320\274\320\265\321\201\321\202\320\276", "\321\202\320\276\320\273\321\214\320\272\320\276", "\320\261\320\265\320\267", "\320\275\320\265", "\320\275\320\265\321\202", "\321\202\320\260\320\272\320\266\320\265", "\320\265\321\211\320\265", "\320\267\320\260\320\274\320\265\320\275\320\270", "\321\203\320\261\320\265\321\200\320\270",
+		"\321\203\320\264\320\260\320\273\320\270", "\320\270\320\267\320\274\320\265\320\275\320\270", "\320\270\321\201\320\277\321\200\320\260\320\262\321\214", "\320\277\320\276\320\277\321\200\320\260\320\262\321\214"});
 	return words;
 }
 
@@ -912,7 +910,7 @@ bool has_digit(const std::u32string &word) {
 }
 
 // The same word, or the same word in another form - "amendment" and
-// "amendments", "поправка" and "поправку": a long shared beginning. A figure is
+// "amendments", "…" and "…": a long shared beginning. A figure is
 // the same figure only when it is written the same.
 bool is_proposal_word(const std::u32string &word, const std::vector<std::u32string> &proposal) {
 	for (const std::u32string &known : proposal) {
@@ -1133,14 +1131,14 @@ struct TaskAttemptSpec {
 	bool assemble_without_known_capacity = false;
 	// Where the effective model for this request actually came from, and which
 	// role produced its primary result - the AI Setup resolver's own answer,
-	// recorded on the task instead of being assumed (SET-1). Unset means the
-	// caller chose this exact model for this one request.
+	// recorded on the task instead of being assumed. Unset means the caller
+	// chose this exact model for this one request.
 	std::optional<std::string> ai_setup_source;
 	std::optional<std::string> operation_role;
 	// Set only for a rerun (Retry, Run with another model, Edit and continue):
 	// the Project object the original turn actually realized. A rerun replaces
 	// its own work - see the retryOfTaskId branch in task_attempt_spec_from_
-	// params() and resolve_rerun_bound_record_plan() (SLR-3).
+	// params and resolve_rerun_bound_record_plan.
 	std::optional<std::string> realized_record_document_id;
 	std::optional<std::string> realized_record_table_id;
 	std::optional<std::size_t> realized_record_banner_row_index;
@@ -1150,7 +1148,7 @@ struct TaskAttemptSpec {
 	// A console or a test sends none, and nothing would ever answer.
 	bool can_ask_lawyer = false;
 	// Nobody watches the request as it runs (an AI colleague's own work): a wait
-	// on the lawyer keeps its place and returns at once (Beta 1 #14).
+	// on the lawyer keeps its place and returns at once.
 	bool unattended = false;
 	// The agent whose thread the request is in, and whether the agent began
 	// it itself (MatterTask::agent_id, agent_initiated).
@@ -1440,7 +1438,7 @@ struct AnswerChronology {
 // is used in. The model's own words about its own table, never the request's.
 bool names_chronology(const std::string &caption) {
 	static const std::vector<std::string> kWords{"chronolog", "cronolog", "kronolog", "timeline", "time line",
-		"хронолог", "年表", "时间线", "時間線", "時系列", "연표", "타임라인", "التسلسل الزمني"};
+		"\321\205\321\200\320\276\320\275\320\276\320\273\320\276\320\263", "年表", "时间线", "時間線", "時系列", "연표", "타임라인", "التسلسل الزمني"};
 	const std::string folded = platform::folded_text(caption);
 	for (const std::string &word : kWords)
 		if (folded.find(word) != std::string::npos) return true;
@@ -2557,11 +2555,11 @@ void restore_supplied_evidence(PreparedTaskRequest &prepared, const nlohmann::js
 // in every real user's packaged app and every ordinary CLI run.
 std::optional<std::size_t> forced_context_window_tokens_for_experiment() {
 #ifdef NDEBUG
-	// RUN-6: compiled out of a release build entirely. What a lawyer's request
-	// is allowed to deliver is decided by the executing model's real capacity;
-	// an environment variable must not be able to change that in the product
-	// they actually run, even by accident. The seam exists for a deliberate
-	// side-by-side acceptance run, and only a build made for that can honour it.
+	// What a lawyer's request is allowed to deliver is decided by the executing
+	// model's real capacity; an environment variable must not be able to change
+	// that in the product they actually run, even by accident. The seam exists
+	// for a deliberate side-by-side acceptance run, and only a build made for
+	// that can honour it.
 	return std::nullopt;
 #else
 	const char *value = std::getenv("SINGULARITY_FORCE_COMPACT_CONTEXT_TOKENS");
@@ -2792,11 +2790,10 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 	// continuity within) simply never finds a prior object.
 	std::vector<matters::MatterTask> directDocumentWorkChatTasks;
 	if (spec.realized_record_document_id) {
-		// SLR-3: this attempt is a rerun of a turn that already wrote a
-		// structured record. That record IS this turn's work, so it is the only
-		// continuity a rerun has: the rest of the Chat's history is not this
-		// turn's predecessor, and a free template elsewhere in the Project is
-		// not a second place to put the same piece of work.
+		// That record IS this turn's work, so it is the only continuity a rerun
+		// has: the rest of the Chat's history is not this turn's predecessor,
+		// and a free template elsewhere in the Project is not a second place to
+		// put the same piece of work.
 		matters::MatterTask realized;
 		realized.status = matters::TaskStatus::Success;
 		realized.chat_id = spec.chat_id;
@@ -2835,7 +2832,7 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 		: std::nullopt;
 	// A rerun has exactly one place its work belongs: the record it already
 	// wrote. Offering it a free template as well is what let Retry leave a
-	// second copy of the same record in the Project (SLR-3).
+	// second copy of the same record in the Project.
 	if (directDocumentWork && spec.realized_record_document_id) {
 		directDocumentWork->new_work_document_id.reset();
 		directDocumentWork->new_work_target.reset();
@@ -2940,11 +2937,11 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 	if (readsProjectDocuments && spec.selected_document_ids.empty() && spec.model_target
 			&& intent.capability == professional::ProfessionalCapability::Generative) {
 		const std::vector<context::source_picker::ListedDocument> listed = context::source_picker::list_documents(matter);
-		// The document the message this request answers points at (its place,
-		// D-107). Its name stands in the request because the place names it,
-		// not because the lawyer's words do, and those words may rest on other
-		// documents - "check this slide against the DD tracker": the model still
-		// picks those, and the place's document is read with them (D-113).
+		// The document the message this request answers points at. Its name
+		// stands in the request because the place names it, not because the
+		// lawyer's words do, and those words may rest on other documents -
+		// "check this slide against the DD tracker": the model still picks
+		// those, and the place's document is read with them.
 		std::string placeDocumentId;
 		if (!spec.answers_message_id.empty())
 			for (const matters::MatterTask &message : matter.tasks)
@@ -3230,18 +3227,15 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 	// retrieval rank as its admission priority - what is admitted first,
 	// round-robin across documents, when the resolved capacity cannot hold the
 	// whole selection - while SOURCE_MATERIAL and the marker numbering follow
-	// each selected document's own reading order.
-	// SLR-5: a follow-up that reviews, challenges or builds on an earlier answer
-	// has to be able to SEE what that answer rested on. Retrieval only ever
-	// looks at the current message, so "check the finding you made about the
-	// termination clause" would arrive with the finding's own passage missing
-	// and nothing to check it against. The passages this Chat's earlier answers
-	// actually cited are re-admitted here as ordinary optional material: the
-	// capacity law decides how much of it fits, and coverage states what was
-	// carried. The source boundary is unchanged - a document outside THIS
-	// request's own scope is never re-supplied because an earlier turn cited it
-	// (see EVD-1/EXEC-1), which is exactly why this reads the scope that
-	// retrieval itself just used.
+	// each selected document's own reading order. Retrieval only ever looks at
+	// the current message, so "check the finding you made about the termination
+	// clause" would arrive with the finding's own passage missing and nothing to
+	// check it against. The passages this Chat's earlier answers actually cited
+	// are re-admitted here as ordinary optional material: the capacity law
+	// decides how much of it fits, and coverage states what was carried. The
+	// source boundary is unchanged - a document outside THIS request's own scope
+	// is never re-supplied because an earlier turn cited it, which is exactly
+	// why this reads the scope that retrieval itself just used.
 	if (readsProjectDocuments && spec.chat_id) {
 		std::unordered_set<std::string> present;
 		for (const context::RetrievedContextChunk &source : document_context)
@@ -3443,8 +3437,7 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
     history_candidates = std::move(scoped);
   }
   // A conversation the member cleared here begins afresh: what was said up to
-  // then goes into no request made from this computer
-  // (Chat/ConversationClearing; the owner, 2026-11-04).
+  // then goes into no request made from this computer.
   if (spec.chat_id) {
     if (const auto cleared = chat::conversation_clearing::cleared_before(*spec.chat_id)) {
       history_candidates.erase(std::remove_if(history_candidates.begin(), history_candidates.end(),
@@ -3876,8 +3869,8 @@ PreparedTaskRequest prepare_task_request(const std::filesystem::path &workspace_
 		};
 		// Work nobody watches (an AI colleague's) never holds its thread on the
 		// lawyer: once its place is kept it returns at once and waits there, and
-		// the decision resumes it (Beta 1 #14). A chat's wait goes on in this
-		// process, where the lawyer is.
+		// the decision resumes it. A chat's wait goes on in this process, where
+		// the lawyer is.
 		toolContext.unattended = spec.unattended;
 		if (spec.unattended) toolContext.lawyer_wait_limit = std::chrono::milliseconds(0);
 		request.tool_execution_context = std::move(toolContext);
@@ -4116,12 +4109,11 @@ routing::AiSetupOverrideSet override_set_from(const std::vector<matters::AiSetup
   return overrides;
 }
 
-// The canonical Node -> Project -> Chat effective Reasoning resolution
-// (Routing/AiSetup/AiSetup.hpp's resolve_role(), AI_SETUP_CONTRACT.md's
-// "Inheritance") - the same authoritative resolution getEffectiveAiSetup
-// shows the user, never Node-default-only. Preview and reveal both call this
-// (see build_state_fingerprint()'s callers below), so a Project (or Chat, for
-// a matter.previewOutboundRequest call naming one) AI Setup override is
+// The canonical Node -> Project -> Chat effective Reasoning resolution - the
+// same authoritative resolution getEffectiveAiSetup shows the user, never
+// Node-default-only. Preview and reveal both call this (see
+// build_state_fingerprint's callers below), so a Project (or Chat, for a
+// matter.previewOutboundRequest call naming one) AI Setup override is
 // honestly reflected on both sides of the freshness check instead of only
 // ever comparing against the Node default. Operation-level override (a
 // one-time explicit providerId/modelId on this one request) is deliberately
@@ -4312,11 +4304,8 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
   // needs its own explicit call for this.
   protected_api::papinian::production_preview_session_store().invalidate_for_matter(matter_id);
 
-	// D-012 on every path into a model, not only a Chat's own (#229): a request
-	// in a chat that holds work kept on this computer stays here, as the Chat
-	// keeps its own requests (ChatExecution keep_on_this_computer). The Native
-	// API's matter.runTask, matter.runConsilium and a synthesis given such a
-	// chat reach this without passing the Chat.
+	// The Native API's matter.runTask, matter.runConsilium and a synthesis
+	// given such a chat reach this without passing the Chat.
 	const routing::ScopedLocalOnlyWork keptByItsChat(spec.chat_id.has_value()
 		&& chat::chat_holds_work_kept_here(matter, *spec.chat_id));
 	// Work kept here never names a model outside this computer: refused before
@@ -4793,10 +4782,10 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
 		checkpoint.draft = documents::connected_document_draft_checkpoint_json(
 			*prepared.connected_document_action);
 		checkpoint.draft["kind"] = "connected_document_action";
-		// Real product defect (EXEC-2): this rebuild used to replace the whole
-		// draft, so a resumed operation silently lost the approval it was waiting
-		// on and the decision a person had already given - and then asked for
-		// nothing at all before writing.
+		// Real product defect: this rebuild used to replace the whole draft, so a
+		// resumed operation silently lost the approval it was waiting on and the
+		// decision a person had already given - and then asked for nothing at all
+		// before writing.
 		if (task.document_operation_checkpoint)
 			carry_forward_durable_operation_facts(task.document_operation_checkpoint->draft, checkpoint.draft);
 		checkpoint.external_evidence = prepared.request.operation_initial_external_evidence;
@@ -5109,14 +5098,11 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
 				"are not verified.";
 		};
 		researchLimitation = requiredResearchUnavailableLimitation();
-		// IDEM-1: the one real generation this operation is allowed, and which
-		// kind of work it turned out to be, are durable BEFORE the file is
-		// touched - not only when a person happens to be asked for approval
-		// first. Without this an immediate write (Approve safe actions, Full
-		// Project Access) left a prepared-mutation record whose own kind was
-		// unknown, so a resume after a crash could neither recognise it nor
-		// recover it: it called the model again and wrote a second time. Stamped
-		// once; a resumed attempt that already carries these facts keeps them.
+		// Without this an immediate write (Approve safe actions, Full Project
+		// Access) left a prepared-mutation record whose own kind was unknown, so
+		// a resume after a crash could neither recognise it nor recover it: it
+		// called the model again and wrote a second time. Stamped once; a
+		// resumed attempt that already carries these facts keeps them.
 		const auto recordGeneratedBeforeMutation = [&](const char *kind) {
 			if (!task.document_operation_checkpoint)
 				task.document_operation_checkpoint = documents::DocumentOperationCheckpoint{};
@@ -5152,13 +5138,13 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
 		};
 		// AdvancedWorkflow's one real document change, under exactly the durable
 		// contract DirectDocumentWork and the professional artifact path already
-		// follow (EXEC-2): the write-ahead record is durable before the file is
-		// touched, the person's decision lives on this operation's own
-		// checkpoint rather than in an in-process wait a quit destroys, an
-		// approved change is re-checked against the document version it was
-		// approved against, and a denial is a refusal rather than a write.
-		// std::nullopt means the change is waiting for a decision and the caller
-		// must hand back the task as it stands, having made no change.
+		// follow: the write-ahead record is durable before the file is touched,
+		// the person's decision lives on this operation's own checkpoint rather
+		// than in an in-process wait a quit destroys, an approved change is
+		// re-checked against the document version it was approved against, and a
+		// denial is a refusal rather than a write. std::nullopt means the change
+		// is waiting for a decision and the caller must hand back the task as it
+		// stands, having made no change.
 		const auto applyAdvancedWorkflowChange =
 			[&](const documents::ConnectedDocumentActionPlan &plan, const std::string &resultText,
 					const std::vector<research::ExternalEvidenceReference> &evidence)
@@ -5779,11 +5765,11 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
 			}
 			const auto &plan = *prepared.direct_document_work;
 			// The same real selection MatterRequestExecution.cpp and any
-			// deterministic acceptance harness that cannot run a real model
-			// share - see select_direct_document_work_target()'s own comment.
-			// For a rerun of a turn that already wrote a record, updating that
-			// record is a fact of what this turn is, not a claim the model makes:
-			// the same work redone lands where it landed before (SLR-3).
+			// deterministic acceptance harness that cannot run a real model share
+			// - see select_direct_document_work_target's own comment. For a rerun
+			// of a turn that already wrote a record, updating that record is a
+			// fact of what this turn is, not a claim the model makes: the same
+			// work redone lands where it landed before.
 			const auto selected = documents::select_direct_document_work_target(
 				plan, spec.realized_record_document_id.has_value() || parsed->updates_previous_object);
 			if (!selected.has_value())
@@ -7011,10 +6997,6 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
 				action.format = plan.format;
 				action.resulting_version = commit.at("newVersion").get<int>();
 			} else {
-				// IDEM-1: durable after any Professional Review or correction has
-				// settled what this operation actually produced, and before the
-				// file is touched - so a resume restores the result that was
-				// reviewed, never the draft that preceded it.
 				recordGeneratedBeforeMutation("professional_artifact_action");
 				try {
 					if (decision == "approved" && task.document_operation_checkpoint)
@@ -7203,13 +7185,13 @@ matters::MatterTask execute_task_attempt(const std::filesystem::path &workspace_
         task.work_product_document = document->dump();
       }
     }
-    // The typed results the model declared in its own professional_response
-    // (SLR-1). Every citation is validated through the exact same
-    // supplied_markers registry as the prose below - a marker the request
-    // never supplied is dropped, never turned into a citation, and never
-    // fetched a second time. These are the production path; the "[FINDING]"/
-    // "[OBLIGATION]" prose blocks below remain only for a response that
-    // genuinely still uses that older shape.
+    // The typed results the model declared in its own professional_response.
+    // Every citation is validated through the exact same supplied_markers
+    // registry as the prose below - a marker the request never supplied is
+    // dropped, never turned into a citation, and never fetched a second
+    // time. These are the production path; the "[FINDING]"/ "[OBLIGATION]"
+    // prose blocks below remain only for a response that genuinely still
+    // uses that older shape.
     if (structuredResultsJson) {
       const Json declared = Json::parse(*structuredResultsJson, nullptr, false);
       // An entry's sources are what it names in "sources" and what its own text
@@ -7603,9 +7585,9 @@ TaskAttemptSpec task_attempt_spec_from_params(const Json &params, const std::str
     spec.model_target =
         routing::ModelTarget{params.at("providerId").get<std::string>(), params.at("modelId").get<std::string>()};
   }
-	// Where the model came from, as the AI Setup resolver actually decided it
-	// (SET-1). A caller that states nothing is one that chose this exact model
-	// for this one request, which is what "operation_override" means.
+	// Where the model came from, as the AI Setup resolver actually decided it.
+	// A caller that states nothing is one that chose this exact model for this
+	// one request, which is what "operation_override" means.
 	if (params.contains("aiSetupSource") && params.at("aiSetupSource").is_string())
 		spec.ai_setup_source = params.at("aiSetupSource").get<std::string>();
 	if (params.contains("operationRole") && params.at("operationRole").is_string())
@@ -7628,11 +7610,11 @@ TaskAttemptSpec task_attempt_spec_from_params(const Json &params, const std::str
 		spec.protection_mode_override = retry_protection_mode(*original);
 		spec.prompt_profile_id = original->prompt_profile_id;
 		spec.prompt_profile_version = original->prompt_profile_version;
-		// SLR-3: what this turn ALREADY did to the Project. Running the same
-		// turn again - Retry, Run with another model, Edit and continue - is
-		// redoing one piece of work, not asking for a second piece: its own
-		// record or artifact is the only thing it may write, so a rerun can
-		// neither leave a duplicate beside it nor land on someone else's.
+		// Running the same turn again - Retry, Run with another model, Edit
+		// and continue - is redoing one piece of work, not asking for a
+		// second piece: its own record or artifact is the only thing it may
+		// write, so a rerun can neither leave a duplicate beside it nor land
+		// on someone else's.
 		spec.realized_record_document_id = original->direct_document_work_document_id;
 		spec.realized_record_table_id = original->direct_document_work_table_id;
 		spec.realized_record_banner_row_index = original->direct_document_work_banner_row_index;
@@ -8026,7 +8008,7 @@ bool changes_destination(const std::vector<std::u32string> &said, const Proposal
 			if (is_proposal_word(word, otherNames) && !is_proposal_word(word, targetNames)) return true;
 		return false;
 	}
-	// A new document: "into", "in" or "в" puts it inside something that already
+	// A new document: "into", "in" or "…" puts it inside something that already
 	// exists - unless the lawyer says it is a document of its own.
 	if (asksForSeparateDocument) return false;
 	if (contains_any(said, inside_words())) return true;
@@ -8459,10 +8441,10 @@ namespace {
 // Work kept on this computer - asked to stay, or begun on another computer
 // this one cannot confirm - is run again here only: never on a model outside
 // it. With no model named, the attempt runs kept here (ScopedLocalOnlyWork),
-// where inference itself takes only this computer's model.
-// Whether any of these answers is work kept on this computer (D-012). A
-// request that carries an answer word for word - a synthesis, a seat shown the
-// answers before it - carries that work, so it stays here too (#229).
+// where inference itself takes only this computer's model. Whether any of
+// these answers is work kept on this computer. A request that carries an
+// answer word for word - a synthesis, a seat shown the answers before it -
+// carries that work, so it stays here too (#229).
 bool answers_kept_here(const matters::Matter &snapshot, const std::vector<matters::MatterTask> &answers) {
   return std::any_of(answers.begin(), answers.end(),
       [&](const matters::MatterTask &answer) { return chat::task_works_only_here(snapshot, answer); });
@@ -8899,9 +8881,8 @@ matters::Matter synthesize_consilium(const Json &params) {
     throw std::runtime_error("This Consilium run has no successful answers to synthesize.");
   }
   // Every member's answer goes into the synthesis word for word, so an answer
-  // kept on this computer keeps the synthesis here too (#229, D-012): it runs
-  // on this computer's model, and a cloud model is refused before anything is
-  // sent.
+  // kept on this computer keeps the synthesis here too: it runs on this
+  // computer's model, and a cloud model is refused before anything is sent.
   const bool keptHere = answers_kept_here(snapshot, successful_members)
       || (successful_members.front().chat_id.has_value()
           && chat::chat_holds_work_kept_here(snapshot, *successful_members.front().chat_id));

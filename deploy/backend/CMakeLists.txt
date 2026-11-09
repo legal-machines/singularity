@@ -20,6 +20,9 @@ set(NATIVE_APP_CODE_ROOT "${NATIVE_APP_ROOT}/code")
 set(NATIVE_APP_SOURCE_DIR "${NATIVE_APP_CODE_ROOT}/backend")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/AppMetadata.cmake")
 file(READ "${NATIVE_APP_ROOT}/docs/VERSION" NATIVE_APP_VERSION_VALUE)
+# An incremental build reads the version again when docs/VERSION
+# changes, not only a fresh configure.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${NATIVE_APP_ROOT}/docs/VERSION")
 string(STRIP "${NATIVE_APP_VERSION_VALUE}" NATIVE_APP_VERSION_VALUE)
 
 project(
@@ -143,9 +146,9 @@ function(singularity_add_executable target)
   # BCryptGenRandom.
   if(WIN32)
     target_link_libraries(${target} PRIVATE bcrypt)
-    # The firm's computers link directly over UDP (Platform/UdpSocket, D-124),
-    # which every build of the application's sources carries: Winsock, and the
-    # adapters' addresses a computer tells the others.
+    # The firm's computers link directly over UDP, which every build of the
+    # application's sources carries: Winsock, and the adapters' addresses a
+    # computer tells the others.
     target_link_libraries(${target} PRIVATE ws2_32 iphlpapi)
     # This machine's graphics adapters and their memory budget, as local
     # inference plans for them (Node/DeviceCapabilities): DXGI.
@@ -283,8 +286,8 @@ endfunction()
 # PDFium, Chrome's PDF engine (BSD-3-Clause; its bundled libraries' licenses
 # ship in licenses/), as a pinned prebuilt release of bblanchon/pdfium-binaries.
 # On Windows and Linux it reads PDFs; on every system it writes the annotated
-# and redacted copies of a PDF (D-115), so one engine writes the same copy
-# everywhere. macOS reads PDFs with PDFKit.
+# and redacted copies of a PDF, so one engine writes the same copy everywhere.
+# macOS reads PDFs with PDFKit.
 if(WIN32 OR APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(NATIVE_APP_PDFIUM_RELEASE "chromium/8086")
   if(WIN32)
@@ -688,7 +691,7 @@ if(APPLE)
   # What macOS allows Singularity, asked in onboarding, holds its blocks with ARC.
   set_source_files_properties("${NATIVE_APP_SOURCE_DIR}/Platform/SystemPermissions/SystemPermissionsMacOS.mm"
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
-  # The relay's WebSocket (D-242) keeps its task and blocks with ARC.
+  # The relay's WebSocket keeps its task and blocks with ARC.
   set_source_files_properties("${NATIVE_APP_SOURCE_DIR}/Platform/WebSocket/WebSocketMacOS.mm"
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
   # The file-drop module holds blocks and objects across a drag: ARC keeps them.
@@ -828,9 +831,8 @@ target_include_directories(native_app SYSTEM PRIVATE
 if(WIN32)
   target_sources(native_app PRIVATE "${NATIVE_APP_SOURCE_DIR}/Provider/CredentialStore/CredentialStoreWindows.cpp")
   # psapi is Platform/ProcessMetrics/ProcessMetrics.cpp's GetProcessMemoryInfo -
-  # real peak-RSS evidence for Phase 05's resource benchmark harness.
-  # oleaut32 is Windows Firewall's COM (Platform/SystemPermissions, D-244):
-  # its rules come as VARIANTs and BSTRs.
+  # real peak-RSS evidence for Phase 05's resource benchmark harness. oleaut32
+  # is Windows Firewall's COM: its rules come as VARIANTs and BSTRs.
   target_link_libraries(native_app PRIVATE dwmapi uxtheme ole32 oleaut32 shell32 advapi32 crypt32 winhttp psapi)
 endif()
 if(APPLE)
@@ -915,13 +917,17 @@ if(APPLE)
     COMMENT "Staging the public domain word list Papinian Guard reads"
     VERBATIM)
     # The role and query lexicons of the protected computation protocol
-    # (DESIGN4 §5.2, §8.7): legal-general words, no names.
+    # (DESIGN4 §5.2, §8.7): legal-general words, no names. Each language's
+    # lexicon is staged where the tree holds it.
+    set(papinian_lexicons)
+    foreach(papinian_lexicon role_lexicon_en.txt role_lexicon_ru.txt query_lexicon_en.txt query_lexicon_ru.txt)
+      if(EXISTS "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/${papinian_lexicon}")
+        list(APPEND papinian_lexicons "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/${papinian_lexicon}")
+      endif()
+    endforeach()
     add_custom_command(TARGET native_app POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-      "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/role_lexicon_en.txt"
-      "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/role_lexicon_ru.txt"
-      "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/query_lexicon_en.txt"
-      "${NATIVE_APP_SOURCE_DIR}/PapinianGuard/SemanticRoles/query_lexicon_ru.txt"
+      ${papinian_lexicons}
       "$<TARGET_BUNDLE_CONTENT_DIR:native_app>/Resources/"
     COMMENT "Staging the role and query lexicons Papinian Guard reads"
     VERBATIM)
@@ -933,7 +939,7 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${NATIVE_APP_ONNXRUNTIME_LIBRARY}"
             "$<TARGET_BUNDLE_CONTENT_DIR:native_app>/Frameworks/libonnxruntime.${NATIVE_APP_ONNXRUNTIME_VERSION}.dylib"
-    # PDFium, which writes a PDF's annotated and redacted copies (D-115).
+    # PDFium, which writes a PDF's annotated and redacted copies.
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${NATIVE_APP_PDFIUM_LIBRARY}"
             "$<TARGET_BUNDLE_CONTENT_DIR:native_app>/Frameworks/libpdfium.dylib"
@@ -1125,10 +1131,10 @@ if(UNIX AND NOT APPLE AND NATIVE_APP_HAS_ICON)
   )
 endif()
 
-# A source tree without the tests - the open repository's (the owner,
-# 2026-11-01) - builds the application and its tools and defines no test,
-# whatever the preset asks: every test target below needs BUILD_TESTING. The
-# tests' own files are looked for, not a folder that may stand empty.
+# A source tree without the tests - the open repository's - builds the
+# application and its tools and defines no test, whatever the preset asks:
+# every test target below needs BUILD_TESTING. The tests' own files are
+# looked for, not a folder that may stand empty.
 file(GLOB_RECURSE singularity_present_tests "${NATIVE_APP_SOURCE_DIR}/*.test.cpp")
 if(NOT singularity_present_tests)
   if(BUILD_TESTING)
@@ -1180,7 +1186,7 @@ if(BUILD_TESTING)
   add_test(NAME file_drop COMMAND file_drop_tests)
 
   if(APPLE)
-    # The macOS quit reaches Singularity's own shutdown (Beta 1 #55).
+    # The macOS quit reaches Singularity's own shutdown.
     singularity_add_executable(macos_chrome_tests
       Platform/MacOSChrome/MacOSChrome.test.mm
       Platform/MacOSChrome/MacOSChrome.mm
@@ -2177,13 +2183,12 @@ if(BUILD_TESTING)
 	# no network, no real Project ever created.
 	#
 	# It drives singularity_cli_offline, NOT singularity_cli: the offline build is an
-	# ordinary target (no EXCLUDE_FROM_ALL) and is an explicit dependency below,
-	# so `cmake --build` always leaves this test a binary as new as its own
-	# sources. singularity_cli, the one that reaches real providers, IS
-	# EXCLUDE_FROM_ALL - so anyone running a REAL CLI journey by hand must build
-	# that target first, or they will drive a stale binary and attribute its
-	# transcript to code that is not in it. That mistake cost one invalid
-	# acceptance run; see docs/TEST_TIERS.md.
+	# ordinary target (no EXCLUDE_FROM_ALL) and is an explicit dependency below, so
+	# `cmake --build` always leaves this test a binary as new as its own sources.
+	# singularity_cli, the one that reaches real providers, IS EXCLUDE_FROM_ALL - so
+	# anyone running a REAL CLI journey by hand must build that target first, or they
+	# will drive a stale binary and attribute its transcript to code that is not in
+	# it.
 	singularity_add_executable(singularity_cli_tests
 		tests/singularity_cli_test.cpp
 		Platform/AppSettings/AppSettings.cpp
@@ -2993,6 +2998,27 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME beta1_routing_log COMMAND routing_log_tests)
 
+  # The vocabulary of one model call: each failure's one class, the one retry a call makes
+  # for itself, and a reply checked against the form the call declared. No caller uses it
+  # yet.
+  singularity_add_executable(model_call_tests
+    Routing/ModelCall/ModelCall.test.cpp
+    Routing/ModelCall/ModelCall.cpp
+  )
+  target_include_directories(model_call_tests PRIVATE
+    "${NATIVE_APP_SOURCE_DIR}"
+  )
+  target_link_libraries(model_call_tests PRIVATE nlohmann_json::nlohmann_json)
+  target_include_directories(model_call_tests SYSTEM PRIVATE
+    "$<TARGET_PROPERTY:nlohmann_json::nlohmann_json,INTERFACE_INCLUDE_DIRECTORIES>"
+  )
+  if(MSVC)
+    target_compile_options(model_call_tests PRIVATE /W4 /permissive- /utf-8)
+  else()
+    target_compile_options(model_call_tests PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
+  add_test(NAME model_call COMMAND model_call_tests)
+
   # What a protected request sent, read back beside the local text: the
   # alignment of a passage's sent form with the words it was built from, and
   # the sent passages the Routing Log keeps (never a restoration mapping).
@@ -3083,7 +3109,7 @@ if(BUILD_TESTING)
   target_include_directories(ai_setup_tests PRIVATE
     "${NATIVE_APP_SOURCE_DIR}"
   )
-  # Platform/AppSettings.hpp declares its JSON forms (D-210).
+  # Platform/AppSettings.hpp declares its JSON forms.
   target_include_directories(ai_setup_tests SYSTEM PRIVATE
     "$<TARGET_PROPERTY:nlohmann_json::nlohmann_json,INTERFACE_INCLUDE_DIRECTORIES>"
   )
@@ -3108,7 +3134,7 @@ if(BUILD_TESTING)
   target_include_directories(local_model_removal_policy_tests PRIVATE
     "${NATIVE_APP_SOURCE_DIR}"
   )
-  # Platform/AppSettings.hpp declares its JSON forms (D-210).
+  # Platform/AppSettings.hpp declares its JSON forms.
   target_include_directories(local_model_removal_policy_tests SYSTEM PRIVATE
     "$<TARGET_PROPERTY:nlohmann_json::nlohmann_json,INTERFACE_INCLUDE_DIRECTORIES>"
   )
@@ -4320,6 +4346,7 @@ if(BUILD_TESTING)
   singularity_add_executable(matter_actions_tests
     Matter/MatterActions/MatterActions.test.cpp
     Matter/MatterActions/MatterActions.cpp
+    Matter/MatterTrash/MatterTrash.cpp
     Document/DocumentActions/DocumentActions.cpp
     Document/DocumentFileActions/DocumentFileActions.cpp
     Document/DocumentStructuralReader/DocumentStructuralReader.cpp
@@ -4413,8 +4440,8 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME beta1_project_actions COMMAND matter_actions_tests)
 
-  # A Matter's letters filed from the emails in its folder (D-180), on the same
-  # Matter stack as the Matter actions above.
+  # A Matter's letters filed from the emails in its folder, on the same Matter
+  # stack as the Matter actions above.
   singularity_add_executable(correspondence_actions_tests
     Correspondence/CorrespondenceActions/CorrespondenceActions.test.cpp
     Correspondence/CorrespondenceActions/CorrespondenceActions.cpp
@@ -4506,8 +4533,8 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME correspondence_actions COMMAND correspondence_actions_tests)
 
-  # The time members record on a Matter (D-181), on the same Matter stack as
-  # the Matter actions above.
+  # The time members record on a Matter, on the same Matter stack as the
+  # Matter actions above.
   singularity_add_executable(time_entries_tests
     Billing/TimeEntries/TimeEntries.test.cpp
     Billing/TimeEntries/TimeEntries.cpp
@@ -4907,10 +4934,10 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME app_update COMMAND app_update_tests)
 
-  # Singularity installing its own new versions (Platform/UpdateInstall,
-  # D-261): what the last install did, said once from one line any system's
-  # helper writes; and a test program, never an installed Singularity, which
-  # installs by hand and changes nothing.
+  # Singularity installing its own new versions: what the last install did,
+  # said once from one line any system's helper writes; and a test program,
+  # never an installed Singularity, which installs by hand and changes
+  # nothing.
   set(SINGULARITY_UPDATE_INSTALL_TEST_SOURCES
     Platform/UpdateInstall/UpdateInstall.test.cpp
     Platform/UpdateInstall/UpdateInstall.cpp
@@ -4984,10 +5011,9 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME account_bridge COMMAND account_bridge_tests)
 
-  # A seat's password kept at the member's choice (D-243, Platform/
-  # SeatPasswordStore): on Windows the user's Credential Manager itself, under a
-  # test entry of Singularity's own prefix that the test removes again; on macOS
-  # and Linux, that nothing is kept.
+  # A seat's password kept at the member's choice: on Windows the user's
+  # Credential Manager itself, under a test entry of Singularity's own prefix
+  # that the test removes again; on macOS and Linux, that nothing is kept.
   if(WIN32)
     singularity_add_executable(seat_password_store_tests
       Platform/SeatPasswordStore/SeatPasswordStore.test.cpp
@@ -5009,8 +5035,8 @@ if(BUILD_TESTING)
   add_test(NAME seat_password_store COMMAND seat_password_store_tests)
 
   # What Windows Firewall's rules for Singularity mean for the firm's computers
-  # reaching this one (D-244, Platform/SystemPermissions/FirewallState.hpp):
-  # the decision alone, the same on every system; Windows reads the rules.
+  # reaching this one: the decision alone, the same on every system; Windows
+  # reads the rules.
   singularity_add_executable(firewall_state_tests
     Platform/SystemPermissions/FirewallState.test.cpp
   )
@@ -5037,8 +5063,8 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME legal_machines_account COMMAND legal_machines_account_tests)
 
-  # An OpenPGP message sealed on this computer to Legal Machines' keys (D-257):
-  # read from a key openpgp.js made, and opened again with that key's secret.
+  # An OpenPGP message sealed on this computer to Legal Machines' keys: read
+  # from a key openpgp.js made, and opened again with that key's secret.
   singularity_add_executable(openpgp_message_tests
     Node/OpenPgpMessage/OpenPgpMessage.test.cpp
     Node/OpenPgpMessage/OpenPgpMessage.cpp
@@ -5054,9 +5080,9 @@ if(BUILD_TESTING)
   set_tests_properties(openpgp_message PROPERTIES
     ENVIRONMENT "SINGULARITY_OPENPGP_SAMPLE=${CMAKE_CURRENT_BINARY_DIR}/openpgp-sample.asc"
     FIXTURES_SETUP openpgp_sample)
-  # A design partner's work log of its model calls (D-257): kept only where
-  # its folder is named and the record is on, each chat apart, for 14 days,
-  # and erased when it is turned off.
+  # A design partner's work log of its model calls: kept only where its
+  # folder is named and the record is on, each chat apart, for 14 days, and
+  # erased when it is turned off.
   singularity_add_executable(work_log_tests
     Node/WorkLog/WorkLog.test.cpp
     Node/WorkLog/WorkLog.cpp
@@ -5071,8 +5097,8 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME work_log COMMAND work_log_tests)
 
-  # A design partner's work log sent (D-257): packed as a zip, signed, put in
-  # a letter Seal reads, sealed to Legal Machines' pinned keys and posted to
+  # A design partner's work log sent: packed as a zip, signed, put in a
+  # letter Seal reads, sealed to Legal Machines' pinned keys and posted to
   # the mail server's intake; never while a pinned key is missing.
   singularity_add_executable(work_log_share_tests
     Node/WorkLogShare/WorkLogShare.test.cpp
@@ -5418,11 +5444,11 @@ if(BUILD_TESTING)
 		target_compile_options(work_product_acceptance_setup PRIVATE -Wall -Wextra -Wpedantic)
 	endif()
 
-	# The Native API checked against the code that serves it (Beta 1 #269,
-	# docs/API_CONTRACT.md API-2): every contract method has a real
-	# register_handler, its params are what its handler reads, with the same
-	# optionality, and its events are the ones the backend publishes. The
-	# check and its own tests are plain Python and run on every platform.
+	# The Native API checked against the code that serves it: every contract
+	# method has a real register_handler, its params are what its handler
+	# reads, with the same optionality, and its events are the ones the
+	# backend publishes. The check and its own tests are plain Python and
+	# run on every platform.
 	find_package(Python3 3.9 QUIET COMPONENTS Interpreter)
 	if(Python3_Interpreter_FOUND)
 		add_test(NAME native_contract_check
@@ -5433,6 +5459,26 @@ if(BUILD_TESTING)
 		set_tests_properties(native_contract_check_tests PROPERTIES LABELS "unit;bridge")
 	else()
 		message(STATUS "Python 3.9 or later not found: the Native API contract check is not registered with ctest")
+	endif()
+
+	# They run in every full ctest: the checks before handoff and the release run,
+	# which packages nothing around a red ctest. Nothing makes a push run them. Plain
+	# Python reading the repository with git.
+	if(Python3_Interpreter_FOUND)
+		add_test(NAME architecture_check
+			COMMAND "${Python3_EXECUTABLE}" "${NATIVE_APP_ROOT}/other/architecture/archmap.py" check
+			WORKING_DIRECTORY "${NATIVE_APP_ROOT}")
+		set_tests_properties(architecture_check PROPERTIES LABELS "unit;architecture")
+		add_test(NAME architecture_check_tests
+			COMMAND "${Python3_EXECUTABLE}" -m unittest test_archmap
+			WORKING_DIRECTORY "${NATIVE_APP_ROOT}/other/architecture")
+		set_tests_properties(architecture_check_tests PROPERTIES LABELS "unit;architecture")
+	else()
+		# Without Python the checks cannot run, so the run fails rather than
+		# passing without them.
+		message(WARNING "Python 3.9 or later not found: architecture_check fails until it is installed")
+		add_test(NAME architecture_check COMMAND "${CMAKE_COMMAND}" -E false)
+		set_tests_properties(architecture_check PROPERTIES LABELS "unit;architecture")
 	endif()
 
 	# The two steps of the contract parity acceptance that have no
@@ -5505,12 +5551,12 @@ if(BUILD_TESTING)
 	# separate process per call, each request and answer checked against the
 	# generated contract (deploy/scripts/native_contract_parity_acceptance.py).
 	# It needs --native-call, which a Debug build has and a release build
-	# refuses (D-025): against a release build the test says so and is
-	# skipped. A bridge method runs beside the application's window, which on
-	# Linux needs a display: the test runs under xvfb-run where it is
-	# installed, and without a display it says so and is skipped. Windows has
-	# no --native-call at all, since its application opens its window as it
-	# starts, so the test is not registered there.
+	# refuses: against a release build the test says so and is skipped. A
+	# bridge method runs beside the application's window, which on Linux needs
+	# a display: the test runs under xvfb-run where it is installed, and
+	# without a display it says so and is skipped. Windows has no --native-call
+	# at all, since its application opens its window as it starts, so the test
+	# is not registered there.
 	if(Python3_Interpreter_FOUND AND NOT WIN32)
 		set(singularity_parity_display)
 		if(NOT APPLE)
@@ -5653,9 +5699,8 @@ if(BUILD_TESTING)
   add_test(NAME background_activity COMMAND background_activity_tests)
 
   # The firm's computers pass sealed envelopes to each other directly, never
-  # through Legal Machines (Matter/CoordinationTransport, D-124): the firm's
-  # own folder, and the Noise IK handshake checked against the protocol's
-  # published test vectors.
+  # through Legal Machines: the firm's own folder, and the Noise IK
+  # handshake checked against the protocol's published test vectors.
   singularity_add_executable(folder_transport_tests
     Matter/CoordinationTransport/FolderTransport.test.cpp
     Matter/CoordinationTransport/FolderTransport.cpp
@@ -5732,7 +5777,7 @@ if(BUILD_TESTING)
   target_include_directories(direct_transport_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
   target_link_libraries(direct_transport_tests PRIVATE monocypher nlohmann_json::nlohmann_json Threads::Threads)
   add_test(NAME direct_transport COMMAND direct_transport_tests)
-  # This computer's Trash of Matters (Matter/MatterTrash, D-247).
+  # This computer's Trash of Matters.
   singularity_add_executable(matter_trash_tests
     Matter/MatterTrash/MatterTrash.test.cpp
     Matter/MatterTrash/MatterTrash.cpp
@@ -5748,8 +5793,8 @@ if(BUILD_TESTING)
   target_include_directories(conversation_clearing_tests PRIVATE "${NATIVE_APP_SOURCE_DIR}")
   target_link_libraries(conversation_clearing_tests PRIVATE nlohmann_json::nlohmann_json)
   add_test(NAME conversation_clearing COMMAND conversation_clearing_tests)
-  # The relay's WebSocket frames (Platform/WebSocket, D-242), as the Linux
-  # client speaks them: RFC 6455's samples, a message in pieces, a broken frame.
+  # The relay's WebSocket frames, as the Linux client speaks them: RFC 6455's
+  # samples, a message in pieces, a broken frame.
   singularity_add_executable(websocket_frames_tests
     Platform/WebSocket/WebSocketFrames.test.cpp
     Platform/WebSocket/WebSocketFrames.cpp
@@ -5777,10 +5822,10 @@ if(BUILD_TESTING)
     add_test(NAME trash_file COMMAND trash_file_tests)
   endif()
 
-  # The Windows download path against a server of the test's own on 127.0.0.1
-  # (Platform/HttpClient, Beta 1 #175): a whole package of the protection
-  # model's size, a body cut short, a refusal, a Stop and a stall at the
-  # product's own limit. Loopback only; about a minute, most of it the stall.
+  # The Windows download path against a server of the test's own on
+  # 127.0.0.1: a whole package of the protection model's size, a body cut
+  # short, a refusal, a Stop and a stall at the product's own limit. Loopback
+  # only; about a minute, most of it the stall.
   if(WIN32)
     singularity_add_executable(http_download_tests
       Platform/HttpClient/HttpClientWindows.test.cpp
@@ -5794,8 +5839,7 @@ if(BUILD_TESTING)
     add_test(NAME http_download COMMAND http_download_tests)
   endif()
 
-  # Where WebView2 keeps the window's data on Windows (Platform/WebViewData,
-  # D-040).
+  # Where WebView2 keeps the window's data on Windows.
   if(WIN32)
     singularity_add_executable(web_view_data_tests
       Platform/WebViewData/WebViewDataWindows.test.cpp
@@ -8733,26 +8777,26 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME mcp_caller_windows COMMAND mcp_caller_windows_tests)
   endif()
-  # The one catalogue of the roles a colleague can be begun in (Beta 1 #272).
+  # The one catalogue of the roles a colleague can be begun in.
   singularity_add_agent_test(agent_roles_tests agent_roles
     Agent/AgentRoles/AgentRoles.test.cpp
     Agent/AgentRoles/AgentRoles.cpp
   )
-  # What changed, said once to whoever listens (Beta 1 #263).
+  # What changed, said once to whoever listens.
   singularity_add_agent_test(platform_events_tests platform_events
     Platform/Events/Events.test.cpp
   )
-  # Singularity is closing: one fact every domain reads (Beta 1 #55, #16, #216).
+  # Singularity is closing: one fact every domain reads.
   singularity_add_agent_test(platform_app_lifecycle_tests platform_app_lifecycle
     Platform/AppLifecycle/AppLifecycle.test.cpp
   )
-  # The organisation read, built from facts alone (Beta 1 #273).
+  # The organisation read, built from facts alone.
   singularity_add_agent_test(organisation_read_model_tests organisation_read_model
     Organisation/OrganisationReadModel/OrganisationReadModel.test.cpp
     Organisation/OrganisationReadModel/OrganisationReadModel.cpp
   )
-  # Who at this computer answers for the firm (D-184): the role the account
-  # flow records. Its settings stand in a directory of the test's own.
+  # Who at this computer answers for the firm: the role the account flow
+  # records. Its settings stand in a directory of the test's own.
   singularity_add_executable(firm_role_tests
     Organisation/FirmRole/FirmRole.test.cpp
     Organisation/FirmRole/FirmRole.cpp
@@ -8772,8 +8816,8 @@ if(BUILD_TESTING)
     target_compile_options(firm_role_tests PRIVATE -Wall -Wextra -Wpedantic)
   endif()
   add_test(NAME firm_role COMMAND firm_role_tests)
-  # Who sits in each of the firm's seats (D-209), in a firm record of the
-  # test's own.
+  # Who sits in each of the firm's seats, in a firm record of the test's
+  # own.
   singularity_add_executable(firm_people_tests
     Organisation/FirmPeople/FirmPeople.test.cpp
     Organisation/FirmPeople/FirmPeople.cpp
@@ -8786,8 +8830,8 @@ if(BUILD_TESTING)
     target_compile_options(firm_people_tests PRIVATE -Wall -Wextra -Wpedantic)
   endif()
   add_test(NAME firm_people COMMAND firm_people_tests)
-  # The firm's computers and the check two of them make of each other
-  # (D-205), with a Legal Machines of the test's own in between.
+  # The firm's computers and the check two of them make of each
+  # other, with a Legal Machines of the test's own in between.
   singularity_add_executable(firm_computers_tests
     Matter/FirmComputers/FirmComputers.test.cpp
     Matter/FirmComputers/FirmComputers.cpp
@@ -8802,7 +8846,7 @@ if(BUILD_TESTING)
   endif()
   add_test(NAME firm_computers COMMAND firm_computers_tests)
   # A Matter given to a member by choosing them: the signed offer in the two
-  # members' personal channel, and the lawyer's answers (D-205).
+  # members' personal channel, and the lawyer's answers.
   singularity_add_executable(matter_offers_tests
     Matter/MatterOffers/MatterOffers.test.cpp
     Matter/MatterOffers/MatterOffers.cpp
@@ -8816,7 +8860,7 @@ if(BUILD_TESTING)
     target_compile_options(matter_offers_tests PRIVATE -Wall -Wextra -Wpedantic)
   endif()
   add_test(NAME matter_offers COMMAND matter_offers_tests)
-  # Who connects or removes the firm's model accounts on this computer (D-184).
+  # Who connects or removes the firm's model accounts on this computer.
   singularity_add_agent_test(provider_account_gate_tests provider_account_gate
     Provider/AccountGate/AccountGate.test.cpp
     Provider/AccountGate/AccountGate.cpp
@@ -8826,13 +8870,13 @@ if(BUILD_TESTING)
     Matter/SharedMatter/SharedMatter.cpp
     Platform/Sha256/Sha256.cpp
   )
-  # The brief every AI colleague's request carries (D-101).
+  # The brief every AI colleague's request carries.
   singularity_add_agent_test(colleague_brief_tests colleague_brief
     Agent/ColleagueBrief/ColleagueBrief.test.cpp
     Agent/ColleagueBrief/ColleagueBrief.cpp
   )
-  # A firm's Matters carried between its computers directly, sealed end to end
-  # (D-123, D-124): two computers, two folders, the firm's own folder between.
+  # A firm's Matters carried between its computers directly, sealed end to
+  # end: two computers, two folders, the firm's own folder between.
   singularity_add_agent_test(matter_coordination_tests matter_coordination
     Matter/MatterCoordination/MatterCoordination.test.cpp
     Matter/MatterCoordination/MatterCoordination.cpp
@@ -8841,18 +8885,18 @@ if(BUILD_TESTING)
     Matter/CoordinationTransport/FolderTransport.cpp
     Platform/Sha256/Sha256.cpp
   )
-  # The seals of what the firm's computers send each other (D-123): a Matter's
-  # key, a computer's key, a key sealed to a computer, a request to join, an
-  # address card - XChaCha20-Poly1305, X25519 and BLAKE2b from Monocypher.
+  # The seals of what the firm's computers send each other: a Matter's key, a
+  # computer's key, a key sealed to a computer, a request to join, an address
+  # card - XChaCha20-Poly1305, X25519 and BLAKE2b from Monocypher.
   singularity_add_agent_test(coordination_seal_tests coordination_seal
     Matter/CoordinationSeal/CoordinationSeal.test.cpp
     Matter/CoordinationSeal/CoordinationSeal.cpp
   )
 
-  # Singularity in Word, Excel and Outlook (Office/, D-105): the certificate
-  # and its one-shot authority, the rules for a pane's paths and names, the
-  # add-ins' manifests, and the connection itself - its protocol and a real
-  # TLS exchange on this computer's loopback. Mbed TLS is linked below.
+  # Singularity in Word, Excel and Outlook: the certificate and its one-shot
+  # authority, the rules for a pane's paths and names, the add-ins'
+  # manifests, and the connection itself - its protocol and a real TLS
+  # exchange on this computer's loopback. Mbed TLS is linked below.
   singularity_add_agent_test(office_certificate_tests office_certificate
     Office/OfficeCertificate/OfficeCertificate.test.cpp
     Office/OfficeCertificate/OfficeCertificate.cpp
@@ -8861,7 +8905,7 @@ if(BUILD_TESTING)
     Office/OfficePaths/OfficePaths.test.cpp
     Office/OfficePaths/OfficePaths.cpp
   )
-  # Where a letter belongs among a firm's Matters (D-106).
+  # Where a letter belongs among a firm's Matters.
   singularity_add_agent_test(letter_routing_tests letter_routing
     Correspondence/LetterRouting/LetterRouting.test.cpp
     Correspondence/LetterRouting/LetterRouting.cpp
@@ -8872,7 +8916,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(office_addins_tests PRIVATE pugixml::pugixml)
   # The applications Singularity opens as the person connects them, and the
-  # file of its own each of Word, Excel and PowerPoint opens with (D-191): the
+  # file of its own each of Word, Excel and PowerPoint opens with: the
   # packages are read back here; no application is started.
   singularity_add_agent_test(office_apps_tests office_apps
     Office/OfficeApps/OfficeApps.test.cpp
@@ -8950,12 +8994,11 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_dependencies(native_app singularity_mcp)
 endif()
 
-# Singularity's updater on Windows (Platform/UpdateHelper; D-261). It stands
-# alone, Windows' own libraries and a static runtime, because Singularity
-# starts it from a copy outside its install folder, which the installer
-# empties and fills again; it leaves its outcome through UpdateInstall.cpp,
-# plain C++. Built beside the executable and installed beside it, where
-# Platform/UpdateInstall finds it.
+# Singularity's updater on Windows. It stands alone, Windows' own libraries
+# and a static runtime, because Singularity starts it from a copy outside
+# its install folder, which the installer empties and fills again; it leaves
+# its outcome through UpdateInstall.cpp, plain C++. Built beside the
+# executable and installed beside it, where Platform/UpdateInstall finds it.
 if(WIN32)
   add_executable(singularity_update WIN32
     "${NATIVE_APP_SOURCE_DIR}/Platform/UpdateHelper/UpdateHelper.cpp"
@@ -9168,9 +9211,9 @@ endif()
 set(CPACK_MONOLITHIC_INSTALL ON)
 set(CPACK_VERBATIM_VARIABLES YES)
 
-# The processor each installer is for, in the app's and the site's words
-# (D-216): x64 or arm64, or universal for a macOS build of both. publish.py
-# site reads it from the name, so every installer says it.
+# The processor each installer is for, in the app's and the site's words:
+# x64 or arm64, or universal for a macOS build of both. publish.py site
+# reads it from the name, so every installer says it.
 set(_singularity_processor "${CMAKE_SYSTEM_PROCESSOR}")
 if(APPLE)
   list(LENGTH CMAKE_OSX_ARCHITECTURES _singularity_architectures)
@@ -9194,7 +9237,7 @@ if(APPLE)
   set(CPACK_DMG_VOLUME_NAME "${NATIVE_APP_DISPLAY_NAME}")
   set(CPACK_DMG_FORMAT "UDZO")
   set(CPACK_DMG_BACKGROUND_IMAGE "${NATIVE_APP_DMG_BACKGROUND}")
-  # The disk image places the bundle by its name (D-078).
+  # The disk image places the bundle by its name.
   configure_file(
     "${NATIVE_APP_ROOT}/deploy/backend/macos/installer/dmg-layout.applescript.in"
     "${CMAKE_CURRENT_BINARY_DIR}/dmg-layout.applescript"
@@ -9231,7 +9274,7 @@ elseif(WIN32)
   set(CPACK_GENERATOR "${NATIVE_APP_WINDOWS_PACKAGER}")
   # The install folder bears the application's name: AI apps keep the path of
   # the helper in it (singularity-mcp.exe), and an upgrade replaces the
-  # program in place (D-125).
+  # program in place.
   set(CPACK_PACKAGE_INSTALL_DIRECTORY "${NATIVE_APP_DATA_NAME}")
   set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${NATIVE_APP_SLUG}")
   set(CPACK_PACKAGE_EXECUTABLES
@@ -9258,9 +9301,9 @@ elseif(WIN32)
   set(CPACK_NSIS_INSTALLED_ICON_NAME "${NATIVE_APP_DISPLAY_NAME}.exe")
   # The last page offers to start Singularity, through Explorer, so that it
   # runs as the person and not with the installer's rights: an elevated
-  # Singularity takes no files dragged in from Explorer (the owner,
-  # 2026-11-05). An update installs silently and shows no page; its updater
-  # starts Singularity itself (Platform/UpdateHelper).
+  # Singularity takes no files dragged in from Explorer. An update installs
+  # silently and shows no page; its updater starts Singularity itself
+  # (Platform/UpdateHelper).
   set(CPACK_NSIS_DEFINES "
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_TEXT \"Run ${NATIVE_APP_DISPLAY_NAME}\"
@@ -9553,7 +9596,7 @@ set(SINGULARITY_TRUST_SOURCES
   "${NATIVE_APP_SOURCE_DIR}/Provider/ModelClassification/ModelClassification.cpp")
 # Their tests, and the other tests defined from here on, are built only with
 # the tests (BUILD_TESTING): the release builds - windows-cross among them,
-# which runs no test - compile none of them (Beta 1 #176).
+# which runs no test - compile none of them.
 if(BUILD_TESTING)
   singularity_add_executable(device_key_tests
     Platform/DeviceKey/DeviceKey.test.cpp
@@ -9846,11 +9889,10 @@ if(BUILD_TESTING AND APPLE)
   endif()
 endif()
 
-# The Office connection (Office/, Platform/TrustStore, D-105) uses Mbed TLS
-# for its listener, its certificate and Base64, and the system's certificate
-# and Office registration services: linked into every target that builds its
-# sources - the app, the targets that build the app's whole source list, and
-# its own tests.
+# The Office connection uses Mbed TLS for its listener, its certificate and
+# Base64, and the system's certificate and Office registration services:
+# linked into every target that builds its sources - the app, the targets
+# that build the app's whole source list, and its own tests.
 get_property(singularity_office_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
 foreach(singularity_target IN LISTS singularity_office_targets)
   get_target_property(singularity_target_type ${singularity_target} TYPE)
@@ -9880,11 +9922,11 @@ endforeach()
 
 # (Placed last in this file, so they see every program.)
 get_property(singularity_all_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
-# Every program that runs the Native Bridge keeps its pace in the background
-# (Platform/BackgroundActivity, D-122), whichever source list it was built
-# from: the bridge asks for it when it starts its services. On macOS each test
-# program names its own system sources, so a list that predates this would
-# otherwise leave the call unresolved.
+# Every program that runs the Native Bridge keeps its pace in the background,
+# whichever source list it was built from: the bridge asks for it when it
+# starts its services. On macOS each test program names its own system
+# sources, so a list that predates this would otherwise leave the call
+# unresolved.
 if(APPLE)
   set(SINGULARITY_BACKGROUND_ACTIVITY_SOURCE
     "${NATIVE_APP_SOURCE_DIR}/Platform/BackgroundActivity/BackgroundActivityMacOS.mm")
@@ -9920,8 +9962,7 @@ foreach(singularity_target IN LISTS singularity_all_targets)
 endforeach()
 
 # Every program that seals what the firm's computers send each other links
-# Monocypher (Matter/CoordinationSeal, D-123), whichever source list brought
-# the seal in.
+# Monocypher, whichever source list brought the seal in.
 foreach(singularity_target IN LISTS singularity_all_targets)
   get_target_property(singularity_target_type ${singularity_target} TYPE)
   if(NOT singularity_target_type STREQUAL "EXECUTABLE")
@@ -9937,12 +9978,12 @@ foreach(singularity_target IN LISTS singularity_all_targets)
 endforeach()
 
 # Every program that makes model calls keeps them in a design partner's work
-# log (Node/WorkLog, D-257) - recorded only where the app names the log's
-# folder - whichever source list brought the calls in; the account bridge
-# turns it on and off from the seat's own record. A colleague's calls come
-# from the review library (lm_document_review), which, like its other
-# domains, leaves the log to whoever links it: a program that links it, or
-# that the review joins once this directory is read (the bridges, see
+# log - recorded only where the app names the log's folder - whichever
+# source list brought the calls in; the account bridge turns it on and off
+# from the seat's own record. A colleague's calls come from the review
+# library (lm_document_review), which, like its other domains, leaves the
+# log to whoever links it: a program that links it, or that the review joins
+# once this directory is read (the bridges, see
 # cmake/DocumentIntelligence.cmake), compiles the log too.
 foreach(singularity_target IN LISTS singularity_all_targets)
   get_target_property(singularity_target_type ${singularity_target} TYPE)
@@ -9969,10 +10010,9 @@ foreach(singularity_target IN LISTS singularity_all_targets)
 endforeach()
 
 # On macOS every program that reads PDFs with PDFKit also writes their copies
-# with PDFium (D-115; PdfExtractorPdfium.cpp builds only that there) and finds
-# libpdfium.dylib through its build RPATH; the app carries it in Frameworks.
-# Last in this file, so it sees every program, those made from others' lists
-# included.
+# with PDFium and finds libpdfium.dylib through its build RPATH; the app
+# carries it in Frameworks. Last in this file, so it sees every program, those
+# made from others' lists included.
 if(APPLE)
   get_property(singularity_all_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
   foreach(singularity_target IN LISTS singularity_all_targets)

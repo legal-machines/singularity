@@ -28,13 +28,13 @@ nlohmann::json edit_message(const nlohmann::json &params);
 nlohmann::json delete_message(const nlohmann::json &params);
 nlohmann::json react(const nlohmann::json &params);
 // The messages of a chat other people wrote, marked as having reached the
-// member at this computer (D-212).
+// member at this computer.
 nlohmann::json mark_received(const nlohmann::json &params);
 // What the member at this computer has read of each conversation, and marking
-// one read up to a time (D-202).
+// one read up to a time.
 nlohmann::json read_marks(const nlohmann::json &params);
 nlohmann::json mark_read(const nlohmann::json &params);
-// A thread's closing with its conclusion, and its reopening (D-088).
+// A thread's closing with its conclusion, and its reopening.
 nlohmann::json close_thread(const nlohmann::json &params);
 nlohmann::json reopen_thread(const nlohmann::json &params);
 
@@ -54,7 +54,7 @@ nlohmann::json delete_chat(const nlohmann::json &params);
 nlohmann::json compact(const nlohmann::json &params);
 
 nlohmann::json restore(const nlohmann::json &params);
-// chat.setArchived {projectId, chatId, archived} -> ProjectChat (D-214).
+// chat.setArchived {projectId, chatId, archived} -> ProjectChat.
 nlohmann::json set_archived(const nlohmann::json &params);
 
 // Phase 27's Search (Chat/ChatActions/ChatActions.hpp's search()) - a real
@@ -93,10 +93,10 @@ nlohmann::json resolve_operation_setup(const nlohmann::json &params);
 // resolver through a second, unvalidated path and an unknown source-policy
 // mode can never be silently defaulted.
 //
-// chat_request_setup() reads what a request names before it is written: its
+// chat_request_setup reads what a request names before it is written: its
 // Project, its Chat, its legal task and a one-time model. The callers that
 // do not compose a request (the operation setup and the composer's
-// protection state) use it alone, so they read nothing else (Beta 1 #269).
+// protection state) use it alone, so they read nothing else.
 chat::ChatRequestComposition chat_request_setup(const nlohmann::json &params);
 // chat_request_composition() reads the setup, then the request itself: its
 // words, its sources, its target document, whether it may ask the lawyer

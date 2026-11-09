@@ -171,10 +171,6 @@ OwnedChildProcess::OwnedChildProcess(const ChildProcessSpec &spec) : state_(std:
 	if (supervisor == 0) {
 		::close(guard_pipe[1]);
 		::close(info_pipe[0]);
-		// Drop every other inherited descriptor (this process's stdio, any
-		// OTHER child's still-open guard pipe, etc.) so this supervisor can
-		// never itself become a hidden extra writer keeping some guard pipe
-		// artificially open past its real owner's death.
 		for (int descriptor = 0; descriptor < launch.max_descriptor; ++descriptor) {
 			if (descriptor == guard_pipe[0] || descriptor == info_pipe[1]) continue;
 			::close(descriptor);
@@ -183,14 +179,7 @@ OwnedChildProcess::OwnedChildProcess(const ChildProcessSpec &spec) : state_(std:
 
 		const pid_t child = ::fork();
 		if (child == 0) {
-			// Its OWN process group before anything else. Otherwise it inherits
-			// the owner's process group and controlling terminal, and a user's
-			// Ctrl-C delivers SIGINT to the whole foreground group - reaching
-			// the child directly and bypassing the owner's cooperative
-			// cancellation (reproduced live with llama-server, which treats
-			// SIGINT as "stop the server", in a command-line acceptance run).
-			// terminate() signals this exact PID, which does not depend on
-			// process-group membership.
+			// Its OWN process group before anything else.
 			::setpgid(0, 0);
 			// stdin stays closed; stdout/stderr go to the log.
 			const int log = ::open(launch.log.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0600);
@@ -206,8 +195,6 @@ OwnedChildProcess::OwnedChildProcess(const ChildProcessSpec &spec) : state_(std:
 		if (child < 0) ::_exit(127);
 
 		const pid_t worker = child;
-		// A short write leaves the owner reading too few bytes, which it
-		// reports as a failed start - nothing more to do here.
 		[[maybe_unused]] const ssize_t reported = ::write(info_pipe[1], &worker, sizeof(worker));
 		::close(info_pipe[1]);
 

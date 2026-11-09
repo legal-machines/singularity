@@ -48,16 +48,16 @@ function isSamePlace(first, second) {
 	return JSON.stringify(first) == JSON.stringify(second);
 }
 
-// The window: the desk with its places, and the sheet of the place open
-// (DESIGN.md, FOLIO-10). Everything runs on mock data. The window's address
-// names the place open ("#inbox/t_sablewood", "#matter/x_sablewood",
+// The window: the desk with its places, and the sheet of the place open.
+// Everything runs on mock data. The window's address names the place open
+// ("#inbox/t_sablewood", "#matter/x_sablewood",
 // "#document/doc_sablewood_markup", "#team", ...), so a reload opens it again.
-// In onboarding the app runs as its own emulation (D-134): `emulation`
-// drives it through the same functions a member's hand does. It shows the one
-// place a step is about, so the sidebar and the window's own pieces - its
-// buttons, Office's question, the keys it holds - stay out.
-// Whether the member hid the sidebar, kept on this computer as a convenience:
-// storage that cannot be read leaves it shown.
+// In onboarding the app runs as its own emulation: `emulation` drives it
+// through the same functions a member's hand does. It shows the one place a
+// step is about, so the sidebar and the window's own pieces - its buttons,
+// Office's question, the keys it holds - stay out. Whether the member hid the
+// sidebar, kept on this computer as a convenience: storage that cannot be read
+// leaves it shown.
 const SIDEBAR_KEY = "singularity.sidebar";
 function readSidebarHidden() {
 	try {
@@ -80,8 +80,8 @@ export function App({ emulation = null }) {
 	// A return from a conversation restores the member's Inbox view.
 	const [inboxDisplay, setInboxDisplay] = useState({ view: "active", unreadOnly: false });
 	const place = history.entries[history.index];
-	// The sidebar hides and comes back with its own button (Twist; the owner,
-	// 2026-11-02), at the top of the window beside the traffic lights.
+	// The sidebar hides and comes back with its own button, at the top of the
+	// window beside the traffic lights.
 	const [sidebarHidden, setSidebarHidden] = useState(() => emulation == null && readSidebarHidden());
 	useEffect(() => {
 		if (emulation == null) keepSidebarHidden(sidebarHidden);
@@ -100,7 +100,7 @@ export function App({ emulation = null }) {
 		if (key != null) setOpened(previous => ({ ...previous, [key]: new Date().toISOString() }));
 	}, [place]);
 	// The conversation open is read up to its latest message, and again as
-	// more comes while it is open (D-202).
+	// more comes while it is open.
 	useEffect(() => {
 		if (hasNative() == false) return;
 		const threadId = place.kind == "thread" || place.kind == "inbox" ? place.threadId : null;
@@ -118,7 +118,7 @@ export function App({ emulation = null }) {
 	useEffect(() => {
 		connectRealWork();
 		// The firm's computers: who asks to join a Matter here, and what this
-		// computer asked for (D-123).
+		// computer asked for.
 		watchFirmComputers();
 		// Singularity's new versions, from Legal Machines' site.
 		watchUpdates();
@@ -128,10 +128,10 @@ export function App({ emulation = null }) {
 	useEffect(() => {
 		if (emulation == null) tellUpdated().catch(() => {});
 	}, [emulation]);
-	// A sign-in by a recovery code (D-218) is told once Singularity opens, with
-	// the way to a new authenticator app; onboarding's preview never tells it.
-	// A seat with no authenticator app is led to set one up wherever Legal
-	// Machines asks for it first (D-215).
+	// A sign-in by a recovery code is told once Singularity opens, with the way
+	// to a new authenticator app; onboarding's preview never tells it. A seat
+	// with no authenticator app is led to set one up wherever Legal Machines
+	// asks for it first.
 	useEffect(() => (emulation == null ? watchTwoStepSetup() : undefined), [emulation]);
 	useEffect(() => {
 		if (emulation != null) return;
@@ -144,7 +144,7 @@ export function App({ emulation = null }) {
 		});
 	}, [emulation]);
 	// Each real colleague's face acts out what it is doing now, on every
-	// computer: at work, its work (the owner, 2026-10-24).
+	// computer: at work, its work.
 	useEffect(() => {
 		for (const { memberId, presence } of realColleaguePresences()) report(memberId, presence);
 	}, [real]);
@@ -199,15 +199,15 @@ export function App({ emulation = null }) {
 				openRef.current({ kind: "search", query: "" });
 				return;
 			}
-			// Settings, as every Mac application opens its own (D-201).
+			// Settings, as every Mac application opens its own.
 			if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.code == "Comma") {
 				event.preventDefault();
 				openRef.current({ kind: "settings" });
 				return;
 			}
 			if (event.altKey == false || event.ctrlKey || event.shiftKey || event.metaKey) return;
-			// In a field Option-arrow moves the caret a word (the owner,
-			// 2026-11-02): back and forward never take it there.
+			// In a field Option-arrow moves the caret a word: back and
+			// forward never take it there.
 			if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true'], [contenteditable='']") != null) return;
 			if (event.key == "ArrowLeft") {
 				event.preventDefault();
@@ -249,14 +249,14 @@ export function App({ emulation = null }) {
 		}
 	}
 
-	// A hired AI colleague joins the firm (D-071). In the app it is the firm's
-	// own, never one Matter's (D-157): kept by the backend with the office and
-	// the face it was hired with, named in any Matter's thread to take work
-	// there; in a plain browser it joins the prototype for this session.
+	// A hired AI colleague joins the firm. In the app it is the firm's own,
+	// never one Matter's: kept by the backend with the office and the face it
+	// was hired with, named in any Matter's thread to take work there; in a
+	// plain browser it joins the prototype for this session.
 	async function hire(colleague, facts, matterIds) {
 		if (hasNative()) {
-			// Hired over no one's shoulder (D-223): it answers to no member, unless
-			// one is named.
+			// Hired over no one's shoulder: it answers to no member, unless one is
+			// named.
 			const answersToId = shownMembers().some(member => member.id == facts.answersTo) ? facts.answersTo : null;
 			const answersTo = answersToId != null ? members.find(member => member.id == answersToId)?.name ?? "" : "";
 			const memberId = await hireColleague({
@@ -312,9 +312,8 @@ export function App({ emulation = null }) {
 	}
 
 	// An answer to what a colleague asks is taken once, by the one it asks,
-	// and stands in the thread as that member's reply, quoting the question
-	// (the owner, 2026-10-24, of the line with a check that said what came of
-	// it: "throw it out"). The thread stays open until someone closes it.
+	// and stands in the thread as that member's reply, quoting the question.
+	// The thread stays open until someone closes it.
 	function decide(threadId, decisionId, key, quote) {
 		const option = decisions[decisionId].options.find(item => item.key == key);
 		setState(previous => ({
@@ -331,16 +330,16 @@ export function App({ emulation = null }) {
 		setState(previous => ({ ...previous, extraEvents: addEvents(previous, threadId, [event]) }));
 	}
 
-	// Closing a thread is an act of its own, with its conclusion (ORG-13).
+	// Closing a thread is an act of its own, with its conclusion.
 	function closeThread(threadId, conclusion) {
 		const event = { id: `close_${Date.now()}`, kind: "closed", at: now(), byId: viewerId, conclusion };
 		setState(previous => ({ ...previous, extraEvents: addEvents(previous, threadId, [event]) }));
 	}
 
-	// A reply to a closed thread reopens it; the reply is its reason.
-	// A reply to a thread, with what it hands in: its files, what was not
+	// A reply to a closed thread reopens it; the reply is its reason. A
+	// reply to a thread, with what it hands in: its files, what was not
 	// checked and the answers to the question it asks, as an AI colleague's
-	// post carries them (the owner, 2026-10-24: "the same tools").
+	// post carries them.
 	function reply(threadId, text, quote, extras = {}) {
 		const thread = findThread(threadId);
 		const post = postOf(text.split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(Boolean), quote, extras);
@@ -477,7 +476,7 @@ export function App({ emulation = null }) {
 			<DocumentLensHost />
 			<TooltipLayer />
 			<Toaster />
-			{/* A check of one of the firm's computers, or a Matter shared with this member (D-205). */}
+			{/* A check of one of the firm's computers, or a Matter shared with this member. */}
 			<FirmDialogs />
 			{emulation == null ? <OfficePairingQuestion /> : null}
 			{emulation == null ? <TwoStepSetupHost /> : null}

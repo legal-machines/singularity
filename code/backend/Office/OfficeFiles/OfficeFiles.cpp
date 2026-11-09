@@ -24,7 +24,7 @@ constexpr std::uintmax_t kMaxAttachmentBytes = 30ULL * 1024 * 1024;
 
 std::vector<matters::Matter> matters_here() {
 	try {
-		// The member's desk is no Matter a pane works in (D-157).
+		// The member's desk is no Matter a pane works in.
 		std::vector<matters::Matter> all = matters::load_matters(node::require_active_workspace_path());
 		all.erase(std::remove_if(all.begin(), all.end(), [](const matters::Matter &entry) { return matter::is_desk(entry); }),
 			all.end());
@@ -58,7 +58,7 @@ DescribedFile describe_file(const std::string &location) {
 	}
 	const std::filesystem::path file = std::filesystem::u8path(path_of_location(location));
 	described.name = file.filename().u8string();
-	// The file Singularity opened the application with, to show its pane (D-191).
+	// The file Singularity opened the application with, to show its pane.
 	if (is_starter_file(file, office_folder())) {
 		described.kind = "starter";
 		return described;
@@ -104,6 +104,11 @@ Filed file_into_matter(const std::string &matter_id, const std::string &name, co
 	}
 	const std::filesystem::path target = free_path_in(folder, safe_file_name(name));
 	platform::write_file_durably(target, bytes);
+	// Listed at once and read in the background, so the window finds it as soon
+	// as it reads the Matter again, never waiting on the folder's watch or on
+	// its reading.
+	(void)matter::detect_affected_paths(matter_id, {target.u8string()});
+	matter::read_documents_in_background(matter_id);
 	Filed filed;
 	filed.matter_id = matter_id;
 	filed.name = target.filename().u8string();

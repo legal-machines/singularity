@@ -18,18 +18,17 @@ import { findMember, firstName, formatClock, formatDay, plainWords, positionOf }
 
 import styles from "./MatterDesk.module.css";
 
-// A Matter's overview as the team's desk (the owner, 2026-11-02: "rebuild it,
-// more original and beautiful"): who works on it, faces side by side, people
-// and AI colleagues alike (PHIL-10); what happened, day by day; and what the
-// firm's books say of it. Its threads and its documents are their sections'
-// own, not the overview's (the owner, 2026-11-02). No panels and no frames:
-// room, faces and type carry it.
+// A Matter's overview as the team's desk: who works on it, faces side by
+// side, people and AI colleagues alike; what happened, day by day; and what
+// the firm's books say of it. Its threads and its documents are their
+// sections' own, not the overview's. No panels and no frames: room, faces and
+// type carry it.
 export function MatterDesk({ matter, people, state, matterThreads, matterDocuments, matterWork, history = null, isReal, invitedIds, onShare, facts, onDocuments, onThreads }) {
 	const { open } = useNavigation();
 	// The member here first, then the rest; whoever is there now wears the
 	// green dot every face of theirs wears (components/Avatar/online.js). The
-	// Matter travels sealed only to computers its people confirmed (AG-SEC-9),
-	// so no sign of the seal stands on a face (the owner, 2026-11-02).
+	// Matter travels sealed only to computers its people confirmed, so no sign
+	// of the seal stands on a face.
 	const ordered = [...people.filter(member => member?.id == viewerId), ...people.filter(member => member?.id != viewerId)];
 	const tile = member => {
 		const doing = member.kind == "ai_colleague" ? colleagueState(member.id, state) : null;
@@ -85,9 +84,7 @@ export function MatterDesk({ matter, people, state, matterThreads, matterDocumen
 }
 
 // The threads the member has not read yet, the latest first, as the Inbox
-// lists them, on its unread ground (the owner, 2026-11-02: "show the latest
-// threads the lawyer has not read, as in the Inbox"). None, and it says
-// nothing.
+// lists them, on its unread ground. None, and it says nothing.
 const UNREAD_SHOWN = 3;
 
 function Unread({ matterThreads, state, onAll }) {
@@ -143,11 +140,9 @@ export function MatterThreads(props) {
 function Threads({ matter, matterThreads, state, isReal, now }) {
 	const { open } = useNavigation();
 	const [isMaking, setMaking] = useState(false);
-	// Open or archived, as the Matters page chooses its own (the owner,
-	// 2026-11-02: "remove this from the threads and make such a logic of tabs").
+	// Open or archived, as the Matters page chooses its own.
 	const [view, setView] = useState("open");
-	// An archived thread deleted, once confirmed (the owner, 2026-11-02: "archived
-	// threads must be deletable"), as its own page deletes one.
+	// An archived thread deleted, once confirmed, as its own page deletes one.
 	const [deleting, setDeleting] = useState(null);
 	const archived = isReal ? archivedThreads(matter.id) : [];
 	const views = [{ id: "open", label: "Open" }, { id: "archived", label: "Archived" }];
@@ -256,14 +251,11 @@ function Threads({ matter, matterThreads, state, isReal, now }) {
 	);
 }
 
-// What happened on the Matter, as a feed in one column and one manner (the
-// owner, 2026-11-02: "in a column, in one style ... one system"; "documents
-// taken in at different times are merged now, and it must be a feed; a new
-// person added must show there too"): each line a sign, what happened in a
-// few words, what it concerned under them, and when. Documents are one line
-// only while the same person took them in, one after another, within a few
-// minutes. The latest few show, so it reads without scrolling; the rest are a
-// press away.
+// What happened on the Matter, as a feed in one column and one manner: each
+// line a sign, what happened in a few words, what it concerned under them,
+// and when. Documents are one line only while the same person took them in,
+// one after another, within a few minutes. The latest few show, so it reads
+// without scrolling; the rest are a press away.
 const SHOWN = 6;
 // Changes further apart than this are separate lines.
 const BATCH_GAP_MS = 5 * 60 * 1000;
@@ -304,7 +296,7 @@ function History({ matterThreads, matterDocuments, matterWork, history, state, i
 				: onDocuments,
 		});
 	}
-	// Each member's arrival, people and AI colleagues alike (PHIL-10).
+	// Each member's arrival, people and AI colleagues alike.
 	for (const arrival of history?.arrivals ?? []) {
 		const member = findMember(arrival.memberId);
 		if (member == null) continue;
@@ -409,7 +401,7 @@ function HistoryLines({ lines }) {
 	);
 }
 
-// A document opens in its own application (D-225); in the prototype, on its page.
+// A document opens in its own application; in the prototype, on its page.
 async function openDocument(item, isReal, open) {
 	if (isReal != true) {
 		if (item.documentId != null) open({ kind: "document", documentId: item.documentId });

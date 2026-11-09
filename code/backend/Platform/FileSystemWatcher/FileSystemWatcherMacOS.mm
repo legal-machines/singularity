@@ -42,12 +42,6 @@ public:
 		CFArrayRef paths = CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void**>(&pathString), 1,
 				&kCFTypeArrayCallBacks);
 		FSEventStreamContext context = {0, this, nullptr, nullptr, nullptr};
-		// 0.3s latency lets the OS coalesce a burst of individual writes (e.g.
-		// an application saving a document via write-then-rename) into one
-		// callback, matching the "watcher coalescing" requirement in
-		// phase-08-documents-filesystem-states.md Sec.7 - callers still always
-		// reconcile against real current state, never trust event content.
-		//
 		// kFSEventStreamCreateFlagFileEvents asks FSEvents for per-FILE paths
 		// in the callback (eventPaths below) instead of only the containing
 		// directory - without it, an edit deep in a large Project would only

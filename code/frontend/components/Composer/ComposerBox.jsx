@@ -10,32 +10,30 @@ import { mentionAt, mentionOptions, withMention } from "./mentions.js";
 
 import styles from "./ComposerBox.module.css";
 
-// The box a member writes in, one for every place it writes, a thread, a
-// chat or a letter, drawn as Codex draws its own (the owner, 2026-10-24: "too
-// small, copy it from here"). Two calm rows on one grid: two lines to write
-// in, 18px in from the frame; under them a row of round tools 10px from the
-// edges, what the place adds on the left (the "+", a chat's filing) and the
-// send on the right. A press anywhere in the box that is not a tool puts the
-// cursor in it. The send stays quiet until there is something to send, and
-// Ctrl+Enter (Command-Enter on a Mac) sends; where `sendsOnEnter`, as in a
-// messenger, Enter sends and Shift+Enter starts a new line - and inside a code
-// block begun with ``` Enter starts a new line too. Command-B, -I and -E
-// (Ctrl elsewhere) and Command-Shift-X put bold, italic, code and strike
-// marks around the selection, or take them away (formatting.js); the words
-// stay plain here and every message draws them (MessageText). `submit` puts
-// another act in the send's place, such as closing a thread. Where it is given
-// `mentionables`, an @ opens the list of whom the message can name
-// (MentionList), with "all" first where `allowsAll`.
-// The emoji a message is most often given, put in where the caret stands.
+// The box a member writes in, one for every place it writes, a thread, a chat
+// or a letter, drawn as Codex draws its own. Two calm rows on one grid: two
+// lines to write in, 18px in from the frame; under them a row of round tools
+// 10px from the edges, what the place adds on the left (the "+", a chat's
+// filing) and the send on the right. A press anywhere in the box that is not a
+// tool puts the cursor in it. The send stays quiet until there is something to
+// send, and Ctrl+Enter (Command-Enter on a Mac) sends; where `sendsOnEnter`,
+// as in a messenger, Enter sends and Shift+Enter starts a new line - and
+// inside a code block begun with ``` Enter starts a new line too. Command-B,
+// -I and -E (Ctrl elsewhere) and Command-Shift-X put bold, italic, code and
+// strike marks around the selection, or take them away (formatting.js); the
+// words stay plain here and every message draws them (MessageText). `submit`
+// puts another act in the send's place, such as closing a thread. Where it is
+// given `mentionables`, an @ opens the list of whom the message can name
+// (MentionList), with "all" first where `allowsAll`. The emoji a message is
+// most often given, put in where the caret stands.
 const EMOJI = ["🙂", "😊", "😂", "😉", "🙏", "👍", "👏", "🎉", "✅", "👀", "🤝", "💡", "🔥", "⏰", "📎", "❗", "❓", "❤️"];
 
-// The box a member writes in, as Twist draws its own (the owner, 2026-11-02:
-// "make the input field like this"): the words on top, and under them, at the
-// left, the box's tools - its own, attaching where the page gives it, and
-// emoji - and at the right what to do with the words: put them away, or send
-// them. `above` stands in the box over the words: the files a message hands
-// over, as Codex shows them.
-export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, onSubmit, canSend, placeholder, label, tools, submit, above = null, sendsOnEnter = false, mentionables = [], allowsAll = false, allLine = "", onDiscard }, ref) {
+// The box a member writes in, as Twist draws its own: the words on top, and
+// under them, at the left, the box's tools - its own, attaching where the
+// page gives it, and emoji - and at the right what to do with the words: put
+// them away, or send them. `above` stands in the box over the words: the
+// files a message hands over, as Codex shows them.
+export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, onSubmit, canSend, placeholder, label, tools, submit, above = null, sendsOnEnter = false, mentionables = [], allowsAll = false, allLine = "", onDiscard, onStop = null, stopLabel = "Stop" }, ref) {
 	const own = useRef(null);
 	const field = ref ?? own;
 	const boxRef = useRef(null);
@@ -186,11 +184,18 @@ export const ComposerBox = forwardRef(function ComposerBox({ value, onChange, on
 							<Icon name="trash" size={18} />
 						</button>
 					) : null}
-					{submit ?? (
+					{submit ?? (value == "" && onStop != null ? (
+						// While colleagues work on what this conversation gave them, an
+						// empty box's send is their Stop, a square as a messenger's; a
+						// word typed brings the send back.
+						<button className={`${styles.send} ${styles.stop}`} type="button" aria-label={stopLabel} data-tooltip={stopLabel} onClick={onStop}>
+							<span className={styles.stop_mark} aria-hidden="true" />
+						</button>
+					) : (
 						<button className={styles.send} type="button" disabled={!canSend} aria-label="Send" data-tooltip="Send" onClick={onSubmit}>
 							<Icon name="send" size={18} />
 						</button>
-					)}
+					))}
 				</div>
 			</div>
 			{emojiAt != null ? (

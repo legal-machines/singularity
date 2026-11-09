@@ -127,9 +127,8 @@ namespace detail {
 	return count;
 }
 
-// The reusable, format-neutral document semantic layer (phase-24-1-research-
-// document-intelligence-project-actions.md, "Document Semantic Layer"). This
-// is the ONE structural representation every format adapter (DocxExtractor,
+// The reusable, format-neutral document semantic layer. This is the ONE
+// structural representation every format adapter (DocxExtractor,
 // PptxExtractor, XlsxExtractor, the CSV/plain-text readers in
 // DocumentExtractor.cpp/DocumentStructuralReader.cpp) produces into, and the
 // only thing generic document actions and DocumentPatchValidator resolve a

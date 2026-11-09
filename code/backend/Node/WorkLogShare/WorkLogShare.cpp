@@ -32,13 +32,27 @@ struct PinnedKey {
 	const char *armored;
 };
 
-// diagnostics@legalmachines.org: Legal Machines' mailbox for work logs, whose
-// key the owner makes in Seal. Pinned here once it is published; until then
-// no log is sent (recipients_ready()).
-constexpr PinnedKey kDiagnostics {"diagnostics@legalmachines.org", "", "", ""};
+constexpr PinnedKey kDiagnostics {"diagnostics@legalmachines.org", "A82E34D5E4AEC96E3FD404BD67217292A57963C8",
+	"24E7640D75F6513DCC13A326B5E4DB49D1D072C4", R"(-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEauxBnRYJKwYBBAHaRw8BAQdAUBRWkn8NnHcNfyavuCSwiwW80qmws2LYmS+H
+BBHghK20HzxkaWFnbm9zdGljc0BsZWdhbG1hY2hpbmVzLm9yZz6I2QQTFgoAiwWC
+auxBnQWJBaOagAMLCQcJEGchcpKleWPIRRQAAAAAABwAIHNhbHRAbm90YXRpb25z
+Lm9wZW5wZ3Bqcy5vcmen6VIzYgqqrrmnmnPBIM4crGsTMuGUVJO+Ztyt3WsHUAUV
+CggODAQWAAIBAhkBApsDAh4BFiEEqC401eSuyW4/1AS9ZyFykqV5Y8gAABqMAQCS
+x75fxV6Xj7OkCr87gKQo1HrjkQiztN2sL1p+rMcR7gD/e0NbhGHJGUBQV4IyPUJU
+xyOp+ESPhdnexrLsjmK3KQ24OARq7EGdEgorBgEEAZdVAQUBAQdAs2qaOzXJvDRC
+7kbdGnTx0yeKwEIvHmmdZ0sehiObHXEDAQgHiMQEGBYKAHYFgmrsQZ0FiQWjmoAJ
+EGchcpKleWPIRRQAAAAAABwAIHNhbHRAbm90YXRpb25zLm9wZW5wZ3Bqcy5vcmce
+iUN9QHyMWzcuB1xEiyK1Ga8GiI3MS74ZfQufDFvZdQKbDBYhBKguNNXkrsluP9QE
+vWchcpKleWPIAABR/gD/c4rne8dlPsQvduCOpsKfrKmzGl2DVl+WAM9fZSuJ9KoB
+ANhvh1JiE6kaLFu/kob4BArUgzw2HQ2pU3irbZNALC8D
+=IBH9
+-----END PGP PUBLIC KEY BLOCK-----
+)"};
 
 // claude@legalmachines.org: Legal Machines' Claude, which reads the logs to
-// find what to fix (the owner, 2026-11-05: "diagnostics@, and claude@ too").
+// find what to fix.
 constexpr PinnedKey kClaude {"claude@legalmachines.org", "DCB772989B9E1ABB2740FAC53C9292119B9DF195",
 	"0FA9BB63EDDB593F41A5113BFEC5AA3F2EF73CE8", R"(-----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -211,7 +225,7 @@ Preview preview(const std::string &matter_id, const std::string &chat_id) {
 	} else if (recipients_ready() == false) {
 		shown.reason = "Work logs can't be sent from this build yet: Legal Machines' keys for them are not in it.";
 	} else if (calls.empty() == true) {
-		shown.reason = "Nothing of this conversation's work is kept on this computer yet.";
+		shown.reason = "Nothing of this conversation's work has been kept yet.";
 	} else {
 		shown.can_send = true;
 	}
@@ -241,7 +255,7 @@ std::string zip_of(const Request &request, const std::vector<work_log::Call> &ca
 		const std::string name = "calls/" + two_digits(index + 1, 4) + ".json";
 		listed.push_back({{"number", index + 1}, {"at", call.at}, {"milliseconds", call.milliseconds}, {"provider", call.provider_id},
 			{"model", call.model_id}, {"purpose", call.purpose}, {"protected", call.is_protected}, {"inputTokens", call.input_tokens},
-			{"outputTokens", call.output_tokens}, {"failure", call.failure}, {"file", name}});
+			{"outputTokens", call.output_tokens}, {"failure", call.failure}, {"device", call.device}, {"file", name}});
 		kept.push_back(dump(Json{{"request", readable(call.request)}, {"answer", readable(call.answer)}, {"failure", call.failure}}));
 		files.emplace_back(name, &kept.back());
 	}
@@ -343,7 +357,7 @@ Sent send(const Request &request, const Signer &sign, const Poster &post) {
 		throw std::runtime_error("Work logs can't be sent from this build yet: Legal Machines' keys for them are not in it.");
 	const std::vector<openpgp::Recipient> sealedTo = recipients();
 	std::vector<work_log::Call> calls = work_log::calls_of(request.matter_id, request.chat_id);
-	if (calls.empty() == true) throw std::runtime_error("Nothing of this conversation's work is kept on this computer yet.");
+	if (calls.empty() == true) throw std::runtime_error("Nothing of this conversation's work has been kept yet.");
 	const std::string sentAt = work_log::now_text();
 	const auto when = static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::seconds>(
 		std::chrono::system_clock::now().time_since_epoch()).count());
@@ -369,8 +383,11 @@ Sent send(const Request &request, const Signer &sign, const Poster &post) {
 		? answer.at("error").get<std::string>()
 		: std::string();
 	if (status == 401) throw std::runtime_error("Sign in to Singularity again, then send the work log.");
+	// Whatever Legal Machines answered in words is said as it said it: a
+	// refusal, or a fault on its side.
+	if (status >= 400 && said.empty() == false) throw std::runtime_error(said);
 	if (status == 403 || status == 413 || status == 429 || status == 400)
-		throw std::runtime_error(said.empty() == true ? std::string("Legal Machines did not take the work log.") : said);
+		throw std::runtime_error("Legal Machines did not take the work log.");
 	if (status < 200 || status >= 300 || answer.is_object() == false)
 		throw std::runtime_error("Legal Machines isn't answering. Try sending the work log again in a moment.");
 	Sent sent;

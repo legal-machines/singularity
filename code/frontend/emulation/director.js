@@ -11,9 +11,9 @@ const REPLAY_AFTER_MS = 12000;
 
 let director = null;
 
-// The one director of this frame's app (D-134): it plays the scene onboarding
-// asks for, by the app's own functions and on its own elements, so what shows
-// is the app at work, not a picture of it.
+// The one director of this frame's app: it plays the scene onboarding asks
+// for, by the app's own functions and on its own elements, so what shows is
+// the app at work, not a picture of it.
 export function directorOfThisFrame() {
 	director ??= createDirector();
 	return director;
@@ -49,8 +49,8 @@ function createDirector() {
 			wake();
 		}
 		// The member introducing themselves on onboarding's first page, as they
-		// type (D-162): the app draws them at once, and on the team's page the
-		// row they join in comes into view.
+		// type: the app draws them at once, and on the team's page the row they
+		// join in comes into view.
 		if (event.data.type === "profile") {
 			applyProfile(event.data.profile);
 			app?.()?.setState?.((previous) => ({ ...previous }));
@@ -207,7 +207,7 @@ function createDirector() {
 			hidePointer() {
 				if (pointer != null) delete pointer.dataset.shown;
 			},
-			// A colleague pointed at reacts as it does under a hand (D-069).
+			// A colleague pointed at reacts as it does under a hand.
 			async hover(element) {
 				await point(element);
 				element.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));

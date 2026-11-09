@@ -1,4 +1,7 @@
 .page {
+	/* A thread, its title and its reply box stand in a conversation's
+	   column. */
+	--column: var(--conversation-column);
 	position: relative;
 	display: flex;
 	flex-direction: column;

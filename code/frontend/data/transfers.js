@@ -1,8 +1,8 @@
 // What goes on between this computer and the firm's others, said while it goes
-// on (D-207): a Matter coming here or going to another computer, by its bytes -
-// how much there is, known before any of it opens, and how much has come -,
-// and this computer waiting for another's answer. Pure: the window's
-// coordination (coordination.js) reads the backend and shows what this says.
+// on: a Matter coming here or going to another computer, by its bytes - how
+// much there is, known before any of it opens, and how much has come -, and
+// this computer waiting for another's answer. Pure: the window's coordination
+// (coordination.js) reads the backend and shows what this says.
 
 const KIB = 1024;
 const MIB = 1024 * KIB;
@@ -41,8 +41,8 @@ function whoseComputer(deviceId, names, code) {
 
 // A Matter taken here is whole once its key is here, nothing of it is still
 // coming, and something sealed of it came: the computer that gives a Matter
-// says first what it holds (D-207), so before anything came, "nothing coming"
-// only means nothing was said yet.
+// says first what it holds, so before anything came, "nothing coming" only
+// means nothing was said yet.
 export function isWhole(link) {
 	return link?.state == "carried" && (link.receiving ?? []).length == 0 && (link.heard ?? []).length > 0;
 }
@@ -71,11 +71,9 @@ export function transferNotices(matters, { deviceCode = "", names = new Map(), w
 	accepted = new Map(), givenHere = new Set(), now = Date.now() } = {}) {
 	const notices = [];
 	const stillGoing = new Set();
-	// A Matter the member accepted here (D-205) is said from the moment they
-	// accept it until it is whole here, however small it is and however fast it
-	// comes, with how much of what the offer said has come: the member waits for
-	// it (the owner, 2026-11-02: a Matter came in half a second and nothing said
-	// how much had come).
+	// A Matter the member accepted here is said from the moment they accept it
+	// until it is whole here, however small it is and however fast it comes,
+	// with how much of what the offer said has come: the member waits for it.
 	for (const [matterId, taken] of accepted) {
 		const link = (matters ?? []).find(entry => entry.matterId == matterId) ?? null;
 		if (isWhole(link)) continue;
@@ -173,8 +171,8 @@ export function transferNotices(matters, { deviceCode = "", names = new Map(), w
 	return { notices, watched: stillGoing };
 }
 
-// How a notice no longer called for ends (D-207): "done" when what it told of
-// came whole - the Matter carried here with nothing more coming, or every byte
+// How a notice no longer called for ends: "done" when what it told of came
+// whole - the Matter carried here with nothing more coming, or every byte
 // going to that computer confirmed -, "drop" otherwise, unsaid.
 export function endingOf(item, matters) {
 	if (item.kind == "wait") return "drop";

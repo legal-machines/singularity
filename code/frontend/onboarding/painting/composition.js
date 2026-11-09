@@ -17,13 +17,13 @@ export const VIEW = [SIZE[0] - EDGE - (HEIGHT * 3) / 4, EDGE, (HEIGHT * 3) / 4, 
 // draws him in front of it). The stool behind him stays behind him.
 const find = (id) => OBJECTS.find((object) => object.id === id);
 const behindDesk = [find("stool"), { ...find("client"), depth: 0.62 }];
-// The sheet of paper on the floor at the foot of the frame is left out here
-// (the owner, 2026-10-26).
+// The sheet of paper on the floor at the foot of the frame is left out
+// here.
 export const REMOVED = new Set(["floorPaperRight"]);
 // The scene's layers that never reach this frame, however the camera breathes
 // and the figures move (80 of the painting's points to spare): they are left
-// out, so they are neither loaded nor drawn (D-133). composition.test.js
-// measures them from their images, and that no other file is shipped.
+// out, so they are neither loaded nor drawn. composition.test.js measures
+// them from their images, and that no other file is shipped.
 export const OFF_FRAME = new Set([
 	"entranceBundles", "wallBag", "floorPaperLeft", "floorPaperMiddle", "leftRear", "door", "leftFront",
 	"clerk", "leftDesk", "waitingRear", "basketWoman", "floorPail", "floorLeft",

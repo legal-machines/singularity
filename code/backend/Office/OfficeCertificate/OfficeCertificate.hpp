@@ -5,15 +5,15 @@
 #include <string>
 
 // The certificate Singularity's Office connection presents on this
-// computer's loopback (D-105). Word, Excel and Outlook load a pane only over
-// HTTPS, so the panes Singularity serves from this computer need a
-// certificate the system trusts for localhost.
+// computer's loopback. Word, Excel and Outlook load a pane only over HTTPS,
+// so the panes Singularity serves from this computer need a certificate the
+// system trusts for localhost.
 //
 // It is one self-signed server certificate, for localhost and 127.0.0.1 and
 // for serving only: it is no authority and signs nothing, so trusting it
 // trusts Singularity's own panes on this computer and nothing else. The
 // system is asked to trust that one certificate as itself (Windows' Trusted
-// People store), never to trust a new authority (docs/OFFICE.md).
+// People store), never to trust a new authority.
 namespace singularity::office {
 
 struct LocalCertificate {

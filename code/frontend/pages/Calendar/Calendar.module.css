@@ -1,5 +1,5 @@
-/* The calendar (D-076): Google Calendar's functions, in Folio's own look
-   (DESIGN.md): white, fine lines, Roboto, colour only for the calendars. */
+/* The calendar: Google Calendar's functions, in Folio's own look: white,
+   fine lines, Roboto, colour only for the calendars. */
 
 .tokens {
 	--c-surface: var(--sheet);
@@ -343,7 +343,7 @@
 	min-height: 0;
 }
 
-/* The panel, in the shared sidebar under the places (D-081). */
+/* The panel, in the shared sidebar under the places. */
 .panel {
 	display: flex;
 	flex-direction: column;

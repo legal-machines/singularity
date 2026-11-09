@@ -43,7 +43,7 @@ enum class Quantity { None, Money, Rate, Date, Duration, Number, Count, Rows, Fl
 // ---------------------------------------------------------------------------
 // Text helpers.
 
-// A case-folded copy (utf8proc): "Не ранее" and "не ранее" read alike. The text
+// A case-folded copy (utf8proc): "…" and "…" read alike. The text
 // itself when it is not valid UTF-8.
 std::string folded(std::string_view text) {
 	if (text.empty()) return {};
@@ -376,7 +376,7 @@ const Statement *statement_around(const std::vector<Statement> &statements, std:
 // Words beside a symbol (type in context).
 
 // The currency a sign, a code or a word right before or after a symbol names:
-// "$[[X]]", "[[X]] USD", "[[X]] dollars", «[[X]] руб.». "" when none.
+// "$[[X]]", "[[X]] USD", "[[X]] dollars", «…». "" when none.
 std::string currency_before(std::string_view text, std::size_t start) {
 	const std::size_t end = skip_spaces_back(text, start);
 	// "$" is a dollar of any country: its code is "$".
@@ -410,8 +410,8 @@ std::string currency_after(std::string_view text, std::size_t end) {
 	for (const auto &[word, code] : codes)
 		if (starts_with(ahead, word) && word_ends_at(ahead, 3)) return code;
 	static const std::pair<const char *, const char *> words[] = {{"dollar", "USD"}, {"euro", "EUR"}, {"rouble", "RUB"},
-		{"ruble", "RUB"}, {"pound", "GBP"}, {"\xD1\x80\xD1\x83\xD0\xB1", "RUB"} /* руб */,
-		{"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xBB", "USD"} /* долл */, {"\xD0\xB5\xD0\xB2\xD1\x80\xD0\xBE", "EUR"} /* евро */};
+		{"ruble", "RUB"}, {"pound", "GBP"}, {"\xD1\x80\xD1\x83\xD0\xB1", "RUB"} /* … */,
+		{"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xBB", "USD"} /* … */, {"\xD0\xB5\xD0\xB2\xD1\x80\xD0\xBE", "EUR"} /* … */};
 	for (const auto &[word, code] : words)
 		if (starts_with(ahead, word)) return code;
 	return {};
@@ -423,11 +423,11 @@ bool percent_after(std::string_view text, std::size_t end) {
 	if (text[from] == '%' || text.compare(from, 3, "\xEF\xBC\x85") == 0) return true;
 	const std::string ahead = folded_ahead(text, from, 24);
 	return starts_with(ahead, "percent") || starts_with(ahead, "per cent")
-		|| starts_with(ahead, "\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82");  // процент
+		|| starts_with(ahead, "\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82");  // …
 }
 
-// A unit of time right after a symbol ("[[X]] days", «[[X]] дней»); `years`
-// says whether a year word counts ("[[Date3]] года" is how a Russian date ends).
+// A unit of time right after a symbol ("[[X]] days", «…»); `years`
+// says whether a year word counts ("…" is how a Russian date ends).
 bool period_after(std::string_view text, std::size_t end, bool years) {
 	const std::size_t from = skip_spaces(text, end);
 	if (from >= text.size()) return false;
@@ -441,12 +441,10 @@ bool period_after(std::string_view text, std::size_t end, bool years) {
 	}
 	if (years && (starts_with(ahead, "year") && word_ends_at(ahead, ahead.size() > 4 && ahead[4] == 's' ? 5 : 4)))
 		return true;
-	// дн(я/ей), день, недел-, месяц-, рабоч- (рабочих дней), календарн-.
 	for (const char *stem : {"\xD0\xB4\xD0\xBD", "\xD0\xB4\xD0\xB5\xD0\xBD\xD1\x8C", "\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB",
 			"\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86", "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87",
 			"\xD0\xBA\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB4\xD0\xB0\xD1\x80\xD0\xBD"})
 		if (starts_with(ahead, stem)) return true;
-	// год, года, лет.
 	if (years && (starts_with(ahead, "\xD0\xB3\xD0\xBE\xD0\xB4") || starts_with(ahead, "\xD0\xBB\xD0\xB5\xD1\x82")))
 		return true;
 	return false;
@@ -476,7 +474,7 @@ bool type_fits_context(const Symbol &symbol, std::string_view text) {
 enum class Direction { None, Lower, Upper };
 
 // The direction of the bound word nearest before `start` (on the same line),
-// or None when there is none. «до [[X]] включительно» is an upper bound.
+// or None when there is none. «…» is an upper bound.
 Direction bound_word_before(std::string_view text, std::size_t start, std::size_t end) {
 	std::size_t from = start > 72 ? start - 72 : 0;
 	const std::size_t line = text.rfind('\n', start == 0 ? 0 : start - 1);
@@ -485,17 +483,17 @@ Direction bound_word_before(std::string_view text, std::size_t start, std::size_
 	const std::string window = folded(text.substr(from, start - from));
 	static const char *lower[] = {"not before", "on or after", "at least", "no earlier than", "not earlier than",
 		"not less than", "no less than", "no sooner than",
-		"\xD0\xBD\xD0\xB5 \xD1\x80\xD0\xB0\xD0\xBD\xD0\xB5\xD0\xB5",                  // не ранее
-		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                  // не менее
-		"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD0\xBD\xD0\xB0\xD1\x8F \xD1\x81",          // начиная с
-		"\xD0\xBD\xD0\xB5 \xD1\x80\xD0\xB0\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",          // не раньше
-		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5"};         // не меньше
+		"\xD0\xBD\xD0\xB5 \xD1\x80\xD0\xB0\xD0\xBD\xD0\xB5\xD0\xB5",                  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                  // …
+		"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD0\xBD\xD0\xB0\xD1\x8F \xD1\x81",          // …
+		"\xD0\xBD\xD0\xB5 \xD1\x80\xD0\xB0\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",          // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5"};         // …
 	static const char *upper[] = {"no later than", "not later than", "on or before", "at most", "not after",
 		"not more than", "no more than",
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",  // не позднее
-		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                  // не более
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB6\xD0\xB5",                  // не позже
-		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5"};         // не больше
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB6\xD0\xB5",                  // …
+		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5"};         // …
 	const auto last_of = [&](const char *const *words, std::size_t count) {
 		std::size_t best = kNone;
 		for (std::size_t index = 0; index < count; ++index) {
@@ -508,9 +506,9 @@ Direction bound_word_before(std::string_view text, std::size_t start, std::size_
 	};
 	std::size_t lowerAt = last_of(lower, std::size(lower));
 	std::size_t upperAt = last_of(upper, std::size(upper));
-	// «до [[X]] включительно»: "до" right before, "включительно" right after.
+	// «…»: "…" right before, "…" right after.
 	const std::string before = trimmed(window);
-	const std::string until = "\xD0\xB4\xD0\xBE";  // до
+	const std::string until = "\xD0\xB4\xD0\xBE";  // …
 	const bool untilAlone = before.size() >= until.size()
 		&& before.compare(before.size() - until.size(), until.size(), until) == 0
 		&& (before.size() == until.size() || (!is_letter_byte(before[before.size() - until.size() - 1])
@@ -518,10 +516,10 @@ Direction bound_word_before(std::string_view text, std::size_t start, std::size_
 	if (untilAlone) {
 		const std::string after = folded_ahead(text, end, 40);
 		if (after.find("\xD0\xB2\xD0\xBA\xD0\xBB\xD1\x8E\xD1\x87\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD\xD0\xBE") != kNone)
-			upperAt = window.size() + 1;  // включительно: nearest of all
+			upperAt = window.size() + 1;  // …: nearest of all
 	}
 	// A range written out: "between [[Lo]] and [[Hi]]", "from [[Lo]] to [[Hi]]",
-	// «с [[Lo]] по [[Hi]]», «между [[Lo]] и [[Hi]]» - each end by its place.
+	// «…» - each end by its place.
 	const auto ends_with_word = [&](const char *word) {
 		const std::string_view wanted(word);
 		if (before.size() < wanted.size() || before.compare(before.size() - wanted.size(), wanted.size(), wanted) != 0) return false;
@@ -530,10 +528,10 @@ Direction bound_word_before(std::string_view text, std::size_t start, std::size_
 		return previous == ' ' || previous == '(' || previous == ',';
 	};
 	const bool opensRange = ends_with_word("between") || ends_with_word("from")
-		|| ends_with_word("\xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83")   // между
-		|| ends_with_word("\xD1\x81");                                          // с
+		|| ends_with_word("\xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83")   // …
+		|| ends_with_word("\xD1\x81");                                          // …
 	const bool closesRange = (ends_with_word("and") || ends_with_word("to") || ends_with_word("through")
-			|| ends_with_word("\xD0\xB8") || ends_with_word("\xD0\xBF\xD0\xBE"))  // и, по
+			|| ends_with_word("\xD0\xB8") || ends_with_word("\xD0\xBF\xD0\xBE"))  // …
 		&& (window.find("between ") != kNone || window.find("from ") != kNone
 			|| window.find("\xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83 ") != kNone || window.find("\xD1\x81 ") != kNone)
 		&& window.find("[[") != kNone;
@@ -905,7 +903,7 @@ struct Claim {
 
 // Every arithmetic claim the text makes about one symbol: "[[X]] = [[A]] -
 // [[B]]", "[[A]] + [[B]] = [[X]]", "[[X]] ([[A]] minus [[B]])", "[[X]], the
-// sum of [[A]] and [[B]]" (and «сумма», «разница между»).
+// sum of [[A]] and [[B]]" (and «…»).
 std::vector<Claim> claims_in(const std::string &text, const std::vector<Symbol> &symbols,
 		const std::vector<Statement> &statements, const Atoms &atoms) {
 	std::vector<Claim> claims;
@@ -982,9 +980,9 @@ std::vector<Claim> claims_in(const std::string &text, const std::vector<Symbol> 
 		std::size_t skip = 0;
 		static const std::pair<const char *, int> phrases[] = {{"the sum of ", 0}, {"the total of ", 0},
 			{"the difference between ", 1}, {"the difference of ", 1}, {"the product of ", 2},
-			{"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB0 ", 0},                                        // сумма
-			{"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBD\xD0\xB8\xD1\x86\xD0\xB0 \xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83 ", 1},  // разница между
-			{"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBD\xD0\xBE\xD1\x81\xD1\x82\xD1\x8C ", 1}};              // разность
+			{"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB0 ", 0},                                        // …
+			{"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBD\xD0\xB8\xD1\x86\xD0\xB0 \xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83 ", 1},  // …
+			{"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBD\xD0\xBE\xD1\x81\xD1\x82\xD1\x8C ", 1}};              // …
 		for (const auto &[phrase, meaning] : phrases) {
 			if (!starts_with(ahead, phrase)) continue;
 			skip = std::string_view(phrase).size();
@@ -1008,7 +1006,7 @@ std::vector<Claim> claims_in(const std::string &text, const std::vector<Symbol> 
 			const std::string joint = folded_ahead(text, at, 8);
 			if (starts_with(joint, ",")) at += 1;
 			else if (starts_with(joint, "and ")) at += 4;
-			else if (starts_with(joint, "\xD0\xB8 ")) at += 3;  // и
+			else if (starts_with(joint, "\xD0\xB8 ")) at += 3;  // …
 			else break;
 		}
 		if (operands.size() < 2) continue;
@@ -1375,7 +1373,7 @@ FigureSpan raw_span(const std::string &text, std::size_t offset, const std::vect
 	switch (figure->kind) {
 		case semantic::RecognisedFigure::Kind::Date: {
 			span.kind = GapKind::Date;
-			// «15 марта 2026 года», «… 2026 г.»: the year word is the date's own.
+			// «…»: the year word is the date's own.
 			const std::size_t after = skip_spaces(text, span.start + span.length);
 			for (const char *word : {"\xD0\xB3\xD0\xBE\xD0\xB4\xD0\xB0", "\xD0\xB3."}) {
 				const std::size_t length = std::string_view(word).size();
@@ -1413,7 +1411,7 @@ std::string gap_text(GapKind kind, semantic::Language language) {
 }
 
 // Whether a "." at `at` closes an abbreviation or an initial ("No. 17",
-// "Mr. Smith", "J. Smith", «ст. 395», «т. е.») rather than a sentence.
+// "Mr. Smith", "J. Smith", «…») rather than a sentence.
 bool abbreviation_before(std::string_view text, std::size_t at) {
 	std::size_t from = at;
 	while (from > 0 && (is_letter_byte(text[from - 1]) || (static_cast<unsigned char>(text[from - 1]) & 0xC0) == 0x80
@@ -1421,7 +1419,7 @@ bool abbreviation_before(std::string_view text, std::size_t at) {
 		--from;
 	const std::string word = folded(text.substr(from, at - from));
 	if (word.empty()) return false;
-	// One letter: an initial or «г.», «п.», «д.».
+	// One letter: an initial or «…».
 	std::size_t letters = 0;
 	for (std::size_t index = 0; index < word.size(); ++index)
 		if ((static_cast<unsigned char>(word[index]) & 0xC0) != 0x80 && word[index] != '.') ++letters;
@@ -1429,19 +1427,19 @@ bool abbreviation_before(std::string_view text, std::size_t at) {
 	static const std::set<std::string> known{"no", "nos", "nr", "mr", "mrs", "ms", "dr", "st", "inc", "ltd", "co", "corp",
 		"vs", "e.g", "i.e", "art", "arts", "sec", "secs", "para", "paras", "pp", "cl", "ch", "fig", "approx", "ref", "cf",
 		"jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
-		"\xD1\x81\xD1\x82",                              // ст
-		"\xD0\xBF\xD0\xBF",                              // пп
-		"\xD0\xB3\xD0\xB3",                              // гг
-		"\xD1\x80\xD1\x83\xD0\xB1",                    // руб
-		"\xD0\xBA\xD0\xBE\xD0\xBF",                    // коп
-		"\xD1\x82\xD1\x8B\xD1\x81",                    // тыс
-		"\xD0\xBC\xD0\xBB\xD0\xBD",                    // млн
-		"\xD0\xBC\xD0\xBB\xD1\x80\xD0\xB4",          // млрд
-		"\xD1\x81\xD0\xBC",                              // см
-		"\xD1\x81\xD1\x82\xD1\x80",                    // стр
-		"\xD1\x83\xD0\xBB",                              // ул
-		"\xD1\x82.\xD0\xB5",                             // т.е
-		"\xD0\xB8\xD0\xBC"};                             // им
+		"\xD1\x81\xD1\x82",                              // …
+		"\xD0\xBF\xD0\xBF",                              // …
+		"\xD0\xB3\xD0\xB3",                              // …
+		"\xD1\x80\xD1\x83\xD0\xB1",                    // …
+		"\xD0\xBA\xD0\xBE\xD0\xBF",                    // …
+		"\xD1\x82\xD1\x8B\xD1\x81",                    // …
+		"\xD0\xBC\xD0\xBB\xD0\xBD",                    // …
+		"\xD0\xBC\xD0\xBB\xD1\x80\xD0\xB4",          // …
+		"\xD1\x81\xD0\xBC",                              // …
+		"\xD1\x81\xD1\x82\xD1\x80",                    // …
+		"\xD1\x83\xD0\xBB",                              // …
+		"\xD1\x82.\xD0\xB5",                             // …
+		"\xD0\xB8\xD0\xBC"};                             // …
 	return known.count(word) > 0;
 }
 
@@ -1454,8 +1452,8 @@ bool continues_sentence(std::string_view text, std::size_t at) {
 	if ((text[at] >= 'a' && text[at] <= 'z') || is_digit(text[at])) return true;
 	if (at + 1 < text.size()) {
 		const auto next = static_cast<unsigned char>(text[at + 1]);
-		if (byte == 0xD0 && next >= 0xB0 && next <= 0xBF) return true;  // а-п
-		if (byte == 0xD1 && next >= 0x80 && next <= 0x8F) return true;  // р-я
+		if (byte == 0xD0 && next >= 0xB0 && next <= 0xBF) return true;  // …
+		if (byte == 0xD1 && next >= 0x80 && next <= 0x8F) return true;  // …
 	}
 	return false;
 }
@@ -1676,7 +1674,7 @@ ContractResult check(const std::string &protected_text, const std::string &json_
 		if (figure.value && (safe_constant(*figure.value) || grounding.keys.count(semantic::value_key(*figure.value)) > 0))
 			continue;
 		// A count the material writes as a bare number - a ledger's "E7 = 19",
-		// written back as "19 дней": the same count, with its unit said (live R2,
+		// written back as "…": the same count, with its unit said (live R2,
 		// 27 Sep 2026: correct day counts were cut from the answer).
 		if (figure.value && (figure.value->kind == semantic::Kind::Duration || figure.value->kind == semantic::Kind::Count)
 				&& figure.value->amount.is_integer()
@@ -1714,24 +1712,24 @@ ContractResult check(const std::string &protected_text, const std::string &json_
 		const bool asksForFigure = !request.empty() && contains_any(request, {"how much", "amount", "how many", "total",
 			"owed", "outstanding", "balance", "deadline", "due date", "when ", "what date", "which date", "interest",
 			"penalty", "shortfall",
-			"\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBB\xD1\x8C\xD0\xBA\xD0\xBE",                       // сколько
-			"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",                                               // сумм
-			"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBC\xD0\xB5\xD1\x80",                               // размер
-			"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                               // срок
-			"\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xB4\xD0\xB0",                                       // когда
-			"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xBD",       // задолженн
-			"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA",               // неустойк
-			"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82"});                     // процент
+			"\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBB\xD1\x8C\xD0\xBA\xD0\xBE",                       // …
+			"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",                                               // …
+			"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBC\xD0\xB5\xD1\x80",                               // …
+			"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                               // …
+			"\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xB4\xD0\xB0",                                       // …
+			"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xBD",       // …
+			"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA",               // …
+			"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82"});                     // …
 		static const char *undetermined[] = {"cannot be determined", "can't be determined", "cannot determine",
 			"can't determine", "cannot be calculated", "can't be calculated", "cannot calculate", "cannot be computed",
 			"not possible to determine", "not possible to calculate", "unable to determine", "unable to calculate",
 			"impossible to determine", "impossible to calculate", "cannot be established",
-			"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x82\xD1\x8C",  // невозможно определить
-			"\xD0\xBD\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xB7\xD1\x8F \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x82\xD1\x8C",  // нельзя определить
-			"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x8F\xD0\xB5\xD1\x82\xD1\x81\xD1\x8F \xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD1\x8B\xD0\xBC",  // не представляется возможным
-			"\xD0\xB1\xD0\xB5\xD0\xB7 \xD0\xBF\xD0\xBE\xD0\xB4\xD1\x81\xD1\x82\xD0\xB0\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xBA\xD0\xB8",  // без подстановки
-			"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD1\x80\xD0\xB0\xD1\x81\xD1\x81\xD1\x87\xD0\xB8\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C",  // невозможно рассчитать
-			"\xD0\xBD\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xB7\xD1\x8F \xD1\x80\xD0\xB0\xD1\x81\xD1\x81\xD1\x87\xD0\xB8\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C"};  // нельзя рассчитать
+			"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x82\xD1\x8C",  // …
+			"\xD0\xBD\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xB7\xD1\x8F \xD0\xBE\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x82\xD1\x8C",  // …
+			"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x8F\xD0\xB5\xD1\x82\xD1\x81\xD1\x8F \xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD1\x8B\xD0\xBC",  // …
+			"\xD0\xB1\xD0\xB5\xD0\xB7 \xD0\xBF\xD0\xBE\xD0\xB4\xD1\x81\xD1\x82\xD0\xB0\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xBA\xD0\xB8",  // …
+			"\xD0\xBD\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE \xD1\x80\xD0\xB0\xD1\x81\xD1\x81\xD1\x87\xD0\xB8\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C",  // …
+			"\xD0\xBD\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xB7\xD1\x8F \xD1\x80\xD0\xB0\xD1\x81\xD1\x81\xD1\x87\xD0\xB8\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C"};  // …
 		std::size_t undeterminedAt = kNone;
 		for (const char *phrase : undetermined) {
 			const std::size_t at = answer.find(phrase);
@@ -1756,7 +1754,7 @@ ContractResult check(const std::string &protected_text, const std::string &json_
 			from = end + 1;
 			const std::string lower = folded(line);
 			if (lower.find("same role, two sources") == kNone
-					&& lower.find("\xD0\xBE\xD0\xB4\xD0\xBD\xD0\xB0 \xD1\x80\xD0\xBE\xD0\xBB\xD1\x8C") == kNone)  // одна роль
+					&& lower.find("\xD0\xBE\xD0\xB4\xD0\xBD\xD0\xB0 \xD1\x80\xD0\xBE\xD0\xBB\xD1\x8C") == kNone)  // …
 				continue;
 			std::vector<std::string> sides;
 			for (const markers::Parsed &parsed : markers::find_all(line))

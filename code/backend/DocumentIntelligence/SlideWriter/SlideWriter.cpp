@@ -517,7 +517,7 @@ bool loadSlides(const std::filesystem::path& path, std::vector<Slide>& slides, s
 }
 
 
-// ---- Whether a slide's words still fit it (2026-10-29) -----------------------
+// ---- Whether a slide's words still fit it -----------------------
 //
 // Unicorn rewrote the IC deck's diligence slide as eighteen lines in a box that
 // grows with its words: PowerPoint drew them over the footer and the last off

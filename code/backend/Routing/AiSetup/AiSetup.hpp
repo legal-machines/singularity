@@ -12,11 +12,11 @@
 
 namespace singularity::routing {
 
-// The real Beta 1 AI Setup roles (AI_SETUP_CONTRACT.md). `Gaius`/Triplets is
-// reserved future capability, not a Beta 1 role, and is deliberately absent
-// here - see all_ai_setup_roles() below, which is the only place a role can
-// enter resolution/UI, so a future role is a new enumerator plus a new
-// registry entry, never an invented card.
+// The real Beta 1 AI Setup roles. `Gaius`/Triplets is reserved future
+// capability, not a Beta 1 role, and is deliberately absent here - see
+// all_ai_setup_roles below, which is the only place a role can enter
+// resolution/UI, so a future role is a new enumerator plus a new registry
+// entry, never an invented card.
 enum class AiSetupRole { Reasoning, Anonymization, SemanticSearch, Context, Drafting };
 
 // Wire/persistence identifiers - lower camelCase, stable across releases
@@ -24,10 +24,9 @@ enum class AiSetupRole { Reasoning, Anonymization, SemanticSearch, Context, Draf
 const char *to_string(AiSetupRole role);
 std::optional<AiSetupRole> ai_setup_role_from_string(const std::string &value);
 
-// The exact product-facing role name (AI_SETUP_CONTRACT.md, phase-06 spec) -
-// backend truth so the frontend never re-hardcodes its own copy of these
-// names, and so a domain error message below can name a role in plain
-// language.
+// The exact product-facing role name - backend truth so the frontend never
+// re-hardcodes its own copy of these names, and so a domain error message
+// below can name a role in plain language.
 const char *display_label(AiSetupRole role);
 
 // Canonical Beta 1 order, used everywhere a role list is produced so Node
@@ -38,8 +37,7 @@ const std::vector<AiSetupRole> &all_ai_setup_roles();
 // One role's assignment at a single inheritance level (Node default,
 // Project override, Chat override or a one-time operation override). A
 // level that has not customized a role simply omits it here - overrides are
-// persisted as explicit differences, never a copied full configuration
-// (D-006, AI_SETUP_CONTRACT.md).
+// persisted as explicit differences, never a copied full configuration.
 struct RoleAssignment {
   AiSetupRole role;
   ModelTarget model;
@@ -48,11 +46,6 @@ struct RoleAssignment {
 // Only entries a level actually customized - sparse by construction.
 using AiSetupOverrideSet = std::vector<RoleAssignment>;
 
-// Where an effective role assignment actually came from. `Automatic` is
-// deliberately absent: this resolver only ever performs deterministic
-// inheritance, never dynamic routing, so it must never produce a source a
-// UI could mistake for real Automatic/"Singularity chooses" routing - see
-// AI_SETUP_CONTRACT.md's "Automatic is not inheritance".
 enum class AiSetupSource { NodeDefault, ProjectOverride, ChatOverride, OperationOverride, Unassigned };
 const char *to_string(AiSetupSource source);
 
@@ -65,20 +58,18 @@ struct ResolvedRoleAssignment {
 };
 
 // The Node's own canonical Reasoning assignment - role_assignments' single
-// "reasoning" entry (Phase 06, AI_SETUP_CONTRACT.md). This is the one
-// implementation the real inference resolution path
-// (Routing/InferenceExecutor/InferenceExecutor.cpp's
-// resolve_generation_inputs()) and every capability/effective-setup query
+// "reasoning" entry. This is the one implementation the real inference
+// resolution path (Routing/InferenceExecutor/InferenceExecutor.cpp's
+// resolve_generation_inputs) and every capability/effective-setup query
 // share, so changing the canonical Reasoning assignment always changes what
 // a real request with no explicit override actually resolves to -
 // LocalNodeSetup::default_model is never independently consulted for this.
 std::optional<ModelTarget> node_default_reasoning_target(const platform::LocalNodeSetup &setup);
 
 // The one place effective AI Setup is decided - Node default -> Project
-// override -> Chat override -> one-time operation override
-// (AI_SETUP_CONTRACT.md's "Inheritance"). Each override set is checked in
-// that order and the first one naming `role` wins; a set that never names a
-// role is pure inheritance, not a copied value.
+// override -> Chat override -> one-time operation override. Each override
+// set is checked in that order and the first one naming `role` wins; a set
+// that never names a role is pure inheritance, not a copied value.
 ResolvedRoleAssignment resolve_role(AiSetupRole role,
                                     const AiSetupOverrideSet &node_default,
                                     const AiSetupOverrideSet &project_override,
@@ -99,8 +90,8 @@ std::vector<ResolvedRoleAssignment> resolve_effective_setup(
 // no family restriction. `Gaius`/Triplets never appears here - Beta 1 has
 // no Triplets role to be compatible with.
 
-// SET-2. Whether a person can actually choose the model that fills this role,
-// or whether Singularity itself fills it and an assignment would change nothing.
+// Whether a person can actually choose the model that fills this role, or
+// whether Singularity itself fills it and an assignment would change nothing.
 // Protection is the case that matters: Papinian runs Singularity's own bundled
 // detection package, and nothing a person assigns to Anonymization has ever
 // altered what protects their data. Offering that choice tells them something
@@ -120,14 +111,14 @@ struct RoleAssignmentEntry {
   std::string model_id;
 };
 
-// The set kept when a person saves `next` over `previous` (Beta 1 #41).
-// Only what the save changes is checked, through `validate` (in the app, the
-// live registries: validate_role_model_assignment). An entry kept exactly as
-// it was stays as it was, even when its model has since gone away, so one
-// stale role never blocks changing or clearing another. A role Singularity
-// fills itself (is_role_assignable) is never kept: an old entry for it is
-// dropped, and a new one is refused with fixed_role_reason. Throws for a role
-// that does not exist and for any changed entry `validate` refuses.
+// The set kept when a person saves `next` over `previous`. Only what the save
+// changes is checked, through `validate` (in the app, the live registries:
+// validate_role_model_assignment). An entry kept exactly as it was stays as
+// it was, even when its model has since gone away, so one stale role never
+// blocks changing or clearing another. A role Singularity fills itself
+// (is_role_assignable) is never kept: an old entry for it is dropped, and a
+// new one is refused with fixed_role_reason. Throws for a role that does not
+// exist and for any changed entry `validate` refuses.
 std::vector<RoleAssignmentEntry> accept_assignment_set(const std::vector<RoleAssignmentEntry> &previous,
     const std::vector<RoleAssignmentEntry> &next,
     const std::function<void(AiSetupRole, const ModelTarget &)> &validate);
@@ -146,9 +137,6 @@ bool is_local_model_compatible(AiSetupRole role, const std::string &family,
                                hardware::ModelArchitectureKind architecture_kind);
 
 // Whether a connected provider's model is a valid candidate for `role`.
-// Family-restricted roles (Anonymization, Semantic search) never accept a
-// provider model - see PRIVACY_CONTRACT.md/AI_SETUP_CONTRACT.md, protection
-// and retrieval families stay local.
 bool is_provider_model_compatible(AiSetupRole role, bool text_capable);
 
 // validate_role_model_assignment() - the live-registry-aware counterpart
@@ -162,11 +150,8 @@ bool is_provider_model_compatible(AiSetupRole role, bool text_capable);
 
 // --- Task profile ---------------------------------------------------------
 //
-// Which roles a given kind of AI operation actually needs, and which one of
-// those roles produces the user-facing result - AI_SETUP_CONTRACT.md's
-// "Primary model and supporting roles". Frontend never infers this; it is
-// backend truth needed for correct Retry/"Compare with another model" and
-// provenance.
+// Frontend never infers this; it is backend truth needed for correct
+// Retry/"Compare with another model" and provenance.
 
 enum class AiOperationKind { ConversationalReasoning, Drafting };
 const char *to_string(AiOperationKind kind);
@@ -190,11 +175,10 @@ struct TaskProfile {
 
 const TaskProfile &task_profile_for(AiOperationKind kind);
 
-// Which AiOperationKind a legal task preset id maps to (phase-22-chat-tasks-
-// ai-setup.md's "Operation setup / one-time override") - the one place a
+// Which AiOperationKind a legal task preset id maps to - the one place a
 // Routing/LegalTaskPresets/LegalTaskPresets.hpp preset id becomes a real
 // task profile/primary role. Only "draft" resolves the real dedicated
-// drafting_profile() defined above; every other id, including "general" and
+// drafting_profile defined above; every other id, including "general" and
 // any id this function does not recognize, is ordinary conversational legal
 // work - callers that must reject an unrecognized preset id outright do so
 // against LegalTaskPresets.hpp's own registry, not by relying on this

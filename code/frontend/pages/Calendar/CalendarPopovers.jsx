@@ -58,9 +58,7 @@ export function Popover({ anchor, wide, onClose, children }) {
 	}, [onClose]);
 
 	// Set at the page's top, with the calendar's tokens: it stands where its
-	// anchor is, in the window, never cut at the calendar's edge (2026-10-31:
-	// "Record time" now stands in the shared sidebar, and its form opened half
-	// under it).
+	// anchor is, in the window, never cut at the calendar's edge.
 	return createPortal(
 		<div ref={cardRef} className={[styles.tokens, styles.card, wide ? styles.card_wide : null].filter(Boolean).join(" ")} style={position ?? { visibility: "hidden" }} role="dialog">
 			{children}
@@ -155,8 +153,8 @@ const quarterHours = Array.from({ length: 96 }, (_, index) => index * 15);
 
 // Creating or changing an event, or recording time on a Matter: the time a
 // member records is billed at its rate, as a timesheet in ProjectMate is. In
-// the app it records time alone (D-181), billable unless the member says
-// otherwise, and a refusal of the backend's stands under it in its words.
+// the app it records time alone, billable unless the member says otherwise,
+// and a refusal of the backend's stands under it in its words.
 export function EventForm({ initial, isNew, calendars, isReal = false, problem, onChange, onSave, onCancel }) {
 	const form = initial;
 	const change = patch => onChange({ ...form, ...patch });
@@ -389,8 +387,8 @@ export function ViewMenu({ views, view, weekends, onView, onWeekends }) {
 	);
 }
 
-// Connecting a mail and calendar account (D-079). In the prototype nothing
-// leaves this computer: the connection is simulated, and says so.
+// Connecting a mail and calendar account. In the prototype nothing leaves
+// this computer: the connection is simulated, and says so.
 export function ConnectDialog({ account, onConnect, onClose }) {
 	useEffect(() => {
 		function handleKey(event) {

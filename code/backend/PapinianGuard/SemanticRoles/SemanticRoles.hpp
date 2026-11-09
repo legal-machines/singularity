@@ -15,7 +15,7 @@
 #include <vector>
 
 // Semantic roles (DESIGN4 §5, owner §6): what each protected fact IS in the
-// matter - "Base Rent", «Ставка неустойки (по договору)», "Paid" @ July 2026 -
+// matter - "Base Rent", «…», "Paid" @ July 2026 -
 // in the material's own words, plus a closed universal role class (LIMIT,
 // PRICE, BALANCE, DEADLINE ... PUBLIC). Read locally from defined terms,
 // labels, table headers and clause captions, never from a value; sent only in
@@ -93,7 +93,7 @@ struct CrossCheck {
 // "MONEY(USD/month)", "DATE(day)", "ENTITY(person)"; a role's repair applied.
 [[nodiscard]] std::string type_of_row(const RequestMappingEntry &row, const std::optional<RoleLabel> &role = std::nullopt);
 
-// The label's words in the quotes its language takes: "Base Rent", «Премия».
+// The label's words in the quotes its language takes: "Base Rent", «…».
 [[nodiscard]] std::string quoted_label(std::string_view words);
 
 // One symbol's line: `[[Amount3]] MONEY(USD/month) PRICE "Base Rent" · DOC_1 §4.1`.

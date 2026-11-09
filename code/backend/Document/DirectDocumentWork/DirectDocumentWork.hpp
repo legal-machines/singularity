@@ -57,10 +57,10 @@ enum class EditSurfaceMode { FillTemplate, UpdateExisting, InsertNew };
 // codebase already relies on - never from column header TEXT content, so
 // this works for any document using this common "banner + labeled body"
 // block convention, in any language. Proven structurally against the real
-// design-partner document this session: a "Риск 1.9"-style empty block is exactly
-// one banner row (title "Общество — [Наименование риска]" + severity cell)
-// followed by a header row ("Описание риска"/"Рекомендации") and a body row,
-// then a second header/body pair ("Дополнительная информация").
+// design-partner document this session: a "…"-style empty block is exactly
+// one banner row (title "…" + severity cell)
+// followed by a header row ("…") and a body row,
+// then a second header/body pair ("…").
 struct DocumentBlockSurface {
 	// "" when this block was discovered directly against a single known
 	// table/document (every existing call site before the real Chat->
@@ -90,7 +90,7 @@ struct DocumentBlockSurface {
 	std::string banner_metadata_text; // the banner's own severity/metadata cell text, verbatim ("" if none)
 	// A block's occupancy is decided from its real body fields alone (see
 	// all_fields_are_placeholder() below) - a template's own DEFAULT title/
-	// severity text (e.g. the design partner's own real "Средний" sitting in an
+	// severity text (e.g. the design partner's own real "…" sitting in an
 	// otherwise-empty block) is presentation scaffolding, never evidence the
 	// block itself is already used, and never a constraint on what the
 	// model may professionally conclude for it (this session's own real
@@ -164,7 +164,7 @@ struct EditSurfaceDecision {
 // Selection is occupancy-only - it is NOT severity-aware, and never re-runs
 // once a severity judgment is known: this session's own real product
 // correction established that a template's own default severity display
-// (e.g. the design partner's own real "Средний" sitting in an otherwise fully-
+// (e.g. the design partner's own real "…" sitting in an otherwise fully-
 // placeholder block) is presentation scaffolding, not a structural
 // constraint on what the model may professionally conclude. Selecting
 // "the area Singularity will let the model populate" and deciding "what that

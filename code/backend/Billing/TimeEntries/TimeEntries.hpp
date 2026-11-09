@@ -7,11 +7,11 @@
 #include <string>
 #include <vector>
 
-// The time members record on a Matter (D-181): the lawyers' own part of the
-// bill, beside the AI colleagues' work that Usage counts. A member records
-// their own time, on the day they did the work, and changes or takes back
-// only their own; nothing is recorded for them. Kept in the Matter's data, so
-// the Matter's other computers have it as they have its threads.
+// The time members record on a Matter: the lawyers' own part of the bill,
+// beside the AI colleagues' work that Usage counts. A member records their
+// own time, on the day they did the work, and changes or takes back only
+// their own; nothing is recorded for them. Kept in the Matter's data, so the
+// Matter's other computers have it as they have its threads.
 namespace singularity::billing {
 
 class TimeRefused : public std::runtime_error {

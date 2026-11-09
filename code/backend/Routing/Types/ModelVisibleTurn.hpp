@@ -79,11 +79,11 @@ struct ModelVisibleTurn {
 	// for a short think. Sent only to a model that takes it
 	// (providers::accepts_reasoning_effort()).
 	providers::ReasoningEffort reasoning_effort = providers::ReasoningEffort::Default;
-	// A colleague's talk (DocumentReview/ColleagueTalk, D-130): its protection
-	// legend says what a symbol is in a conversation's few words - the same
-	// symbols, masking and checks as every turn. The legend every other turn
-	// carries asks a model to write a party's name wherever it can, and in a
-	// conversation that made it greet the person by name at every message.
+	// A colleague's talk: its protection legend says what a symbol is in a
+	// conversation's few words - the same symbols, masking and checks as every
+	// turn. The legend every other turn carries asks a model to write a
+	// party's name wherever it can, and in a conversation that made it greet
+	// the person by name at every message.
 	bool is_conversation = false;
 	// Set on a turn that exists only to ask Singularity for facts about protected
 	// amounts, dates, rates and quantities (the facts step): protection reads

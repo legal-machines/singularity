@@ -147,14 +147,8 @@ bool is_symlink_or_hidden_within(const std::filesystem::path& root, const std::f
 
 // Never follows a symlink: a symlinked file's target - or a symlinked
 // directory's contents - could sit entirely outside the Project folder, and
-// std::filesystem::directory_entry::is_regular_file()/is_directory() follow
-// symlinks by default. Treating a symlink target as Project content would
-// let scanning walk (and hash) arbitrary filesystem locations, exactly what
-// Sec.19 (Security and path safety) of phase-08-documents-filesystem-states.md
-// forbids. recursive_directory_iterator itself never descends into a
-// symlinked directory unless directory_options::follow_directory_symlink is
-// set (it is not, below), so this check exists to also exclude a symlinked
-// *file* from being read as one.
+// std::filesystem::directory_entry::is_regular_file/is_directory follow
+// symlinks by default.
 //
 // Shared walk core for collect_real_folder_paths()/collect_real_entries()
 // below: visits every real, non-symlink, non-hidden/technical entry under
@@ -173,13 +167,8 @@ bool walk_real_entries(const std::filesystem::path& root, bool hash_files, std::
 	// Probed once, deliberately WITHOUT skip_permission_denied: that flag only
 	// means "keep walking past a permission failure found while descending
 	// into a subdirectory," matching ProjectStore's own "one unreadable
-	// subdirectory is skipped, not the whole scan" convention below. Passed to
-	// the very first (root) directory_iterator construction, it instead
-	// silently skips straight to an empty "end" iterator when root itself is
-	// unreadable - turning "the Project folder just lost access" into what
-	// looks exactly like "the Project folder is empty," precisely what Sec.8
-	// of phase-08-documents-filesystem-states.md forbids. This bare probe on
-	// root surfaces that failure as a real error_code instead.
+	// subdirectory is skipped, not the whole scan" convention below. This bare
+	// probe on root surfaces that failure as a real error_code instead.
 	std::error_code rootListError;
 	const std::filesystem::directory_iterator rootProbe(root, rootListError);
 	if (rootListError) return false;
@@ -304,15 +293,15 @@ void journal_transitions(matters::Matter& matter, const DocumentBefore& before, 
 	if (before.fingerprint != after.fingerprint) journal(matter, DocumentEventKind::Changed, after, &before);
 }
 
-// A new file's document id, the same on every computer that records it
-// (D-109). Two computers sharing a Matter's folder notice a new file within
-// the same second, and each records it before it has read the other's record:
-// a random id each left the Matter two documents for one file, one of them
-// soon marked gone. The id is read off the Matter and the file's place in it,
-// so the two records are one object and the Matter's store keeps one. Where a
-// document already holds that id (one that was at that place before and left
-// it), the next id of the same sequence is taken, which a computer that knows
-// the same documents takes too.
+// A new file's document id, the same on every computer that records it. Two
+// computers sharing a Matter's folder notice a new file within the same
+// second, and each records it before it has read the other's record: a random
+// id each left the Matter two documents for one file, one of them soon marked
+// gone. The id is read off the Matter and the file's place in it, so the two
+// records are one object and the Matter's store keeps one. Where a document
+// already holds that id (one that was at that place before and left it), the
+// next id of the same sequence is taken, which a computer that knows the same
+// documents takes too.
 std::string new_document_id(const matters::Matter& matter, const std::vector<matters::MatterDocument>& pending,
 		const std::string& relative_path) {
 	const auto isTaken = [&](const std::string& id) {
@@ -389,8 +378,8 @@ matters::MatterDocument* untimed_identity_match(
 // file, so a record another computer wrote names that computer's copy - its
 // modification time and size as that computer saw them - and they are no change
 // here. Counting them made two computers rewrite each other's record without
-// end: 300 records in four minutes (2026-10-29). The content's hash alone says
-// whether the document changed.
+// end: 300 records in four minutes. The content's hash alone says whether the
+// document changed.
 bool is_same_physical_file(const matters::MatterDocument& document, const ObservedFile& file) {
 	return document.filesystem_identity.device_id.has_value() && document.filesystem_identity.file_id.has_value()
 		&& file.device_id.has_value() && file.file_id.has_value()
@@ -1059,13 +1048,13 @@ bool process_pending_documents(const std::filesystem::path& workspace_path, matt
 			continue;
 		}
 
-		// An email file is read as its text (D-115), though no writer works on it:
-		// its kind stays unknown, so nothing ever writes into it.
+		// An email file is read as its text, though no writer works on it: its
+		// kind stays unknown, so nothing ever writes into it.
 		std::string extension = std::filesystem::u8path(document.relative_path).extension().u8string();
 		std::transform(extension.begin(), extension.end(), extension.begin(),
 			[](unsigned char character) { return static_cast<char>(std::tolower(character)); });
 		const bool isEmail = document.file_type == DocumentFormat::unknown && extension == ".eml";
-		// A picture likewise, by text recognition (D-115).
+		// A picture likewise, by text recognition.
 		const bool isPicture = document.file_type == DocumentFormat::unknown && (extension == ".png" || extension == ".jpg"
 			|| extension == ".jpeg" || extension == ".tif" || extension == ".tiff" || extension == ".bmp" || extension == ".gif"
 			|| extension == ".heic" || extension == ".heif");

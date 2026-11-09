@@ -13,17 +13,17 @@ import { findMember } from "../../pages/words.js";
 
 import styles from "./AccountMenu.module.css";
 
-// The member at this computer, at the desk's foot (D-051). Its menu holds
-// only what is the member's own here (the owner, 2026-11-02): Settings, this
-// computer's code, and signing out. Time off and pausing notifications are
-// gone, and Word, Excel, PowerPoint and Outlook moved to Settings (D-201).
+// The member at this computer, at the desk's foot. Its menu holds only what
+// is the member's own here: Settings, this computer's code, and signing out.
+// Time off and pausing notifications are gone, and Word, Excel, PowerPoint
+// and Outlook moved to Settings.
 export function AccountMenu() {
 	const menu = useMenu();
 	const { open } = useNavigation();
 	const firm = useFirmComputers();
 	const [isSigningOut, setSigningOut] = useState(false);
 	// This computer's code stands where its name was for a moment after a
-	// press, as it is copied (the owner, 2026-11-02).
+	// press, as it is copied.
 	const [isCodeShown, setCodeShown] = useState(false);
 	const codeTimer = useRef(0);
 	useEffect(() => () => clearTimeout(codeTimer.current), []);
@@ -45,20 +45,20 @@ export function AccountMenu() {
 		try {
 			await nativeApp().signOutOfLegalMachines();
 		} catch {
-			// Signed out here whatever Legal Machines answered (D-026).
+			// Signed out here whatever Legal Machines answered.
 		}
 		window.location.reload();
 	}
 
 	const items = [
 		{ key: "settings", label: "Settings", icon: "settings", onSelect: () => open({ kind: "settings" }) },
-		// This computer's code (D-123), always where its member finds it: a
-		// colleague compares it before their computer counts what this one signs
-		// as this member's, and before their AI colleagues take up what this
-		// member asks (2026-10-29).
+		// This computer's code, always where its member finds it: a colleague
+		// compares it before their computer counts what this one signs as this
+		// member's, and before their AI colleagues take up what this member
+		// asks.
 		hasNative() && firm.deviceCode != "" ? { key: "code", label: isCodeShown ? firm.deviceCode : "This computer's code", isCode: isCodeShown, icon: "computer", keepsOpen: true, onSelect: () => copyCode(firm.deviceCode) } : null,
-		// Signing out of the firm on this computer (D-136): the window opens at
-		// the entry, where this or another member signs in.
+		// Signing out of the firm on this computer: the window opens at the
+		// entry, where this or another member signs in.
 		hasNative() ? { key: "sign_out", label: `Sign out of ${organisation.shortName}`, icon: "power", onSelect: () => setSigningOut(true) } : null,
 	].filter(Boolean);
 
@@ -78,7 +78,7 @@ export function AccountMenu() {
 				</span>
 			</button>
 			{menu.isOpen ? <Menu anchor={menu.anchor} items={items} label="Your account" placement="top-start" matchAnchorWidth onClose={menu.close} /> : null}
-			{/* Signing out is asked once more (the owner, 2026-11-02). */}
+			{/* Signing out is asked once more. */}
 			{isSigningOut ? (
 				<Dialog
 					title={`Sign out of ${organisation.shortName}?`}

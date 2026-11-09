@@ -2459,9 +2459,9 @@ mod bounded_inference_tests {
     }
 
     fn russian_legal_sentence() -> &'static str {
-        "Верховный Суд Российской Федерации в определении по делу N А40-123456/2023 указал, \
-         что общество с ограниченной ответственностью \"Северный Мост\" не проявило должной \
-         осмотрительности при выборе контрагента. "
+        "\u{412}\u{435}\u{440}\u{445}\u{43e}\u{432}\u{43d}\u{44b}\u{439} \u{421}\u{443}\u{434} \u{420}\u{43e}\u{441}\u{441}\u{438}\u{439}\u{441}\u{43a}\u{43e}\u{439} \u{424}\u{435}\u{434}\u{435}\u{440}\u{430}\u{446}\u{438}\u{438} \u{432} \u{43e}\u{43f}\u{440}\u{435}\u{434}\u{435}\u{43b}\u{435}\u{43d}\u{438}\u{438} \u{43f}\u{43e} \u{434}\u{435}\u{43b}\u{443} N \u{410}40-123456/2023 \u{443}\u{43a}\u{430}\u{437}\u{430}\u{43b}, \
+         \u{447}\u{442}\u{43e} \u{43e}\u{431}\u{449}\u{435}\u{441}\u{442}\u{432}\u{43e} \u{441} \u{43e}\u{433}\u{440}\u{430}\u{43d}\u{438}\u{447}\u{435}\u{43d}\u{43d}\u{43e}\u{439} \u{43e}\u{442}\u{432}\u{435}\u{442}\u{441}\u{442}\u{432}\u{435}\u{43d}\u{43d}\u{43e}\u{441}\u{442}\u{44c}\u{44e} \"\u{421}\u{435}\u{432}\u{435}\u{440}\u{43d}\u{44b}\u{439} \u{41c}\u{43e}\u{441}\u{442}\" \u{43d}\u{435} \u{43f}\u{440}\u{43e}\u{44f}\u{432}\u{438}\u{43b}\u{43e} \u{434}\u{43e}\u{43b}\u{436}\u{43d}\u{43e}\u{439} \
+         \u{43e}\u{441}\u{43c}\u{43e}\u{442}\u{440}\u{438}\u{442}\u{435}\u{43b}\u{44c}\u{43d}\u{43e}\u{441}\u{442}\u{438} \u{43f}\u{440}\u{438} \u{432}\u{44b}\u{431}\u{43e}\u{440}\u{435} \u{43a}\u{43e}\u{43d}\u{442}\u{440}\u{430}\u{433}\u{435}\u{43d}\u{442}\u{430}. "
     }
 
     #[test]
@@ -2513,13 +2513,13 @@ mod bounded_inference_tests {
         // includes a non-BMP emoji before the marker so its multi-byte UTF-8
         // encoding is exercised in the offset arithmetic leading up to it.
         let padding = russian_legal_sentence().repeat(35);
-        let marker = "Общество \u{1F4C4} \"Балтийская Верфь\" заключило договор поставки. ";
+        let marker = "\u{41e}\u{431}\u{449}\u{435}\u{441}\u{442}\u{432}\u{43e} \u{1F4C4} \"\u{411}\u{430}\u{43b}\u{442}\u{438}\u{439}\u{441}\u{43a}\u{430}\u{44f} \u{412}\u{435}\u{440}\u{444}\u{44c}\" \u{437}\u{430}\u{43a}\u{43b}\u{44e}\u{447}\u{438}\u{43b}\u{43e} \u{434}\u{43e}\u{433}\u{43e}\u{432}\u{43e}\u{440} \u{43f}\u{43e}\u{441}\u{442}\u{430}\u{432}\u{43a}\u{438}. ";
         let text = format!("{padding}{marker}{padding}");
         let (entities, _, _) = engine
             .extract(&text, &[SchemaTask::Entities(labels())], None)
             .expect("long padded input must succeed");
         let found = entities.iter().find(|e| text.get(e.start_char..e.end_char)
-            .map(|slice| slice.contains("Балтийская")).unwrap_or(false));
+            .map(|slice| slice.contains("\u{411}\u{430}\u{43b}\u{442}\u{438}\u{439}\u{441}\u{43a}\u{430}\u{44f}")).unwrap_or(false));
         assert!(found.is_some(),
             "an entity naming the marker organization must be found with offsets that slice back to it exactly in the ORIGINAL text");
         // Confirms the slice at these offsets is valid UTF-8 landing on real
@@ -2538,13 +2538,13 @@ mod bounded_inference_tests {
             return;
         };
         let padding = russian_legal_sentence().repeat(35);
-        let tail_marker = "В заключение договор с \"Уральская Сталь\" был расторгнут. ";
+        let tail_marker = "\u{412} \u{437}\u{430}\u{43a}\u{43b}\u{44e}\u{447}\u{435}\u{43d}\u{438}\u{435} \u{434}\u{43e}\u{433}\u{43e}\u{432}\u{43e}\u{440} \u{441} \"\u{423}\u{440}\u{430}\u{43b}\u{44c}\u{441}\u{43a}\u{430}\u{44f} \u{421}\u{442}\u{430}\u{43b}\u{44c}\" \u{431}\u{44b}\u{43b} \u{440}\u{430}\u{441}\u{442}\u{43e}\u{440}\u{433}\u{43d}\u{443}\u{442}. ";
         let text = format!("{padding}{tail_marker}");
         let (entities, _, _) = engine
             .extract(&text, &[SchemaTask::Entities(labels())], None)
             .expect("long input ending with a marker must succeed");
         let found = entities.iter().any(|e| text.get(e.start_char..e.end_char)
-            .map(|slice| slice.contains("Уральская")).unwrap_or(false));
+            .map(|slice| slice.contains("\u{423}\u{440}\u{430}\u{43b}\u{44c}\u{441}\u{43a}\u{430}\u{44f}")).unwrap_or(false));
         assert!(found, "an entity in the document's final chunk must not be left unexamined");
     }
 }

@@ -11,22 +11,21 @@ import styles from "./Avatar.module.css";
 // app gives a new member (data/native.js).
 const BASE_GROUND = "#5b6170";
 
-// One face for every member (UI-5), in one shape: a square with G2 corners
-// (the owner, 2026-10-24). A person's face is their photograph, or without one
-// the base face, a figure on their colour (D-188). An AI colleague's face is
-// its species of the Agent Family on the species' own ground (D-063), never a
-// photograph (UI-18), alive on the window's one clock (life.js): its state as
-// the backend reports it (D-013), and at rest a gesture now and then and one
-// right after it is pointed at (its face, or the row that passes `pointedAt`)
-// (D-069). Under reduced motion it holds its state's still. Where its state
-// matters, `withState` adds the dot that says what it is doing now (D-067).
+// One face for every member, in one shape: a square with G2 corners. A
+// person's face is their photograph, or without one the base face, a figure on
+// their colour. An AI colleague's face is its species of the Agent Family on
+// the species' own ground, never a photograph, alive on the window's one clock
+// (life.js): its state as the backend reports it, and at rest a gesture now
+// and then and one right after it is pointed at (its face, or the row that
+// passes `pointedAt`). Under reduced motion it holds its state's still. Where
+// its state matters, `withState` adds the dot that says what it is doing now.
 export function Avatar({ member, size, presence, withState, pointedAt, showsOnline = true }) {
 	useOnline();
 	const face = faceOf(member, size, presence, pointedAt == true);
 	const working = withState == true && member.kind == "ai_colleague" ? stateOf(presence) : null;
-	// A colleague who is there now wears a green dot on every face of theirs
-	// (the owner, 2026-11-02), unless the dot of what it does stands there or
-	// the place says none (Recent: "don't show the online dots in Recent").
+	// A colleague who is there now wears a green dot on every face of theirs,
+	// unless the dot of what it does stands there or the place says none
+	// (Recent: "don't show the online dots in Recent").
 	const state = working ?? (showsOnline && isOnline(member) ? { colour: "var(--online)", words: member.kind == "ai_colleague" ? "Available" : "Online" } : null);
 	if (state == null) return face;
 
@@ -128,7 +127,7 @@ function faceOf(member, size, presence, pointedAt) {
 	}
 
 	// A person who has not chosen a photo: the base face, a head and shoulders
-	// on their colour, the same at every size (D-188).
+	// on their colour, the same at every size.
 	if (member.kind != "ai_colleague") {
 		return (
 			<span

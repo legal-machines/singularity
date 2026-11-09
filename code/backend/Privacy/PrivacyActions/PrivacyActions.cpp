@@ -50,10 +50,9 @@ matters::Matter require_matter(const std::string &id) {
 
 // Every internal preprocessing/readiness check uses Standard regardless of
 // the user's own outbound Guard policy: Entity Registry maintenance is
-// purely local (PRIVACY_CONTRACT.md - "Preprocessing never means the
-// document was sent outside"), so an explicit outbound "Off" must not also
-// disable this local-only feature. This mirrors InferenceExecutor.cpp's own
-// warm-up policy for the identical reason.
+// purely local, so an explicit outbound "Off" must not also disable this
+// local-only feature. This mirrors InferenceExecutor.cpp's own warm-up
+// policy for the identical reason.
 protected_api::Policy internal_detection_policy() {
 	protected_api::Policy policy;
 	policy.mode = protected_api::Mode::Standard;
@@ -97,7 +96,7 @@ std::string detection_unit(const matters::MatterDocument &document) {
 // or this computer's own. A Matter shared with a computer of another system
 // names that computer's reader (a PDF read on Windows), while this one keeps
 // its own reading of the same file; without it, nothing here was prepared for
-// such a document (2026-11-02).
+// such a document.
 std::optional<documents::DocumentExtractionResult> load_reading(const documents::DocumentCache &cache,
 		const matters::MatterDocument &document) {
 	if (auto extraction = cache.load(document.fingerprint, document.extractor_version)) return extraction;
@@ -122,9 +121,8 @@ std::optional<std::vector<std::string>> load_passages(const documents::DocumentC
 // Each document's masked reading, kept while the app is open and given back
 // at once while nothing it was made from has changed: the file and its
 // reading, its place, the Project's identities and this computer's Guard
-// settings (the owner, 2026-11-02: "Papinian must read it ahead, and it must
-// be cached and reused if the file did not change"). In memory only, never
-// written: like a request's table, what it holds is never kept (AG-SEC-3).
+// settings. In memory only, never written: like a request's table, what it
+// holds is never kept.
 struct PreviewCache {
 	std::mutex mutex;
 	std::list<std::pair<std::string, DocumentProtectionPreview>> entries;
@@ -195,7 +193,7 @@ void warm_project_detections(const std::string &project_id) {
 				(void)guard.warm_semantic_detections(*passages);
 				store->mark(unit);
 			}
-			// Then masked once, so the document opens read at once (D-233).
+			// Then masked once, so the document opens read at once.
 			try {
 				(void)preview_document_protection(project_id, document.id);
 			} catch (const std::exception &) {
@@ -365,8 +363,8 @@ matters::Matter run_preprocessing(const std::string &id) {
 					&& current->state == privacy::DocumentProtectionState::Ready) continue;
 			// Already said, for this version of the document, for this same reason:
 			// said again it would be a write each time the window reads the
-			// documents, which asks for this pass again - a loop of one operation
-			// a second on a computer without the model (2026-10-25).
+			// documents, which asks for this pass again - a loop of one operation a
+			// second on a computer without the model.
 			if (current && privacy::is_protection_current(*current, document)
 					&& current->state == privacy::DocumentProtectionState::Unsupported && current->detail == detail) continue;
 			privacy::DocumentProtectionStatus unavailable;
@@ -505,7 +503,7 @@ DocumentProtectionPreview preview_document_protection(const std::string &id, con
 		if (found == matter.documents.end()) throw std::runtime_error("This document is no longer in the Matter.");
 		document = *found;
 		// The same Project identities a real request protects with, each under
-		// its own symbol (D-235).
+		// its own symbol.
 		symbols.project_entity_symbols = privacy::project_entity_symbols(matter);
 		for (const privacy::ProjectEntity &entity : privacy::list_active_entities(matter)) {
 			const std::vector<std::string> values = privacy::protection_values(matter, entity);

@@ -1,4 +1,4 @@
-// The calendar's dates and times (D-076). A day is "YYYY-MM-DD" and a moment
+// The calendar's dates and times. A day is "YYYY-MM-DD" and a moment
 // "YYYY-MM-DDTHH:MM", both in the firm's own time (New York in the mock), and
 // all arithmetic runs in UTC so no daylight change on this computer moves
 // them.

@@ -27,14 +27,10 @@ public:
 	virtual void stop() = 0;
 };
 
-// True when start_watching() is backed by a real OS watcher on this
-// platform (currently: macOS, via FSEvents - see FileSystemWatcherMacOS.mm).
-// A platform where this is false has no live-update path; callers still get
-// correct state through explicit reconciliation (Project open, restart,
-// every matter.listDocuments call) - see phase-08-documents-filesystem-states.md
-// Sec.7/18, which requires correctness never to depend on watcher history.
-// Phase 08 correction round 3, item 1: Matter/MatterActions/MatterActions.cpp's
-// list_documents() relies on this being false meaning "no watcher will ever
+// True when start_watching is backed by a real OS watcher on this platform
+// (currently: macOS, via FSEvents - see FileSystemWatcherMacOS.mm). Phase 08
+// correction round 3, item 1: Matter/MatterActions/MatterActions.cpp's
+// list_documents relies on this being false meaning "no watcher will ever
 // register for this Matter" to keep re-running the full startup/restart audit
 // scan on every call - see that function's own comment.
 [[nodiscard]] bool file_system_watching_supported() noexcept;

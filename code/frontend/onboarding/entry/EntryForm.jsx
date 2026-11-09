@@ -25,18 +25,16 @@ const RESEND_SECONDS = 45;
 // How often the wait for approval asks Legal Machines again.
 const APPROVAL_EVERY_MS = 15000;
 
-// Onboarding's entry (D-133): the organisation's email alone. Legal Machines
-// knows the organisation: the seat, a login of the firm's with no person in it
-// (D-204), then its password; the firm's administrator's seat then the code
-// its authenticator app shows, or for an older one the code mailed to that
-// email, while a colleague's seat is signed in and accepts the documents. It does not: the
-// organisation registers, one thing a page (the owner, 2026-10-29, D-146) -
-// its name, where it is registered, its agreement to the account Legal
-// Machines makes for it; only then is Legal Machines asked - then confirms its
-// email, sets its administrator's password, scans the authenticator's code on
-// one page and enters the code it shows on the next, keeps its recovery codes
-// and waits for Legal Machines' approval (D-030). A dot a step at the foot of
-// the page. Signed in, onComplete takes onboarding on with the organisation's
+// Onboarding's entry: the organisation's email alone. Legal Machines knows the
+// organisation: the seat, a login of the firm's with no person in it, then its password;
+// the firm's administrator's seat then the code its authenticator app shows, or for an
+// older one the code mailed to that email, while a colleague's seat is signed in and
+// accepts the documents. It does not: the organisation registers, one thing a page - its
+// name, where it is registered, its agreement to the account Legal Machines makes for it;
+// only then is Legal Machines asked - then confirms its email, sets its administrator's
+// password, scans the authenticator's code on one page and enters the code it shows on the
+// next, keeps its recovery codes and waits for Legal Machines' approval. A dot a step at
+// the foot of the page. Signed in, onComplete takes onboarding on with the organisation's
 // name.
 const REGISTRATION = [
 	["name", "Name"],
@@ -51,7 +49,7 @@ const REGISTRATION = [
 ];
 // Signing in, one thing a page: the firm's email, the seat, its password and,
 // for the administrator's seat, the code; a colleague's seat accepts the
-// documents instead (D-204).
+// documents instead.
 const SIGNING_IN = [
 	["email", "Email"],
 	["seat", "Seat"],
@@ -65,17 +63,17 @@ const COLLEAGUE_SIGNING_IN = [
 	["memberAgree", "Agreement"],
 ];
 // A colleague's seat with no authenticator yet sets one up after its
-// agreements (D-215).
+// agreements.
 const COLLEAGUE_SETTING_UP = [
 	...COLLEAGUE_SIGNING_IN,
 	["twoFactor", "Two-step sign-in"],
 	["twoFactorCode", "Code from the app"],
 	["recovery", "Recovery codes"],
 ];
-// The administrator's forgotten password, one thing a page (D-215; the owner,
-// 2026-11-05): the code mailed to the firm's email, the new password twice,
-// and last, where two-step sign-in is on, the code the authenticator app
-// shows, new every 30 seconds, on a page of its own so it is fresh when sent.
+// The administrator's forgotten password, one thing a page: the code mailed
+// to the firm's email, the new password twice, and last, where two-step
+// sign-in is on, the code the authenticator app shows, new every 30 seconds,
+// on a page of its own so it is fresh when sent.
 const RECOVERING = [
 	["forgot", "Forgot your password"],
 	["recoverCode", "Code from the email"],
@@ -144,14 +142,13 @@ export function EntryForm({ onComplete }) {
 	// dots.
 	const [journey, setJourney] = useState(null);
 	const [email, setEmail] = useState("");
-	// The seat's id as typed (D-204): drawn by Legal Machines, like papinian-x3k.
+	// The seat's id as typed: drawn by Legal Machines, like papinian-x3k.
 	const [seatLogin, setSeatLogin] = useState("");
 	// The firm a colleague's seat signed in to, kept while they accept the
 	// documents.
 	const [signedInFirm, setSignedInFirm] = useState(null);
 	const [password, setPassword] = useState("");
-	// A new password is typed twice, and goes on only once both match (the
-	// owner, 2026-10-29).
+	// A new password is typed twice, and goes on only once both match.
 	const [repeat, setRepeat] = useState("");
 	const [code, setCode] = useState("");
 	// The second step of a sign-in: "authenticator" or "email"; and whether a
@@ -159,18 +156,18 @@ export function EntryForm({ onComplete }) {
 	const [method, setMethod] = useState("email");
 	const [byRecoveryCode, setByRecoveryCode] = useState(false);
 	const [details, setDetails] = useState({ legalEntityName: "", country: "United States", registrationNumber: "" });
-	// Each document is accepted by its own statement (the owner, 2026-10-29).
+	// Each document is accepted by its own statement.
 	const [agreed, setAgreed] = useState(emptyAgreements);
 	// Two-factor setup: the key and link the authenticator app takes, and the
 	// recovery codes it gave.
 	const [twoFactor, setTwoFactor] = useState(null);
 	const [twoFactorTry, setTwoFactorTry] = useState(0);
-	// A forgotten password (D-215): the administrator's, reset by the code
-	// mailed to the firm's email and, where two-step sign-in is on, the code
-	// their authenticator shows or a recovery code, asked for last.
+	// A forgotten password: the administrator's, reset by the code mailed to
+	// the firm's email and, where two-step sign-in is on, the code their
+	// authenticator shows or a recovery code, asked for last.
 	const [twoStepCode, setTwoStepCode] = useState("");
 	// A colleague's seat with no authenticator yet sets one up after its
-	// agreements, with its own session (D-215), before it works.
+	// agreements, with its own session, before it works.
 	const [ownSetup, setOwnSetup] = useState(false);
 	// The key was copied a moment ago: its label says so, then goes back.
 	const [keyCopied, setKeyCopied] = useState(false);
@@ -180,16 +177,16 @@ export function EntryForm({ onComplete }) {
 	const [kept, setKept] = useState(false);
 	// What the organisation is once set up: "awaiting_approval" or "active".
 	const [organisationState, setOrganisationState] = useState(null);
-	// An organisation active at the end of its setup is signed in here then
-	// (D-152): after its recovery codes, onboarding goes straight on, with no
-	// code asked again.
+	// An organisation active at the end of its setup is signed in here then:
+	// after its recovery codes, onboarding goes straight on, with no code
+	// asked again.
 	const [signedInHere, setSignedInHere] = useState(null);
-	// Where this computer keeps a seat's password at the member's choice
-	// (D-243): "windows", or null where it keeps none and nothing is offered.
-	// Whether it keeps one for the seat at hand, and the member's choice:
-	// ticked, the password the seat signs in with is kept; unticked, a kept one
-	// is forgotten once the seat signs in. A sign-in by the kept password checks
-	// its code with it too.
+	// Where this computer keeps a seat's password at the member's choice:
+	// "windows", or null where it keeps none and nothing is offered. Whether it
+	// keeps one for the seat at hand, and the member's choice: ticked, the
+	// password the seat signs in with is kept; unticked, a kept one is forgotten
+	// once the seat signs in. A sign-in by the kept password checks its code
+	// with it too.
 	const [passwordStore, setPasswordStore] = useState(null);
 	const [savedPassword, setSavedPassword] = useState(false);
 	const [keepPassword, setKeepPassword] = useState(false);
@@ -249,7 +246,7 @@ export function EntryForm({ onComplete }) {
 		const timer = setTimeout(() => setKeyCopied(false), 1600);
 		return () => clearTimeout(timer);
 	}, [keyCopied]);
-	// Whether this computer can keep a seat's password, asked once (D-243).
+	// Whether this computer can keep a seat's password, asked once.
 	useEffect(() => {
 		let current = true;
 		account.passwordStore?.().then((store) => current && setPasswordStore(store ?? null), () => {});
@@ -292,10 +289,10 @@ export function EntryForm({ onComplete }) {
 			current = false;
 		};
 	}, [step, twoFactor, twoFactorTry, seat?.organisationId, ownSetup]);
-	// The wait for Legal Machines' approval (D-030) asks again every few seconds
-	// while it shows, and when the window comes back. Once approved, sign-in
-	// goes on by itself with the password typed for it, and the member only
-	// enters the code that comes (2026-10-29: the wait never noticed approval).
+	// The wait for Legal Machines' approval asks again every few seconds while
+	// it shows, and when the window comes back. Once approved, sign-in goes on
+	// by itself with the password typed for it, and the member only enters the
+	// code that comes.
 	useEffect(() => {
 		if (step !== "waiting" || !seat?.organisationId) return undefined;
 		let current = true;
@@ -349,11 +346,11 @@ export function EntryForm({ onComplete }) {
 		forward.current = !back;
 		setStep(next);
 	};
-	// Where each step's Back goes, with everything entered kept (the owner,
-	// 2026-10-29). Before Legal Machines is asked, back through the details;
-	// from the email's code back to the agreement, which asks again with what
-	// changed; once the email is confirmed, back only within the setup after
-	// it: the authenticator's pages to the password, its code to the QR code.
+	// Where each step's Back goes, with everything entered kept. Before Legal
+	// Machines is asked, back through the details; from the email's code back
+	// to the agreement, which asks again with what changed; once the email is
+	// confirmed, back only within the setup after it: the authenticator's
+	// pages to the password, its code to the QR code.
 	const backOf = {
 		seat: "email", password: "seat", code: "password",
 		name: "email", country: "name", agree: "country", confirm: journey === "register" ? "agree" : "email",
@@ -396,8 +393,7 @@ export function EntryForm({ onComplete }) {
 				} else if (failure?.code === "account.too_many_attempts" && step === "code") {
 					// Five wrong codes close a sign-in's code; there is nothing to
 					// wait for: signing in again gives a new one, with five more
-					// tries (the owner, 2026-11-05: "give people at least five
-					// tries"). The password stays as it was typed.
+					// tries. The password stays as it was typed.
 					setCode("");
 					go("password", true);
 					refuse("Five wrong codes for this sign-in. Sign in again for a new code.", "password");
@@ -417,8 +413,7 @@ export function EntryForm({ onComplete }) {
 		setCode("");
 		setTwoFactor(null);
 		setRecoveryCodes([]);
-		// A registration just finished is celebrated on the welcome (the owner,
-		// 2026-10-30).
+		// A registration just finished is celebrated on the welcome.
 		onComplete?.({ organisationName: organisationName || details.legalEntityName.trim() || null, registered: journey === "register", joined: journey === "colleague" });
 	};
 	const waitForCode = (next) => {
@@ -443,7 +438,7 @@ export function EntryForm({ onComplete }) {
 	};
 
 	// A sign-in by the seat's password: the one typed, or the one this computer
-	// keeps (D-243), which the native side signs in with.
+	// keeps, which the native side signs in with.
 	const signIn = (seatId, bySaved = false) => {
 		setBySavedPassword(bySaved);
 		return bySaved ? account.signInWithSavedPassword(email, seatId) : account.signIn(email, seatId, password);
@@ -484,10 +479,10 @@ export function EntryForm({ onComplete }) {
 		if (result?.maskedEmail) setMaskedEmail(result.maskedEmail);
 		if (result?.status === "signed_in") {
 			await keepChoice();
-			// Signed in by a recovery code (D-218): once Singularity opens, it
-			// asks for the authenticator app again.
+			// Signed in by a recovery code: once Singularity opens, it asks
+			// for the authenticator app again.
 			if (result.usedRecoveryCode === true) rememberRecoverySignIn(result.recoveryCodesLeft);
-			// A colleague's seat accepts the documents before it goes on (D-204).
+			// A colleague's seat accepts the documents before it goes on.
 			if (result.account?.role === "member" && journey !== "register") {
 				setSignedInFirm(result.account?.organisationName ?? null);
 				setJourney("colleague");
@@ -520,11 +515,10 @@ export function EntryForm({ onComplete }) {
 	// The repeat differs from the password once it is no longer the start of it.
 	const mismatch = repeat !== "" && (repeat.length >= password.length ? repeat !== password : !password.startsWith(repeat));
 	const newPasswordReady = strength.enough && repeat === password;
-	// A step's button works once the step is filled in (the owner, 2026-10-29):
-	// every field has something in it, a code all its digits, every statement
-	// is accepted, the recovery codes kept. What is filled in wrong is said
-	// when it is pressed; a new password says as it is typed what it still
-	// needs.
+	// A step's button works once the step is filled in: every field has
+	// something in it, a code all its digits, every statement is accepted, the
+	// recovery codes kept. What is filled in wrong is said when it is pressed;
+	// a new password says as it is typed what it still needs.
 	const ready = {
 		email: email.trim() !== "",
 		password: password !== "" || savedPassword,
@@ -555,7 +549,7 @@ export function EntryForm({ onComplete }) {
 			return;
 		}
 		setEmail(address);
-		// A known email signs in by a seat (D-204); a new one registers its
+		// A known email signs in by a seat; a new one registers its
 		// organisation.
 		request(() => account.find(address), "email", ({ exists }) => {
 			if (exists) {
@@ -579,8 +573,8 @@ export function EntryForm({ onComplete }) {
 		setSeatLogin(typed);
 		go("password");
 	};
-	// The administrator's forgotten password (D-215): a code to the firm's
-	// email first; a colleague's is set again by the administrator.
+	// The administrator's forgotten password: a code to the firm's email
+	// first; a colleague's is set again by the administrator.
 	const submitForgot = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
@@ -650,7 +644,7 @@ export function EntryForm({ onComplete }) {
 		resetPassword(twoStepCode.trim());
 	};
 	// An empty field, where this computer keeps the seat's password, signs in
-	// with the kept one (D-243).
+	// with the kept one.
 	const submitPassword = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
@@ -734,8 +728,8 @@ export function EntryForm({ onComplete }) {
 		if (busy || !ready) return;
 		request(() => account.setPassword(seat.organisationId, password), "password", (result) => goSetup(result?.setup ?? "two_factor"));
 	};
-	// The key scanned, the code the app shows is entered on a page of its own
-	// (the owner, 2026-10-29).
+	// The key scanned, the code the app shows is entered on a page of its
+	// own.
 	const submitScan = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
@@ -775,8 +769,8 @@ export function EntryForm({ onComplete }) {
 		}
 		go("yourSeat");
 	};
-	// The administrator's own seat said once its setup is done (D-204): the
-	// firm's email, this seat and its password sign in from then on.
+	// The administrator's own seat said once its setup is done: the firm's
+	// email, this seat and its password sign in from then on.
 	const submitYourSeat = (event) => {
 		event.preventDefault();
 		if (busy || !ready) return;
@@ -828,7 +822,7 @@ export function EntryForm({ onComplete }) {
 		setBySavedPassword(false);
 		go("email", true);
 	};
-	// The codes kept on paper (the owner, 2026-10-29), in a file or copied.
+	// The codes kept on paper, in a file or copied.
 	const printRecoveryCodes = () => request(() => account.printRecoveryCodes(seat.organisationId), "recovery", (result) => {
 		if (!result?.printed) return;
 		setKept(true);
@@ -857,10 +851,10 @@ export function EntryForm({ onComplete }) {
 		</div>
 	);
 	const change = { label: "Change", onClick: restart };
-	// After the first page the wordmark steps aside (the owner, 2026-10-29):
-	// each page's own title is its heading, and the section is named by it.
-	// Under it, the address the page is about, or a line of what to do, as a
-	// phrase without a closing full stop.
+	// After the first page the wordmark steps aside: each page's own title
+	// is its heading, and the section is named by it. Under it, the address
+	// the page is about, or a line of what to do, as a phrase without a
+	// closing full stop.
 	const heading = (title, { address, action, line } = {}) => (
 		<div className={styles.codeHeading}>
 			<h1 id="onboarding-title" className={styles.stepTitle} tabIndex={-1} ref={headingRef}>{title}</h1>
@@ -873,8 +867,8 @@ export function EntryForm({ onComplete }) {
 			) : null}
 		</div>
 	);
-	// A page's button says what the person confirms by pressing it (the owner,
-	// 2026-10-29: "I've added the code"); only the first page's says Continue.
+	// A page's button says what the person confirms by pressing it; only the
+	// first page's says Continue.
 	const primary = (label, busyLabel = label) => (
 		<button className={styles.primary} type="submit" disabled={busy || !ready} data-busy={busy || undefined}>
 			<span className={styles.buttonLabel}>{busy ? busyLabel : label}</span>
@@ -886,8 +880,8 @@ export function EntryForm({ onComplete }) {
 			aria-invalid={invalid(name)} aria-describedby={describedBy(name)} {...props}
 		/>
 	);
-	// A password, with the eye that shows it (the owner, 2026-11-04): a password
-	// field still, which a password manager knows by its autocomplete.
+	// A password, with the eye that shows it: a password field still, which a
+	// password manager knows by its autocomplete.
 	const secret = (name, props) => (
 		<SecretInput
 			ref={fields[name]} id={`entry-${name}`} name={name} readOnly={busy}
@@ -950,7 +944,7 @@ export function EntryForm({ onComplete }) {
 	// suggested password what Legal Machines takes.
 	const passwordRules = `minlength: ${MIN_PASSWORD_LENGTH}; maxlength: 200;`;
 	// Leaving a new password short of strong, the person is told at the top
-	// what it still needs (the owner, 2026-10-29: recommend a strong one).
+	// what it still needs.
 	const adviseOnPassword = () => {
 		if (!password || !document.hasFocus() || strength.level === "good" || strength.level === "strong") return;
 		setNotice(strength.level === "short" ? `The password needs ${strength.words}` : `${LEVELS[strength.level]} password: ${strength.words}`, "warning");
@@ -1161,7 +1155,7 @@ export function EntryForm({ onComplete }) {
 		body = (
 			<StepForm onSubmit={submitAgreement} aria-busy={busy} aria-label="Create the account">
 				{heading("Create your organisation’s account", { line: name })}
-				{/* The organisation accepts Singularity's documents here, each by its own statement (D-145). */}
+				{/* The organisation accepts Singularity's documents here, each by its own statement. */}
 				<fieldset className={`${styles.statements} ${styles.first}`} ref={fields.agreements} tabIndex={-1} aria-invalid={invalid("agreements")}>
 					<legend className={styles.hidden}>Agreements</legend>
 					{documentStatements}
@@ -1188,7 +1182,7 @@ export function EntryForm({ onComplete }) {
 						<button className={styles.textButton} type="button" onClick={() => { clear(); setTwoFactorTry((value) => value + 1); }}>Try again</button>
 					) : null}
 				</div>
-				{/* The key copies itself when clicked (the owner, 2026-10-29). */}
+				{/* The key copies itself when clicked. */}
 				{twoFactor ? (
 					<div className={styles.key}>
 						<span id="entry-key-label" aria-live="polite">{keyCopied ? "Key copied" : "Or enter this key"}</span>

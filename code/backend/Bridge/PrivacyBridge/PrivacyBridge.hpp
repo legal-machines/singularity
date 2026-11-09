@@ -6,7 +6,7 @@ namespace singularity::bridge::privacy_bridge {
 
 nlohmann::json get_overview(const nlohmann::json &params);
 // privacy.getCoverage: the overview's counts and Guard's state, without what
-// left this device - nothing of the routing log is read (Beta 1 #266).
+// left this device - nothing of the routing log is read.
 nlohmann::json get_coverage(const nlohmann::json &params);
 nlohmann::json list_attention_documents(const nlohmann::json &params);
 nlohmann::json list_entities(const nlohmann::json &params);

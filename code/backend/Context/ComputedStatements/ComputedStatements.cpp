@@ -289,7 +289,7 @@ std::pair<std::string, std::string> split_format(const std::string &head) {
 // choosing a value - and {{= X as f}} is (X).
 std::string as_expression(const std::string &head, Language language, int depth) {
 	if (depth > kDeepest)
-		throw Problem{say(language, "the statement is nested too deeply", "в выражении слишком глубокая вложенность")};
+		throw Problem{say(language, "the statement is nested too deeply", "\320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270 \321\201\320\273\320\270\321\210\320\272\320\276\320\274 \320\263\320\273\321\203\320\261\320\276\320\272\320\260\321\217 \320\262\320\273\320\276\320\266\320\265\320\275\320\275\320\276\321\201\321\202\321\214")};
 	std::string expression;
 	std::size_t index = 0;
 	while (index < head.size()) {
@@ -308,7 +308,7 @@ std::string as_expression(const std::string &head, Language language, int depth)
 		const std::size_t close = tag.empty() ? kNone : balanced_close(head, rest);
 		if (close == kNone)
 			throw Problem{say(language, "\"{{\" inside the calculation opens no statement that is closed with \"}}\"",
-				"«{{» внутри расчета не открывает выражения, закрытого «}}»")};
+				"«{{» \320\262\320\275\321\203\321\202\321\200\320\270 \321\200\320\260\321\201\321\207\320\265\321\202\320\260 \320\275\320\265 \320\276\321\202\320\272\321\200\321\213\320\262\320\260\320\265\321\202 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\321\217, \320\267\320\260\320\272\321\200\321\213\321\202\320\276\320\263\320\276 «}}»")};
 		if (tag == "=") {
 			expression += "(" + as_expression(split_format(head.substr(rest, close - rest)).first, language, depth + 1) + ")";
 			index = close + 2;
@@ -318,10 +318,10 @@ std::string as_expression(const std::string &head, Language language, int depth)
 			const Block block = block_after(head, close + 2);
 			if (!block.closed)
 				throw Problem{say(language, "an {{if}} inside the calculation is not closed with {{end}}",
-					"{{if}} внутри расчета не закрыт {{end}}")};
+					"{{if}} \320\262\320\275\321\203\321\202\321\200\320\270 \321\200\320\260\321\201\321\207\320\265\321\202\320\260 \320\275\320\265 \320\267\320\260\320\272\321\200\321\213\321\202 {{end}}")};
 			if (block.else_at == kNone)
 				throw Problem{say(language, "a value chosen with {{if}} inside the calculation needs {{else}}: without it there is no value when the condition fails",
-					"значению, выбранному через {{if}} внутри расчета, нужен {{else}}: без него при невыполненном условии значения нет")};
+					"\320\267\320\275\320\260\321\207\320\265\320\275\320\270\321\216, \320\262\321\213\320\261\321\200\320\260\320\275\320\275\320\276\320\274\321\203 \321\207\320\265\321\200\320\265\320\267 {{if}} \320\262\320\275\321\203\321\202\321\200\320\270 \321\200\320\260\321\201\321\207\320\265\321\202\320\260, \320\275\321\203\320\266\320\265\320\275 {{else}}: \320\261\320\265\320\267 \320\275\320\265\320\263\320\276 \320\277\321\200\320\270 \320\275\320\265\320\262\321\213\320\277\320\276\320\273\320\275\320\265\320\275\320\275\320\276\320\274 \321\203\321\201\320\273\320\276\320\262\320\270\320\270 \320\267\320\275\320\260\321\207\320\265\320\275\320\270\321\217 \320\275\320\265\321\202")};
 			const std::string condition = head.substr(rest, close - rest);
 			const std::string whenTrue = head.substr(close + 2, block.else_at - close - 2);
 			const std::string whenFalse = false_branch(head, block, block.end_at);
@@ -330,7 +330,7 @@ std::string as_expression(const std::string &head, Language language, int depth)
 			index = block.after_end;
 			continue;
 		}
-		throw Problem{say(language, "{{" + tag + "}} cannot stand inside a calculation", "{{" + tag + "}} не может стоять внутри расчета")};
+		throw Problem{say(language, "{{" + tag + "}} cannot stand inside a calculation", "{{" + tag + "}} \320\275\320\265 \320\274\320\276\320\266\320\265\321\202 \321\201\321\202\320\276\321\217\321\202\321\214 \320\262\320\275\321\203\321\202\321\200\320\270 \321\200\320\260\321\201\321\207\320\265\321\202\320\260")};
 	}
 	return expression;
 }
@@ -363,7 +363,7 @@ struct Worked {
 std::string unknown_format(const std::string &asked, Language language) {
 	return say(language,
 		"\"as " + asked + "\" is not a format Singularity knows (money, $, \xE2\x82\xAC, \xE2\x82\xBD, percent, number, days, months, date, words)",
-		"«as " + asked + "» - не формат, известный Singularity (money, $, \xE2\x82\xAC, \xE2\x82\xBD, percent, number, days, months, date, words)");
+		"«as " + asked + "» - \320\275\320\265 \321\204\320\276\321\200\320\274\320\260\321\202, \320\270\320\267\320\262\320\265\321\201\321\202\320\275\321\213\320\271 Singularity (money, $, \xE2\x82\xAC, \xE2\x82\xBD, percent, number, days, months, date, words)");
 }
 
 // A value statement's head: its expression worked out, and how it is to be written.
@@ -413,7 +413,7 @@ Worked work_condition(const std::string &head, Language language) {
 		return worked;
 	}
 	if (evaluation.value->kind != semantic::Kind::Boolean) {
-		worked.reason = say(language, trimmed(head) + " is not a condition (true or false)", trimmed(head) + " - не условие (да или нет)");
+		worked.reason = say(language, trimmed(head) + " is not a condition (true or false)", trimmed(head) + " - \320\275\320\265 \321\203\321\201\320\273\320\276\320\262\320\270\320\265 (\320\264\320\260 \320\270\320\273\320\270 \320\275\320\265\321\202)");
 		return worked;
 	}
 	worked.value = evaluation.value;
@@ -424,26 +424,26 @@ Worked work_condition(const std::string &head, Language language) {
 std::string kind_phrase(const semantic::Value &value, Language language) {
 	const auto unit = [&]() -> std::string {
 		switch (value.unit) {
-			case semantic::DurationUnit::Day: return say(language, "days", "днях");
-			case semantic::DurationUnit::BusinessDay: return say(language, "business days", "рабочих днях");
-			case semantic::DurationUnit::Week: return say(language, "weeks", "неделях");
-			case semantic::DurationUnit::Month: return say(language, "months", "месяцах");
-			case semantic::DurationUnit::Year: return say(language, "years", "годах");
-			case semantic::DurationUnit::Quarter: return say(language, "quarters", "кварталах");
-			case semantic::DurationUnit::Hour: return say(language, "hours", "часах");
-			case semantic::DurationUnit::Minute: return say(language, "minutes", "минутах");
+			case semantic::DurationUnit::Day: return say(language, "days", "\320\264\320\275\321\217\321\205");
+			case semantic::DurationUnit::BusinessDay: return say(language, "business days", "\321\200\320\260\320\261\320\276\321\207\320\270\321\205 \320\264\320\275\321\217\321\205");
+			case semantic::DurationUnit::Week: return say(language, "weeks", "\320\275\320\265\320\264\320\265\320\273\321\217\321\205");
+			case semantic::DurationUnit::Month: return say(language, "months", "\320\274\320\265\321\201\321\217\321\206\320\260\321\205");
+			case semantic::DurationUnit::Year: return say(language, "years", "\320\263\320\276\320\264\320\260\321\205");
+			case semantic::DurationUnit::Quarter: return say(language, "quarters", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260\321\205");
+			case semantic::DurationUnit::Hour: return say(language, "hours", "\321\207\320\260\321\201\320\260\321\205");
+			case semantic::DurationUnit::Minute: return say(language, "minutes", "\320\274\320\270\320\275\321\203\321\202\320\260\321\205");
 		}
 		return "";
 	};
 	switch (value.kind) {
-		case semantic::Kind::Money: return say(language, "an amount of money", "денежная сумма");
-		case semantic::Kind::Number: return say(language, "a number", "число");
-		case semantic::Kind::Percentage: return say(language, "a percentage", "процент");
-		case semantic::Kind::Duration: return say(language, "a period in ", "срок в ") + unit();
-		case semantic::Kind::Date: return say(language, "a date", "дата");
-		case semantic::Kind::Boolean: return say(language, "true or false", "да или нет");
-		case semantic::Kind::DayOfYear: return say(language, "a day of the year", "день года");
-		case semantic::Kind::Count: return say(language, "a count", "количество");
+		case semantic::Kind::Money: return say(language, "an amount of money", "\320\264\320\265\320\275\320\265\320\266\320\275\320\260\321\217 \321\201\321\203\320\274\320\274\320\260");
+		case semantic::Kind::Number: return say(language, "a number", "\321\207\320\270\321\201\320\273\320\276");
+		case semantic::Kind::Percentage: return say(language, "a percentage", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202");
+		case semantic::Kind::Duration: return say(language, "a period in ", "\321\201\321\200\320\276\320\272 \320\262 ") + unit();
+		case semantic::Kind::Date: return say(language, "a date", "\320\264\320\260\321\202\320\260");
+		case semantic::Kind::Boolean: return say(language, "true or false", "\320\264\320\260 \320\270\320\273\320\270 \320\275\320\265\321\202");
+		case semantic::Kind::DayOfYear: return say(language, "a day of the year", "\320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260");
+		case semantic::Kind::Count: return say(language, "a count", "\320\272\320\276\320\273\320\270\321\207\320\265\321\201\321\202\320\262\320\276");
 	}
 	return "";
 }
@@ -453,19 +453,19 @@ std::string kind_phrase(const semantic::Value &value, Language language) {
 std::string refused_format(const semantic::Value &value, const std::string &asked, const semantic::AlgebraError &error, Language language) {
 	if (error.kind() == "currency") return error.what();
 	return say(language, "the result is " + kind_phrase(value, language) + " and cannot be written \"as " + asked + "\"",
-		"результат - " + kind_phrase(value, language) + ", его нельзя записать «as " + asked + "»");
+		"\321\200\320\265\320\267\321\203\320\273\321\214\321\202\320\260\321\202 - " + kind_phrase(value, language) + ", \320\265\320\263\320\276 \320\275\320\265\320\273\321\214\320\267\321\217 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\321\214 «as " + asked + "»");
 }
 
 // ---- Writing a result -------------------------------------------------------------------------
 
-// The currency a mark names: "$", "US$", "€", "руб.", "рублей", "USD" ...
+// The currency a mark names: "$", "US$", "€", "…", "USD" ...
 std::string currency_of_mark(const std::string &mark) {
 	const std::string lower = lower_ascii(mark);
 	if (lower == "$" || lower == "us$" || lower == "usd" || lower == "dollar" || lower == "dollars") return "USD";
 	if (lower == "\xE2\x82\xAC" || lower == "eur" || lower == "euro" || lower == "euros") return "EUR";
 	if (lower == "\xC2\xA3" || lower == "gbp" || lower == "pound" || lower == "pounds") return "GBP";
 	if (lower == "\xC2\xA5" || lower == "jpy" || lower == "yen") return "JPY";
-	if (lower == "\xE2\x82\xBD" || lower == "rub" || starts_with_at(lower, 0, "\xD1\x80\xD1\x83\xD0\xB1")) return "RUB";  // руб
+	if (lower == "\xE2\x82\xBD" || lower == "rub" || starts_with_at(lower, 0, "\xD1\x80\xD1\x83\xD0\xB1")) return "RUB";  // …
 	return "";
 }
 
@@ -517,7 +517,7 @@ Word word_from(std::string_view after, std::size_t from) {
 // The word right after a statement.
 std::string word_after(std::string_view after) { return word_from(after, 0).text; }
 
-// Cyrillic capitals as small letters, and Latin ones (А-Я, Ё; A-Z).
+// Cyrillic capitals as small letters, and Latin ones (…; A-Z).
 std::string lower_letters(std::string text) {
 	text = lower_ascii(std::move(text));
 	for (std::size_t index = 0; index + 1 < text.size(); ++index) {
@@ -536,14 +536,14 @@ std::string lower_letters(std::string text) {
 	return text;
 }
 
-// "calendar", "календарных": a word that says what kind of days, months or
+// "calendar", "…": a word that says what kind of days, months or
 // years follow it, never the unit itself.
 bool is_calendar_word(const std::string &lower) {
-	return lower == "calendar" || starts_with_at(lower, 0, "\xD0\xBA\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB4");  // календ
+	return lower == "calendar" || starts_with_at(lower, 0, "\xD0\xBA\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xBD\xD0\xB4");  // …
 }
 
 // The currency the text already writes right next to a statement: "${{= …}}",
-// "{{= …}} рублей", "USD {{= …}}".
+// "…", "USD {{= …}}".
 std::string currency_beside(std::string_view before, std::string_view after) {
 	std::size_t end = before.size();
 	while (end > 0 && (before[end - 1] == ' ' || before[end - 1] == '\t')) --end;
@@ -563,12 +563,12 @@ std::string currency_beside(std::string_view before, std::string_view after) {
 	return currency_of_mark(word);
 }
 
-// The unit of time written right after a statement: "{{= …}} days", "… дня",
-// "… calendar days", "… рабочих дней".
+// The unit of time written right after a statement: "{{= …}} days", "…",
+// "… calendar days", "…".
 std::optional<semantic::DurationUnit> unit_after(std::string_view after) {
 	using semantic::DurationUnit;
 	Word first = word_from(after, 0);
-	// "calendar months", "календарных месяцев": the unit is the noun after it.
+	// "calendar months", "…": the unit is the noun after it.
 	if (is_calendar_word(lower_letters(first.text))) first = word_from(after, first.end);
 	const std::string word = lower_letters(first.text);
 	if (word.empty()) return std::nullopt;
@@ -577,14 +577,14 @@ std::optional<semantic::DurationUnit> unit_after(std::string_view after) {
 	if (word == "week" || word == "weeks") return DurationUnit::Week;
 	if (word == "month" || word == "months") return DurationUnit::Month;
 	if (word == "year" || word == "years") return DurationUnit::Year;
-	if (starts_with_at(word, 0, "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87")) return DurationUnit::BusinessDay;  // рабоч
-	for (const char *stem : {"\xD0\xB4\xD0\xBD",          // дн
-			 "\xD0\xB4\xD0\xB5\xD0\xBD\xD1\x8C"})  // день
+	if (starts_with_at(word, 0, "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87")) return DurationUnit::BusinessDay;  // …
+	for (const char *stem : {"\xD0\xB4\xD0\xBD",          // …
+			 "\xD0\xB4\xD0\xB5\xD0\xBD\xD1\x8C"})  // …
 		if (starts_with_at(word, 0, stem)) return DurationUnit::Day;
-	if (starts_with_at(word, 0, "\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB")) return DurationUnit::Week;  // недел
-	if (starts_with_at(word, 0, "\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86")) return DurationUnit::Month;  // месяц
-	if (word == "\xD0\xB3\xD0\xBE\xD0\xB4" || word == "\xD0\xB3\xD0\xBE\xD0\xB4\xD0\xB0"  // год, года
-			|| word == "\xD0\xBB\xD0\xB5\xD1\x82")                                         // лет
+	if (starts_with_at(word, 0, "\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB")) return DurationUnit::Week;  // …
+	if (starts_with_at(word, 0, "\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86")) return DurationUnit::Month;  // …
+	if (word == "\xD0\xB3\xD0\xBE\xD0\xB4" || word == "\xD0\xB3\xD0\xBE\xD0\xB4\xD0\xB0"  // …
+			|| word == "\xD0\xBB\xD0\xB5\xD1\x82")                                         // …
 		return DurationUnit::Year;
 	return std::nullopt;
 }
@@ -601,14 +601,14 @@ std::optional<semantic::DurationUnit> unit_of_style(semantic::FormatStyle style)
 
 std::string unit_words(semantic::DurationUnit unit, Language language) {
 	switch (unit) {
-		case semantic::DurationUnit::Day: return say(language, "days", "днях");
-		case semantic::DurationUnit::BusinessDay: return say(language, "business days", "рабочих днях");
-		case semantic::DurationUnit::Week: return say(language, "weeks", "неделях");
-		case semantic::DurationUnit::Month: return say(language, "months", "месяцах");
-		case semantic::DurationUnit::Year: return say(language, "years", "годах");
-		case semantic::DurationUnit::Quarter: return say(language, "quarters", "кварталах");
-		case semantic::DurationUnit::Hour: return say(language, "hours", "часах");
-		case semantic::DurationUnit::Minute: return say(language, "minutes", "минутах");
+		case semantic::DurationUnit::Day: return say(language, "days", "\320\264\320\275\321\217\321\205");
+		case semantic::DurationUnit::BusinessDay: return say(language, "business days", "\321\200\320\260\320\261\320\276\321\207\320\270\321\205 \320\264\320\275\321\217\321\205");
+		case semantic::DurationUnit::Week: return say(language, "weeks", "\320\275\320\265\320\264\320\265\320\273\321\217\321\205");
+		case semantic::DurationUnit::Month: return say(language, "months", "\320\274\320\265\321\201\321\217\321\206\320\260\321\205");
+		case semantic::DurationUnit::Year: return say(language, "years", "\320\263\320\276\320\264\320\260\321\205");
+		case semantic::DurationUnit::Quarter: return say(language, "quarters", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260\321\205");
+		case semantic::DurationUnit::Hour: return say(language, "hours", "\321\207\320\260\321\201\320\260\321\205");
+		case semantic::DurationUnit::Minute: return say(language, "minutes", "\320\274\320\270\320\275\321\203\321\202\320\260\321\205");
 	}
 	return "";
 }
@@ -639,13 +639,13 @@ struct RussianUnit {
 };
 
 const RussianUnit kRussianUnits[] = {
-	{"день", "дня", "дней", "дня", true},
-	{"месяц", "месяца", "месяцев", "месяца", true},
-	{"год", "года", "лет", "года", true},
-	{"неделя", "недели", "недель", "недели", false},
+	{"\320\264\320\265\320\275\321\214", "\320\264\320\275\321\217", "\320\264\320\275\320\265\320\271", "\320\264\320\275\321\217", true},
+	{"\320\274\320\265\321\201\321\217\321\206", "\320\274\320\265\321\201\321\217\321\206\320\260", "\320\274\320\265\321\201\321\217\321\206\320\265\320\262", "\320\274\320\265\321\201\321\217\321\206\320\260", true},
+	{"\320\263\320\276\320\264", "\320\263\320\276\320\264\320\260", "\320\273\320\265\321\202", "\320\263\320\276\320\264\320\260", true},
+	{"\320\275\320\265\320\264\320\265\320\273\321\217", "\320\275\320\265\320\264\320\265\320\273\320\270", "\320\275\320\265\320\264\320\265\320\273\321\214", "\320\275\320\265\320\264\320\265\320\273\320\270", false},
 };
 
-// The last word of `before`, in small letters: "течение" in "в течение ".
+// The last word of `before`, in small letters: "…" in "…".
 std::string last_word(std::string_view before) {
 	std::size_t end = before.size();
 	while (end > 0) {
@@ -665,11 +665,10 @@ std::string last_word(std::string_view before) {
 	return lower_letters(std::string(before.substr(begin, end - begin)));
 }
 
-// A word before a count that puts it in the genitive: "в течение 21 дня",
-// "не позднее 1 дня", "до 3 лет".
+// A word before a count that puts it in the genitive: "…",
 bool governs_genitive(const std::string &word) {
-	static const char *const kWords[] = {"течение", "до", "менее", "более", "больше", "меньше", "свыше", "от", "около", "после",
-		"из", "для", "без", "сверх", "истечении", "пределах", "позднее", "позже", "ранее", "раньше"};
+	static const char *const kWords[] = {"\321\202\320\265\321\207\320\265\320\275\320\270\320\265", "\320\264\320\276", "\320\274\320\265\320\275\320\265\320\265", "\320\261\320\276\320\273\320\265\320\265", "\320\261\320\276\320\273\321\214\321\210\320\265", "\320\274\320\265\320\275\321\214\321\210\320\265", "\321\201\320\262\321\213\321\210\320\265", "\320\276\321\202", "\320\276\320\272\320\276\320\273\320\276", "\320\277\320\276\321\201\320\273\320\265",
+		"\320\270\320\267", "\320\264\320\273\321\217", "\320\261\320\265\320\267", "\321\201\320\262\320\265\321\200\321\205", "\320\270\321\201\321\202\320\265\321\207\320\265\320\275\320\270\320\270", "\320\277\321\200\320\265\320\264\320\265\320\273\320\260\321\205", "\320\277\320\276\320\267\320\264\320\275\320\265\320\265", "\320\277\320\276\320\267\320\266\320\265", "\321\200\320\260\320\275\320\265\320\265", "\321\200\320\260\320\275\321\214\321\210\320\265"};
 	for (const char *governing : kWords)
 		if (word == governing) return true;
 	return false;
@@ -677,18 +676,18 @@ bool governs_genitive(const std::string &word) {
 
 // The Russian words the text writes after a count, agreed with it: the model
 // writes them before the count is known (it is worked out from protected
-// values), so "{{= …}} дня" for 171 is "171 день", "{{= …}} календарных дня"
-// for 5 is "5 календарных дней", and after «в течение» a count of 21 is
-// "21 дня". Returns how much of `after` the agreed words replace, and them
+// values), so "…" for 171 is "…"
+// for 5 is "…", and after «…» a count of 21 is
+// "…". Returns how much of `after` the agreed words replace, and them
 // with the text's own spaces; nothing for words that are not a unit of time
-// (or a case other than these: "к 21 дню" stays as written).
+// (or a case other than these: "…" stays as written).
 std::optional<std::pair<std::size_t, std::string>> agreed_russian_unit(std::string_view before, std::string_view after,
 	const semantic::Rational &count) {
 	if (!count.is_integer() || count.sign() < 0) return std::nullopt;
 	const Word first = word_from(after, 0);
 	const std::string firstLower = lower_letters(first.text);
-	const bool calendar = starts_with_at(firstLower, 0, "календарн");
-	const bool working = starts_with_at(firstLower, 0, "рабоч");
+	const bool calendar = starts_with_at(firstLower, 0, "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275");
+	const bool working = starts_with_at(firstLower, 0, "\321\200\320\260\320\261\320\276\321\207");
 	const Word noun = calendar || working ? word_from(after, first.end) : first;
 	const std::string nounLower = lower_letters(noun.text);
 	const RussianUnit *unit = nullptr;
@@ -700,8 +699,8 @@ std::optional<std::pair<std::size_t, std::string>> agreed_russian_unit(std::stri
 	const bool genitive = governs_genitive(last_word(before));
 	std::string replaced(after.substr(0, first.begin));
 	if (calendar || working) {
-		const std::string stem = calendar ? "календарн" : "рабоч";
-		const std::string ending = !one ? (calendar ? "ых" : "их") : genitive ? (calendar ? "ого" : "его") : (calendar ? "ый" : "ий");
+		const std::string stem = calendar ? "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275" : "\321\200\320\260\320\261\320\276\321\207";
+		const std::string ending = !one ? (calendar ? "\321\213\321\205" : "\320\270\321\205") : genitive ? (calendar ? "\320\276\320\263\320\276" : "\320\265\320\263\320\276") : (calendar ? "\321\213\320\271" : "\320\270\320\271");
 		replaced += stem + ending;
 		replaced.append(after.substr(first.end, noun.begin - first.end));
 	}
@@ -710,15 +709,15 @@ std::optional<std::pair<std::size_t, std::string>> agreed_russian_unit(std::stri
 }
 
 // How the amounts of a statement were written, for a result the model asked
-// no format for: "руб." stays "руб.", "рублей" stays words, "USD" a code. A
+// no format for: "…" stays "…" stays words, "USD" a code. A
 // Russian word stays only in Russian text.
 std::string mark_of_operands(const std::string &expression, const std::string &currency, Language language) {
 	for (const std::string &operand : operands_in(expression)) {
 		const auto value = semantic::parse_value(operand);
 		if (!value || value->kind != semantic::Kind::Money || value->currency != currency) continue;
 		if (language != Language::Russian && operand.find("\xD1\x80\xD1\x83\xD0\xB1") != kNone) return "";
-		if (operand.find("\xD1\x80\xD1\x83\xD0\xB1\xD0\xBB") != kNone) return "\xD1\x80\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB5\xD0\xB9";  // рублей
-		if (operand.find("\xD1\x80\xD1\x83\xD0\xB1") != kNone) return "\xD1\x80\xD1\x83\xD0\xB1.";  // руб.
+		if (operand.find("\xD1\x80\xD1\x83\xD0\xB1\xD0\xBB") != kNone) return "\xD1\x80\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB5\xD0\xB9";  // …
+		if (operand.find("\xD1\x80\xD1\x83\xD0\xB1") != kNone) return "\xD1\x80\xD1\x83\xD0\xB1.";  // …
 		for (const char *code : {"USD", "EUR", "GBP", "RUB", "JPY"}) {
 			const std::size_t at = operand.find(code);
 			if (at == kNone) continue;
@@ -771,14 +770,14 @@ std::string written_value(const Worked &worked, Language language, std::string_v
 		const std::string unit = unit_words(*written_unit, language);
 		if (asked_unit && *asked_unit != *written_unit)
 			throw Problem{say(language, "\"as " + worked.format_text + "\" asks for a figure the text then counts in " + unit,
-				"«as " + worked.format_text + "» просит число, которое текст затем считает в " + unit)};
+				"«as " + worked.format_text + "» \320\277\321\200\320\276\321\201\320\270\321\202 \321\207\320\270\321\201\320\273\320\276, \320\272\320\276\321\202\320\276\321\200\320\276\320\265 \321\202\320\265\320\272\321\201\321\202 \320\267\320\260\321\202\320\265\320\274 \321\201\321\207\320\270\321\202\320\260\320\265\321\202 \320\262 " + unit)};
 		semantic::Value period = value;
 		if (value.kind == semantic::Kind::Duration) {
 			const auto converted = period_in(value, *written_unit);
 			if (!converted)
 				throw Problem{say(language, "the result is " + kind_phrase(value, language) + ", and the text counts it in " + unit
 						+ ": it is not an exact number of them",
-					"результат - " + kind_phrase(value, language) + ", а текст считает его в " + unit + ": точного их числа нет")};
+					"\321\200\320\265\320\267\321\203\320\273\321\214\321\202\320\260\321\202 - " + kind_phrase(value, language) + ", \320\260 \321\202\320\265\320\272\321\201\321\202 \321\201\321\207\320\270\321\202\320\260\320\265\321\202 \320\265\320\263\320\276 \320\262 " + unit + ": \321\202\320\276\321\207\320\275\320\276\320\263\320\276 \320\270\321\205 \321\207\320\270\321\201\320\273\320\260 \320\275\320\265\321\202")};
 			period = *converted;
 		} else {
 			period = semantic::make_duration(value.amount, *written_unit);
@@ -805,7 +804,7 @@ std::string without_operand_marks(std::string text) {
 }
 
 // A name in the case a Russian sentence needs, or the word that agrees with a
-// name's gender - "{{case р [[E5]]}}", "{{gender [[E5]]: действующего|действующей}}"
+// name's gender - "…"
 // - worked out from the restored name on the lawyer's computer
 // (Context/RussianNames). What cannot be told is written in its plainest form:
 // the name as it is, the first of the words offered.
@@ -823,7 +822,7 @@ std::string grammar_of(const Statement &statement, const std::string &head) {
 		const std::string words = trimmed(value);
 		const auto form = russian_names::case_from_word(asked.substr(0, asked.find(' ')));
 		if (words.empty()) {
-			// Written without a protected name: "{{case р Громов Игорь Викторович}}".
+			// Written without a protected name: "…".
 			const std::string plain = trimmed(head);
 			const std::size_t space = plain.find(' ');
 			if (space == kNone) return plain;
@@ -1159,14 +1158,14 @@ public:
 			const std::string written = text.substr(statement->start, statement->head_end + 2 - statement->start);
 			if (depth > kDeepest) {
 				fail(text.substr(statement->start, statement->end - statement->start),
-					say(language_, "the statement is nested too deeply", "в выражении слишком глубокая вложенность"));
+					say(language_, "the statement is nested too deeply", "\320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270 \321\201\320\273\320\270\321\210\320\272\320\276\320\274 \320\263\320\273\321\203\320\261\320\276\320\272\320\260\321\217 \320\262\320\273\320\276\320\266\320\265\320\275\320\275\320\276\321\201\321\202\321\214"));
 			} else if (statement->kind == StatementKind::Case || statement->kind == StatementKind::Gender) {
 				result += grammar_of(*statement, head);
 			} else if (statement->kind == StatementKind::Value) {
 				result += value_of(text, *statement, head, end, consumed);
 			} else {
 				if (statement->unclosed)
-					fail(written, say(language_, "the {{if}} is not closed with {{end}}", "{{if}} не закрыт {{end}}"));
+					fail(written, say(language_, "the {{if}} is not closed with {{end}}", "{{if}} \320\275\320\265 \320\267\320\260\320\272\321\200\321\213\321\202 {{end}}"));
 				const Worked worked = work_condition(head, language_);
 				const Language language = language_;
 				if (worked.value) result += run(worked.value->truth ? statement->when_true : statement->when_false, depth + 1, language);
@@ -1197,7 +1196,7 @@ private:
 		const std::size_t close = balanced_close(text, rest);
 		if (!is_statement_tag(tag) && close != kNone) {
 			const std::string written = text.substr(at, close + 2 - at);
-			fail(written, say(language_, written + " stands without the {{if}} it belongs to", written + " стоит без своего {{if}}"));
+			fail(written, say(language_, written + " stands without the {{if}} it belongs to", written + " \321\201\321\202\320\276\320\270\321\202 \320\261\320\265\320\267 \321\201\320\262\320\276\320\265\320\263\320\276 {{if}}"));
 			return tag_span(text, at, close).second;
 		}
 		std::size_t line = text.find('\n', at);
@@ -1206,7 +1205,7 @@ private:
 		const std::size_t nextOpen = text.find("{{", rest);
 		const std::size_t end = shut != kNone && shut < line && (nextOpen == kNone || shut < nextOpen) ? shut + 2
 			: arithmetic_end(text, rest, line);
-		fail(text.substr(at, end - at), say(language_, "the statement is not closed with }}", "выражение не закрыто }}"));
+		fail(text.substr(at, end - at), say(language_, "the statement is not closed with }}", "\320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\265 \320\275\320\265 \320\267\320\260\320\272\321\200\321\213\321\202\320\276 }}"));
 		return end;
 	}
 
@@ -1439,14 +1438,14 @@ std::string derived_answer(const Worked &given, Language language) {
 			"the result is an amount owed for each "
 				+ std::string(value.basis == semantic::RateBasis::PerDay ? "day" : value.basis == semantic::RateBasis::PerMonth ? "month" : "year")
 				+ ", which a symbol cannot carry; ask for it over the period it is owed for (times the days, months or years)",
-			"результат - сумма за каждый период ставки, которую символ передать не может; спросите сумму за весь срок (умножив на дни, месяцы или годы)");
+			"\321\200\320\265\320\267\321\203\320\273\321\214\321\202\320\260\321\202 - \321\201\321\203\320\274\320\274\320\260 \320\267\320\260 \320\272\320\260\320\266\320\264\321\213\320\271 \320\277\320\265\321\200\320\270\320\276\320\264 \321\201\321\202\320\260\320\262\320\272\320\270, \320\272\320\276\321\202\320\276\321\200\321\203\321\216 \321\201\320\270\320\274\320\262\320\276\320\273 \320\277\320\265\321\200\320\265\320\264\320\260\321\202\321\214 \320\275\320\265 \320\274\320\276\320\266\320\265\321\202; \321\201\320\277\321\200\320\276\321\201\320\270\321\202\320\265 \321\201\321\203\320\274\320\274\321\203 \320\267\320\260 \320\262\320\265\321\201\321\214 \321\201\321\200\320\276\320\272 (\321\203\320\274\320\275\320\276\320\266\320\270\320\262 \320\275\320\260 \320\264\320\275\320\270, \320\274\320\265\321\201\321\217\321\206\321\213 \320\270\320\273\320\270 \320\263\320\276\320\264\321\213)");
 	if (!written)
 		return "could not be worked out: " + say(language,
 			"the result has no exact decimal writing, so a symbol for it would stand for a rounding; ask for it rounded "
 			"(op round with the places, or round(x, places) in an expression), or write the calculation itself where the "
 			"figure is needed",
-			"у результата нет точной десятичной записи, и символ для него означал бы округление; спросите его округленным "
-			"(op round с числом знаков или round(x, places) в выражении) или напишите сам расчет там, где нужна цифра");
+			"\321\203 \321\200\320\265\320\267\321\203\320\273\321\214\321\202\320\260\321\202\320\260 \320\275\320\265\321\202 \321\202\320\276\321\207\320\275\320\276\320\271 \320\264\320\265\321\201\321\217\321\202\320\270\321\207\320\275\320\276\320\271 \320\267\320\260\320\277\320\270\321\201\320\270, \320\270 \321\201\320\270\320\274\320\262\320\276\320\273 \320\264\320\273\321\217 \320\275\320\265\320\263\320\276 \320\276\320\267\320\275\320\260\321\207\320\260\320\273 \320\261\321\213 \320\276\320\272\321\200\321\203\320\263\320\273\320\265\320\275\320\270\320\265; \321\201\320\277\321\200\320\276\321\201\320\270\321\202\320\265 \320\265\320\263\320\276 \320\276\320\272\321\200\321\203\320\263\320\273\320\265\320\275\320\275\321\213\320\274 "
+			"(op round \321\201 \321\207\320\270\321\201\320\273\320\276\320\274 \320\267\320\275\320\260\320\272\320\276\320\262 \320\270\320\273\320\270 round(x, places) \320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270) \320\270\320\273\320\270 \320\275\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\201\320\260\320\274 \321\200\320\260\321\201\321\207\320\265\321\202 \321\202\320\260\320\274, \320\263\320\264\320\265 \320\275\321\203\320\266\320\275\320\260 \321\206\320\270\321\204\321\200\320\260");
 	return std::string(kOpen) + *written + std::string(kClose) + " (" + kind_of(read) + rounding + ")";
 }
 

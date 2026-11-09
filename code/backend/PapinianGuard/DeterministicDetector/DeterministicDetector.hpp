@@ -12,7 +12,7 @@ namespace singularity::protected_api {
 
 // Labels for the two shapes found whenever protection is on, whatever
 // categories are picked, like the names Papinian NER finds (see Policy.hpp):
-// a Russian or English street address and the name written after «ИП».
+// a Russian or English street address and the name written after «…».
 inline constexpr char address_label[] = "address";
 inline constexpr char person_label[] = "person";
 // A financial ratio the monetary-amounts category protects ("Gross margin |
@@ -59,27 +59,27 @@ std::vector<Match> detect(const std::string &text, const Policy &policy);
 enum class NumberMeaning {
   // Nothing nearby says what it is.
   Unknown,
-  // Structure or a plain scalar: a row, section or clause ("Row 10", "п. 9.4",
-  // "ст. 401"), a length of time or a count of things ("12 months", "60 days",
+  // Structure or a plain scalar: a row, section or clause ("Row 10", "…",
+  // "…"), a length of time or a count of things ("12 months", "60 days",
   // "3 copies"), a list's number, a cell reference or a formula's constant, a
   // percentage under no financial label, a factor or a probability - and zero.
   Generic,
-  // A date or a part of one: "15.03.2026", "10:30", the year in "15 марта 2026 г.".
+  // A date or a part of one: "15.03.2026", "10:30", the year in "…".
   DatePart,
-  // Money: a currency beside it ("$12", "USD 12", "12 рублей"), a scale ("12
+  // Money: a currency beside it ("$12", "USD 12", "…"), a scale ("12
   // million"), a money word before it ("purchase price of 12"), the workbook
   // reading's "(shown in $)", or a row label or column header naming money
-  // ("Fees", "Стоимость услуг, ₽").
+  // ("Fees", "…").
   Money,
   // A financial ratio a company keeps confidential: under a label naming a
   // margin, an ownership share or another financial measure ("Gross margin",
   // "Ownership %", "(shown as a percentage)" beside "Adjusted EBITDA margin").
   FinancialRatio,
   // A party's holding: under a label naming shares, units or membership
-  // interests ("Shares", «Количество акций»), or a count of them in prose
+  // interests ("Shares", «…»), or a count of them in prose
   // ("3,600 shares of the Company").
   Holding,
-  // The number of an identifier: after "№", "No." or "#" ("протокол № 7"), or
+  // The number of an identifier: after "№", "No." or "#" ("…"), or
   // an account's, a passport's or a tax number's ("Account suffix 12").
   Identifier,
 };
@@ -90,31 +90,31 @@ NumberMeaning number_meaning(const std::string &text, std::size_t start, std::si
 // Whether text[start, start + length) stands as the whole number it is: not
 // the start of "20260", not the "0" of "0.64" or of "15.03.2026", not a group
 // of "2 615 000", and not the number of a code or a reference ("B10", "E80",
-// "СП-087", a phone's "+7"). A letter right after it is allowed: "12m" is 12.
+// "…", a phone's "+7"). A letter right after it is allowed: "12m" is 12.
 bool stands_as_whole_number(const std::string &text, std::size_t start, std::size_t length);
 
 // The span a number found at text[start, end) stands for: the whole number,
-// and when it is written glued to letters, the code it is part of ("СП-087/26",
-// "ИНН7710482917") - except a workbook's cell reference, which stays as found
+// and when it is written glued to letters, the code it is part of ("…",
+// "…") - except a workbook's cell reference, which stays as found
 // (number_meaning() reads it as structure). A detected span widened so is one
 // the frozen pass finds again where it stands.
 std::pair<std::size_t, std::size_t> detected_number_span(const std::string &text, std::size_t start, std::size_t end);
 
 // The header of the column a position stands in, when it stands in a cell of a
 // table as a document's reading writes one - a line per row, the cells joined
-// by tabs - whose first row is a header ("Наименование<TAB>Итого, ₽"): where
-// that header cell's text begins and ends. What a figure under «Итого, ₽» is
+// by tabs - whose first row is a header ("…"): where
+// that header cell's text begins and ends. What a figure under «…» is
 // counted in. Nothing outside such a table, and nothing for its header row.
 std::optional<std::pair<std::size_t, std::size_t>> table_column_header(const std::string &text, std::size_t position);
 
 // Whether a number's sign stands right before text[start]: "№", "#", "No.",
-// "Nr.", "N" - "Договор № 15/03/2026", "Invoice No. 2026-03-15". What follows
+// "Nr.", "N" - "…", "Invoice No. 2026-03-15". What follows
 // it is a document's number whatever its shape, never a date.
 bool after_number_sign(const std::string &text, std::size_t start);
 
 // Whether a word that places something in time stands right before
-// text[start]: "от", "с", "до", "по", "не позднее", "on", "by", "dated",
-// "from", "until", "as of", "effective". What makes "02.07" in «оплата от
+// text[start]: "…", "on", "by", "dated",
+// "from", "until", "as of", "effective". What makes "02.07" in «…
 // 02.07» a day and "3/4" in "3/4 of the price" not one.
 bool after_date_cue(const std::string &text, std::size_t start);
 
@@ -129,14 +129,14 @@ std::optional<std::pair<int, int>> yearless_day(const std::string &text, std::si
 bool stands_as_cell_reference(const std::string &text, std::size_t start, std::size_t length);
 
 // Whether text[start, start + length) names a place in a document or a length
-// of time and nothing else - "Section 12", "подп. 10.3.2", "разделом 10
-// Договора", "ст. 401 ГК РФ", "12 months" - every number in it structure.
+// of time and nothing else - "Section 12", "…", "… 10
+// …", "… 401 …", "12 months" - every number in it structure.
 bool names_only_structure(const std::string &text, std::size_t start, std::size_t length);
 
 // The span a quantity whose number stands at text[start, end) is written
-// with: its sign, a currency before or after it, a scale ("million", "млн"),
-// the amount restated in words ("(восемнадцать миллионов) рублей"), and a
-// percent sign or word ("3 %", "0,1 процента"). The number alone when nothing
+// with: its sign, a currency before or after it, a scale ("million", "…"),
+// the amount restated in words ("…"), and a
+// percent sign or word ("3 %", "…"). The number alone when nothing
 // of that stands beside it.
 std::pair<std::size_t, std::size_t> quantity_span(const std::string &text, std::size_t start, std::size_t end);
 

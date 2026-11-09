@@ -267,7 +267,7 @@ Json reactions_json(const std::map<std::string, std::vector<std::string>> &react
   return list;
 }
 
-// When a person's message reached each other member (D-212): actor id to time.
+// When a person's message reached each other member: actor id to time.
 Json received_json(const std::map<std::string, std::string> &received) {
   Json found = Json::object();
   for (const auto &[actor, at] : received) found[actor] = at;

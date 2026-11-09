@@ -79,6 +79,9 @@ struct State {
 	std::vector<Computer> listing;
 	bool is_listing_read = false;
 	Clock::time_point listed_at {};
+	// The organisation whose computers `listing` holds: read again once
+	// this computer is signed in to another.
+	std::string listing_organisation;
 	// What this computer last said of itself, and when.
 	std::string said;
 	Clock::time_point said_at {};
@@ -109,6 +112,10 @@ std::string key_of(const std::string &me, const std::string &device_id) {
 
 std::string my_device(const Environment &environment) {
 	return environment.device_id ? environment.device_id() : std::string();
+}
+
+std::string organisation_of(const Environment &environment) {
+	return environment.organisation_id ? environment.organisation_id() : std::string();
 }
 
 std::string commitment_of(const std::string &device_key, const std::string &coordination_key, const std::string &seat_id,
@@ -158,18 +165,46 @@ std::vector<Computer> read_records(const Environment &environment) {
 		computer.device_id = entry.value("deviceId", std::string());
 		computer.device_key = entry.value("deviceKey", std::string());
 		computer.coordination_key = entry.value("coordinationKey", std::string());
+		computer.organisation_id = entry.value("organisationId", std::string());
 		if (computer.device_id.empty() || computer.device_key.empty() || computer.coordination_key.empty()) continue;
 		kept.push_back(std::move(computer));
 	}
 	return kept;
 }
 
+// Whether a check is the organisation's: checked in it, or kept from before
+// checks named their organisation and listed by its listing with the very keys
+// the check confirmed.
+bool is_of_organisation(const Computer &record, const std::string &organisation, const std::vector<Computer> &listing,
+		bool is_listing_its) {
+	if (organisation.empty()) return false;
+	if (record.organisation_id.empty() == false) return record.organisation_id == organisation;
+	if (is_listing_its == false) return false;
+	return std::any_of(listing.begin(), listing.end(), [&record](const Computer &listed) {
+		return listed.device_id == record.device_id && listed.device_key == record.device_key;
+	});
+}
+
+// The checks of `organisation` among those kept, each with its id.
+std::vector<Computer> records_of(const std::vector<Computer> &kept, const std::string &organisation,
+		const std::vector<Computer> &listing, bool is_listing_its) {
+	std::vector<Computer> found;
+	for (const Computer &record : kept) {
+		if (is_of_organisation(record, organisation, listing, is_listing_its) == false) continue;
+		found.push_back(record);
+		found.back().organisation_id = organisation;
+	}
+	return found;
+}
+
 void write_records(const Environment &environment, const std::vector<Computer> &checked) {
 	if (!environment.records) return;
 	Json list = Json::array();
 	for (const Computer &computer : checked) {
-		list.push_back(Json{{"seatId", computer.seat_id}, {"deviceId", computer.device_id}, {"deviceKey", computer.device_key},
-			{"coordinationKey", computer.coordination_key}, {"checkedAt", environment.now ? environment.now() : std::string()}});
+		Json entry{{"seatId", computer.seat_id}, {"deviceId", computer.device_id}, {"deviceKey", computer.device_key},
+			{"coordinationKey", computer.coordination_key}, {"checkedAt", environment.now ? environment.now() : std::string()}};
+		if (computer.organisation_id.empty() == false) entry["organisationId"] = computer.organisation_id;
+		list.push_back(std::move(entry));
 	}
 	const fs::path path = environment.records();
 	std::error_code error;
@@ -189,6 +224,9 @@ void fail(Session &session, const std::string &problem) {
 // io one; kept as they were when it can't be reached.
 void refresh_listing(State &held, const Environment &environment) {
 	if (!environment.list) return;
+	// The organisation signed in to as the listing is asked for: what comes is
+	// its computers.
+	const std::string organisation = organisation_of(environment);
 	std::optional<std::vector<Computer>> listed;
 	try {
 		listed = environment.list();
@@ -196,14 +234,55 @@ void refresh_listing(State &held, const Environment &environment) {
 	}
 	const std::lock_guard<std::mutex> lock(held.mutex);
 	held.listed_at = Clock::now();
-	if (listed.has_value() == false) return;
+	if (listed.has_value() == false) {
+		// Another organisation's listing is not this one's, though nothing came.
+		if (held.listing_organisation != organisation) {
+			held.listing.clear();
+			held.is_listing_read = false;
+		}
+		return;
+	}
 	held.listing = std::move(*listed);
 	held.is_listing_read = true;
+	held.listing_organisation = organisation;
 }
 
 bool is_listing_stale(State &held, Clock::duration fresh) {
+	Environment environment;
+	{
+		const std::lock_guard<std::mutex> lock(held.mutex);
+		environment = held.environment;
+	}
+	const std::string organisation = organisation_of(environment);
 	const std::lock_guard<std::mutex> lock(held.mutex);
-	return held.is_listing_read == false || Clock::now() - held.listed_at >= fresh;
+	return held.is_listing_read == false || held.listing_organisation != organisation || Clock::now() - held.listed_at >= fresh;
+}
+
+// The listing as last read, when it is the listing of the organisation signed
+// in to now; none else.
+std::vector<Computer> listing_of_now(State &held, const Environment &environment) {
+	const std::string organisation = organisation_of(environment);
+	const std::lock_guard<std::mutex> lock(held.mutex);
+	if (held.is_listing_read == false || organisation.empty() || held.listing_organisation != organisation) return {};
+	return held.listing;
+}
+
+// The checks kept from before checks named their organisation, that the
+// organisation signed in to lists now with their very keys, kept from now on
+// as that organisation's.
+void name_kept_checks(State &held, const Environment &environment) {
+	const std::string organisation = organisation_of(environment);
+	if (organisation.empty()) return;
+	const std::vector<Computer> listing = listing_of_now(held, environment);
+	if (listing.empty()) return;
+	std::vector<Computer> kept = read_records(environment);
+	bool isNamed = false;
+	for (Computer &record : kept) {
+		if (record.organisation_id.empty() == false || is_of_organisation(record, organisation, listing, true) == false) continue;
+		record.organisation_id = organisation;
+		isNamed = true;
+	}
+	if (isNamed == true) write_records(environment, kept);
 }
 
 std::vector<Message> fetch_inbox(const Environment &environment) {
@@ -343,9 +422,11 @@ Check check_of(State &held, const std::string &key, const std::string &device_id
 	return view_of(device_id, found->second);
 }
 
+// `listing` is the organisation's signed in to now (listing_of_now): a check
+// made in another counts for none of its computers.
 std::vector<View> views_of(const Environment &environment, const std::vector<Computer> &listing) {
 	const std::string me = my_device(environment);
-	const std::vector<Computer> kept = read_records(environment);
+	const std::vector<Computer> kept = records_of(read_records(environment), organisation_of(environment), listing, true);
 	std::vector<View> views;
 	for (const Computer &computer : listing) {
 		View view;
@@ -410,6 +491,7 @@ void install_environment(Environment environment) {
 	held.listing.clear();
 	held.is_listing_read = false;
 	held.listed_at = {};
+	held.listing_organisation.clear();
 	held.said.clear();
 	held.said_at = {};
 }
@@ -433,24 +515,13 @@ std::vector<View> computers() {
 	const std::lock_guard<std::mutex> io(held.io);
 	const Environment environment = environment_now(held);
 	if (is_listing_stale(held, kListingFresh)) refresh_listing(held, environment);
-	std::vector<Computer> listing;
-	{
-		const std::lock_guard<std::mutex> lock(held.mutex);
-		listing = held.listing;
-	}
-	return views_of(environment, listing);
+	return views_of(environment, listing_of_now(held, environment));
 }
 
 std::vector<View> computers_as_known() {
 	State &held = state();
-	Environment environment;
-	std::vector<Computer> listing;
-	{
-		const std::lock_guard<std::mutex> lock(held.mutex);
-		environment = held.environment;
-		listing = held.listing;
-	}
-	return views_of(environment, listing);
+	const Environment environment = environment_now(held);
+	return views_of(environment, listing_of_now(held, environment));
 }
 
 Check start_check(const std::string &device_id) {
@@ -547,6 +618,9 @@ void match(const std::string &device_id) {
 		held.sessions.erase(found);
 	}
 	if (environment.confirm) environment.confirm(actor_of(environment, peer.seat_id), peer.device_key);
+	// Checked in the organisation signed in to: its computer for no
+	// other.
+	peer.organisation_id = organisation_of(environment);
 	std::vector<Computer> kept = read_records(environment);
 	kept.erase(std::remove_if(kept.begin(), kept.end(), [&peer](const Computer &record) { return record.device_id == peer.device_id; }),
 		kept.end());
@@ -587,26 +661,24 @@ void cancel(const std::string &device_id) {
 
 std::vector<Computer> checked_records() {
 	State &held = state();
-	Environment environment;
-	{
-		const std::lock_guard<std::mutex> lock(held.mutex);
-		environment = held.environment;
-	}
-	return read_records(environment);
+	const Environment environment = environment_now(held);
+	const std::vector<Computer> listing = listing_of_now(held, environment);
+	return records_of(read_records(environment), organisation_of(environment), listing, listing.empty() == false);
 }
 
 std::vector<Computer> checked() {
 	State &held = state();
-	Environment environment;
-	std::vector<Computer> listed;
+	const Environment environment = environment_now(held);
+	const std::string organisation = organisation_of(environment);
+	// Signed in to no organisation, no computer is the firm's.
+	if (organisation.empty()) return {};
 	bool isListed = false;
 	{
 		const std::lock_guard<std::mutex> lock(held.mutex);
-		environment = held.environment;
-		listed = held.listing;
-		isListed = held.is_listing_read;
+		isListed = held.is_listing_read && held.listing_organisation == organisation;
 	}
-	std::vector<Computer> kept = read_records(environment);
+	const std::vector<Computer> listed = isListed ? listing_of_now(held, environment) : std::vector<Computer>();
+	std::vector<Computer> kept = records_of(read_records(environment), organisation, listed, isListed);
 	std::vector<Computer> found;
 	for (Computer &record : kept) {
 		if (environment.is_refused && environment.is_refused(record.device_key)) continue;
@@ -646,6 +718,7 @@ void background_once() {
 	if (is_listing_stale(held, kListingEvery)) {
 		const std::vector<View> before = computers_as_known();
 		refresh_listing(held, environment);
+		name_kept_checks(held, environment);
 		const std::vector<View> after = computers_as_known();
 		changed = before.size() != after.size()
 			|| !std::equal(before.begin(), before.end(), after.begin(), [](const View &a, const View &b) {
@@ -714,6 +787,7 @@ void reset_for_tests() {
 	held.listing.clear();
 	held.is_listing_read = false;
 	held.listed_at = {};
+	held.listing_organisation.clear();
 	held.said.clear();
 	held.said_at = {};
 }

@@ -3,11 +3,11 @@
 # WebView2's user data folder.
 #
 # webview creates WebView2's user data folder, the window's browser cache and
-# the page's own storage, at %APPDATA%\<program file name>, which is the
-# roaming profile, and offers no way to choose another. Microsoft's guidance is
-# the folder where the app keeps the rest of its data, never a network drive:
-# a roaming profile is often redirected to one. Singularity keeps it in
-# %LOCALAPPDATA%\Singularity\WebView2 (Platform/WebViewData, D-040).
+# the page's own storage, at %APPDATA%\<program file name>, which is the roaming
+# profile, and offers no way to choose another. Microsoft's guidance is the
+# folder where the app keeps the rest of its data, never a network drive: a
+# roaming profile is often redirected to one. Singularity keeps it in
+# %LOCALAPPDATA%\Singularity\WebView2.
 #
 # The patch adds webview::mswebview2_user_data_folder(), which the application
 # sets before it creates a webview. Left empty, webview's own choice stands.

@@ -20,9 +20,8 @@ import { ThreadView } from "./ThreadView.jsx";
 import styles from "./ThreadPage.module.css";
 
 // A thread on a page of its own. Its title, its project's band and its faces
-// travel into the window's band as it scrolls, and come back down at its top
-// (MovingHead, the owner, 2026-10-24); a press on the docked title brings the
-// thread back to its top.
+// travel into the window's band as it scrolls, and come back down at its top;
+// a press on the docked title brings the thread back to its top.
 export function ThreadPage({ state, onDecide, onReply, onReact, onEditPost, onDeletePost, onMarkUnread, onAnswer, onCloseThread, onReopenThread }) {
 	const { place, open } = useNavigation();
 	const real = useRealWork();
@@ -48,7 +47,7 @@ export function ThreadPage({ state, onDecide, onReply, onReact, onEditPost, onDe
 	}
 	const matter = findMatter(thread.matterId);
 	// A real thread is renamed where its title stands; one just begun opens
-	// with its name to write (the owner, 2026-11-02).
+	// with its name to write.
 	const isReal = thread.isReal == true;
 	const isUnnamed = isReal && (thread.posts ?? []).length == 0 && ["New thread", "New chat"].includes(thread.title);
 	const hasColleague = isReal && thread.real?.chatId != null && (thread.participantIds ?? []).some(id => findMember(id)?.kind == "ai_colleague");
@@ -64,7 +63,7 @@ export function ThreadPage({ state, onDecide, onReply, onReact, onEditPost, onDe
 		<div ref={pageRef} className={styles.page}>
 			{!isEmulation ? <SheetBar actions={thread.isReal == true ? (
 				<>
-					{/* With an AI colleague in it, the thread can be read as an AI provider receives it (D-233). */}
+					{/* With an AI colleague in it, the thread can be read as an AI provider receives it. */}
 					{hasColleague ? <ProviderViewButton chatId={thread.real?.chatId} /> : null}
 					<ThreadMenu thread={thread} matter={matter} />
 				</>
@@ -87,7 +86,7 @@ export function ThreadPage({ state, onDecide, onReply, onReact, onEditPost, onDe
 	);
 }
 
-// The thread's messages as the member sees them, for its work log (D-257).
+// The thread's messages as the member sees them, for its work log.
 function messagesOf(thread) {
 	return (thread.posts ?? []).map(post => ({
 		author: findMember(post.authorId ?? post.byId)?.name ?? "",
@@ -96,14 +95,17 @@ function messagesOf(thread) {
 	}));
 }
 
-// What the member may do to the thread (D-214): rename it, archive it apart
-// from the Matter's threads or bring it back, or delete it, which its notice
-// can still undo; its words are never erased. On a design partner's seat it
-// also sends the thread's work log to Legal Machines (D-257).
+// What the member may do to the thread: rename it, archive it apart from the
+// Matter's threads or bring it back, or delete it, which its notice can
+// still undo; its words are never erased. On a design partner's seat it also
+// sends the thread's work log to Legal Machines.
 function ThreadMenu({ thread, matter }) {
 	const { open } = useNavigation();
 	const [asking, setAsking] = useState(null);
-	const canShareWorkLog = useCanShareWorkLog() && thread.real?.chatId != null;
+	// The log is the AI models' record: a thread of people alone has none, so
+	// the option is not there.
+	const canShareWorkLog = useCanShareWorkLog() && thread.real?.chatId != null
+		&& (thread.participantIds ?? []).some(id => findMember(id)?.kind == "ai_colleague");
 	const backToMatter = () => open({ kind: "matter", matterId: matter.id, tab: "threads" });
 
 	async function archive(archived) {

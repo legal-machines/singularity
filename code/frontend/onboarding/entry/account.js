@@ -1,16 +1,16 @@
-// Onboarding's account with Legal Machines (D-133), through the bridge: the
+// Onboarding's account with Legal Machines, through the bridge: the
 // organisation's email first; a known organisation signs in with its password
 // and a second step - the code its authenticator app shows, or for an older
 // one the code mailed to that email. A new one is created from its details
 // and agreements alone, confirms its email, then sets its administrator's
-// password and two-factor authentication and is given its recovery codes
-// (D-146). The password goes to the native side with each call and is kept
-// nowhere here; what the email's confirmation gives to finish the setup stays
-// native. Signed in, the native side records the account and downloads
-// Papinian's protection model.
+// password and two-factor authentication and is given its recovery codes. The
+// password goes to the native side with each call and is kept nowhere here;
+// what the email's confirmation gives to finish the setup stays native.
+// Signed in, the native side records the account and downloads Papinian's
+// protection model.
 
-// Short words for each refusal (UI-28). Where the words must say what to
-// correct (a registration's details), the bridge's own are used.
+// Short words for each refusal. Where the words must say what to correct
+// (a registration's details), the bridge's own are used.
 const REFUSALS = {
 	"account.wrong_credentials": "Email or password is wrong.",
 	"account.wrong_code": "That code doesn’t match. Try again.",
@@ -32,22 +32,20 @@ export function refusalOf(error) {
 // stand-in answers instead: it signs nothing in and sends nothing, an email at
 // example.com is a known organisation that signs in with an authenticator app
 // (one that begins "mail" with a mailed code), and every code it asks for is
-// PREVIEW_CODE. The page never shows it (the owner, 2026-10-29).
+// PREVIEW_CODE. The page never shows it.
 //
 // A seat's password is kept, at the member's choice, where the computer's own
-// store can keep it (D-243): Windows' Credential Manager. The page asks only
-// whether one is kept; signing in with it is the native side's, and the page
-// never reads it back.
+// store can keep it: Windows' Credential Manager. The page asks only whether
+// one is kept; signing in with it is the native side's, and the page never
+// reads it back.
 //
 // A test of the whole product in the app may stand in for Legal Machines the
-// same way (the owner, 2026-10-31: "I can't give you the code from the mail;
-// at the onboarding stage emulate it, like 2FA"). Only a Debug build started
-// for such a test says so (accountEmulation "register" for a new firm, "join"
-// for a colleague signing in to a seat the firm made, with the firm's name); a
-// Release build
-// never does, and Legal Machines' own checks are never weakened. The test's
-// firm then waits a few seconds for its approval, and its name is the one
-// this computer keeps for an installation nobody signed in to.
+// same way. Only a Debug build started for such a test says so
+// (accountEmulation "register" for a new firm, "join" for a colleague signing
+// in to a seat the firm made, with the firm's name); a Release build never
+// does, and Legal Machines' own checks are never weakened. The test's firm
+// then waits a few seconds for its approval, and its name is the one this
+// computer keeps for an installation nobody signed in to.
 export const PREVIEW_CODE = "246810";
 export const PREVIEW_SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 const PREVIEW_RECOVERY_CODES = [
@@ -62,13 +60,13 @@ export function accountOf(nativeApp) {
 			preview: false,
 			state: () => nativeApp.getAccountState(),
 			find: (email) => nativeApp.findLegalMachinesOrganisation(email),
-			// The firm's email, a seat's id and its password (D-204): the
-			// administrator's seat goes on to its code, a colleague's is signed in.
+			// The firm's email, a seat's id and its password: the administrator's
+			// seat goes on to its code, a colleague's is signed in.
 			signIn: (email, seat, password) => nativeApp.signInToLegalMachinesWithEmail(email, seat, password),
 			verify: (challengeId, code, organisationId, seatId, password, email) =>
 				nativeApp.verifyLegalMachinesCode(challengeId, code, organisationId, seatId, password, email),
-			// Where this computer keeps a seat's password (D-243): "windows", or
-			// null where it keeps none and the page offers none.
+			// Where this computer keeps a seat's password: "windows", or null
+			// where it keeps none and the page offers none.
 			passwordStore: async () => (typeof nativeApp.getSeatPasswordStore == "function"
 				? (await nativeApp.getSeatPasswordStore())?.store ?? null
 				: null),
@@ -95,7 +93,7 @@ export function accountOf(nativeApp) {
 			startTwoFactor: (organisationId) => nativeApp.startLegalMachinesTwoFactor(organisationId),
 			// {state, recoveryCodes, signedIn?}: two-factor is on, the codes that
 			// stand in for the app once each, and, for an organisation active at
-			// the end of its setup, its sign-in here, with no code again (D-152).
+			// the end of its setup, its sign-in here, with no code again.
 			confirmTwoFactor: (organisationId, code, seatId, password, email) =>
 				nativeApp.confirmLegalMachinesTwoFactor(organisationId, code, seatId, password, email),
 			// {saved}: the recovery codes written to a file the person chooses.
@@ -103,15 +101,15 @@ export function accountOf(nativeApp) {
 			// {printed}: the recovery codes as a page to print, opened with its
 			// print dialog in the system's browser.
 			printRecoveryCodes: (organisationId) => nativeApp.printLegalMachinesRecoveryCodes(organisationId),
-			// Whether Legal Machines approved the organisation the page waits for (D-030).
+			// Whether Legal Machines approved the organisation the page waits for.
 			approved: (organisationId) => typeof nativeApp.getLegalMachinesApprovalState == "function"
 				? nativeApp.getLegalMachinesApprovalState(organisationId)
 				: Promise.resolve({ approved: false }),
 			// A colleague's seat sets up its own two-step sign-in, with its
-			// session (D-215): {secret, uri}, then {recoveryCodes}.
+			// session: {secret, uri}, then {recoveryCodes}.
 			startOwnTwoFactor: () => nativeApp.startOwnTwoFactor(),
 			confirmOwnTwoFactor: (code) => nativeApp.confirmOwnTwoFactor(code),
-			// The administrator's forgotten password, by the firm's email (D-215).
+			// The administrator's forgotten password, by the firm's email.
 			requestRecovery: (email) => nativeApp.requestAccountRecovery(email),
 			resetPassword: (email, code, twoStepCode, password) => nativeApp.resetAccountPassword(email, code, twoStepCode, password),
 		};
@@ -177,7 +175,7 @@ function standIn(emulation, nativeApp) {
 			return { exists: email.trim().toLowerCase().endsWith("@example.com") };
 		},
 		// The administrator's seat is "preview-seat" and goes on to its code; any
-		// other seat is a colleague's, signed in at once (D-204), as is a test's.
+		// other seat is a colleague's, signed in at once, as is a test's.
 		signIn,
 		verify,
 		// Where the app says it could keep a password; a browser keeps none.

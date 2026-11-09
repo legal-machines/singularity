@@ -3,11 +3,9 @@
 # structure read, the context a task needs prepared, a model's answer checked
 # against the source, and a revised draft written as Word tracked changes.
 #
-# Built as ARCH-8 asks of every new component: its own library, which the
-# application links and its tests link, never copies of its sources. What it
-# uses that is not yet a module of its own - Document/DocxExtractor,
-# Document/OfficeTextEdit and Platform/Sha256 - is compiled by whoever links
-# it: the application has them already, and each test compiles them beside it.
+# What it uses that is not yet a module of its own - Document/DocxExtractor,
+# Document/OfficeTextEdit and Platform/Sha256 - is compiled by whoever links it: the
+# application has them already, and each test compiles them beside it.
 set(LM_DOCUMENT_INTELLIGENCE_SOURCES
   DocumentIntelligence/SourceIntake/SourceIntake.cpp
   DocumentIntelligence/SourceIntake/SourceIntake.hpp
@@ -55,6 +53,12 @@ target_link_libraries(native_app PRIVATE lm_document_intelligence)
 # it stands on domains that are not modules yet (Matter, Chat, Agent, Routing,
 # WorkProduct), which the application compiles and links it with.
 set(LM_DOCUMENT_REVIEW_SOURCES
+  # One model call: the colleague's calls are its first caller; here until
+  # Routing has a library of its own.
+  Routing/ModelCall/ModelCall.cpp
+  Routing/ModelCall/ModelCall.hpp
+  Routing/ModelCall/CallModel.cpp
+  Routing/ModelCall/CallModel.hpp
   DocumentReview/Types/DocumentReview.hpp
   DocumentReview/Types/DocumentReviewJson.hpp
   DocumentReview/DocumentReviewActions/DocumentReviewActions.cpp
@@ -142,11 +146,12 @@ if(BUILD_TESTING)
     PapinianGuard/SemanticAlgebra/SemanticAlgebra.cpp
     Context/TemporalSemantics/TemporalSemantics.cpp)
 
-  # A colleague's talk (the owner, 2026-10-26): a light call first, and only
-  # what the colleague asks for after it.
+  # A colleague's talk: a light call first, and only what the colleague asks
+  # for after it.
   lm_document_intelligence_test(document_review_colleague_talk_tests document_review_colleague_talk
     DocumentReview/ColleagueTalk/ColleagueTalk.test.cpp
-    DocumentReview/ColleagueTalk/ColleagueTalk.cpp)
+    DocumentReview/ColleagueTalk/ColleagueTalk.cpp
+    Routing/ModelCall/ModelCall.cpp)
 
   # The layer measured: one review asked as the extractor reads the document
   # and as the layer prepares it, scored against the fixture's answer key.

@@ -24,10 +24,9 @@
 	overflow-y: auto;
 }
 
-/* The page's title rests on the baseline of the sidebar's "Inbox" (UI-23,
-   --sidebar-label-baseline, below a head as tall as the page's band); a
-   24/30 Roboto title's baseline lies 23.2 into its line. On macOS the firm's
-   row under the traffic lights lowers "Inbox", and every title with it
+/* The page's title rests on the baseline of the sidebar's "Inbox"; a 24/30
+   Roboto title's baseline lies 23.2 into its line. On macOS the firm's row
+   under the traffic lights lowers "Inbox", and every title with it
    (--firm-row). */
 .content {
 	max-width: 1180px;
@@ -38,13 +37,12 @@
 	max-width: none;
 }
 
-/* A page set as Inbox is (the owner, 2026-11-02: "take Team's distances,
-   and the tokens' sizes, from Inbox"): its width, its margins and its
-   title's place - a 30/36 title whose baseline, 28.3 into its line, rests on
-   the sidebar's "Inbox" - with the line under it in body type, 12 below
-   (the head's own 6 and 6 more), as Inbox's own. */
+/* A page set as Inbox is: its width, its margins and its title's place - a
+   30/36 title whose baseline, 28.3 into its line, rests on the sidebar's
+   "Inbox" - with the line under it in body type, 12 below (the head's own 6
+   and 6 more), as Inbox's own. */
 /* Its left margin from the page's whole width (stableGutter.js), so a
-   scrollbar never moves it (the owner, 2026-11-02). */
+   scrollbar never moves it. */
 .content_inbox {
 	max-width: 1200px;
 	margin-left: max(0px, calc((var(--page-width, 100%) - 1200px) / 2));
@@ -53,7 +51,7 @@
 }
 
 /* Under 1300 wide Inbox keeps 32 at its sides (InboxPage.module.css), and so
-   does a page set as it is (the owner, 2026-11-02). */
+   does a page set as it is. */
 @media (max-width: 1300px) {
 	.content_inbox {
 		padding-inline: 32px;
@@ -76,7 +74,7 @@
 
 /* A head whose face stands beside its words: the name and the line under it
    one block, close together and centred on the face, so the line's first
-   words stand within the face's height (the owner, 2026-11-02). */
+   words stand within the face's height. */
 .head_compact {
 	align-items: center;
 }
@@ -89,15 +87,14 @@
 	margin-top: 0;
 }
 
-/* Its name in a page's title size, not Inbox's larger one (the owner,
-   2026-11-02: "the name's font in the profile is too big"). */
+/* Its name in a page's title size, not Inbox's larger one. */
 .head_compact .title {
 	font: var(--type-page-title);
 	letter-spacing: var(--track-display);
 }
 
 /* A carried head's line, travelling with its title: quieter than the name,
-   beside it once docked in the band (the owner, 2026-11-02). */
+   beside it once docked in the band. */
 .line_travelling {
 	display: block;
 	max-width: 50vw;

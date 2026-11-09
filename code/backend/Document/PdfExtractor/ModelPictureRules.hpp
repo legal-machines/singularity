@@ -11,15 +11,15 @@
 #include <utility>
 
 // When a picture a member attached goes to a model as it is, decided the same
-// way on every system (D-256). Every provider here takes PNG, JPEG, GIF and
-// WebP; Anthropic, the strictest, takes at most 5 MB of base64 a picture,
-// which 3.75 MB of bytes make, and no side longer than 8000 pixels. A picture
-// that is none of these, or larger, or turned by its file rather than in its
+// way on every system. Every provider here takes PNG, JPEG, GIF and WebP;
+// Anthropic, the strictest, takes at most 5 MB of base64 a picture, which
+// 3.75 MB of bytes make, and no side longer than 8000 pixels. A picture that
+// is none of these, or larger, or turned by its file rather than in its
 // pixels, is redrawn where the system can (PdfExtractor's picture_for_model).
 // What a picture is is read from its bytes, never from its file's name.
 namespace singularity::documents {
 
-// A picture as a model reads it (D-256).
+// A picture as a model reads it.
 struct ModelPicture {
 	// "image/png", "image/jpeg", "image/gif" or "image/webp".
 	std::string media_type;
@@ -159,6 +159,64 @@ inline bool goes_as_it_is(const std::string &bytes, const PictureFacts &facts) {
 	return facts.media_type.empty() == false && bytes.size() <= kMostBytesAsItIs
 		&& facts.width <= kMostEdgeAsItIs && facts.height <= kMostEdgeAsItIs
 		&& (facts.orientation == 0 || facts.orientation == 1);
+}
+
+// Whether a picture can show through: a PNG with an alpha channel or a
+// transparent colour, a WebP with alpha, a GIF with a transparent colour. A
+// model lays such a picture on a ground of its own choosing, and on black a
+// logo's dark lettering vanishes: a colleague read "DEVOLVER DIGITAL" as
+// Revolver, its black DIGITAL gone. So it is laid on its ground here first,
+// where this system can redraw it (PdfExtractor's picture_for_model).
+inline bool shows_through(const std::string &bytes) {
+	const std::size_t size = bytes.size();
+	if (size >= 26 && bytes.compare(0, 8, "\x89PNG\r\n\x1a\n") == 0) {
+		const unsigned char colour = static_cast<unsigned char>(bytes[25]);
+		if (colour == 4 || colour == 6) return true;
+		// A transparent colour (tRNS) stands before the image data.
+		for (std::size_t at = 8; at + 8 <= size;) {
+			const std::uint32_t length = detail::big_endian(bytes, at, 4);
+			const std::string kind = bytes.substr(at + 4, 4);
+			if (kind == "tRNS") return true;
+			if (kind == "IDAT" || kind == "IEND") return false;
+			at += 12 + static_cast<std::size_t>(length);
+		}
+		return false;
+	}
+	if (size >= 30 && bytes.compare(0, 4, "RIFF") == 0 && bytes.compare(8, 4, "WEBP") == 0) {
+		if (bytes.compare(12, 4, "VP8X") == 0) return (static_cast<unsigned char>(bytes[20]) & 0x10) != 0;
+		if (bytes.compare(12, 4, "VP8L") == 0 && static_cast<unsigned char>(bytes[20]) == 0x2f)
+			return ((detail::little_endian(bytes, 21, 4) >> 28) & 1U) != 0;
+		return false;
+	}
+	if (size >= 13 && (bytes.compare(0, 6, "GIF87a") == 0 || bytes.compare(0, 6, "GIF89a") == 0)) {
+		// Any graphic control extension that names a transparent colour.
+		for (std::size_t at = bytes.find("\x21\xf9\x04", 13); at != std::string::npos && at + 4 < size;
+				at = bytes.find("\x21\xf9\x04", at + 3))
+			if ((static_cast<unsigned char>(bytes[at + 3]) & 1U) != 0) return true;
+		return false;
+	}
+	return false;
+}
+
+// Whether what a picture draws is light: its pixels' luminance, weighted by
+// how opaque each is, above three quarters - a white logo, which is laid on
+// black; anything else is laid on white, as a page shows it. `pixels` are
+// 8-bit, four a pixel, the channels at the offsets given, its colour
+// premultiplied by its alpha or not.
+inline bool is_drawn_light(const std::uint8_t *pixels, std::size_t count, int red, int green, int blue, int alpha,
+		bool isPremultiplied) {
+	double weighted = 0.0;
+	double weight = 0.0;
+	for (std::size_t index = 0; index < count; ++index) {
+		const std::uint8_t *pixel = pixels + index * 4;
+		const double opacity = pixel[alpha] / 255.0;
+		if (opacity <= 0.0) continue;
+		const double scale = isPremultiplied ? 1.0 / opacity : 1.0;
+		const double luminance = (0.2126 * pixel[red] + 0.7152 * pixel[green] + 0.0722 * pixel[blue]) * scale / 255.0;
+		weighted += luminance * opacity;
+		weight += opacity;
+	}
+	return weight > 0.0 && weighted / weight > 0.75;
 }
 
 // The picture file as it is, where it goes so; nothing where it must be

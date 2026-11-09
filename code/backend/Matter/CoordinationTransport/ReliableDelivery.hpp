@@ -14,13 +14,13 @@ using Bytes = std::vector<std::uint8_t>;
 using Clock = std::chrono::steady_clock;
 
 // Whole messages - sealed envelopes of any size - carried between two of a
-// firm's computers over UDP, which loses, repeats and reorders datagrams
-// (D-124). Each message goes in fragments small enough for any path; the
-// other side acknowledges what it holds, in order and in ranges beyond; what
-// is not acknowledged in time is sent again; and the window of fragments in
-// flight grows while everything arrives and halves when something is lost,
-// so a lawyer's home connection is never flooded. The receiving side hands
-// each message over once, whole.
+// firm's computers over UDP, which loses, repeats and reorders datagrams.
+// Each message goes in fragments small enough for any path; the other side
+// acknowledges what it holds, in order and in ranges beyond; what is not
+// acknowledged in time is sent again; and the window of fragments in flight
+// grows while everything arrives and halves when something is lost, so a
+// lawyer's home connection is never flooded. The receiving side hands each
+// message over once, whole.
 //
 // Pure logic: the time comes from the caller, and the frames it makes are
 // sealed and sent by the link (DirectLink), which also proves who sent them.
@@ -28,10 +28,7 @@ class ReliableDelivery {
 public:
 	// The most payload one fragment this computer sends carries: with the
 	// frame's and the link's headers and the seal's tag, a datagram of 946
-	// bytes. QUIC's 1,200 was not small enough: on the owner's PC's network
-	// (2026-11-02) every 1,146-byte datagram was lost while the handshake's
-	// small ones passed, so both computers called the link connected and
-	// nothing went through; 900-byte fragments arrived at once.
+	// bytes.
 	static constexpr std::size_t kFragmentSize = 900;
 	// The most payload a fragment this computer takes may carry: what earlier
 	// builds send, so they are still heard.
@@ -60,9 +57,9 @@ public:
 	// Nothing in flight, queued or owed.
 	bool is_idle() const;
 	// The messages the other side does not yet hold whole, oldest first, taken
-	// out with the ids send() gave them: what a new session between the same
+	// out with the ids send gave them: what a new session between the same
 	// computers sends again. Across sessions a message may come twice; the
-	// engine takes an envelope once by its id (D-123).
+	// engine takes an envelope once by its id.
 	struct Unconfirmed {
 		std::uint64_t id = 0;
 		Bytes bytes;

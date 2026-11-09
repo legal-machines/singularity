@@ -95,9 +95,9 @@ function Chapter({ index, pages = PAGES, setup, onNext, onBack, onComplete, onSe
 }
 
 // A slide's footnote: what its picture is, then the pages it rests on, each a
-// link, joined by commas (the owner, 2026-11-01, D-198). A link is a legal
-// document's key (legal.js) or a published page of its own; a slide that names
-// none points to the Terms of Use.
+// link, joined by commas. A link is a legal document's key (legal.js) or a
+// published page of its own; a slide that names none points to the Terms of
+// Use.
 function Disclaimer({ page, footnoteRef }) {
 	const links = (page.disclaimerLinks ?? ["terms"]).map(link => typeof link == "string" ? { text: LEGAL_TITLES[link], href: LEGAL_LINKS[link] } : link);
 	return <p ref={footnoteRef} className={styles.disclaimer}>
@@ -107,8 +107,7 @@ function Disclaimer({ page, footnoteRef }) {
 
 // The height a slide's footnote takes beyond its first line, measured as it
 // lays out and again whenever it reflows: Back and the step dots rise by it
-// (Tour.module.css), so Back's hit area never reaches the footnote's words
-// (the owner, 2026-11-01: a two-line footnote stood cut under Back).
+// (Tour.module.css), so Back's hit area never reaches the footnote's words.
 const FOOTNOTE_LINE = 16;
 function useFootnoteLift(footnote, text) {
 	const [lift, setLift] = useState(0);
@@ -140,10 +139,10 @@ function useTask(setBusy) {
 	};
 }
 
-// The member in the firm (D-162, D-163, D-166): their photo, name, position
-// and practice. What they type shows in the demonstration beside them at
-// once; the practice takes its official name when they leave the field, and
-// the photo is cut to the firm's square here, on their computer.
+// The member in the firm: their photo, name, position and practice. What
+// they type shows in the demonstration beside them at once; the practice
+// takes its official name when they leave the field, and the photo is cut
+// to the firm's square here, on their computer.
 function RoleAsk({ setup, busy, setBusy, onDone, draft, onChange }) {
 	const [name, setName] = useState(draft?.name ?? "");
 	const [position, setPosition] = useState(draft?.position ?? "");
@@ -255,7 +254,7 @@ function useProtection(setup, active = true, often = false) {
 	return [protection, setProtection];
 }
 
-// A story's list under its words: the facts it rests on (D-195), or what this
+// A story's list under its words: the facts it rests on, or what this
 // computer may ask and why.
 function StoryList({ page }) {
 	const items = page.permissions?.[platformOf()] ?? null;
@@ -270,8 +269,8 @@ function StoryList({ page }) {
 
 // What the computer must allow, asked for in turn as the member presses
 // Allow access, each with the system's own question, and checked: each row
-// says what came of it, and one not allowed says how to allow it (the owner,
-// 2026-11-04). One the computer does not need here leaves the list.
+// says what came of it, and one not allowed says how to allow it. One the
+// computer does not need here leaves the list.
 const PERMISSION_WORDS = { allowed: "Allowed", denied: "Not allowed", unknown: "Not asked yet" };
 
 function PermissionsAsk({ setup, page, active, busy, setBusy, onDone }) {
@@ -299,7 +298,7 @@ function PermissionsAsk({ setup, page, active, busy, setBusy, onDone }) {
 		if (live.current) { setAsking(null); setBusy(false); }
 	};
 	// The member pressed Allow access: each not given yet is asked at once, in
-	// turn, and one given already is never asked (the owner, 2026-11-05, D-249).
+	// turn, and one given already is never asked.
 	useEffect(() => {
 		if (!active || begun.current) return;
 		begun.current = true;
@@ -337,13 +336,13 @@ function PermissionsAsk({ setup, page, active, busy, setBusy, onDone }) {
 // goes on by itself.
 const ARRIVED_MS = 700;
 
-// Client data protection on this computer (D-195): masking on or off. Its
-// model comes from Legal Machines under the Software License Agreement the
-// firm accepted before anything downloaded (its section 4). It downloads only
-// when the member chooses protection and presses the button, which fills from
-// the left as the model comes (the owner, 2026-11-01, D-198); once the model
-// runs, onboarding goes on by itself. A failure says what went wrong and the
-// same button tries again; Off goes on without the model.
+// Client data protection on this computer: masking on or off. Its model comes
+// from Legal Machines under the Software License Agreement the firm accepted
+// before anything downloaded (its section 4). It downloads only when the
+// member chooses protection and presses the button, which fills from the left
+// as the model comes; once the model runs, onboarding goes on by itself. A
+// failure says what went wrong and the same button tries again; Off goes on
+// without the model.
 function ProtectionAsk({ setup, active, busy, setBusy, onDone, onChange }) {
 	const [on, setOn] = useState(true);
 	const [error, setError] = useState("");
@@ -401,7 +400,7 @@ function ProtectionAsk({ setup, active, busy, setBusy, onDone, onChange }) {
 		: failed || waiting ? "Try again"
 		: "Download and continue";
 	// One line, in every state but a failure, so nothing moves as the member
-	// switches or the download starts (the owner, 2026-11-01).
+	// switches or the download starts.
 	const state = !on ? (runs ? "" : "Nothing downloads.")
 		: protection == null ? ""
 		: filling ? "From Legal Machines, to run only on this computer."

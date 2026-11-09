@@ -7,12 +7,12 @@ import { positionOf } from "../words.js";
 
 import styles from "./InvoicePage.module.css";
 
-// A Matter's invoice (D-076), in the form a US client's legal department
-// expects: the firm's letterhead with its tax ID; the invoice's number, date,
-// period and due date; the client and the Matter with both its numbers and
-// its responsible partner; the fees by date with their UTBMS codes, the AI
-// colleagues' work on the basis Schedule B of the engagement letter agrees;
-// a summary by timekeeper; the disbursements, AI model usage at cost among
+// A Matter's invoice, in the form a US client's legal department expects: the
+// firm's letterhead with its tax ID; the invoice's number, date, period and
+// due date; the client and the Matter with both its numbers and its
+// responsible partner; the fees by date with their UTBMS codes, the AI
+// colleagues' work on the basis Schedule B of the engagement letter agrees; a
+// summary by timekeeper; the disbursements, AI model usage at cost among
 // them; the totals and the balance; the trust account; the terms. It prints
 // on Letter paper as it stands, and it downloads as a LEDES 1998B file for
 // the client's e-billing. Above it, never printed, the way back and what the

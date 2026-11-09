@@ -2,10 +2,10 @@ import { Icon } from "../Icon/Icon.jsx";
 
 import styles from "./Tray.module.css";
 
-// A tray (DESIGN.md, FOLIO-14): a faint grey holder with its heading in small
-// capitals, what belongs beside the heading on its right, a white card with
-// the content, and an optional line under the card. Lists of rows, facts and
-// short notes all stand in trays, so every page reads in the same blocks.
+// A tray: a faint grey holder with its heading in small capitals, what
+// belongs beside the heading on its right, a white card with the content, and
+// an optional line under the card. Lists of rows, facts and short notes all
+// stand in trays, so every page reads in the same blocks.
 export function Tray({ icon, label, count, countTone, aside, footer, children, className, bodyClassName, flush = false }) {
 	return (
 		<section className={[styles.tray, className].filter(Boolean).join(" ")} aria-label={typeof label == "string" ? label : undefined}>

@@ -17,16 +17,12 @@ import { TimeSheet } from "./TimeSheet.jsx";
 
 import styles from "./Calendar.module.css";
 
-// The member's calendar (D-076): Google Calendar's functions, look and
-// complexity, in the tokens of the firm's own webmail calendar. Its bar
-// steps through days, weeks, months and years; its panel, in the shared
-// sidebar under the places (D-081), creates, picks a day and shows or hides
-// calendars, among them the accounts it connects to (D-079); its views are the day, four days, the week, the month, the year
-// and the schedule. Time, beside it, is the member's timesheet, as
-// ProjectMate keeps one (D-075). In the app the calendar holds what is real
-// here (D-181): the member's own time, recorded on the Matters through the
-// backend, and the AI colleagues' working time; it creates time, never an
-// event nothing would keep.
+// The member's calendar: Google Calendar's functions, look and complexity, in the tokens of the firm's own webmail calendar.
+// Its bar steps through days, weeks, months and years; its panel, in the shared sidebar under the places, creates, picks a
+// day and shows or hides calendars, among them the accounts it connects to; its views are the day, four days, the week, the
+// month, the year and the schedule. Time, beside it, is the member's timesheet, as ProjectMate keeps one. In the app the
+// calendar holds what is real here: the member's own time, recorded on the Matters through the backend, and the AI
+// colleagues' working time; it creates time, never an event nothing would keep.
 export const views = [
 	{ key: "day", label: "Day", hint: "D" },
 	{ key: "week", label: "Week", hint: "W" },
@@ -452,7 +448,7 @@ function draftShown(initial) {
 }
 
 // The member's own time on the Matters where it was worked: an entry with its
-// start stands on the calendar (D-181); one without stays in Time.
+// start stands on the calendar; one without stays in Time.
 function ownTimeEvents() {
 	return ownTime()
 		.filter(entry => entry.start != null)

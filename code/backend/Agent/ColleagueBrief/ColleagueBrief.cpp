@@ -5,9 +5,6 @@
 namespace singularity::agents {
 namespace {
 
-// The owner's words for it, 2026-10-24 (D-101): one way of professional
-// communication for every AI colleague; a colleague's individuality is its
-// role, below, never a second set of rules.
 const char *kIdentityAndJudgment = R"RULES(# SINGULARITY - PROFESSIONAL COLLEAGUE COMMUNICATION
 
 <identity>
@@ -266,8 +263,8 @@ std::string sentence(const std::string &words) {
 }
 
 // Who the colleague is in the firm: its name, firm, office, rank and area -
-// of the whole firm, never of one Matter (the owner, 2026-10-26). Where it
-// holds no office, its standing work says what it is there for.
+// of the whole firm, never of one Matter. Where it holds no office, its
+// standing work says what it is there for.
 std::string who_it_is(const ColleagueRole &role) {
 	std::string words = "You are " + (role.name.empty() == true ? std::string("an AI colleague") : role.name) + ", an AI colleague";
 	if (role.firm.empty() == false) words += " at " + role.firm;
@@ -276,8 +273,6 @@ std::string who_it_is(const ColleagueRole &role) {
 	const std::string ranks = organisation::position_members(role.ranks_with);
 	if (ranks.empty() == false) words += ", ranking with " + ranks;
 	words += ".\n";
-	// Rank carries the work, as the owner gives it (2026-10-26: "since she heads
-	// a practice, she gives tasks to the people below her").
 	if (ranks.empty() == false)
 		words += "Members of the firm who rank below you take work from you, and you review it; those above you may give you "
 			"work.\n";
@@ -290,10 +285,10 @@ std::string who_it_is(const ColleagueRole &role) {
 	if (role.manner.empty() == false) words += "How you work: " + sentence(role.manner) + "\n";
 	// Its firm's team, so it knows whom it works with, and whom to name.
 	if (role.team.empty() == false) words += "Your firm's team: " + role.team + ".\n";
-	// A member of the firm, as any member is (D-158): what it may do is what the
-	// Matter's own rules let any member do; what holds a decision of its own -
-	// what leaves the firm, the acceptance of a work product - is the decision of
-	// the member who holds it, for a person as for an AI colleague.
+	// A member of the firm, as any member is: what it may do is what the Matter's
+	// own rules let any member do; what holds a decision of its own - what leaves
+	// the firm, the acceptance of a work product - is the decision of the member
+	// who holds it, for a person as for an AI colleague.
 	words += "What you can do: take part in any of the firm's Matters - read their documents and threads, post in them, "
 		"and change their documents as tracked changes, as each Matter's own rules let any member - and hand work to "
 		"colleagues or take it from them. What leaves the firm is sent by the member who sends it, and you do not accept "
@@ -309,9 +304,8 @@ std::string who_it_is(const ColleagueRole &role) {
 std::string colleague_identity(const ColleagueRole &role) {
 	ColleagueRole talk = role;
 	// A talk is not the place of its standing duties: it is a colleague of its
-	// office first (the owner, 2026-10-26: agents are not assigned to such
-	// narrow kinds of work, they are like people). Where it holds no office,
-	// its standing work is all that says what it is there for.
+	// office first. Where it holds no office, its standing work is all that
+	// says what it is there for.
 	if (role.office.empty() == false || role.area.empty() == false) talk.standing_work.clear();
 	std::string words = who_it_is(talk);
 	if (words.empty() == false && words.back() == '\n') words.pop_back();

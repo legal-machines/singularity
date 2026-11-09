@@ -111,9 +111,9 @@ function(native_app_fetch_dependencies)
   if(WIN32)
     # WebView2's SDK, pinned by version and SHA-256 rather than fetched by
     # version alone as webview 0.12.0 would (its default is 1.0.1150.38).
-    # 1.0.4258.31 (2026-09-28) gives the host the paths of files dropped on the
-    # page (ICoreWebView2File, Platform/FileDrop). Here the SDK is headers:
-    # webview loads the installed WebView2 runtime itself
+    # 1.0.4258.31 gives the host the paths of files dropped on the page
+    # (ICoreWebView2File, Platform/FileDrop). Here the SDK is headers: webview
+    # loads the installed WebView2 runtime itself
     # (WEBVIEW_MSWEBVIEW2_BUILTIN_IMPL). Populated first, so webview finds it
     # (MSWebView2_ROOT) and fetches nothing of its own.
     set(WEBVIEW_MSWEBVIEW2_VERSION "1.0.4258.31" CACHE STRING "MS WebView2 version" FORCE)
@@ -199,14 +199,13 @@ function(native_app_fetch_dependencies)
   endif()
   set(SINGULARITY_MONOCYPHER_LICENCE "${monocypher_SOURCE_DIR}/LICENCE.md" PARENT_SCOPE)
 
-  # TLS for the Office connection (Office/OfficeConnection, D-105): Word,
-  # Excel and Outlook load Singularity's panes only over HTTPS, and the panes
-  # come from this computer. Mbed TLS 3.6.7 (Apache-2.0), the long-term
-  # support line, its release archive pinned by SHA-256 - the same bytes its
-  # GitHub release lists in mbedtls-3.6.7-sha256sum.txt. Its library sources
-  # are built here as one static library, with Singularity's additions to
-  # its configuration (cmake/mbedtls/lm-mbedtls-config.h); no programs, tests
-  # or install rules.
+  # TLS for the Office connection: Word, Excel and Outlook load Singularity's
+  # panes only over HTTPS, and the panes come from this computer. Mbed TLS
+  # 3.6.7 (Apache-2.0), the long-term support line, its release archive
+  # pinned by SHA-256 - the same bytes its GitHub release lists in
+  # mbedtls-3.6.7-sha256sum.txt. Its library sources are built here as one
+  # static library, with Singularity's additions to its configuration
+  # (cmake/mbedtls/lm-mbedtls-config.h); no programs, tests or install rules.
   FetchContent_Declare(
     mbedtls
     URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2

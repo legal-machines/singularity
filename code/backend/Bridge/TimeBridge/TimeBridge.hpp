@@ -2,10 +2,9 @@
 
 #include <nlohmann/json.hpp>
 
-// The Native API of the time members record on a Matter (docs/contracts/
-// native/Matter.json, D-181): recording, changing and taking back one's own
-// time, and the Matter's time. Parses, calls Billing/, serialises; no rule
-// lives here.
+// The Native API of the time members record on a Matter: recording,
+// changing and taking back one's own time, and the Matter's time. Parses,
+// calls Billing/, serialises; no rule lives here.
 namespace singularity::bridge::time_bridge {
 
 nlohmann::json record(const nlohmann::json &params);

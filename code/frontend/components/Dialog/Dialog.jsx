@@ -6,29 +6,22 @@ import { remeasureTitlebarControls } from "../Window/titlebar.js";
 
 import styles from "./Dialog.module.css";
 
-// A dialog stops the page for one decision or one short task (DESIGN.md,
-// FOLIO-25). It says what it is in its title, what follows from it in its
-// lines, and holds its actions at its foot, the leading one last. It stands in
-// the middle of the window, and the page behind is not dimmed: white washes
-// out from the middle over the whole window as it opens and draws back into
-// the middle as it closes (the owner, 2026-11-02: "no darkening, a wave from
-// the centre fills everything with white, and then flows back"). It is part of
-// that white, with no frame, shadow or close button: "only the dialog".
+// A dialog stops the page for one decision or one short task. It says what it
+// is in its title, what follows from it in its lines, and holds its actions at
+// its foot, the leading one last. It stands in the middle of the window, and
+// the page behind is not dimmed: white washes out from the middle over the
+// whole window as it opens and draws back into the middle as it closes. It is
+// part of that white, with no frame, shadow or close button: "only the dialog".
 // Its own buttons and Escape leave it, and the focus returns to what opened it.
-// A press anywhere beside it never does: the white is the dialog's, and a
-// stray click never throws work away (the owner, 2026-11-02: "pressing
-// anywhere on the empty space must NOT leave the fill"). While a dialog
-// stands, the window's own controls over the white - the sidebar's button -
-// are put away.
-// A dialog laid out "spacious" is a short task of its own with room to
-// breathe: a larger title and its line, what it holds under them, and its
-// actions at its foot as every dialog's.
-// What its leading action waits on, such as a consent to tick, and what went
-// wrong when it was tried, stand in its footnote: over the actions and under
-// what scrolls, so they are always in sight (the owner, 2026-11-05: the
-// report's consent stood out of sight under its scroll, beside a Send that
-// could not be pressed).
-export function Dialog({ title, description, size = "medium", tone, layout, onClose, actions, footnote, children, initialFocus }) {
+// A press anywhere beside it never does: the white is the dialog's, and a stray
+// click never throws work away. While a dialog stands, the window's own
+// controls over the white - the sidebar's button - are put away. A dialog laid
+// out "spacious" is a short task of its own with room to breathe: a larger
+// title and its line, what it holds under them, and its actions at its foot as
+// every dialog's. What its leading action waits on, such as a consent to tick,
+// and what went wrong when it was tried, stand in its footnote: over the
+// actions and under what scrolls, so they are always in sight.
+export function Dialog({ title, description, size = "medium", tone, layout, fits = false, lead = null, onClose, actions, footnote, children, initialFocus }) {
 	const paperRef = useRef(null);
 	const scrimRef = useRef(null);
 	const opener = useRef(document.activeElement);
@@ -70,7 +63,8 @@ export function Dialog({ title, description, size = "medium", tone, layout, onCl
 	useEffect(() => {
 		const paper = paperRef.current;
 		const target = initialFocus != null ? paper.querySelector(initialFocus) : null;
-		(target ?? focusables(paper).find(element => element.dataset.dialogClose == null) ?? paper).focus();
+		// The task's own first control, never the way out above the title (lead).
+		(target ?? focusables(paper).find(element => element.dataset.dialogClose == null && element.closest("[data-dialog-lead]") == null) ?? paper).focus();
 		const returnTo = opener.current;
 
 		function keys(event) {
@@ -108,12 +102,16 @@ export function Dialog({ title, description, size = "medium", tone, layout, onCl
 				ref={paperRef}
 				className={[styles.dialog, styles[size], tone == "seal" ? styles.seal : null].filter(Boolean).join(" ")}
 				data-layout={layout ?? undefined}
+				data-fits={fits || undefined}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={titleId}
 				aria-describedby={description != null ? descriptionId : undefined}
 				tabIndex={-1}
 			>
+				{/* An act above the title, at the dialog's top left: a way out
+				    that is not the task's own end, such as "Finish later". */}
+				{lead != null ? <div className={styles.lead} data-dialog-lead="">{lead}</div> : null}
 				<header className={styles.head}>
 					<h2 id={titleId} className={styles.title}>{title}</h2>
 				</header>

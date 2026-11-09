@@ -1,5 +1,4 @@
-/* The entry's composition follows the owner's reference (D-125). It signs in
-   to Legal Machines through the bridge's account methods (D-133). */
+/* It signs in to Legal Machines through the bridge's account methods. */
 @font-face {
 	font-family: "Sora Entry";
 	font-style: normal;
@@ -37,7 +36,7 @@
 }
 
 /* The first page, the cover, is centred exactly: the space above it and
-   below it are the same (the owner, 2026-10-29). */
+   below it are the same. */
 .group {
 	width: min(320px, 100%);
 }
@@ -81,7 +80,7 @@
 }
 
 /* Where Windows can keep the seat's password, the member's choice stands
-   right under the field it keeps (D-243). */
+   right under the field it keeps. */
 .content .keepPassword {
 	margin-top: 12px;
 }
@@ -308,8 +307,8 @@
 	--entry-button-fill: var(--entry-g2-active);
 }
 
-/* A step not filled in yet: its button is a quiet grey, plainly not ready
-   (the owner, 2026-10-29). While Legal Machines answers it is a darker one. */
+/* A step not filled in yet: its button is a quiet grey, plainly not ready.
+   While Legal Machines answers it is a darker one. */
 .primary:disabled {
 	--entry-button-fill: var(--entry-g2-unready);
 	color: #9b9b97;

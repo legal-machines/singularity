@@ -7,16 +7,16 @@
 namespace singularity::document {
 
 // Real filesystem actions for a Referenced (real Project-folder) document -
-// Phase 09 (documents-actions-source-peek.md). Every function here performs
-// the actual std::filesystem operation on the real Project folder FIRST,
-// then hands off to the exact same reconciliation pipeline Phase 08's
-// watcher already uses (Matter/MatterActions/MatterActions.hpp's
-// detect_affected_paths()/process_project_documents()) to derive canonical
-// identity/version/state - this component never writes MatterDocument
-// fields itself (request_reprocessing() below is the one narrow exception,
-// and it lives in DocumentRegistry, not here). See DocumentActions.hpp for
-// the separate, older action surface that still operates on Managed
-// (copied-in) documents only.
+// Phase 09. Every function here performs the actual std::filesystem
+// operation on the real Project folder FIRST, then hands off to the exact
+// same reconciliation pipeline Phase 08's watcher already uses
+// (Matter/MatterActions/MatterActions.hpp's
+// detect_affected_paths/process_project_documents) to derive canonical
+// identity/version/state - this component never writes MatterDocument fields
+// itself (request_reprocessing below is the one narrow exception, and it
+// lives in DocumentRegistry, not here). See DocumentActions.hpp for the
+// separate, older action surface that still operates on Managed (copied-in)
+// documents only.
 //
 // `expected_version` on every function that targets one specific document is
 // a staleness guard (PHASE 09 spec Sec.14 "External filesystem changes while
@@ -60,26 +60,27 @@ matters::Matter remove_document(const std::string& matter_id, const std::string&
 matters::Matter create_folder(const std::string& matter_id, const std::string& parent_folder_relative_path,
                               const std::string& folder_name);
 
-// Adds an external file into the Project folder: a real copy by default, or
-// an explicit real move when `move_source` is true. Never uploads anywhere -
-// this is a local filesystem operation only. Refuses rather than silently
-// overwriting an existing file at the destination. An explicit Move never
-// reports success while the original file still exists: if the original
-// cannot be removed after a cross-device copy, the copy is rolled back (or,
-// if rollback itself fails, an explicit partial-failure error is raised -
-// never a silent success with two copies). With `keep_both`, a name already
-// taken at the destination gives way to the next free one ("Brief 2.pdf"), as
-// Finder's "Keep Both" and a file dropped into a Matter have it.
+// Adds an external file into the Project folder: a real copy by default, or an
+// explicit real move when `move_source` is true. Never uploads anywhere - this is a
+// local filesystem operation only. Refuses rather than silently overwriting an
+// existing file at the destination. An explicit Move never reports success while the
+// original file still exists: if the original cannot be removed after a cross-device
+// copy, the copy is rolled back (or, if rollback itself fails, an explicit
+// partial-failure error is raised - never a silent success with two copies). With
+// `keep_both`, a name already taken at the destination gives way to the next free one
+// ("Brief 2.pdf"), as Finder's "Keep Both" and a file dropped into a Matter have it.
+// With `reads_in_background`, it answers once the file is copied and listed, and the
+// file is read on a thread of its own (matter::read_documents_in_background): a file
+// a member drops into a reply shows at once.
 matters::Matter add_external_file(const std::string& matter_id, const std::string& destination_folder_relative_path,
-                                  const std::string& source_absolute_path, bool move_source, bool keep_both = false);
+                                  const std::string& source_absolute_path, bool move_source, bool keep_both = false, bool reads_in_background = false);
 
 // Adds an external folder into the Project folder, whole: a real copy of it
 // and of the folders and files inside, under its own name or the next free
-// one ("Data Room 2"), as a folder dragged onto a Matter has it (the owner,
-// 2026-11-04: drag and drop must work reliably). Hidden files, Office's lock
-// files ("~$...") and links are left out. A folder of more than
-// kMostAddedFolderFiles files, or one that holds or lies inside this Project,
-// is refused before anything is copied.
+// one ("Data Room 2"), as a folder dragged onto a Matter has it. Hidden
+// files, Office's lock files ("~$...") and links are left out. A folder of
+// more than kMostAddedFolderFiles files, or one that holds or lies inside
+// this Project, is refused before anything is copied.
 inline constexpr std::size_t kMostAddedFolderFiles = 5000;
 matters::Matter add_external_folder(const std::string& matter_id, const std::string& destination_folder_relative_path,
                                     const std::string& source_absolute_path);

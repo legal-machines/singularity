@@ -5,7 +5,7 @@
 namespace singularity::platform::system_permissions {
 
 // What Windows Defender Firewall's rules for Singularity's own program mean for
-// the firm's computers reaching this one directly (D-244), read without asking
+// the firm's computers reaching this one directly, read without asking
 // (SystemPermissionsWindows.cpp). Profiles are the firewall's own bits: domain
 // 1, private 2, public 4.
 struct FirewallRules {

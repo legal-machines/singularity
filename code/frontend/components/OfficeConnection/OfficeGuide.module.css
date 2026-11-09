@@ -1,6 +1,6 @@
-/* The guide in the window's dialog over the white (OfficeGuide.jsx, UI-32): one
-   list of what is connected, each part its name and its state in a word, the
-   one at hand open under its name.
+/* The guide in the window's dialog over the white: one list of what is
+   connected, each part its name and its state in a word, the one at hand open
+   under its name.
 
    Its hierarchy, kept strictly:
    - weight: medium (500) for the dialog's title, each part's name and the
@@ -27,10 +27,14 @@
 	color: var(--accent-ink);
 }
 
+/* The settings stand on a block of the tray's grey, so the page is not flat. */
 .parts {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	padding: 4px 20px;
+	background: var(--tray);
+	border-radius: 16px;
 }
 
 .part {

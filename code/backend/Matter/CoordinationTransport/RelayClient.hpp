@@ -16,12 +16,11 @@
 
 namespace singularity::matter::coordination::transport::link {
 
-// This computer's way to Legal Machines' relay (D-242;
-// sites/public/backend/src/Relay.h): one WebSocket on port 443, kept open
-// while the program runs, so the firm's other computers reach this one through
-// it whenever no direct way does. It carries the direct link's datagrams as
-// they are, sealed on this computer for the computer they go to; it adds who
-// they go to, and the relay says who they came from.
+// This computer's way to Legal Machines' relay: one WebSocket on port 443,
+// kept open while the program runs, so the firm's other computers reach this
+// one through it whenever no direct way does. It carries the direct link's
+// datagrams as they are, sealed on this computer for the computer they go to;
+// it adds who they go to, and the relay says who they came from.
 // - It opens with the seat's session and this computer's coordination key; the
 //   relay lets it in only as a computer its seat announced.
 // - Opened, it is up once the relay says "ready". Turned away ("refused": not

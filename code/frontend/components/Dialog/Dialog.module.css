@@ -63,7 +63,7 @@
 	width: 100%;
 	max-height: 76vh;
 	overflow: hidden;
-	/* Part of the white, with no frame and no shadow (the owner, 2026-11-02). */
+	/* Part of the white, with no frame and no shadow. */
 	background: var(--sheet);
 	/* It comes as the white reaches it. */
 	animation: rise 360ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
@@ -168,6 +168,44 @@
 	justify-content: flex-end;
 	gap: 8px;
 	padding: 20px 24px 24px;
+}
+
+/* A dialog whose whole task stands in sight at once (fits): as tall as it
+   needs, up to the window, and never scrolled, its content laid out to fit
+   the smallest window. */
+.dialog[data-fits] {
+	max-height: calc(100vh - 32px);
+}
+
+.dialog[data-fits] .body {
+	overflow: visible;
+}
+
+/* The dialog itself holds the focus only until its task's first control
+   stands: it is no control, and draws no ring. */
+.dialog:focus-visible {
+	outline: none;
+}
+
+/* The act above the title (lead): at the dialog's top left, the title under
+   it a little closer than the head would stand alone. */
+.lead {
+	display: flex;
+	/* A small quiet button's words stand on the title's edge: its 10 of
+	   padding less than the head's. */
+	padding: 16px 24px 0 14px;
+}
+
+.lead + .head {
+	padding-top: 8px;
+}
+
+.dialog[data-layout="spacious"] .lead {
+	padding: 20px 36px 0 26px;
+}
+
+.dialog[data-layout="spacious"] .lead + .head {
+	padding-top: 12px;
 }
 
 /* A dialog for a key: its title is set beside the seal. */

@@ -53,7 +53,7 @@ void write_recorded(const Recorded &recorded) {
 	platform::commit_staged_file(staged, path, platform::StagedCommitMode::ReplaceExisting, false);
 }
 
-// The role a whole-product test asks for (D-182), in a Debug build alone.
+// The role a whole-product test asks for, in a Debug build alone.
 std::optional<FirmRole> emulated_role() {
 #if defined(SINGULARITY_ACCOUNT_EMULATION)
 	const char *mode = std::getenv("NATIVE_APP_EMULATE_ACCOUNT");

@@ -12,13 +12,13 @@ import { recordTime, useCalendar, viewerRate } from "./store.js";
 
 import styles from "./Calendar.module.css";
 
-// The member's time (D-075), as a timesheet in ProjectMate keeps it: the week
-// by Matter and day, the entries of each day with what they bill, a timer on
-// a Matter, and the week submitted to the Matters' leads, who bill it. Each
+// The member's time, as a timesheet in ProjectMate keeps it: the week by
+// Matter and day, the entries of each day with what they bill, a timer on a
+// Matter, and the week submitted to the Matters' leads, who bill it. Each
 // entry is also an event on the calendar, where it was worked. In the app the
-// sheet is the member's own time as the backend keeps it on each Matter
-// (D-181): an entry is on its Matter the moment it is recorded, so there is
-// no week to submit, and no rate is shown that the firm never set.
+// sheet is the member's own time as the backend keeps it on each Matter: an
+// entry is on its Matter the moment it is recorded, so there is no week to
+// submit, and no rate is shown that the firm never set.
 const today = nowLocal().slice(0, 10);
 
 // What the member has submitted in this session, by entry.

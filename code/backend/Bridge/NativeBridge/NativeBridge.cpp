@@ -54,6 +54,7 @@
 #include "Node/ActiveWorkspace/ActiveWorkspace.hpp"
 #include "Bridge/UpdateBridge/UpdateBridge.hpp"
 #include "Platform/Trace/Trace.hpp"
+#include "Privacy/EntityRegistry/EntityRegistry.hpp"
 #include "Privacy/PrivacyActions/PrivacyActions.hpp"
 #include "Platform/StaleRuntimeReaper/StaleRuntimeReaper.hpp"
 #include "Bridge/ProjectContextBridge/ProjectContextBridge.hpp"
@@ -69,6 +70,7 @@
 #include "Bridge/OfficeBridge/OfficeBridge.hpp"
 #include "Platform/AppPaths/AppPaths.hpp"
 #include "Platform/AppWindow/AppWindow.hpp"
+#include "ExternalResearch/SiteIcon/SiteIcon.hpp"
 #include "Platform/HttpClient/HttpClient.hpp"
 #include "Platform/Types/WindowLayout.hpp"
 #include "Bridge/NativeBridge/BackgroundExecutor.hpp"
@@ -116,10 +118,10 @@ enum class ExecutionPolicy { UiThread, Worker };
 // this same constant, so they cannot independently drift from each other -
 // deploy/scripts/generate_native_contract.py's verify_implementation()
 // checks this constant's value against the contract's own apiVersion.
-constexpr int kNativeApiVersion = 105;
+constexpr int kNativeApiVersion = 106;
 
-// The organisation this computer is signed in to, for the firm's seal
-// (D-167); empty when it is signed in to none.
+// The organisation this computer is signed in to, for the firm's
+// seal; empty when it is signed in to none.
 std::string signed_in_organisation() {
   const platform::AppSettings settings = platform::load_app_settings();
   return settings.account ? settings.account->organisation_id : std::string();
@@ -169,8 +171,8 @@ constexpr std::size_t kRunThreads = 4;
 constexpr std::size_t kControlThreads = 2;
 
 // A read the new frontend uses, with who is looking and what they may do
-// beside it (Beta 1 #274): the same viewer organisation.get holds, so a page
-// relates every author and member it shows to the person reading it.
+// beside it: the same viewer organisation.get holds, so a page relates every
+// author and member it shows to the person reading it.
 std::function<Json(const Json &)> with_viewer(std::function<Json(const Json &)> read) {
   return [read = std::move(read)](const Json &params) {
     Json result = read(params);
@@ -180,7 +182,7 @@ std::function<Json(const Json &)> with_viewer(std::function<Json(const Json &)> 
 }
 
 bool is_operation_control(const std::string &method) {
-  return method == "chat.stopOperation" || method == "chat.operationState" || method == "chat.respondToolApproval"
+  return method == "chat.stopOperation" || method == "chat.stopColleagues" || method == "chat.operationState" || method == "chat.respondToolApproval"
       || method == "chat.answerQuestion" || method == "reviewTable.stop" || method == "reviewTable.stopChanges";
 }
 
@@ -192,13 +194,12 @@ bool holds_a_run(const std::string &method) {
 }
 
 // A whole-product test on a Debug build may stand in for Legal Machines'
-// account at onboarding (the owner, 2026-10-31: "I can't give you the code
-// from the mail; at the onboarding stage emulate it, like 2FA"):
-// NATIVE_APP_EMULATE_ACCOUNT=register for a new firm, =join for a colleague
-// the firm invited, with NATIVE_APP_EMULATE_FIRM naming the firm joined. The
-// page's account stand-in (onboarding/entry/account.js) answers then, and
-// nothing is asked of Legal Machines. Every other build compiles it out: its
-// account's checks are never weakened.
+// account at onboarding: NATIVE_APP_EMULATE_ACCOUNT=register for a new firm,
+// =join for a colleague the firm invited, with NATIVE_APP_EMULATE_FIRM
+// naming the firm joined. The page's account stand-in
+// (onboarding/entry/account.js) answers then, and nothing is asked of Legal
+// Machines. Every other build compiles it out: its account's checks are
+// never weakened.
 std::string account_emulation_script() {
 #if defined(SINGULARITY_ACCOUNT_EMULATION)
   const char *mode = std::getenv("NATIVE_APP_EMULATE_ACCOUNT");
@@ -366,15 +367,14 @@ std::string bridge_script(const std::string &window_frame) {
       invoke('account.verifyTwoFactor', { challengeId, code, organisationId, seatId, password, email }),
     getAccountState: () => invoke('account.getState'),
     signOutOfLegalMachines: () => invoke('account.signOut'),
-    // Onboarding begins with the organisation's email (D-133): a known one signs
-    // in with a seat and its password (D-204); a new one registers and confirms
-    // its email.
+    // Onboarding begins with the organisation's email: a known one signs in with
+    // a seat and its password; a new one registers and confirms its email.
     findLegalMachinesOrganisation: (email) => invoke('account.lookup', { email }),
     signInToLegalMachinesWithEmail: (email, seat, password) =>
       invoke('account.signInWithEmail', { email, seat, password }),
     // A seat's password kept by this computer's user's own store, at the
-    // member's choice (D-243): the page learns only whether one is kept, and a
-    // sign-in asks for it to be used natively; no call ever answers with it.
+    // member's choice: the page learns only whether one is kept, and a sign-in
+    // asks for it to be used natively; no call ever answers with it.
     getSeatPasswordStore: () => invoke('account.seatPasswordStore', {}),
     hasSavedSeatPassword: (email, seat) => invoke('account.savedSeatPassword', { email, seat }),
     saveSeatPassword: (email, seat, password) => invoke('account.saveSeatPassword', { email, seat, password }),
@@ -384,8 +384,8 @@ std::string bridge_script(const std::string &window_frame) {
     verifyLegalMachinesCodeWithSavedPassword: (challengeId, code, organisationId, seatId, email) =>
       invoke('account.verifyTwoFactor', { challengeId, code, organisationId, seatId, email, savedPassword: true }),
     registerLegalMachinesOrganisation: (registration) => invoke('account.register', registration),
-    // A new organisation one thing a page (D-146): created from its details
-    // and agreements, then, once its email is confirmed, its administrator's
+    // A new organisation one thing a page: created from its details and
+    // agreements, then, once its email is confirmed, its administrator's
     // password, an authenticator app and recovery codes.
     createLegalMachinesOrganisation: (registration) => invoke('account.create', registration),
     setLegalMachinesPassword: (organisationId, password) =>
@@ -393,7 +393,7 @@ std::string bridge_script(const std::string &window_frame) {
     startLegalMachinesTwoFactor: (organisationId) => invoke('account.startTwoFactor', { organisationId }),
     // An organisation active at the end of its setup signs in here at once
     // with the password just set, which goes native for this one call and is
-    // never kept (D-152).
+    // never kept.
     confirmLegalMachinesTwoFactor: (organisationId, code, seatId, password, email) =>
       invoke('account.confirmTwoFactor', { organisationId, code, seatId, password, email }),
     saveLegalMachinesRecoveryCodes: (organisationId) => invoke('account.saveRecoveryCodes', { organisationId }),
@@ -402,16 +402,16 @@ std::string bridge_script(const std::string &window_frame) {
       invoke('account.confirmEmail', { organisationId, code }),
     resendLegalMachinesEmailCode: (organisationId) =>
       invoke('account.resendEmailCode', { organisationId }),
-    // Whether Legal Machines approved the organisation the window waits for (D-030).
+    // Whether Legal Machines approved the organisation the window waits for.
     getLegalMachinesApprovalState: (organisationId) =>
       invoke('account.approvalState', { organisationId }),
-    // A firm's seats (D-204): its administrator makes one for a colleague and
-    // hands over the firm's email, the seat and its password.
+    // A firm's seats: its administrator makes one for a colleague and hands
+    // over the firm's email, the seat and its password.
     listFirmSeats: () => invoke('account.listSeats', {}),
     createFirmSeat: (seatId, password) => invoke('account.createSeat', { seatId, password }),
     setFirmSeatPassword: (seatId, password) => invoke('account.setSeatPassword', { seatId, password }),
     removeFirmSeat: (seatId) => invoke('account.removeSeat', { seatId }),
-    // A seat's sign-in security (D-215): its own two-step and password, a
+    // A seat's sign-in security: its own two-step and password, a
     // colleague's two-step turned off by the administrator, and the
     // administrator's recovery by the firm's email.
     getOwnSeat: () => invoke('account.ownSeat', {}),
@@ -427,7 +427,7 @@ std::string bridge_script(const std::string &window_frame) {
     reportProblem: (report) => invoke('account.reportProblem', report),
     getWorkLogPreview: (matterId, chatId) => invoke('account.workLogPreview', { matterId, chatId }),
     shareWorkLog: (log) => invoke('account.shareWorkLog', log),
-    // A colleague archived, restored with a new password, or removed (D-214).
+    // A colleague archived, restored with a new password, or removed.
     setSeatState: (seatId, state, password) => invoke('organisation.setSeatState', { seatId, state, password }),
     authorizeLocalModels: (password) => invoke('localModels.authorize', { password }),
 		syncLocalModels: (modelId, existingArtifactPath) =>
@@ -445,10 +445,10 @@ std::string bridge_script(const std::string &window_frame) {
 )js"
 // Adjacent literals: MSVC rejects a single string literal over 16,380 bytes.
 R"js(
-    // Phase 06 (AI_SETUP_CONTRACT.md) - role/capability metadata for AI
-    // Setup pickers/drop targets, and the one effective-setup resolver every
-    // AI Setup surface reads from (Node default -> Project override -> Chat
-    // override). chatId requires projectId - see routing_bridge::get_effective_ai_setup().
+    // Phase 06 - role/capability metadata for AI Setup pickers/drop targets, and the one
+    // effective-setup resolver every AI Setup surface reads from (Node default -> Project
+    // override -> Chat override). chatId requires projectId - see
+    // routing_bridge::get_effective_ai_setup.
     getAiSetupCapabilities: () => invoke('routing.getAiSetupCapabilities'),
     getEffectiveAiSetup: (projectId, chatId) => invoke('routing.getEffectiveAiSetup', { projectId, chatId }),
     listMatters: () => invoke('matter.list'),
@@ -461,8 +461,8 @@ R"js(
       invoke('usage.getSummary', { periodStart, periodEnd, projectId }),
     generateProjectUsageStatement: (projectId, periodStart, periodEnd, structuredFormat = 'json') =>
       invoke('usage.generateProjectStatement', { projectId, periodStart, periodEnd, structuredFormat }),
-    // A Matter's month of AI work as a statement for its client (D-252): a PDF
-    // and its signed file, in the folder the lawyer chooses.
+    // A Matter's month of AI work as a statement for its client: a PDF and its
+    // signed file, in the folder the lawyer chooses.
     saveWorkStatement: (projectId, periodStart, periodEnd, periodName) =>
       invoke('usage.saveWorkStatement', { projectId, periodStart, periodEnd, periodName }),
     confirmWorkCosts: (projectId, periodStart, periodEnd) =>
@@ -564,7 +564,7 @@ R"js(
     deleteProjectChat: (projectId, chatId, expectedRevision) =>
       invoke('chat.delete', { projectId, chatId, expectedRevision }),
     restoreChat: (projectId, chatId) => invoke('chat.restore', { projectId, chatId }),
-    // A thread archived or brought back (D-214).
+    // A thread archived or brought back.
     setChatArchived: (projectId, chatId, archived) => invoke('chat.setArchived', { projectId, chatId, archived }),
     // "/compact" - carry a long conversation forward in a shorter form.
     compactChat: (projectId, chatId) => invoke('chat.compact', { projectId, chatId }),
@@ -728,13 +728,13 @@ R"js(		listPlaybooks: () => invoke('playbook.list', {}),
 		// The organisation: people and AI colleagues, their areas, work and decisions.
 		getOrganisation: () => invoke('organisation.get', {}),
 		setOwnOffice: (office) => invoke('organisation.setOwnOffice', Object.assign({}, office)),
-		// The photo the member shows the firm (D-163): kept here and in their
-		// record of every Matter, never sent to Legal Machines.
+		// The photo the member shows the firm: kept here and in their record
+		// of every Matter, never sent to Legal Machines.
 		setOwnPhoto: (photo) => invoke('organisation.setOwnPhoto', { photo: photo == null ? null : photo }),
 		chooseOwnPhoto: () => invoke('organisation.chooseOwnPhoto', {}),
 		getAgentRun: (agentId, runId) => invoke('agent.getRun', { agentId, runId }),
 		createAgent: (settings) => invoke('agent.create', settings),
-		// A colleague of the firm, in no Matter (D-157).
+		// A colleague of the firm, in no Matter.
 		hireColleague: (colleague) => invoke('agent.hire', Object.assign({}, colleague)),
 		getColleagueMemory: (agentId) => invoke('agent.memory', { agentId }),
 		listFirmColleagues: () => invoke('agent.firmColleagues', {}),
@@ -747,7 +747,7 @@ R"js(		listPlaybooks: () => invoke('playbook.list', {}),
 		resumeAgent: (agentId) => invoke('agent.resume', { agentId }),
 		stopAgent: (agentId) => invoke('agent.stop', { agentId }),
 		// The firm's administrator changes, archives, restores or lets go of a
-		// colleague (D-214).
+		// colleague.
 		editColleague: (agentId, colleague) => invoke('agent.edit', Object.assign({}, colleague, { agentId })),
 		requestColleagueEdit: (agentId, colleague) => invoke('agent.requestEdit', Object.assign({}, colleague, { agentId })),
 		archiveColleague: (agentId, archived) => invoke('agent.archive', { agentId, archived }),
@@ -794,7 +794,7 @@ R"js(		listPlaybooks: () => invoke('playbook.list', {}),
 			invoke('documentReview.decideWritten', { projectId, assignmentId, step, decision, comment }),
 		saveDocumentReviewCopy: (projectId, reviewId, version) =>
 			invoke('documentReview.saveCopy', { projectId, reviewId, version }),
-		// Singularity in Word, Excel and Outlook (Office.json, D-105).
+		// Singularity in Word, Excel and Outlook.
 		getOfficeStatus: () => invoke('office.getStatus', {}),
 		connectOffice: () => invoke('office.connect', {}),
 		openOfficeApp: (app) => invoke('office.openApp', { app }),
@@ -808,14 +808,14 @@ R"js(		listPlaybooks: () => invoke('playbook.list', {}),
 		readEmailDraft: (matterId, documentId) => invoke('office.emailDraft', { matterId, documentId }),
 		openOfficeDocument: (matterId, documentId) => invoke('office.openDocument', { matterId, documentId }),
 )js"
-R"js(		// A Matter's correspondence (Correspondence.json, D-106).
+R"js(		// A Matter's correspondence.
 		suggestLetterMatter: (message) => invoke('correspondence.suggest', { message }),
 		fileLetter: (matterId, message, evidence, from, by) =>
 			invoke('correspondence.file', { matterId, message, evidence: evidence ?? [], from: from ?? 'outlook', by: by ?? 'person' }),
 		moveLetter: (matterId, letterId, toMatterId) => invoke('correspondence.move', { matterId, letterId, toMatterId }),
 		unfileLetter: (matterId, letterId) => invoke('correspondence.unfile', { matterId, letterId }),
 		listLetters: (matterId) => invoke('correspondence.list', { matterId }),
-		// A reply to a filed letter, opened in the member's mail app to send (D-105).
+		// A reply to a filed letter, opened in the member's mail app to send.
 		draftLetterReply: (matterId, letterId, text, attachmentDocumentIds) => invoke('correspondence.draftReply', attachmentDocumentIds?.length > 0 ? { matterId, letterId, text, attachmentDocumentIds } : { matterId, letterId, text }),
 		recordTime: (projectId, entry) => invoke('project.recordTime', { ...entry, projectId }),
 		updateTime: (projectId, entryId, change) => invoke('project.updateTime', { ...change, projectId, entryId }),
@@ -845,11 +845,11 @@ R"js(		// A Matter's correspondence (Correspondence.json, D-106).
 		importConsiliumConfiguration: (projectId) => invoke('consilium.import', { projectId }),
 		exportConsiliumConfiguration: (projectId, configurationId) =>
 			invoke('consilium.export', { projectId, configurationId }),
-    // Project Data - .lm (PROJECT_CONTRACT.md). getProjectDataStatus is a
-    // cheap presence/health read; setUpProjectData runs the explicit,
-    // recoverable migration once a folder is chosen (idempotent after that).
-    // Wire methods use project.* (D-001); projectId is the Matter's own
-    // stable id - the Matter/Project implementation is the same domain.
+    // Project Data - .lm. getProjectDataStatus is a cheap presence/health
+    // read; setUpProjectData runs the explicit, recoverable migration once a
+    // folder is chosen (idempotent after that). Wire methods use project.*;
+    // projectId is the Matter's own stable id - the Matter/Project
+    // implementation is the same domain.
     getProjectDataStatus: (projectId) => invoke('project.getDataStatus', { projectId }),
     setUpProjectData: (projectId, startEmpty = false) => invoke('project.setUpData', { projectId, startEmpty }),
     revealProjectData: (projectId) => invoke('project.revealData', { projectId }),
@@ -864,7 +864,7 @@ R"js(		// A Matter's correspondence (Correspondence.json, D-106).
       invoke('project.resolveConflict', { projectId, conflictId, resolution }),
     getSharedActivity: (projectId) => invoke('project.sharedActivity', { projectId }),
     getFirmTeam: () => invoke('project.firmTeam', {}),
-    // Who sits in each of the firm's seats, as its record says (D-209).
+    // Who sits in each of the firm's seats, as its record says.
     listSeatProfiles: () => invoke('organisation.seatProfiles', {}),
     saveSeatProfile: (profile) => invoke('organisation.saveSeatProfile', profile),
     resolveOverwrittenChange: (projectId, changeId, choice) =>
@@ -875,25 +875,25 @@ R"js(		// A Matter's correspondence (Correspondence.json, D-106).
     // default (Phase 06) - an empty overrides array is "Reset to Singularity
     // default". See matter_bridge::save_ai_setup().
     saveProjectAiSetup: (projectId, overrides) => invoke('project.saveAiSetup', { projectId, overrides }),
-    // Project discovery/restoration (PROJECT_CONTRACT.md) - the real,
-    // actually-discovered/restored Projects in the active local workspace,
-    // scanning for .lm the same way Singularity recognizes a Project at launch.
-    // Resolves { projects: [] } rather than rejecting when no local
-    // workspace is configured yet, since this backs a lightweight shell
-    // entry point (the command palette), not an onboarding flow.
+    // Project discovery/restoration - the real, actually-discovered/restored
+    // Projects in the active local workspace, scanning for .lm the same way
+    // Singularity recognizes a Project at launch. Resolves { projects: [] }
+    // rather than rejecting when no local workspace is configured yet, since
+    // this backs a lightweight shell entry point (the command palette), not an
+    // onboarding flow.
     discoverProjects: () => invoke('project.discover'),
     // A Matter discovery found in the lawyer's own folders, opened here.
     openDiscoveredMatter: (path) => invoke('matter.openDiscovered', { path }),
-    // The firm's coordination (D-098): the token is handed over once, kept in
-    // the credential store, and never returned.
+    // The firm's coordination: the token is handed over once, kept in the
+    // credential store, and never returned.
     useFirmFolder: (folder) => invoke('coordination.useFirmFolder', { folder }),
     getCoordination: () => invoke('coordination.status', {}),
     shareMatterWithFirm: (projectId) => invoke('coordination.shareMatter', { projectId }),
     getMatterInvitation: (projectId) => invoke('coordination.invitation', { projectId }),
     joinFirmMatter: (invitation) => invoke('coordination.join', { invitation }),
     acceptMatterKey: (matterId, deviceId) => invoke('coordination.acceptKey', { matterId, deviceId }),
-    // The firm's computers, checked by a number both show (D-205), and a Matter
-    // given to a lawyer of the firm by choosing them.
+    // The firm's computers, checked by a number both show, and a Matter given
+    // to a lawyer of the firm by choosing them.
     getFirmComputers: () => invoke('coordination.firmComputers', {}),
     checkFirmComputer: (deviceId) => invoke('coordination.checkComputer', { deviceId }),
     getComputerCheck: (deviceId) => invoke('coordination.computerCheck', { deviceId }),
@@ -904,12 +904,16 @@ R"js(		// A Matter's correspondence (Correspondence.json, D-106).
     getMatterOffers: () => invoke('coordination.offers', {}),
     acceptMatterOffer: (matterId, fromDeviceId) => invoke('coordination.acceptOffer', { matterId, fromDeviceId }),
     declineMatterOffer: (matterId, fromDeviceId) => invoke('coordination.declineOffer', { matterId, fromDeviceId }),
-    // A personal conversation of two members (D-042): opened, and every one held here.
+    // A personal conversation of two members: opened, and every one held here.
     openPersonalChat: (otherActorId) => invoke('chat.openPersonal', { otherActorId }),
     listPersonalChats: () => invoke('chat.listPersonal', {}),
     clearConversation: (chatId) => invoke('chat.clearConversation', { chatId }),
     restoreConversation: (chatId, clearedBefore) => invoke('chat.restoreConversation', { chatId, clearedBefore }),
     listClearedConversations: () => invoke('chat.clearedConversations', {}),
+    // The icons of the sites web sources come from, asked of each site.
+    sourceIcons: (sites) => invoke('chat.sourceIcons', { sites }),
+    // A member's Stop in a conversation: its colleagues end the work given there.
+    stopColleagues: (chatId) => invoke('chat.stopColleagues', { chatId }),
     // Selected IDs are a local privacy control; document content is still
     // retrieved and injected server-side (see build_document_context), so the
     // renderer never receives or resends extracted source text.
@@ -1086,7 +1090,7 @@ R"js(    revealProtectedOccurrence: (matterId, occurrenceId, previewToken) =>
     value: api,
   });
 
-  // Совместимость с исходным Electron preload-контрактом Singularity.
+  // Compatible with Singularity's original Electron preload contract.
   Object.defineProperty(window, 'singularity', {
     configurable: false,
     enumerable: true,
@@ -1333,6 +1337,14 @@ public:
     // colleague shows in every Matter this computer carries with the firm's
     // other computers (Agent/AgentCard).
     agents::RunnerDependencies runner = agents::production_runner_dependencies();
+    // The names that identify each Matter's client here: a colleague's note that
+    // carries one is that client's, whatever a model labelled it.
+    runner.matter_identities = []() {
+      std::vector<agents::MatterIdentities> table;
+      for (const matters::Matter &one : matter::list())
+        table.push_back({one.id, one.name, privacy::identifying_names(one)});
+      return table;
+    };
     runner.carried_matters = []() {
       std::vector<std::string> ids;
       for (const matter::coordination::CarriedMatter &carried : matter::coordination::carried_matters())
@@ -1340,20 +1352,20 @@ public:
       return ids;
     };
     // Only the firm's administrator hires its AI colleagues, chooses their
-    // models and connects its model accounts (D-184).
+    // models and connects its model accounts.
     runner.may_manage_colleagues = [] { return organisation::is_administrator(); };
     // A change of a colleague an administrator asked for on another of the
     // firm's computers is taken only from one checked here, of a seat Legal
-    // Machines lists as the administrator's (D-219).
+    // Machines lists as the administrator's.
     runner.administrator_computer_key = [](const std::string &device_id) {
       return matter::firm_computers::administrator_computer_key(device_id);
     };
     agents::install_runner_dependencies(std::move(runner));
     // What every computer of the firm holds alike travels in the firm's record
-    // and in each Matter's own folder, sealed between the firm's computers
-    // (D-203): the colleagues' settings and memory, and each member's read
-    // marks. The firm's record is made once a minute at most; the Matters'
-    // folders are read again every ten seconds at most.
+    // and in each Matter's own folder, sealed between the firm's computers:
+    // the colleagues' settings and memory, and each member's read marks. The
+    // firm's record is made once a minute at most; the Matters' folders are
+    // read again every ten seconds at most.
     {
       static std::mutex placesMutex;
       static std::optional<std::filesystem::path> firmFolder;
@@ -1410,7 +1422,7 @@ public:
       marks.device_id = []() { return platform::current_device_id(); };
       marks.written = []() { matter::coordination::wake(); };
       chat::install_read_marks_place(marks);
-      // Who sits in each of the firm's seats, in the same record (D-209).
+      // Who sits in each of the firm's seats, in the same record.
       organisation::ProfilePlace profiles;
       profiles.firm = firmRecord;
       profiles.device_id = []() { return platform::current_device_id(); };
@@ -1424,17 +1436,23 @@ public:
     // A request in the thread of an agent set to work only on this computer is
     // that agent's work, and stays here.
     chat::set_agent_works_only_here(agents::agent_works_only_here);
-    // The composer says where kept-here work really runs (Beta 1 #44).
+    // A thread deleted here ends the colleagues' work given in it.
+    chat::set_deleted_listener([](const std::string &, const std::string &chat_id) {
+      (void)agents::withdraw_work_in_deleted_chat(chat_id);
+    });
+    // The composer says where kept-here work really runs.
     chat::set_kept_here_resolver(chat::kept_here_model);
     // A Matter shared between computers is kept by its folder watch; the record
     // of the person here in it says their place in the firm.
     matter::set_own_office_source([] { return organisation::own_office(); });
-    // And the photo they show the firm (D-163).
+    // And the photo they show the firm.
     matter::set_own_photo_source([] { return organisation::own_photo(); });
-    // The firm's seal on its Matters (D-167): this computer seals what it makes
-    // for the organisation it is signed in to; a seal by a colleague's computer
-    // holds as the person here decided about that computer (Tool/DeviceTrust);
-    // a Matter the firm's exchange carries here is the firm's; and a Matter
+    // Who is of one firm is told by the organisation's id.
+    matter::set_own_organisation_source([] { return matter::coordination::signed_in_organisation_id(); });
+    // The firm's seal on its Matters: this computer seals what it makes for the
+    // organisation it is signed in to; a seal by a colleague's computer holds
+    // as the person here decided about that computer (Tool/DeviceTrust); a
+    // Matter the firm's exchange carries here is the firm's; and a Matter
     // listed here keeps its seal as it opens (matter::keep_seal).
     matter::set_seal_trust([](const std::string &actor_id, const std::string &public_key) {
       switch (tools::device_trust(actor_id, public_key)) {
@@ -1453,6 +1471,13 @@ public:
         },
         [](const std::filesystem::path &folder, const std::string &matter_id) {
           return matter::may_open_matter(folder, matter_id, signed_in_organisation());
+        },
+        // Signed in to an organisation, a Matter sealed for another is not
+        // listed here; signed in to none, every one is.
+        [](const std::filesystem::path &folder, const std::string &matter_id) {
+          const std::string organisation = signed_in_organisation();
+          return !organisation.empty()
+              && matter::matter_seal_state(folder, matter_id, organisation) == matter::MatterSealState::OtherOrganisation;
         }});
     {
       matter::SharedMatterHooks sharedHooks = matter::production_shared_matter_hooks();
@@ -1469,23 +1494,27 @@ public:
       };
       matter::set_shared_matter_hooks(std::move(sharedHooks));
     }
-    // And carried between the firm's computers by its coordination (D-098).
+    // And carried between the firm's computers by its coordination.
     matter::coordination::install_environment(matter::coordination::production_environment());
     matter::coordination::start();
     // The firm's computers, found through Legal Machines and checked by their
-    // lawyers by a number both show (D-205). Their background runs in the
-    // window only, below; quiet while no seat is signed in.
+    // lawyers by a number both show. Their background runs in the window
+    // only, below; quiet while no seat is signed in.
     matter::firm_computers::install_environment(matter::firm_computers::production_environment());
-    // A design partner's work log lives in this computer's own records
-    // (D-257), kept only while the seat's own record says design partner. A
-    // build without Legal Machines' keys for work logs could never send one:
-    // it keeps none from its first call, and erases what an earlier build kept.
+    // A design partner's work log lives in this computer's own records, kept
+    // only while the seat's own record says design partner. A build without
+    // Legal Machines' keys for work logs could never send one: it keeps none
+    // from its first call, and erases what an earlier build kept.
     node::work_log::set_directory(platform::computer_records_directory() / "Work Log");
+    // A Matter's chats keep their calls in the Matter's own folder, which
+    // carries them to each of its computers, so any member's computer sends a
+    // thread's log.
+    node::work_log::set_matter_records({matter::records_folder_of, matter::records_folders, platform::resolve_actor_identity().device_id});
     if (node::work_log_share::recipients_ready() == false) node::work_log::set_kept(false);
     // A Matter other people work in keeps its data: one person's removal must
-    // not erase every member's history (Beta 1 #142, until #169 is decided).
-    // What the domains say changed reaches the window as it happens (Beta 1
-    // #263): a page reads again what it shows, instead of polling.
+    // not erase every member's history. What the domains say changed reaches
+    // the window as it happens: a page reads again what it shows, instead of
+    // polling.
     platform::events::set_sink([gate = event_gate_, window = &window_, listeners = event_listeners_](
                                    const std::string &name, const Json &payload) {
       deliver_event(gate, *window, name, payload);
@@ -1520,9 +1549,9 @@ public:
 			// open (Agent/AgentScheduler).
 			agents::AgentScheduler::shared().start();
 			// This computer says itself to the firm's others and hears their
-			// checks every few seconds while the window is open (D-205).
+			// checks every few seconds while the window is open.
 			matter::firm_computers::start();
-			// Outside AI apps are not answered: AI apps left the product (D-217).
+			// Outside AI apps are not answered: AI apps left the product.
 			runs_.submit([this] {
 				// The Project's memory is kept by a local model (MemoryKeeper.hpp): it
 				// hears of every answered request, and reads what it has not read of
@@ -1705,7 +1734,7 @@ public:
 
   // Whether events may still reach the window. Closed when the bridge shuts
   // down, before the window is destroyed: an event still queued then is
-  // dropped, never run against a window that is closing (Beta 1 #263).
+  // dropped, never run against a window that is closing.
   struct EventGate {
     std::mutex mutex;
     bool open = true;
@@ -1812,8 +1841,8 @@ private:
                        return update_bridge::download(params);
                      });
     register_handler("update.show", ExecutionPolicy::UiThread, update_bridge::show);
-    // Restart now (D-261): the version readied installs as Singularity ends,
-    // and Singularity ends the ordinary way, as when its window closes.
+    // Restart now: the version readied installs as Singularity ends, and
+    // Singularity ends the ordinary way, as when its window closes.
     register_handler("update.install", ExecutionPolicy::UiThread,
                      [this](const Json &params) {
                        Json installing = update_bridge::install(params);
@@ -1926,7 +1955,7 @@ private:
     register_handler("settings.getLegalInstructions", ExecutionPolicy::Worker,
                      node_bridge::get_legal_instructions);
     // The member's name is kept on this computer and in the firm's record,
-    // never at Legal Machines (D-204).
+    // never at Legal Machines.
     register_handler("settings.savePerson", ExecutionPolicy::Worker, [](const Json &params) {
       Json saved = node_bridge::save_person(params);
       organisation::publish_own_profile();
@@ -2028,9 +2057,8 @@ private:
     // HTTPS for this call only; the account kept is identifiers and names; the
     // download session the password is exchanged for is kept native-only
     // (ModelPackageManager). Once onboarding is complete with protection on, a
-    // missing protection model's download starts then on its own worker
-    // (D-198); in onboarding the member starts it. papinian.getModelStatus
-    // follows it.
+    // missing protection model's download starts then on its own worker; in
+    // onboarding the member starts it. papinian.getModelStatus follows it.
     register_handler("account.signIn", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::sign_in(params, account_services()); });
     register_handler("account.verifyTwoFactor", ExecutionPolicy::Worker,
@@ -2043,8 +2071,8 @@ private:
                      [this](const Json &params) {
                        return account_bridge::sign_in_with_email(params, account_services());
                      });
-    // A seat's password in this computer's user's own store (D-243,
-    // Platform/SeatPasswordStore): never answered with, never logged.
+    // A seat's password in this computer's user's own store: never
+    // answered with, never logged.
     register_handler("account.seatPasswordStore", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::seat_password_store(params, account_services()); });
     register_handler("account.savedSeatPassword", ExecutionPolicy::Worker,
@@ -2057,10 +2085,10 @@ private:
                      [this](const Json &params) {
                        return account_bridge::register_organisation(params, account_services());
                      });
-    // A new organisation, one thing a page (D-146): created from its details
-    // and agreements, then its setup - the password, the authenticator app,
-    // its recovery codes - opened by what its confirmed email gives, which
-    // stays native.
+    // A new organisation, one thing a page: created from its details and
+    // agreements, then its setup - the password, the authenticator app, its
+    // recovery codes - opened by what its confirmed email gives, which stays
+    // native.
     register_handler("account.create", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::create_organisation(params, account_services()); });
     register_handler("account.setPassword", ExecutionPolicy::Worker,
@@ -2112,7 +2140,7 @@ private:
                      [this](const Json &params) { return account_bridge::reset_password(params, account_services()); });
     register_handler("account.reportProblem", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::report_problem(params, account_services()); });
-    // A design partner's work log of one chat, sealed to Legal Machines (D-257).
+    // A design partner's work log of one chat, sealed to Legal Machines.
     register_handler("account.workLogPreview", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::work_log_preview(params, account_services()); });
     register_handler("account.shareWorkLog", ExecutionPolicy::Worker,
@@ -2120,7 +2148,7 @@ private:
     register_handler("account.getState", ExecutionPolicy::Worker,
                      [this](const Json &params) { return account_bridge::get_state(params, account_services()); });
     // Signed out, the window opens at the entry again, in onboarding's fixed
-    // size (D-133), as at a first launch.
+    // size, as at a first launch.
     register_handler("account.signOut", ExecutionPolicy::Worker, [this](const Json &params) {
       Json state = account_bridge::sign_out(params, account_services());
       window_.dispatch([this] {
@@ -2149,9 +2177,8 @@ private:
 		// local_model_bridge::remove().
 		register_handler("localModels.remove", ExecutionPolicy::Worker, local_model_bridge::remove);
 
-		// The owner's local-model path: choose a model file already on this Mac
-		// (no download, no copy) and stop using it again. Choosing needs the file
-		// picker, so it runs on the UI thread like every other dialog.
+		// Choosing needs the file picker, so it runs on the UI thread like every
+		// other dialog.
 		register_handler("localModels.useExistingFile", ExecutionPolicy::UiThread,
 		                 [this](const Json &) {
 		                   return local_model_bridge::use_existing_file(
@@ -2171,20 +2198,18 @@ private:
 
     // --- Routing / inference --------------------------------------------
 
-    // The one place a workspace, a default (or explicit) model, a
-    // connected provider's secret and the Protected API policy come
-    // together to actually run a prompt - see Routing/InferenceExecutor/InferenceExecutor.*.
-    // USE-8: `models.execute` is deliberately NOT registered. It sent a real,
-    // billed provider request and returned its text without creating any
-    // canonical operation - money spent against a person's Project with no
-    // record that it happened, no provenance and nothing in their Usage. A
-    // product whose cost must be auditable cannot expose that, and nothing
-    // needs it: every real request goes through chat.send, which records one
-    // canonical operation with its own usage, provenance and protection.
+    // The one place a workspace, a default (or explicit) model, a connected provider's
+    // secret and the Protected API policy come together to actually run a prompt - see
+    // Routing/InferenceExecutor/InferenceExecutor.*. It sent a real, billed provider request
+    // and returned its text without creating any canonical operation - money spent against a
+    // person's Project with no record that it happened, no provenance and nothing in their
+    // Usage. A product whose cost must be auditable cannot expose that, and nothing needs
+    // it: every real request goes through chat.send, which records one canonical operation
+    // with its own usage, provenance and protection.
 
-    // Phase 06 (AI_SETUP_CONTRACT.md) - role/capability metadata and the
-    // effective-setup resolver. Pure reads: neither mutates Project/.lm or
-    // Node settings state.
+    // Phase 06 - role/capability metadata and the effective-setup
+    // resolver. Pure reads: neither mutates Project/.lm or Node settings
+    // state.
     register_handler("routing.getAiSetupCapabilities", ExecutionPolicy::Worker,
                      routing_bridge::get_ai_setup_capabilities);
     register_handler("routing.getEffectiveAiSetup", ExecutionPolicy::Worker,
@@ -2201,7 +2226,7 @@ private:
     register_handler("usage.saveWorkStatement", ExecutionPolicy::UiThread,
                      [this](const Json& params) { return save_work_statement(params); });
     register_handler("usage.confirmCosts", ExecutionPolicy::Worker, usage_bridge::confirm_costs);
-    // This computer's work record, kept from now on and timestamped as it grows (D-252).
+    // This computer's work record, kept from now on and timestamped as it grows.
     usage_bridge::start_work_record();
 
     register_handler("matter.create", ExecutionPolicy::Worker, matter_bridge::create);
@@ -2209,16 +2234,16 @@ private:
     register_handler("matter.update", ExecutionPolicy::Worker, matter_bridge::update);
 
     register_handler("matter.delete", ExecutionPolicy::Worker, matter_bridge::remove);
-    // This computer's Trash of Matters (Matter/MatterTrash, D-247).
+    // This computer's Trash of Matters.
     register_handler("project.listTrash", ExecutionPolicy::Worker, matter_bridge::list_trash);
     register_handler("project.moveToTrash", ExecutionPolicy::Worker, matter_bridge::move_to_trash);
     register_handler("project.restoreFromTrash", ExecutionPolicy::Worker, matter_bridge::restore_from_trash);
     register_handler("project.deleteFromTrash", ExecutionPolicy::Worker, matter_bridge::delete_from_trash);
 
-    // Opens the native multi-file picker (UI thread) and, unless
-    // cancelled, copies every chosen file into the Matter's folder, beside its
-    // `.lm` (D-139); a Matter with no folder keeps a copy in Singularity's own
-    // store (Document/DocumentActions import_files).
+    // Opens the native multi-file picker (UI thread) and, unless cancelled,
+    // copies every chosen file into the Matter's folder, beside its `.lm`; a
+    // Matter with no folder keeps a copy in Singularity's own store
+    // (Document/DocumentActions import_files).
     register_handler("matter.addDocument", ExecutionPolicy::UiThread,
                      [this](const Json &params) { return add_matter_document(params); });
 
@@ -2268,19 +2293,19 @@ private:
     register_handler("chat.closeThread", ExecutionPolicy::Worker, chat_bridge::close_thread);
     register_handler("chat.reopenThread", ExecutionPolicy::Worker, chat_bridge::reopen_thread);
     // A colleague's document review in a thread: its versions, the lawyer's
-    // decision on one, a retry of one that failed (DocumentReview/).
-    // A Playbook colleague asked in a thread for a review carries it out (D-091).
+    // decision on one, a retry of one that failed (DocumentReview/). A Playbook
+    // colleague asked in a thread for a review carries it out.
     document_review::installForColleagues();
     register_handler("documentReview.list", ExecutionPolicy::Worker, document_review_bridge::list);
     register_handler("documentReview.get", ExecutionPolicy::Worker, document_review_bridge::get);
     register_handler("documentReview.decide", ExecutionPolicy::Worker, document_review_bridge::decide);
     register_handler("documentReview.retry", ExecutionPolicy::Worker, document_review_bridge::retry);
     // The assignments, step by step with their email's readiness, and a version
-    // made again without the changes the lawyer leaves out (D-119).
+    // made again without the changes the lawyer leaves out.
     register_handler("documentReview.assignments", ExecutionPolicy::Worker, document_review_bridge::assignments);
     register_handler("documentReview.leaveOut", ExecutionPolicy::Worker, document_review_bridge::leaveOut);
     register_handler("documentReview.answerDecision", ExecutionPolicy::Worker, document_review_bridge::answerDecision);
-    // A document a colleague wrote, accepted or returned as a revised draft is (D-143).
+    // A document a colleague wrote, accepted or returned as a revised draft is.
     register_handler("documentReview.decideWritten", ExecutionPolicy::Worker, document_review_bridge::decideWritten);
     // A copy of a version's revised draft, where the lawyer chooses: the file
     // is found before the save dialog opens on the window's thread.
@@ -2334,15 +2359,15 @@ private:
                      chat_execution_bridge::action_permission);
     register_handler("chat.saveActionPermission", ExecutionPolicy::Worker,
                      chat_execution_bridge::save_action_permission);
-    // This only records a trusted decision and wakes the original operation
-    // thread. The same for the lawyer's answer to a question: the run that asked
-    // it holds a run thread while it waits, and the answer comes through the
-    // control pool, so it never queues behind the very run it wakes.
-    // A question or a web search left waiting when Singularity closed is answered on
-    // the place its run kept; the run then goes on from there, on the run pool
-    // like every run (chat::paused_decision_awaits_resume()). So does a change
-    // to a Project document approved once its run had returned: the decision
-    // carries it on, and no client asks for a resume (Beta 1 #262).
+    // This only records a trusted decision and wakes the original operation thread.
+    // The same for the lawyer's answer to a question: the run that asked it holds a
+    // run thread while it waits, and the answer comes through the control pool, so
+    // it never queues behind the very run it wakes. A question or a web search left
+    // waiting when Singularity closed is answered on the place its run kept; the run
+    // then goes on from there, on the run pool like every run
+    // (chat::paused_decision_awaits_resume). So does a change to a Project document
+    // approved once its run had returned: the decision carries it on, and no client
+    // asks for a resume.
     register_handler("chat.respondToolApproval", ExecutionPolicy::Worker,
                      [this](const Json &params) {
                        Json status = chat_execution_bridge::respond_tool_approval(params);
@@ -2415,6 +2440,37 @@ private:
       for (const auto &[chat_id, at] : chat::conversation_clearing::all()) conversations.push_back(Json{{"chatId", chat_id}, {"clearedBefore", at}});
       return Json{{"conversations", std::move(conversations)}};
     });
+    // The icons of the sites a message's web sources come from: each asked
+    // of its own site, over https, with nothing of the firm's in the
+    // request; every site at once and each ask a few seconds at most, so one
+    // call holds its worker briefly. A member's Stop in a conversation:
+    // every colleague on this computer ends the work it was given there and
+    // stays at work for what it is given next (Agent/AgentActions
+    // stop_work_in_chat).
+    register_handler("chat.stopColleagues", ExecutionPolicy::Worker, [](const Json &params) -> Json {
+      const std::string chat_id = params.at("chatId").get<std::string>();
+      if (chat_id.empty()) throw std::invalid_argument("chatId must name a conversation.");
+      return Json{{"chatId", chat_id}, {"ended", agents::stop_work_in_chat(chat_id)}};
+    });
+    register_handler("chat.sourceIcons", ExecutionPolicy::Worker, [](const Json &params) -> Json {
+      const Json &sites = params.at("sites");
+      if (!sites.is_array()) throw std::invalid_argument("sites must be a list of site names.");
+      std::vector<std::string> names;
+      for (const auto &site : sites) {
+        if (site.is_string()) names.push_back(site.get<std::string>());
+      }
+      const auto icons = research::site_icon::fetch_all(names, [](const std::string &url) -> std::optional<std::string> {
+        try {
+          const auto response = platform::https_get(url, {{"Accept", "image/*,text/html;q=0.9,*/*;q=0.5"}}, 4);
+          if (response.status >= 200 && response.status < 300) return response.body;
+        } catch (const std::exception &) {
+        }
+        return std::nullopt;
+      });
+      Json found = Json::object();
+      for (const auto &[site, icon] : icons) found[site] = icon ? Json(research::site_icon::data_url(*icon)) : Json(nullptr);
+      return Json{{"icons", std::move(found)}};
+    });
     // The sample matter: copied once into the default Projects folder and
     // opened, so a lawyer can try Singularity without a client's files.
     register_handler("project.createSample", ExecutionPolicy::Worker, matter_bridge::create_sample);
@@ -2443,8 +2499,11 @@ private:
         chosen_folders_[token] = path;
       }
       std::error_code error;
-      return Json{{"token", token}, {"path", *folder}, {"name", path.filename().u8string()},
-          {"holdsMatter", std::filesystem::exists(path / ".lm", error)}};
+      Json chosen{{"token", token}, {"path", *folder}, {"name", path.filename().u8string()},
+          {"holdsMatter", std::filesystem::exists(path / ".lm", error)},
+          // The Matter it holds, and where it stands here.
+          {"heldMatter", matter_bridge::held_matter(path)}};
+      return chosen;
     });
 
     // Master Spec Sec.27 (Matter Notes) - a lawyer's own durable copy of a
@@ -2493,7 +2552,7 @@ private:
 		register_handler("agent.list", ExecutionPolicy::Worker, agent_bridge::list);
 		register_handler("agent.get", ExecutionPolicy::Worker, with_viewer(agent_bridge::get));
 		register_handler("agent.roles", ExecutionPolicy::Worker, agent_bridge::roles);
-		// The organisation: its members, areas, work and decisions (Beta 1 #273).
+		// The organisation: its members, areas, work and decisions.
 		register_handler("organisation.get", ExecutionPolicy::Worker, organisation_bridge::get);
 		register_handler("organisation.setOwnOffice", ExecutionPolicy::Worker, organisation_bridge::set_own_office);
 		register_handler("organisation.setOwnPhoto", ExecutionPolicy::Worker, organisation_bridge::set_own_photo);
@@ -2501,7 +2560,7 @@ private:
 		register_handler("organisation.chooseOwnPhoto", ExecutionPolicy::UiThread, [this](const Json &) -> Json {
 			return organisation_bridge::own_photo_picture(dialogs_.choose_file("Picture", "jpg,jpeg,png,gif,webp"));
 		});
-		// Singularity in Word, Excel and Outlook (Office.json, D-105).
+		// Singularity in Word, Excel and Outlook.
 		register_handler("office.getStatus", ExecutionPolicy::Worker, office_bridge::get_status);
 		register_handler("office.connect", ExecutionPolicy::Worker, office_bridge::connect);
 		register_handler("office.openApp", ExecutionPolicy::Worker, office_bridge::open_app);
@@ -2634,11 +2693,11 @@ private:
 	register_handler("context.listMergeConflicts", ExecutionPolicy::Worker, project_context_bridge::list_merge_conflicts);
 	register_handler("context.resolveMergeConflict", ExecutionPolicy::Worker, project_context_bridge::resolve_merge_conflict);
 
-    // Project Data - .lm (PROJECT_CONTRACT.md, Phase 03). Public wire names
-    // use project.* (D-001); the C++ implementation stays in the Matter
-    // domain/Bridge internally - matter_bridge maps projectId to the same
-    // Matter id. setUpData and removeData touch .lm on disk; status/reveal
-    // do not mutate durable state beyond a best-effort Finder/Explorer reveal.
+    // Project Data - .lm. Public wire names use project.*; the C++
+    // implementation stays in the Matter domain/Bridge internally -
+    // matter_bridge maps projectId to the same Matter id. setUpData and
+    // removeData touch .lm on disk; status/reveal do not mutate durable state
+    // beyond a best-effort Finder/Explorer reveal.
     register_handler("project.getDataStatus", ExecutionPolicy::Worker,
                      matter_bridge::get_project_data_status);
     register_handler("project.setUpData", ExecutionPolicy::Worker,
@@ -2661,9 +2720,9 @@ private:
 	register_handler("project.sharedActivity", ExecutionPolicy::Worker, matter_bridge::shared_activity);
 	register_handler("project.confirmComputer", ExecutionPolicy::Worker, matter_bridge::confirm_computer);
 	register_handler("project.revokeComputer", ExecutionPolicy::Worker, matter_bridge::revoke_computer);
-	// The firm's team with what its record says of each seat laid over it
-	// (D-209); this computer takes its own seat's newer profile first, and the
-	// firm's AI Setup with it (D-210).
+	// The firm's team with what its record says of each seat laid over it;
+	// this computer takes its own seat's newer profile first, and the firm's
+	// AI Setup with it.
 	register_handler("project.firmTeam", ExecutionPolicy::Worker, [](const Json &) {
 		organisation::adopt_own_profile();
 		organisation::adopt_firm_ai_setup();
@@ -2742,8 +2801,8 @@ private:
     register_handler("dialog.saveGeneratedFile", ExecutionPolicy::UiThread,
                      [this](const Json &params) { return save_generated_file(params); });
 
-    // Добавляйте CPU/IO-bound методы с ExecutionPolicy::Worker.
-    // Системные диалоги и API, требующие main thread, используют UiThread.
+    // Add CPU- or IO-bound methods with ExecutionPolicy::Worker.
+    // System dialogs and APIs that need the main thread use UiThread.
   }
 
   Json add_matter_document(const Json &params) {
@@ -2813,7 +2872,6 @@ private:
       capabilities.push_back(name);
     }
     std::sort(capabilities.begin(), capabilities.end());
-    // Which build this is, as a design partner's report says it (D-257).
 #if defined(NDEBUG)
     constexpr const char *build = "Release";
 #else
@@ -2992,8 +3050,8 @@ private:
       return platform::https_post(url, headers, body, 30);
     };
     services.forget_session = [] { local_models::production_model_package_manager().forget_session(); };
-    // The recovery codes (D-146): saved where the person chooses, or opened as
-    // a page to print.
+    // The recovery codes: saved where the person chooses, or opened as a page
+    // to print.
     services.choose_save_path = [this](const std::string &default_name) {
       return dialogs_.choose_save_path(default_name, "Text", "txt");
     };

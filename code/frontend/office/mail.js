@@ -116,8 +116,8 @@ export function attachToLetter(name, base64) {
 }
 
 // Puts a colleague's email draft into the letter being written, at the
-// person's press (D-119): its subject and words, its recipients where it names
-// any, and its attachments, each as the draft carries it. The person reads it,
+// person's press: its subject and words, its recipients where it names any,
+// and its attachments, each as the draft carries it. The person reads it,
 // edits it and sends it with Outlook's own Send; this never sends.
 export async function writeIntoLetter(draft) {
 	const item = mailbox().item;

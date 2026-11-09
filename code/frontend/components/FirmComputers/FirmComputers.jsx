@@ -21,15 +21,15 @@ import { travelComputers, travelWords } from "./travel.js";
 
 import styles from "./FirmComputers.module.css";
 
-// How a Matter reaches a colleague's computer (D-123, D-124, D-127): the
-// lawyer who has it sends an invitation, which names where this computer's
-// direct link may be reached; the colleague's computer calls it there and asks
-// to join; each lawyer compares the other computer's code before anything
-// passes. A folder the firm keeps in step is a second way, for computers that
-// cannot reach each other: offered in the dialogs, never required.
+// How a Matter reaches a colleague's computer: the lawyer who has it sends an
+// invitation, which names where this computer's direct link may be reached;
+// the colleague's computer calls it there and asks to join; each lawyer
+// compares the other computer's code before anything passes. A folder the firm
+// keeps in step is a second way, for computers that cannot reach each other:
+// offered in the dialogs, never required.
 
-// Whether a Matter travels between the firm's computers (D-137), said in
-// words under its name (travel.js).
+// Whether a Matter travels between the firm's computers, said in words
+// under its name (travel.js).
 export function MatterTravel({ matterId, className }) {
 	const travel = useMatterTravel(matterId);
 	if (travel == null) return null;
@@ -37,10 +37,9 @@ export function MatterTravel({ matterId, className }) {
 }
 
 // The Matter's other computers and its link to them, read when the Matter
-// opens and again, at most every ten seconds, until they are read and while
-// a computer it hears from is still unnamed: a member's record can come after
-// their first envelope does (2026-10-29: a relayed computer stayed "a
-// colleague's"). Null until the firm's computers are read.
+// opens and again, at most every ten seconds, until they are read and while a
+// computer it hears from is still unnamed: a member's record can come after
+// their first envelope does. Null until the firm's computers are read.
 function useMatterTravel(matterId) {
 	const firm = useFirmComputers();
 	const link = firm.matters.find(matter => matter.matterId == matterId) ?? null;
@@ -241,9 +240,9 @@ export function JoinDialog({ onClose }) {
 }
 
 // The computers that ask to join a Matter this computer carries, for every
-// Matter: the lawyer compares each one's code with the colleague, then lets
-// it in or says it is not theirs (D-123). The Matter the window shows has them
-// on its page too.
+// Matter: the lawyer compares each one's code with the colleague, then lets it
+// in or says it is not theirs. The Matter the window shows has them on its
+// page too.
 export function AskingToJoin() {
 	const firm = useFirmComputers();
 	if (firm.asking.length == 0) return null;
@@ -357,7 +356,7 @@ function AskedRow({ matter, offer, deviceCode }) {
 	);
 }
 
-// ---- The firm's computers, checked once by a number both show (D-205) -------
+// ---- The firm's computers, checked once by a number both show -------
 
 // The dialogs about the firm's computers the window shows wherever the lawyer
 // is: a check of one computer, or a Matter given to this member.
@@ -383,11 +382,11 @@ function ComputerCheckDialog({ deviceId }) {
 	const computer = firm.computers.find(entry => entry.deviceId == deviceId);
 	const owner = computerOwner(computer);
 	// A computer of the member's own seat: they compare the number on their two
-	// computers themselves (the owner, 2026-11-05).
+	// computers themselves.
 	const isYours = owner.isYours == true;
 	// One that never answers - wiped, lost, or set up again since - is turned
-	// away without the number (D-254): turning a computer away opens nothing to
-	// anyone, so it needs no check, while letting one in still does.
+	// away without the number: turning a computer away opens nothing to anyone,
+	// so it needs no check, while letting one in still does.
 	const notTheirs = isYours ? "Not mine" : owner.member != null ? `Not ${owner.first}’s` : "Not theirs";
 	const lastHeard = (computer?.announcedAt ?? "") != "" ? `It last said where it is ${formatWhen(computer.announcedAt)}.` : "";
 	const [check, setCheck] = useState({ state: "waiting", number: "", problem: "" });
@@ -586,10 +585,10 @@ function GivenRow({ offer, owner }) {
 	);
 }
 
-// A Matter given to a lawyer of the firm by choosing them (D-205): the firm's
-// lawyers in their seats, each with whether their computer is checked here.
-// One whose computer is not checked yet is checked together first; the
-// Matter waits for them in the meantime.
+// A Matter given to a lawyer of the firm by choosing them: the firm's lawyers
+// in their seats, each with whether their computer is checked here. One whose
+// computer is not checked yet is checked together first; the Matter waits for
+// them in the meantime.
 export function GiveDialog({ projectId, matterName, memberIds = [], invitedIds = [], onClose }) {
 	const firm = useFirmComputers();
 	const [chosen, setChosen] = useState(null);

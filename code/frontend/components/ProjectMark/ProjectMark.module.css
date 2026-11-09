@@ -24,9 +24,9 @@
 }
 
 /* The band: the mark and the name in the project's colour, with no ground of
-   its own (the owner, 2026-10-24); the project's part of the feed carries the
-   colour. A pointer over it lays a tint under it, its corners G2 (tokens.css,
-   --g2), on a layer so a focus ring around it stays whole. */
+   its own; the project's part of the feed carries the colour. A pointer over
+   it lays a tint under it, its corners G2 (tokens.css, --g2), on a layer so a
+   focus ring around it stays whole. */
 .band {
 	position: relative;
 	isolation: isolate;

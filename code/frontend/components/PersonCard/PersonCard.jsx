@@ -12,11 +12,9 @@ import { ShowPerson, useShowPerson } from "./showPerson.js";
 import styles from "./PersonCard.module.css";
 
 // A member's card, opened by a press on its face, its name or an @mention of
-// it, wherever they stand (the owner, 2026-10-24: "when I press on people and
-// people's tags, a window with the person must open"). One card for a person
-// and an AI colleague alike (D-087): the face, the name, the position with its
-// practice (D-058), what the member handles, what it is doing now, and the
-// two ways on: its chat and its profile.
+// it, wherever they stand. One card for a person and an AI colleague alike:
+// the face, the name, the position with its practice, what the member handles,
+// what it is doing now, and the two ways on: its chat and its profile.
 
 // The one card of the window, over everything; a second press on what opened
 // it puts it away.

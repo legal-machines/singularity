@@ -109,7 +109,7 @@ std::string placeWords(const intelligence::LegalDocument& document, const std::s
 }
 
 // Items in a sentence, each named once: a decision raised on nine blocks of an
-// agreement's opening read "Opening, Opening, ... and Opening" (2026-10-31).
+// agreement's opening read "Opening, Opening, ... and Opening".
 std::string listedWords(const std::vector<std::string>& items) {
 	std::vector<std::string> once;
 	for (const std::string& item : items) {
@@ -178,13 +178,13 @@ std::vector<const matters::MatterDocument*> reviewableDocuments(const matters::M
 
 }
 
-// The version of the same agreement the Matter held before a clean copy of it
-// (D-111): a Word file of the same name before its " - " ("Harborline Mutual
-// NDA - Harborline comments 10-24" is a version of "Harborline Mutual NDA"),
-// added before the copy, a colleague's draft included - the other side may
-// have worked on the draft it was sent - and, of those, the one the copy
-// changes least: the one the other side worked from. The latest added where
-// two are as close.
+// The version of the same agreement the Matter held before a clean copy of
+// it: a Word file of the same name before its " - " ("Harborline Mutual NDA -
+// Harborline comments 10-24" is a version of "Harborline Mutual NDA"), added
+// before the copy, a colleague's draft included - the other side may have
+// worked on the draft it was sent - and, of those, the one the copy changes
+// least: the one the other side worked from. The latest added where two are
+// as close.
 struct EarlierVersion {
 	std::string documentId;
 	std::string name;
@@ -331,7 +331,7 @@ SourceChoice chooseSource(const matters::Matter& matter, const std::string& chat
 
 }
 
-// ---- Which review a request is about (D-115) ---------------------------------------
+// ---- Which review a request is about ---------------------------------------
 
 bool isOpen(const DocumentReview& review) {
 	return review.versions.empty() == false && review.versions.back().state != "accepted";
@@ -551,8 +551,8 @@ std::string asRead(const std::string& text) {
 
 // The changes a version proposed, as the next version is told them, with how
 // each clause reads in that version's draft where Word shows it otherwise
-// than proposed, or where the change never reached the draft (D-102): the
-// next version starts from what the lawyer read, not from what was meant.
+// than proposed, or where the change never reached the draft: the next
+// version starts from what the lawyer read, not from what was meant.
 std::string previousChangesOf(const ReviewVersion& version, const intelligence::LegalDocument* draft = nullptr) {
 
 	const Json result = Json::parse(version.result, nullptr, false);
@@ -656,7 +656,7 @@ bool wasRaised(const std::vector<intelligence::UnresolvedPoint>& raised, const s
 	return false;
 }
 
-// ---- What the colleague says, from what happened (D-101) --------------------------
+// ---- What the colleague says, from what happened --------------------------
 
 // A point the review found off the firm's position that the draft does not
 // change: how it is named to the lawyer, the names a message may call it by,
@@ -672,7 +672,7 @@ struct UnchangedPoint {
 };
 
 // A clause as the drafts read it in Word, every tracked change accepted: in
-// the last version's draft, and in this one's (D-102).
+// the last version's draft, and in this one's.
 struct ClauseReading {
 	std::string place;
 	std::string before;
@@ -692,8 +692,8 @@ struct DraftComparison {
 };
 
 // What happened when the review's work was done, as Singularity recorded it
-// once the draft was written and read back (D-101, layer 4): the authority on
-// what the colleague may say. Nothing in it is what the model meant to do.
+// once the draft was written and read back: the authority on what the
+// colleague may say. Nothing in it is what the model meant to do.
 struct HandInFacts {
 	int version = 1;
 	std::string lawyer;
@@ -711,7 +711,7 @@ struct HandInFacts {
 	std::vector<UnchangedPoint> unchanged;
 	std::vector<std::string> draftProblems;
 	// Comments in the draft's margin, as read back from it, and those meant for
-	// it that are not in it, each with why (D-117).
+	// it that are not in it, each with why.
 	std::vector<std::string> commented;
 	std::vector<std::string> notCommented;
 	std::vector<std::string> calls;
@@ -728,8 +728,8 @@ struct HandInFacts {
 	// The colleague's own view of the agreement, written as it reviewed it,
 	// before the draft existed.
 	std::string view;
-	// For a revision: the drafts compared (D-102), and how many of its written
-	// changes read as they did in the last version's draft.
+	// For a revision: the drafts compared, and how many of its written changes
+	// read as they did in the last version's draft.
 	std::optional<DraftComparison> comparison;
 	std::size_t carriedOver = 0;
 	// What an earlier version's draft showed otherwise than meant that this
@@ -1100,7 +1100,7 @@ std::string factsText(const HandInFacts& facts) {
 	std::string text = "<what_happened>\nWhat Singularity recorded once your draft was written and read back from the "
 		"saved Word file, as Word reads it. It is the authority on what the draft holds: say nothing it does not support, "
 		"and never call a change made that it does not list as made.\n";
-	// A document no Playbook covers is revised as the lawyer asked (D-115).
+	// A document no Playbook covers is revised as the lawyer asked.
 	text += "The work: version " + std::to_string(facts.version) + " of your " + (facts.playbookName.empty() == true
 		? "revision of \"" + facts.sourceName + "\" as " + lawyer + " asked"
 		: "review of \"" + facts.sourceName + "\" against " + facts.playbookName + ", asked for by " + lawyer) + ".\n";
@@ -1447,8 +1447,8 @@ std::vector<std::string> contradictions(const std::string& message, const HandIn
 		issues.push_back("It speaks of a draft attached, but there is none.");
 	}
 	if (isReply == true) return issues;
-	// A revision answers what was asked of it (D-102): each clause the lawyer
-	// named, by what became of it.
+	// A revision answers what was asked of it: each clause the lawyer named,
+	// by what became of it.
 	if (facts.comparison.has_value() == true) {
 		for (const ClauseReading& reading : facts.comparison->named) {
 			std::vector<std::string> names{lowered(reading.place)};
@@ -1663,7 +1663,7 @@ AfterWork askAfterWork(const HandInCall& call, const std::string& prompt,
 		const ReviewBudget budget = call.isLocal == true ? ReviewBudget() : loadReviewBudget();
 		if (call.isLocal == false && budget.limitUsd.has_value() == true) {
 			// What the remainder of the limit this computer chose pays for, where
-			// the whole allowance does not fit (D-118, D-132).
+			// the whole allowance does not fit.
 			const std::uint64_t affordable = callAllowance.has_value() == false ? 0 : affordableOutputTokens(asked.size(),
 				*callAllowance, call.capability.input_price_per_token, call.capability.output_price_per_token,
 				budget, kLeastStepOutputTokens);
@@ -1677,6 +1677,7 @@ AfterWork askAfterWork(const HandInCall& call, const std::string& prompt,
 		request.call_purpose = attempt == 1 ? routing::observability::CallPurpose::SubstantiveGeneration
 			: routing::observability::CallPurpose::Correction;
 		request.model_target = call.model;
+		request.authority_operation = routing::InferenceRequest::AuthorityOperation{call.matterId, call.operationId};
 		{
 			const persistence::PersistenceLock lock(persistence::persistence_mutex());
 			request.workspace_id = platform::load_app_settings().local_node_setup.active_workspace_id;
@@ -1761,11 +1762,11 @@ AfterWork askAfterWork(const HandInCall& call, const std::string& prompt,
 }
 
 // The colleague's message for the thread, written once the work is done, from
-// what happened (D-101): the model the review ran on writes it from the
-// colleague's brief, the thread and the facts, and Singularity checks it
-// against the facts before it is posted. A message that says what the facts
-// do not is sent back once with why; one that still does not agree, or a
-// message that cannot be had, gives way to the facts said plainly.
+// what happened: the model the review ran on writes it from the colleague's
+// brief, the thread and the facts, and Singularity checks it against the
+// facts before it is posted. A message that says what the facts do not is
+// sent back once with why; one that still does not agree, or a message that
+// cannot be had, gives way to the facts said plainly.
 HandIn composeHandIn(const HandInCall& call, const HandInFacts& facts) {
 
 	std::optional<matters::Matter> matter;
@@ -1801,7 +1802,7 @@ HandIn composeHandIn(const HandInCall& call, const HandInFacts& facts) {
 
 }
 
-// ---- A colleague asked about a review it handed in (D-101) -------------------------
+// ---- A colleague asked about a review it handed in -------------------------
 
 // The review as its record stands (layer 4), for a colleague asked about it:
 // its latest version, where that stands, the draft, what it changes and does
@@ -2022,6 +2023,14 @@ ThreadAnswer answerAboutReview(const ReviewRunInput& input, const DocumentReview
 	call.answeringLabel = " (the message you are answering)";
 	call.operationId = "review-op-" + platform::secure_random_hex(10);
 	call.cancelled = input.cancelled;
+	// Its operation's record, as every colleague's call has one: the executor
+	// reads from it where this work may run, whatever model was chosen.
+	tools::OperationAuthority authority;
+	authority.origin = tools::OperationOrigin::Agent;
+	authority.agent_id = input.agentId;
+	authority.actor_id = platform::resolve_actor_identity().actor_id;
+	authority.local_only = input.isLocalOnly;
+	tools::begin_operation_authority(input.matterId, call.operationId, authority);
 
 	// The call kept as the Matter's operation, for Usage, as the review's is.
 	call.taskId = matters::generate_task_id();
@@ -2183,10 +2192,9 @@ bool isReviewRequest(const std::string& matterId, const std::string& chatId, con
 }
 
 // What a colleague says as it takes the work up, in reply to the message that
-// gave it (the owner, 2026-10-24: "if the agent starts work, let it write a
-// message as a message in the chat, varied, as a reply"). Said in a few words
-// of what it is about to do, never of what it has done; the words vary from
-// one piece of work to the next as a colleague's do.
+// gave it. Said in a few words of what it is about to do, never of what it
+// has done; the words vary from one piece of work to the next as a
+// colleague's do.
 std::string startWords(const std::string& seed, const std::string& documentName, const std::string& asker,
 	int versionNumber, bool isTakenUpAgain, bool isAnswered) {
 
@@ -2219,10 +2227,10 @@ std::string startWords(const std::string& seed, const std::string& documentName,
 
 namespace {
 
-// What the version did, as its record keeps it (D-119): what it was meant to
-// do, the source and its exact version, each change proposed and what became
-// of it with where its values come from, what the saved draft was checked for,
-// and what is left for the lawyer.
+// What the version did, as its record keeps it: what it was meant to do, the
+// source and its exact version, each change proposed and what became of it
+// with where its values come from, what the saved draft was checked for, and
+// what is left for the lawyer.
 Json stepRecordOf(const intelligence::ValidatedReview& validated, const intelligence::LegalDocument& document,
 	const intelligence::IntegrityReport& integrity, const intelligence::RevisionOutcome& revision, bool isUnchanged,
 	const Json& origins, const ReviewRunOutput& output, const std::filesystem::path& sourcePath, const std::string& readSha,
@@ -2287,7 +2295,7 @@ Json stepRecordOf(const intelligence::ValidatedReview& validated, const intellig
 
 }
 
-// Whether a document of the Matter is a colleague's own work (D-172): a
+// Whether a document of the Matter is a colleague's own work: a
 // review's draft, a document a colleague wrote, or an email it drafted.
 bool isColleagueWork(const matters::Matter& matter, const std::string& documentId) {
 	for (const DocumentReview& review : matter.document_reviews)
@@ -2301,11 +2309,11 @@ bool isColleagueWork(const matters::Matter& matter, const std::string& documentI
 	return false;
 }
 
-// Whose writings of the parties a draft is checked against (D-172): the
-// source's, unless it is a colleague's own work - a reply revised four times
-// from a draft that misnamed the defendant kept "Coastline Logistics Corp."
-// while every pleading writes "Coastline Logistics, Inc." (2026-10-31). Then
-// the Matter's own documents decide, each read as it is.
+// Whose writings of the parties a draft is checked against: the source's,
+// unless it is a colleague's own work - a reply revised four times from a
+// draft that misnamed the defendant kept "Coastline Logistics Corp." while
+// every pleading writes "Coastline Logistics, Inc.". Then the Matter's own
+// documents decide, each read as it is.
 intelligence::PartyAuthority partyAuthorityFor(const matters::Matter& matter, const matters::MatterDocument& source,
 	FactsReading* facts) {
 	intelligence::PartyAuthority authority;
@@ -2338,11 +2346,10 @@ intelligence::PartyAuthority partyAuthorityFor(const matters::Matter& matter, co
 }
 
 // A colleague's own draft that misnames a party is written again with the party
-// named as the Matter's documents write it (D-172): in the changes the model
-// proposed, and as Singularity's own rewrite of every other clause that still
-// misnames it - a reply kept "Coastline Logistics Corp." in 21 places that one
-// pass could not reach (2026-10-31). Each correction says why, where its record
-// shows the reasoning.
+// named as the Matter's documents write it: in the changes the model proposed,
+// and as Singularity's own rewrite of every other clause that still misnames it
+// - a reply kept "Coastline Logistics Corp." in 21 places that one pass could
+// not reach. Each correction says why, where its record shows the reasoning.
 void correctPartyNames(intelligence::ValidatedReview& answer, const intelligence::LegalDocument& document,
 	const std::map<std::string, std::string>& corrections) {
 	const auto corrected = [&](std::string text) {
@@ -2423,9 +2430,9 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	try {
 		matter = loadMatter(input.matterId);
 		// A part of an assignment works on its own document: the review of it this
-		// colleague has open in the thread, or a new one (D-115). Otherwise the
-		// review the request is about: the one it returns or tries again, else the
-		// latest not yet accepted.
+		// colleague has open in the thread, or a new one. Otherwise the review the
+		// request is about: the one it returns or tries again, else the latest not
+		// yet accepted.
 		open = input.sourceDocumentId.empty() == true
 			? reviewAskedAbout(matter, input.chatId, input.agentId, input.requestMessageId)
 			: openReviewOf(matter, input.chatId, input.agentId, input.sourceDocumentId);
@@ -2450,11 +2457,11 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		const bool isUnfinished = latest.state == "failed" || latest.state == "waiting_for_information"
 			|| latest.state == "unchanged" || latest.state == "queued" || latest.state == "preparing"
 			|| latest.state == "running" || latest.state == "producing";
-		// A new message to the colleague about the review it handed in (D-101):
-		// a change to the draft is a new version; a question, a status request or
-		// a remark is answered from the review as it stands. A return with
-		// comments is a change by its nature, and a retry or an answer to the
-		// colleague's own question carries on the version it is for.
+		// A new message to the colleague about the review it handed in: a change
+		// to the draft is a new version; a question, a status request or a remark
+		// is answered from the review as it stands. A return with comments is a
+		// change by its nature, and a retry or an answer to the colleague's own
+		// question carries on the version it is for.
 		const bool isReturnItself = latest.state == "returned" && open->decisions.empty() == false
 			&& open->decisions.back().messageId == input.requestMessageId;
 		const bool isNewMessage = input.requestMessageId.empty() == false && input.requestMessageId != latest.requestMessageId;
@@ -2550,8 +2557,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		source = choice.document;
 		question = choice.question;
 	}
-	// A document no Playbook covers is revised as the lawyer asks (D-115); a
-	// review begun that way goes on that way.
+	// A document no Playbook covers is revised as the lawyer asks; a review
+	// begun that way goes on that way.
 	const bool isRequestOnly = input.isRequestOnly == true
 		|| (open.has_value() == true && open->playbookId.empty() == true && open->versions.empty() == false);
 	std::optional<playbooks::Playbook> playbook = isRequestOnly == true ? std::nullopt : playbooks::get(input.playbookId);
@@ -2694,13 +2701,13 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	}
 	task.version = versionNumber;
 	// A part of an assignment: the lawyer's words, what came before it, the
-	// documents it rests on, and the clauses its instruction names (D-115).
+	// documents it rests on, and the clauses its instruction names.
 	task.assignment = input.assignment;
 	task.earlierInAssignment = input.earlierInAssignment;
 	task.supporting = supportingOf(matter, folder, input.supportingDocumentIds, source->id);
 	if (input.assignment.empty() == false) task.onlyPlaces = placesNamedIn(instruction, document);
-	// The last version, and its draft as Word holds it (D-102): what the lawyer
-	// read, what the request is about, and what this version is measured by.
+	// The last version, and its draft as Word holds it: what the lawyer read,
+	// what the request is about, and what this version is measured by.
 	std::optional<ReviewVersion> previous;
 	for (const ReviewVersion& earlier : review.versions) {
 		if (versionNumber > 1 && earlier.number == versionNumber - 1) previous = earlier;
@@ -2720,7 +2727,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	}
 	// A clean copy - no tracked changes - is read against the version the
 	// Matter held before it, so the other side's changes are found by
-	// comparing the files, never left to the model to guess (D-111).
+	// comparing the files, never left to the model to guess.
 	std::optional<EarlierVersion> earlier;
 	if (versionNumber == 1 && document.pendingRevisions == 0 && intake.identity.format == "docx") {
 		earlier = earlierVersionOf(matter, *source, folder, document);
@@ -2768,8 +2775,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		{"basis", allowance.has_value() == true ? "the most the model writes in one answer, as "
 			+ std::string(capability.source == "local" ? "Singularity measures it on this computer" : "its provider reports it")
 			: std::string("no limit is reported for this model, so none is sent and the provider's own applies")}};
-	// A limit this computer chose on its spend is kept (D-118); with none
-	// chosen, nothing here holds the review back (D-132).
+	// A limit this computer chose on its spend is kept; with none chosen,
+	// nothing here holds the review back.
 	const ReviewBudget budget = isLocal == true ? ReviewBudget() : loadReviewBudget();
 	if (isLocal == false && budget.limitUsd.has_value() == true) {
 		if (allowance.has_value() == false) {
@@ -2778,7 +2785,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 				+ modelChooser(true) + " can choose a model on my page whose provider reports its limits.");
 		}
 		// The model's whole limit where the budget's remainder covers it, else
-		// what the remainder pays for (D-118).
+		// what the remainder pays for.
 		const std::uint64_t affordable = affordableOutputTokens(prepared.prompt.size(), *allowance,
 			capability.input_price_per_token, capability.output_price_per_token, budget, kLeastReviewOutputTokens);
 		if (affordable == 0) {
@@ -2802,7 +2809,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	authority.origin = tools::OperationOrigin::Agent;
 	authority.agent_id = input.agentId;
 	authority.actor_id = platform::resolve_actor_identity().actor_id;
-	// What the Matter's own mode lets any member do (D-158).
+	// What the Matter's own mode lets any member do.
 	authority.local_only = input.isLocalOnly;
 	tools::begin_operation_authority(input.matterId, operationId, authority);
 	try {
@@ -2911,7 +2918,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	// One call of the model as the review asks it, protected as every call of
 	// the colleague is. Gives the run's ending where the call could not be made;
 	// a call the provider could not take for a moment is asked again, at most
-	// twice, and said (D-119).
+	// twice, and said.
 	const std::function<std::optional<ReviewRunOutput>(const std::string&, bool)> callOnce
 		= [&](const std::string& prompt, bool isAgain) -> std::optional<ReviewRunOutput> {
 		std::optional<std::uint64_t> callAllowance = allowance;
@@ -2930,6 +2937,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		request.call_purpose = isAgain == true ? routing::observability::CallPurpose::Correction
 			: routing::observability::CallPurpose::SubstantiveGeneration;
 		request.model_target = model;
+		request.authority_operation = routing::InferenceRequest::AuthorityOperation{input.matterId, operationId};
 		{
 			const persistence::PersistenceLock lock(persistence::persistence_mutex());
 			request.workspace_id = platform::load_app_settings().local_node_setup.active_workspace_id;
@@ -2998,6 +3006,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 			// A moment's trouble at the provider is asked again, twice at most.
 			ColleagueCallResult failed;
 			failed.errorCode = error.code();
+			failed.failureClass = providers::is_model_refusal(error) == true ? inference::FailureClass::Refused
+				: inference::classify(error.code(), false, false);
 			if (isWorthAskingAgain(failed) == true && unansweredAgain < 2) {
 				++unansweredAgain;
 				output.recoveries.push_back("Call " + std::to_string(output.calls) + " brought no answer ("
@@ -3008,14 +3018,14 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 			return fail(reasonFor(error.code(), model.model_id, error.what()));
 		} catch (const platform::CredentialUnavailable&) {
 			// The Mac is locked: nothing left, and the work waits for it to be
-			// unlocked (D-169) - the colleague's loop holds and takes it up again,
-			// never a failed revision (a lease part failed so, 2026-10-31).
+			// unlocked - the colleague's loop holds and takes it up again, never a
+			// failed revision (a lease part failed so, 2026-10-31).
 			endWatch();
 			throw;
 		} catch (const std::exception& error) {
 			endWatch();
 			// Its record says the mode the request ran under, as every other call's
-			// does (D-172): this one once read "off" for a protected lease revision.
+			// does: this one once read "off" for a protected lease revision.
 			recordCall(input.matterId, taskId, model, nullptr, providers::TaskErrorCode::Unknown, millisecondsSince(started),
 				nullptr, std::nullopt, "document-review", 1, decisionOf(model, request, providers::TaskErrorCode::Unknown,
 					std::string()));
@@ -3069,9 +3079,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	intelligence::ValidatedReview validated = intelligence::validateReviewAnswer(result.text, document, task.positions,
 		instruction);
 	// A well-formed answer is not yet a review: one that assessed none of the
-	// Playbook's positions is never handed in as finding nothing (the owner,
-	// 2026-10-24: never call a result correct because the model returned valid
-	// JSON). One that assessed some says which it did not.
+	// Playbook's positions is never handed in as finding nothing. One that
+	// assessed some says which it did not.
 	const auto assessedIn = [](const intelligence::ValidatedReview& answer) {
 		std::size_t count = 0;
 		for (const intelligence::PositionAssessment& assessment : answer.assessments) {
@@ -3094,9 +3103,9 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 			});
 	};
 	// An answer with nothing in it - no summary, assessment, change, comment or
-	// point of its own - is asked for once more before it is refused (D-118):
-	// live runs (25 Oct 2026) had four such answers in some twenty-five, each
-	// well-formed and empty after a thousand tokens and more.
+	// point of its own - is asked for once more before it is refused: live runs
+	// (25 Oct 2026) had four such answers in some twenty-five, each well-formed
+	// and empty after a thousand tokens and more.
 	const auto isEmpty = [&](const intelligence::ValidatedReview& answer) {
 		return answer.summary.find_first_not_of(" \t\r\n") == std::string::npos && assessedIn(answer) == 0
 			&& answer.changes.empty() == true && answer.comments.empty() == true
@@ -3115,8 +3124,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 			return "it assessed none of the Playbook's positions";
 		return std::string();
 	};
-	// An answer that cannot be used is asked for again, twice at most, told why
-	// (D-118, D-119): one live run's review came back empty twice running.
+	// An answer that cannot be used is asked for again, twice at most, told
+	// why: one live run's review came back empty twice running.
 	for (int again = 1; again <= 2; ++again) {
 		const std::string why = whyUnusable(validated);
 		if (why.empty() == true) break;
@@ -3175,13 +3184,13 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 			if (std::filesystem::exists(target, exists) == false) break;
 		}
 	}
-	// Whose writings of the parties decide (D-172), and the corrections a
+	// Whose writings of the parties decide, and the corrections a
 	// colleague's own draft needs, worked out once.
 	const intelligence::PartyAuthority partyAuthority = partyAuthorityFor(matter, *source, input.facts.get());
 	const std::map<std::string, std::string> partyCorrections = intelligence::partyCorrections(document, partyAuthority);
 	// The draft of an answer, written and read back as Word holds it: each
 	// written change's clause as the draft now reads, against what it was meant
-	// to read (D-102).
+	// to read.
 	intelligence::RevisionOutcome revision;
 	std::optional<intelligence::LegalDocument> draftDocument;
 	const auto writeDraft = [&](intelligence::ValidatedReview& answer) {
@@ -3194,8 +3203,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		// deadline - is worked out here, from the real values, before it is
 		// written (Context/ComputedStatements): a revision wrote the statement
 		// itself into the draft, and the colleague then "corrected" it to a ratio
-		// it guessed, 5.0% for 2.53% (2026-10-29). One that cannot be worked out
-		// is not written, and says why.
+		// it guessed, 5.0% for 2.53%. One that cannot be worked out is not
+		// written, and says why.
 		const auto worked = [](std::string& text, std::string& why) {
 			if (context::computed_statements::has_statements(text) == false) return true;
 			const context::computed_statements::CheckedText computed = context::computed_statements::compute_checked(text);
@@ -3301,7 +3310,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	// A revision whose draft would read exactly as the last version's is not a
 	// result: the colleague takes it up again once, told so, with how the
 	// clauses the lawyer named read now; a draft that still changes nothing is
-	// never handed in as a version to accept (D-102).
+	// never handed in as a version to accept.
 	const bool canBeMeasured = isDocx == true && previous.has_value() == true && previousDraft.has_value() == true;
 	bool isUnchanged = canBeMeasured == true && (revision.isWritten == false || readsAsBefore() == true);
 	Json accountability = Json::object();
@@ -3367,10 +3376,10 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		}
 	}
 
-	// Where each value a written change gives comes from (D-119): a document of
-	// the Matter, the Playbook, the lawyer's words, or the clause as it read
-	// before the other side's changes. One that none gives is the lawyer's to
-	// confirm, and said so.
+	// Where each value a written change gives comes from: a document of the
+	// Matter, the Playbook, the lawyer's words, or the clause as it read before
+	// the other side's changes. One that none gives is the lawyer's to confirm,
+	// and said so.
 	Json origins = Json::array();
 	if (revision.isWritten == true && isUnchanged == false) {
 		// The agreement's own clauses, and the documents it rests on: in an
@@ -3432,7 +3441,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 
 	// How the clauses read across the drafts, for the colleague's message: those
 	// the lawyer named, those that read otherwise than in the last draft, and
-	// how many read as they did (D-102).
+	// how many read as they did.
 	DraftComparison comparison;
 	if (canBeMeasured == true) {
 		comparison.previousVersion = previous->number;
@@ -3496,7 +3505,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 
 	/* - - - - - - */
 	// 6. Handed in: the colleague's message, written once the work is done from
-	// what happened, and checked against it before it is posted (D-101).
+	//    what happened, and checked against it before it is posted.
 
 	stage("writing_message");
 	const HandInFacts facts = gatherFacts(input, review, versionNumber, document, validated, revision, isDocx, integrity,
@@ -3504,8 +3513,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	HandIn handIn;
 	if (input.isHandedInByAssignment == true) {
 		// A part of an assignment hands in through the assignment's card and its
-		// closing message (D-120): what happened is said from the record and kept
-		// with the version, for its page; no message is posted, no model asked.
+		// closing message: what happened is said from the record and kept with
+		// the version, for its page; no message is posted, no model asked.
 		handIn.text = plainHandIn(facts);
 		handIn.record = Json{{"writtenBy", "plain"}, {"byAssignment", true}, {"text", handIn.text}};
 	} else {
@@ -3609,8 +3618,8 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 	output.excerpt = said.substr(0, said.find('\n'));
 	if (workProductId.empty() == false) output.workProductId = workProductId;
 	// What the version holds, read back from the saved draft, for the
-	// assignment it may be a part of (D-115). A draft that names a party wrong
-	// is no result to hand in.
+	// assignment it may be a part of. A draft that names a party wrong is no
+	// result to hand in.
 	output.sourceName = source->name;
 	output.resultDocumentId = isPartyFailure == true ? std::string() : resultDocumentId;
 	output.resultFileName = revision.isWritten == true && isPartyFailure == false ? revision.path.filename().u8string()
@@ -3634,7 +3643,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 		}
 	}
 	output.openPoints = facts.calls;
-	// The same calls as the lawyer takes them (D-120).
+	// The same calls as the lawyer takes them.
 	for (const intelligence::UnresolvedPoint& point : validated.unresolved) {
 		if (point.kind != "needs_lawyer") continue;
 		AssignmentDecision decision;
@@ -3663,7 +3672,7 @@ ReviewRunOutput runDocumentReview(const ReviewRunInput& input) {
 
 namespace {
 
-// The work a colleague did in a thread, as its records keep it (D-120): each
+// The work a colleague did in a thread, as its records keep it: each
 // assignment's documents - their versions and where they stand, what each
 // draft holds, what is left - its decisions with their answers, and its email.
 // What the colleague's ordinary answer is given before a question about it.
@@ -3740,8 +3749,9 @@ void installForColleagues() {
 	work.record_of = [](const std::string& matterId, const std::string& chatId, const std::string& agentId) {
 		return threadWorkRecord(matterId, chatId, agentId);
 	};
-	// Every request a lawyer gives a colleague is the colleague's to understand
-	// (D-115): its plan decides whether it is answered in words or worked on.
+	// Every request a lawyer gives a colleague is the colleague's to
+	// understand: its plan decides whether it is answered in words or worked
+	// on.
 	work.is_requested = [](const std::string&, const std::string&, const std::string&, const std::string&) { return true; };
 	// The colleague's run, handed over: its request becomes the work's input,
 	// and how the work ended becomes what the run reports.
@@ -3812,8 +3822,8 @@ void installForColleagues() {
 		}
 		return output;
 	};
-	// A run the colleague begins itself, as its talk (D-129): what it says is
-	// kept as Work Product, as its former answer was.
+	// A run the colleague begins itself, as its talk: what it says is kept as
+	// Work Product, as its former answer was.
 	work.run_own = [](const agents::Agent& agent, const agents::TaskRunInput& input, const std::string& chatId,
 			const std::string& brief, const std::string& why, agents::TaskRunOutput output) -> std::optional<agents::TaskRunOutput> {
 		ReviewRunInput review;

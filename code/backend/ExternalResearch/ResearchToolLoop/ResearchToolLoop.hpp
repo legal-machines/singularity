@@ -2814,8 +2814,8 @@ inline routing::InferenceResult run_research_tool_loop(const std::string &prompt
 		}
 	};
 	// The request ends here and waits for the lawyer at the place it kept:
-	// nobody decided in the time this request may hold its thread (Beta 1 #14).
-	// The decision resumes it from there, with no model call made twice.
+	// nobody decided in the time this request may hold its thread. The decision
+	// resumes it from there, with no model call made twice.
 	const std::string waitsAtItsPlace = "Singularity keeps this request where it stood until you decide.";
 	// The wait on the lawyer is over with their decision, in this process: the
 	// saved place is not needed any more. A wait ended by Stop or by Singularity
@@ -4321,7 +4321,7 @@ inline routing::InferenceResult run_research_tool_loop(const std::string &prompt
 					? asWritten.at("query").get<std::string>() : std::string();
 				// What else the search would send - its jurisdiction, its source
 				// preferences - leaves as plainly as its query: none of it may
-				// write a symbol either (PRIV-1).
+				// write a symbol either.
 				bool othersWriteASymbol = false;
 				if (asWritten.is_object())
 					for (const auto &field : asWritten.items()) {

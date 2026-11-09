@@ -7,22 +7,17 @@ import { nativeApp, openInWord, realDocuments } from "../../data/native.js";
 
 import styles from "./OfficeGuide.module.css";
 
-// Connecting Word, Excel, PowerPoint and Outlook to Singularity (D-105), as one of
-// the window's dialogs over the white (UI-32; the owner, 2026-11-04: "redo the
-// page connecting Word and Excel in the common style; it must not be a page of
-// its own, but a place under the white fill"; 2026-11-05: "make it completely
-// clear, with a very strict and clean hierarchy of layout and weight").
+// Connecting Word, Excel, PowerPoint and Outlook to Singularity, as one of the
+// window's dialogs over the white.
 //
-// It is one list of what is connected: this computer; Word, Excel and
-// PowerPoint; Outlook; the panes allowed. Each says its state in a word, and
-// the one at hand stands open: one line, the steps beside a sketch of the
-// application's own screen with the places to press marked, and its one
-// action. What is checked is checked as the person does it (the owner,
-// 2026-10-24: "always check that the person did everything right"). A pane
-// asking to connect is answered in its own application's part, its code
-// beside the question, so it reads as Singularity's question about that pane.
-// Weight is the hierarchy's: medium for the title, each part's name and the
-// code alone; every other word regular.
+// It is one list of what is connected: this computer; Word, Excel and PowerPoint;
+// Outlook; the panes allowed. Each says its state in a word, and the one at hand
+// stands open: one line, the steps beside a sketch of the application's own screen
+// with the places to press marked, and its one action. What is checked is checked
+// as the person does it. A pane asking to connect is answered in its own
+// application's part, its code beside the question, so it reads as Singularity's
+// question about that pane. Weight is the hierarchy's: medium for the title, each
+// part's name and the code alone; every other word regular.
 
 let isGuideOpen = false;
 const listeners = new Set();
@@ -90,6 +85,19 @@ export function OfficeGuide({ onClose }) {
 			setProblem(error?.message ?? "Singularity could not read the connection.");
 		}
 	}, []);
+
+	// Word opened for the first time while the guide waited for it: Connect
+	// finishes by itself, with nothing more to press.
+	const firstOpening = status?.firstOpening ?? "none";
+	const [isFinishing, setFinishing] = useState(false);
+	useEffect(() => {
+		if (firstOpening != "opened" || isFinishing) return;
+		setFinishing(true);
+		nativeApp().connectOffice().catch(() => {}).finally(async () => {
+			await read();
+			setFinishing(false);
+		});
+	}, [firstOpening, isFinishing, read]);
 
 	// What was done is checked as the person does it.
 	useEffect(() => {
@@ -166,7 +174,10 @@ export function OfficeGuide({ onClose }) {
 			title="Connect Office"
 			description="Singularity in a pane beside your documents and mail."
 			onClose={onClose}
-			actions={allDone ? <Button variant="primary" onClick={onClose}>Done</Button> : <Button onClick={onClose}>Finish later</Button>}
+			// Finish later stands at the top left, the way out of a task left
+			// for later; Done, at the foot, ends it.
+			lead={allDone ? null : <Button variant="quiet" size="small" onClick={onClose}>Finish later</Button>}
+			actions={allDone ? <Button variant="primary" onClick={onClose}>Done</Button> : null}
 		>
 			{body}
 			{problem != null ? <p className={styles.problem}>{problem}</p> : null}
@@ -198,6 +209,8 @@ function Part({ name, state, isOpen, onOpen, children }) {
 function ComputerPart({ status, done, busy, act }) {
 	const mac = onMac();
 	const notTrusted = status.connected == true && status.certificate != "trusted";
+	// Word never opened on this Mac: a step of its own, never a failure.
+	const waitsForWord = (status.firstOpening ?? "none") != "none";
 	if (done) return <p className={styles.line}>{system()} trusts Singularity's certificate, for "localhost" only.</p>;
 	return (
 		<>
@@ -208,12 +221,13 @@ function ComputerPart({ status, done, busy, act }) {
 					<Step number={1}>Press Connect.</Step>
 					{mac
 						? <Step number={2}>Enter your Mac's password when macOS asks.</Step>
-						: <Step number={2}>Press {said("Yes", "Да")} when Windows asks to install the certificate.</Step>}
+						: <Step number={2}>Press {said("Yes", "\u0414\u0430")} when Windows asks to install the certificate.</Step>}
+					{waitsForWord ? <Step number={3}>Open Word once. Singularity finishes by itself as soon as Word has opened.</Step> : null}
 				</ol>
 			</div>
 			{notTrusted ? <p className={styles.problem}>Not trusted yet. Press Connect again.</p> : null}
-			{status.problem ? <p className={styles.problem}>{status.problem}</p> : null}
-			<Button variant="primary" busy={busy} onClick={() => act(() => nativeApp().connectOffice())}>Connect</Button>
+			{status.problem && !waitsForWord ? <p className={styles.problem}>{status.problem}</p> : null}
+			{waitsForWord ? null : <Button variant="primary" busy={busy} onClick={() => act(() => nativeApp().connectOffice())}>Connect</Button>}
 		</>
 	);
 }
@@ -232,8 +246,8 @@ function WordPart({ status, done, computerDone, requests, answer, busy }) {
 			<div className={styles.sheet}>
 				<WordSketch />
 				<ol className={styles.steps}>
-					<Step number={1}>In Word, on {said("Home", "Главная")}, press {said("Add-ins", "Надстройки")}.</Step>
-					<Step number={2}>Under {said("Developer Add-ins", "Надстройки разработчика")}, press Singularity.</Step>
+					<Step number={1}>In Word, on {said("Home", "\u0413\u043b\u0430\u0432\u043d\u0430\u044f")}, press {said("Add-ins", "\u041d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0438")}.</Step>
+					<Step number={2}>Under {said("Developer Add-ins", "\u041d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u043a\u0430")}, press Singularity.</Step>
 					<Step number={3}>Press Matter, now on Home. The pane opens.</Step>
 					<Step number={4}>The pane shows a code. Allow it here.</Step>
 				</ol>
@@ -282,8 +296,8 @@ function OutlookPart({ status, done, computerDone, requests, answer, busy }) {
 					) : (
 						<>
 							<Step number={2}>In Outlook, in the Inbox of a Microsoft 365 or Outlook.com mailbox, press More apps on Home, then Add apps.</Step>
-							<Step number={3}>Choose {said("My add-ins", "Мои надстройки")}. Under Custom add-ins, press {said("Add a custom add-in", "Добавить настраиваемую надстройку")}, then {said("Add from file", "Добавить из файла")}.</Step>
-							<Step number={4}>Paste into {said("File name", "Имя файла")}. Press {said("Open", "Открыть")}, then {said("Install", "Установить")}.</Step>
+							<Step number={3}>Choose {said("My add-ins", "\u041c\u043e\u0438 \u043d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0438")}. Under Custom add-ins, press {said("Add a custom add-in", "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u0430\u0441\u0442\u0440\u0430\u0438\u0432\u0430\u0435\u043c\u0443\u044e \u043d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0443")}, then {said("Add from file", "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0438\u0437 \u0444\u0430\u0439\u043b\u0430")}.</Step>
+							<Step number={4}>Paste into {said("File name", "\u0418\u043c\u044f \u0444\u0430\u0439\u043b\u0430")}. Press {said("Open", "\u041e\u0442\u043a\u0440\u044b\u0442\u044c")}, then {said("Install", "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c")}.</Step>
 							<Step number={5}>In a letter, press More apps, then Singularity. The pane shows a code. Allow it here.</Step>
 						</>
 					)}
@@ -351,14 +365,14 @@ function WindowsTrustSketch() {
 	return (
 		<figure className={styles.sketch} aria-label="Windows' security warning, with Yes marked">
 			<div className={styles.win_dialog}>
-				<p className={styles.win_title}>{said("Security Warning", "Предупреждение системы безопасности")}</p>
+				<p className={styles.win_title}>{said("Security Warning", "\u041f\u0440\u0435\u0434\u0443\u043f\u0440\u0435\u0436\u0434\u0435\u043d\u0438\u0435 \u0441\u0438\u0441\u0442\u0435\u043c\u044b \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438")}</p>
 				<div className={styles.win_body}>
 					<span className={styles.win_shield}><Icon name="shield" size={22} /></span>
 					<span className={styles.win_text}>You are about to install a certificate claiming to represent: <b>localhost</b>. Do you want to install it?</span>
 				</div>
 				<div className={styles.win_buttons}>
-					<span className={`${styles.win_button} ${styles.target}`}>{said("Yes", "Да")}<Mark number={2} /></span>
-					<span className={styles.win_button}>{said("No", "Нет")}</span>
+					<span className={`${styles.win_button} ${styles.target}`}>{said("Yes", "\u0414\u0430")}<Mark number={2} /></span>
+					<span className={styles.win_button}>{said("No", "\u041d\u0435\u0442")}</span>
 				</div>
 			</div>
 		</figure>
@@ -372,7 +386,7 @@ function WordSketch() {
 				<div className={`${styles.app_bar} ${styles.word_bar}`}>Word</div>
 				<div className={styles.ribbon_tabs}>
 					<span>File</span>
-					<span className={styles.tab_on}>{isRussian ? "Главная" : "Home"}</span>
+					<span className={styles.tab_on}>{isRussian ? "\u0413\u043b\u0430\u0432\u043d\u0430\u044f" : "Home"}</span>
 					<span>Insert</span>
 					<span>Layout</span>
 					<span>Review</span>
@@ -380,12 +394,12 @@ function WordSketch() {
 				<div className={styles.ribbon}>
 					<span className={styles.ribbon_group} />
 					<span className={styles.ribbon_group} />
-					<span className={`${styles.ribbon_button} ${styles.target}`}><Icon name="plus" size={14} />{isRussian ? "Надстройки" : "Add-ins"}<Mark number={1} /></span>
+					<span className={`${styles.ribbon_button} ${styles.target}`}><Icon name="plus" size={14} />{isRussian ? "\u041d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0438" : "Add-ins"}<Mark number={1} /></span>
 					<span className={`${styles.ribbon_button} ${styles.target}`}><img src="app-icon.png" width="14" height="14" alt="" />Matter<Mark number={3} /></span>
 				</div>
 				<div className={styles.app_page}>
 					<div className={styles.menu}>
-						<p className={styles.menu_heading}>{isRussian ? "Надстройки разработчика" : "Developer Add-ins"}</p>
+						<p className={styles.menu_heading}>{isRussian ? "\u041d\u0430\u0434\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u043a\u0430" : "Developer Add-ins"}</p>
 						<span className={`${styles.menu_tile} ${styles.target}`}><img src="app-icon.png" width="22" height="22" alt="" />Singularity<Mark number={2} /></span>
 					</div>
 					<div className={styles.paper}>

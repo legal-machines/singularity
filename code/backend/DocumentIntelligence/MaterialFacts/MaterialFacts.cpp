@@ -302,9 +302,9 @@ std::vector<StatedValue> datesOfRange(const Span& span) {
 bool isSetAsideAt(const std::string& text, std::size_t start) {
 	// A figure inside a document's file name is part of its name, never a claim:
 	// "Sablewood - Staff Schedule (Oct 2026).xlsx" was checked as a date against
-	// the index's own, and a workplan read as unreconciled (2026-10-31). The name
-	// runs on to its extension with no new phrase - an opening bracket, a quote, a
-	// cell's end - and no word of prose ("dated March 6, 2026 in Letter.docx").
+	// the index's own, and a workplan read as unreconciled. The name runs on to
+	// its extension with no new phrase - an opening bracket, a quote, a cell's end
+	// - and no word of prose ("dated March 6, 2026 in Letter.docx").
 	{
 		static const std::vector<std::string> extensions{".docx", ".xlsx", ".pptx", ".pdf", ".doc", ".xls", ".eml", ".msg",
 			".txt", ".csv", ".md"};
@@ -1261,7 +1261,7 @@ std::vector<ValueOrigin> originsOfNewValues(const std::string& before, const std
 		// A Section a change cites is no fact to source: whether it exists is the
 		// integrity check's (IntegrityCheck, references). A DPA's markup listed
 		// "Opening now gives Sections 6.2, which no document of the Matter ...
-		// give" five times (2026-10-30).
+		// give" five times.
 		if (value.isSetAside == true || value.kind == "reference") continue;
 		const bool wasThere = std::any_of(earlier.begin(), earlier.end(),
 			[&](const StatedValue& old) { return isSameValue(old, value); });

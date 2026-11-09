@@ -16,15 +16,15 @@ nlohmann::json retry(const nlohmann::json& params);
 // documentReview.assignments: the assignments colleagues carried out, each step
 // with where its review stands and its email with whether it is ready to send;
 // documentReview.leaveOut: the version waiting, made again without the changes
-// the lawyer leaves out (D-119).
+// the lawyer leaves out.
 nlohmann::json assignments(const nlohmann::json& params);
 nlohmann::json leaveOut(const nlohmann::json& params);
 // documentReview.answerDecision: the lawyer's answer to one of an assignment's
-// decisions, recorded and said to the colleague in the thread (D-120).
+// decisions, recorded and said to the colleague in the thread.
 nlohmann::json answerDecision(const nlohmann::json& params);
 // documentReview.decideWritten: the lawyer's decision on a document a colleague
-// wrote (D-141), accepted or returned as a revised draft is (D-143); the
-// assignment as it reads then.
+// wrote, accepted or returned as a revised draft is; the assignment as it reads
+// then.
 nlohmann::json decideWritten(const nlohmann::json& params);
 
 // documentReview.saveCopy: a copy of a version's revised draft, saved where

@@ -229,10 +229,8 @@ int https_download_file(const std::string &url,
 }
 #else
 
-// No libcurl found at configure time (see code/backend/CMakeLists.txt) - see
-// docs/ARCHITECTURE.md for this platform's known gaps. Reporting this
-// honestly lets the UI disable "Connect" instead of the request silently
-// failing.
+// Reporting this honestly lets the UI disable "Connect" instead of the
+// request silently failing.
 HttpResponse https_get(const std::string &, const std::vector<HttpHeader> &, int) {
   throw std::runtime_error(
       "Connecting to model providers requires libcurl, which was not found on this system.");

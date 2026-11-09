@@ -18,6 +18,7 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 namespace singularity::documents {
 namespace {
@@ -394,8 +395,8 @@ bool page_shows_unread_content(PDFPage *page, std::size_t meaningful) {
 
 std::string pdf_extractor_version() { return current_extractor_version(); }
 
-// Text recognition of a scan (D-114) is Windows' for now; on macOS, Vision is
-// the Mac's to bring in, and a scan's pages stay unread and are said to be.
+// Text recognition of a scan is Windows' for now; on macOS, Vision is the
+// Mac's to bring in, and a scan's pages stay unread and are said to be.
 bool pdf_text_recognition_available() { return false; }
 
 namespace {
@@ -483,11 +484,16 @@ std::string text_in_reading_order(NSArray<VNRecognizedTextObservation *> *observ
 
 } // namespace
 
+namespace {
+bool has_transparent_pixel(CGImageRef image);
+CGImageRef on_ground(CGImageRef image);
+} // namespace
+
 // A picture's words, read on this computer by macOS's own text recognition
-// (Vision), as Windows reads them with its own (D-114, D-115): nothing leaves
-// the computer and no model is installed for it. The picture is opened by
-// ImageIO, so a phone's HEIC photograph reads as a PNG, JPEG or TIFF does, and
-// is turned as its file says it is shown.
+// (Vision), as Windows reads them with its own: nothing leaves the computer
+// and no model is installed for it. The picture is opened by ImageIO, so a
+// phone's HEIC photograph reads as a PNG, JPEG or TIFF does, and is turned as
+// its file says it is shown.
 std::optional<std::string> recognize_image_text(const std::filesystem::path &path) {
 	@autoreleasepool {
 		NSString *file = [NSString stringWithUTF8String:path.u8string().c_str()];
@@ -504,6 +510,15 @@ std::optional<std::string> recognize_image_text(const std::filesystem::path &pat
 				: nullptr;
 		CFRelease(source);
 		if (image == nullptr) return std::nullopt;
+		// Laid on its ground first: what shows through reads as black, and a
+		// logo's black lettering on nothing vanished.
+		if (has_transparent_pixel(image) == true) {
+			CGImageRef ground = on_ground(image);
+			if (ground != nullptr) {
+				CGImageRelease(image);
+				image = ground;
+			}
+		}
 
 		VNRecognizeTextRequest *request = [[VNRecognizeTextRequest alloc] init];
 		request.recognitionLevel = VNRequestTextRecognitionLevelAccurate;
@@ -541,16 +556,49 @@ std::optional<std::string> encoded_picture(CGImageRef image, CFStringRef type, s
 
 // The picture on white paper: what shows through its transparency is white,
 // as a page shows it, never JPEG's black.
-CGImageRef on_white(CGImageRef image) {
+// Whether any pixel of a picture shows through: a PNG may carry an alpha
+// channel it never uses, as a screenshot does.
+bool has_transparent_pixel(CGImageRef image) {
+	const std::size_t width = CGImageGetWidth(image);
+	const std::size_t height = CGImageGetHeight(image);
+	if (width == 0 || height == 0) return false;
+	std::vector<std::uint8_t> pixels(width * height * 4, 0);
+	CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	CGContextRef reading = CGBitmapContextCreate(pixels.data(), width, height, 8, width * 4, space,
+		static_cast<CGBitmapInfo>(kCGImageAlphaPremultipliedLast));
+	CGColorSpaceRelease(space);
+	if (reading == nullptr) return true;
+	CGContextDrawImage(reading, CGRectMake(0, 0, static_cast<CGFloat>(width), static_cast<CGFloat>(height)), image);
+	CGContextRelease(reading);
+	for (std::size_t index = 3; index < pixels.size(); index += 4)
+		if (pixels[index] != 255) return true;
+	return false;
+}
+
+// A picture that shows through, laid on its ground: white, as a page shows
+// it, or black under a light drawing.
+CGImageRef on_ground(CGImageRef image) {
 	const std::size_t width = CGImageGetWidth(image);
 	const std::size_t height = CGImageGetHeight(image);
 	CGColorSpaceRef space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	bool isLight = false;
+	if (width > 0 && height > 0) {
+		std::vector<std::uint8_t> pixels(width * height * 4, 0);
+		CGContextRef reading = CGBitmapContextCreate(pixels.data(), width, height, 8, width * 4, space,
+			static_cast<CGBitmapInfo>(kCGImageAlphaPremultipliedLast));
+		if (reading != nullptr) {
+			CGContextDrawImage(reading, CGRectMake(0, 0, static_cast<CGFloat>(width), static_cast<CGFloat>(height)), image);
+			CGContextRelease(reading);
+			isLight = picture::is_drawn_light(pixels.data(), width * height, 0, 1, 2, 3, true);
+		}
+	}
 	CGContextRef context = CGBitmapContextCreate(nullptr, width, height, 8, 0, space,
 		static_cast<CGBitmapInfo>(kCGImageAlphaNoneSkipLast));
 	CGColorSpaceRelease(space);
 	if (context == nullptr) return nullptr;
 	const CGRect whole = CGRectMake(0, 0, static_cast<CGFloat>(width), static_cast<CGFloat>(height));
-	CGContextSetRGBFillColor(context, 1, 1, 1, 1);
+	const CGFloat ground = isLight ? 0 : 1;
+	CGContextSetRGBFillColor(context, ground, ground, ground, 1);
 	CGContextFillRect(context, whole);
 	CGContextDrawImage(context, whole, image);
 	CGImageRef flattened = CGBitmapContextCreateImage(context);
@@ -560,20 +608,22 @@ CGImageRef on_white(CGImageRef image) {
 
 } // namespace
 
-// A picture as a model reads it (D-256): as it is where every provider takes
-// it, otherwise redrawn by ImageIO - a phone's HEIC or HEIF photograph, a TIFF
-// or BMP scan, a picture too large or turned by its file - upright and no
-// larger than any provider reads.
+// A picture as a model reads it: as it is where every provider takes it,
+// otherwise redrawn by ImageIO - a phone's HEIC or HEIF photograph, a TIFF or
+// BMP scan, a picture too large or turned by its file - upright and no larger
+// than any provider reads. One that shows through is laid on its ground, as
+// PNG where it fits.
 std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path) {
-	if (std::optional<ModelPicture> kept = picture::as_it_is(path)) return kept;
+	const std::optional<ModelPicture> kept = picture::as_it_is(path);
+	if (kept.has_value() && picture::shows_through(kept->bytes) == false) return kept;
 	@autoreleasepool {
 		NSString *file = [NSString stringWithUTF8String:path.u8string().c_str()];
 		if (file == nil) return std::nullopt;
 		CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:file], nullptr);
-		if (source == nullptr) return std::nullopt;
+		if (source == nullptr) return kept;
 		if (CGImageSourceGetCount(source) == 0) {
 			CFRelease(source);
-			return std::nullopt;
+			return kept;
 		}
 		NSDictionary *properties = CFBridgingRelease(CGImageSourceCopyPropertiesAtIndex(source, 0, nullptr));
 		const bool hasAlpha = [properties[(id)kCGImagePropertyHasAlpha] boolValue];
@@ -587,27 +637,79 @@ std::optional<ModelPicture> picture_for_model(const std::filesystem::path &path)
 		};
 		CGImageRef image = CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)drawing);
 		CFRelease(source);
-		if (image == nullptr) return std::nullopt;
-		std::optional<ModelPicture> drawn;
-		if (hasAlpha) {
-			std::optional<std::string> png = encoded_picture(image, CFSTR("public.png"), std::nullopt);
-			if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) drawn = ModelPicture{"image/png", std::move(*png)};
+		if (image == nullptr) return kept;
+		// A picture whose file could show through but none of whose pixels do
+		// goes as it is.
+		if (kept.has_value() && has_transparent_pixel(image) == false) {
+			CGImageRelease(image);
+			return kept;
 		}
-		if (drawn.has_value() == false) {
-			CGImageRef paper = hasAlpha ? on_white(image) : CGImageRetain(image);
-			if (paper != nullptr) {
+		std::optional<ModelPicture> drawn;
+		CGImageRef paper = hasAlpha ? on_ground(image) : CGImageRetain(image);
+		if (paper != nullptr) {
+			// A drawing laid on its ground stays sharp as PNG where it fits.
+			if (hasAlpha) {
+				std::optional<std::string> png = encoded_picture(paper, CFSTR("public.png"), std::nullopt);
+				if (png.has_value() && png->size() <= picture::kMostBytesAsItIs) drawn = ModelPicture{"image/png", std::move(*png)};
+			}
+			if (drawn.has_value() == false) {
 				std::optional<std::string> jpeg = encoded_picture(paper, CFSTR("public.jpeg"), picture::kRedrawnJpegQuality);
 				if (jpeg.has_value() && jpeg->size() <= picture::kMostBytesAsItIs) drawn = ModelPicture{"image/jpeg", std::move(*jpeg)};
-				CGImageRelease(paper);
 			}
+			CGImageRelease(paper);
 		}
 		CGImageRelease(image);
-		return drawn;
+		return drawn.has_value() ? drawn : kept;
 	}
 }
 
-// Work on a PDF (D-115) - an annotated or a redacted copy - is PDFium's on
-// every system: PdfExtractorPdfium.cpp writes it on the Mac too.
+std::vector<std::string> picture_word_readings(const std::filesystem::path &path) {
+	std::vector<std::string> words;
+	@autoreleasepool {
+		NSString *file = [NSString stringWithUTF8String:path.u8string().c_str()];
+		if (file == nil) return words;
+		CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)[NSURL fileURLWithPath:file], nullptr);
+		if (source == nullptr) return words;
+		NSDictionary *drawing = @{
+			(id)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+			(id)kCGImageSourceCreateThumbnailWithTransform: @YES,
+			(id)kCGImageSourceThumbnailMaxPixelSize: @(kRecognizedLongEdge),
+		};
+		CGImageRef image = CGImageSourceGetCount(source) > 0
+				? CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)drawing)
+				: nullptr;
+		CFRelease(source);
+		if (image == nullptr) return words;
+		if (has_transparent_pixel(image) == true) {
+			CGImageRef ground = on_ground(image);
+			if (ground != nullptr) {
+				CGImageRelease(image);
+				image = ground;
+			}
+		}
+		// Read as a careful reader and as a quick one: each misreads lettering
+		// the other may read ("REVOLVER" and "DEVOLVER" of one logo).
+		for (const bool isAccurate : {true, false}) {
+			VNRecognizeTextRequest *request = [[VNRecognizeTextRequest alloc] init];
+			request.recognitionLevel = isAccurate ? VNRequestTextRecognitionLevelAccurate : VNRequestTextRecognitionLevelFast;
+			request.usesLanguageCorrection = isAccurate ? YES : NO;
+			VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCGImage:image options:@{}];
+			if ([handler performRequests:@[request] error:nil] == NO) continue;
+			for (VNRecognizedTextObservation *observation in request.results ?: @[]) {
+				for (VNRecognizedText *candidate in [observation topCandidates:3]) {
+					std::istringstream pieces(std::string(candidate.string.UTF8String ?: ""));
+					for (std::string piece; pieces >> piece;)
+						if (std::find(words.begin(), words.end(), piece) == words.end()) words.push_back(piece);
+				}
+			}
+		}
+		CGImageRelease(image);
+	}
+	return words;
+}
+
+// Work on a PDF - an annotated or a redacted copy - is PDFium's on every
+// system: PdfExtractorPdfium.cpp writes it on the Mac too.
 
 DocumentExtractionResult
 extract_pdf_document(const DocumentExtractionRequest &request) {

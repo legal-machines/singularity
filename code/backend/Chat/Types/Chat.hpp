@@ -34,13 +34,12 @@ enum class ChatTitleAuthority { Default, Automatic, User };
 [[nodiscard]] const char *to_string(ChatTitleAuthority authority) noexcept;
 [[nodiscard]] ChatTitleAuthority chat_title_authority_from_string(const std::string &value) noexcept;
 
-// One explicit AI Setup role difference at Project or Chat level (Phase 06,
-// AI_SETUP_CONTRACT.md). Stored as plain strings, like MatterTask's own
-// provider_id/model_id, so Matter/Chat persistence never depends on the
-// Routing domain - `role` is one of routing::to_string(AiSetupRole),
-// validated at the Bridge boundary. A level's override list holds only the
-// roles it actually customized; everything else stays inherited, never a
-// copied full configuration.
+// One explicit AI Setup role difference at Project or Chat level. Stored as
+// plain strings, like MatterTask's own provider_id/model_id, so Matter/Chat
+// persistence never depends on the Routing domain - `role` is one of
+// routing::to_string(AiSetupRole), validated at the Bridge boundary. A
+// level's override list holds only the roles it actually customized;
+// everything else stays inherited, never a copied full configuration.
 struct AiSetupRoleOverride {
   std::string role;
   std::string provider_id;
@@ -109,25 +108,23 @@ struct MatterChat {
   // Set once this Chat has been compacted; replaced by a later compaction.
   std::optional<ChatCompaction> compaction;
   std::vector<AiSetupRoleOverride> ai_setup_overrides;
-  // The real, persisted starting selection this Chat was created/opened
-  // with (Phase 09, "Ask in Chat" - phase-09-documents-actions-source-peek.md).
-  // Canonical Document IDs only - never file paths or copied content.
-  // Genuinely round-trips through .singularity-workspace persistence (see
-  // ChatActions.test.cpp's selection-round-trip case). This is a real
-  // consumed source policy, not merely a stored display value: any request
-  // naming this Chat's id that supplies no selectedDocumentIds of its own
-  // inherits this exact selection into that request's own
-  // MatterTask::selected_document_ids (below) and, from there, into real
-  // local context retrieval - Routing/MatterRequestExecution.cpp's
-  // task_attempt_spec_from_params() does the inheritance,
-  // resolve_task_context_for_testing() is the proof this actually reaches
-  // ContextRetriever, not just persistence (see
+  // The real, persisted starting selection this Chat was created/opened with.
+  // Canonical Document IDs only - never file paths or copied content. Genuinely
+  // round-trips through .singularity-workspace persistence (see
+  // ChatActions.test.cpp's selection-round-trip case). This is a real consumed
+  // source policy, not merely a stored display value: any request naming this
+  // Chat's id that supplies no selectedDocumentIds of its own inherits this
+  // exact selection into that request's own MatterTask::selected_document_ids
+  // (below) and, from there, into real local context retrieval -
+  // Routing/MatterRequestExecution.cpp's task_attempt_spec_from_params does the
+  // inheritance, resolve_task_context_for_testing is the proof this actually
+  // reaches ContextRetriever, not just persistence (see
   // MatterRequestExecution.test.cpp's item1/item2/item3). An explicit
   // selectedDocumentIds on one request still overrides this default outright
-  // (item2). What does not exist yet: any freeform-message composer that
-  // lets a user type directly into an existing Chat - a later Chat phase
-  // adds that UI, and it gets this same inheritance for free by simply
-  // passing this Chat's id, exactly like Phase 09's own Documents actions do.
+  // (item2). What does not exist yet: any freeform-message composer that lets a
+  // user type directly into an existing Chat - a later Chat phase adds that UI,
+  // and it gets this same inheritance for free by simply passing this Chat's
+  // id, exactly like Phase 09's own Documents actions do.
   std::vector<std::string> selected_document_ids;
   // Phase 27's restart-surviving draft (unsent composer text). Backend/`.lm`
   // persisted so a React-only copy is never the sole durable copy - never
@@ -152,13 +149,12 @@ struct MatterChat {
 	std::string instructions;
 };
 
-// Phase 27's source-problem Error (phase-27-chat-lifecycle-observe.md's
-// "Errors" - "Board Minutes.docx couldn't be read. / Review document"). A
-// real, honest projection of a document this attempt genuinely could not
-// read while assembling Relevant Project sources - never a guess from
-// selectedDocumentIds, never a parsed error string. `reason` is the same
-// real human-readable text the Documents page already shows for this exact
-// document (MatterDocument::attention_detail), never a second wording.
+// Phase 27's source-problem Error. A real, honest projection of a document
+// this attempt genuinely could not read while assembling Relevant Project
+// sources - never a guess from selectedDocumentIds, never a parsed error
+// string. `reason` is the same real human-readable text the Documents page
+// already shows for this exact document
+// (MatterDocument::attention_detail), never a second wording.
 struct UnavailableSourceDocument {
   std::string document_id;
   std::string document_name;
@@ -181,9 +177,9 @@ struct ChatList {
   std::vector<MatterChat> chats;
   std::vector<ChatTaskLink> task_links;
   // Whether this Project currently has real, non-blank Project instructions
-  // (Matter::instructions) - the Context inspector's own "Instructions"
-  // fact (phase-26-chat-inspector-workflows.md). Never the instructions text
-  // itself: normal Chat never needs to display it, only whether it is active.
+  // (Matter::instructions) - the Context inspector's own "Instructions" fact.
+  // Never the instructions text itself: normal Chat never needs to display
+  // it, only whether it is active.
   bool project_instructions_active = false;
 };
 
@@ -327,10 +323,10 @@ struct OperationOriginStatement {
 };
 
 // Where in a document of the Matter a message is about, as its author pointed
-// at it - in Word, at the clause under the cursor (D-105, Office/): the
-// document, the section by its number and heading, and the words there as they
-// read when the message was written. Empty for a message about no place, and
-// for every message written before places were kept.
+// at it - in Word, at the clause under the cursor: the document, the section
+// by its number and heading, and the words there as they read when the message
+// was written. Empty for a message about no place, and for every message
+// written before places were kept.
 struct DocumentPlace {
   std::string document_id;
   std::string section;
@@ -379,16 +375,16 @@ struct MatterTask {
 	std::string quote_message_id;
 	std::vector<std::string> attachment_document_ids;
 	std::map<std::string, std::vector<std::string>> reactions;
-	// When a person's message reached each other member of its chat (D-212): by
-	// their actor id, the first time a computer of theirs had it, as that
-	// computer's window said once it had read it. Empty until one has.
+	// When a person's message reached each other member of its chat: by their
+	// actor id, the first time a computer of theirs had it, as that computer's
+	// window said once it had read it. Empty until one has.
 	std::map<std::string, std::string> received;
 	// When its author last changed its words, and when its author deleted it:
 	// a deleted message keeps its place in the thread, without its words.
 	std::string edited_at;
 	std::string deleted_at;
-	// What else a message hands in, as the prototype's messages do (D-087): a
-	// line for what its author did not check, with its files; the answers it
+	// What else a message hands in, as the prototype's messages do: a line
+	// for what its author did not check, with its files; the answers it
 	// offers to a question it asks; and, for a reply that is one of those
 	// answers, the answer it gives (it quotes the question). Empty otherwise.
 	std::string not_checked;
@@ -397,8 +393,8 @@ struct MatterTask {
 	// The place in a document the message is about (DocumentPlace).
 	DocumentPlace place;
 	// A thread's closing ("closed", its words the conclusion) or reopening
-	// ("reopened"), kept as a record in the thread by the member who did it
-	// (D-088). Empty for every other message.
+	// ("reopened"), kept as a record in the thread by the member who did
+	// it. Empty for every other message.
 	std::string thread_event;
 	// A person's message as the computer that wrote it signed it
 	// (Platform/DeviceKey, Chat/MessageProvenance): that computer's public key
@@ -500,8 +496,8 @@ struct MatterTask {
 	// is Standard; a successful external protected request records true.
 	bool protected_api_applied = false;
   protected_api::papinian::PrivacyMetadata privacy_metadata;
-	// Each model call the operation made, as its bill line reads it (D-252):
-	// its time, provider and model, the provider's own id for the request, the
+	// Each model call the operation made, as its bill line reads it: its time,
+	// provider and model, the provider's own id for the request, the
 	// fingerprints of what was sent and what came back, and its own tokens and
 	// cost - never a marker, passage or anything that stands for the Matter's
 	// content. Kept in the Matter, so every computer of the firm can bill the
@@ -560,6 +556,12 @@ struct MatterTask {
 	// request that began a version of it, the colleague's message that hands a
 	// version in, or the lawyer's decision on one. Empty for every other turn.
 	std::string document_review_id;
+	// The thread an AI colleague's own model call worked for - its talk there, a
+	// turn of its work, a revision it made for it. The call is no turn of that
+	// thread, so it never carries chat_id, which every reader of a thread's turns
+	// and counts reads; Usage and the work statement read this, so the call is
+	// billed under its thread. Empty for every other task.
+	std::string work_chat_id;
 	// DirectDocumentWork's own professional-object lineage: the exact real
 	// block this operation's mutation targeted, using the same document_id/
 	// table_id identity DocumentBlockSurface/EditSurfaceDecision already use

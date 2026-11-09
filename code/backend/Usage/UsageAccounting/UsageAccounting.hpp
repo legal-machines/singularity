@@ -16,7 +16,7 @@ struct UsagePeriod {
   std::string end;
 };
 
-// One model call as the bill of its work reads it (D-252): when it ran, which
+// One model call as the bill of its work reads it: when it ran, which
 // provider and model served it, the fingerprints of exactly what was sent and
 // what came back, the provider's own id for the request, and the call's own
 // tokens and cost as the provider reported them. It is the evidence that this
@@ -26,7 +26,7 @@ struct BilledCall {
   std::string time;
   std::string provider_id;
   std::string model_id;
-  // The provider that served it, where a gateway names it (D-116).
+  // The provider that served it, where a gateway names it.
   std::string served_by;
   std::string provider_request_id;
   std::string payload_sha256;
@@ -42,8 +42,8 @@ struct BilledCall {
   std::string cost_methodology;
   // The protection the call left under: "off" when it left as written.
   std::string protection_mode;
-  // Its place in its computer's work record (D-252), and the provider's own
-  // record of its cost, once asked.
+  // Its place in its computer's work record, and the provider's own record
+  // of its cost, once asked.
   std::string record_chain;
   std::optional<long long> record_index;
   std::optional<protected_api::papinian::CostConfirmation> confirmation;
@@ -68,11 +68,11 @@ struct OperationUsageEvidence {
   std::optional<std::string> consilium_id;
   std::optional<std::string> workflow_run_id;
   std::vector<std::string> work_product_ids;
-  // Whose work it was (D-252): the AI colleague whose turn or work the
-  // operation is, empty for a person's own request; whether it began it
-  // itself (its schedule, a change it noticed, a colleague's report); and the
-  // person who asked for it, as Singularity knew them when it was written,
-  // empty when no person did or it was not kept.
+  // Whose work it was: the AI colleague whose turn or work the operation is,
+  // empty for a person's own request; whether it began it itself (its
+  // schedule, a change it noticed, a colleague's report); and the person who
+  // asked for it, as Singularity knew them when it was written, empty when no
+  // person did or it was not kept.
   std::string agent_id;
   bool agent_initiated = false;
   std::string asked_by_actor_id;

@@ -153,7 +153,7 @@ std::size_t character_count(const std::string &text) {
 
 // Whether a word of a name is part of a date: digits with the dots, dashes or
 // slashes a date is written with ("01.03.2026", "2026-08-14", "14th"), a
-// month's name in English or Russian, or the "г." a Russian date ends with.
+// month's name in English or Russian, or the "…" a Russian date ends with.
 bool is_date_word(const std::string &word) {
 	const std::string folded = platform::folded_text(word);
 	if (folded.empty()) return false;
@@ -181,10 +181,10 @@ bool is_date_word(const std::string &word) {
 
 // At most `limit` characters, cut where a word ends when one ends in the second
 // half of the room, and never inside a character. Nothing is left dangling at
-// the cut: a separator, a connecting word ("to", "of", "dated", "к", "по",
-// "от"), a number sign, a dash - or a piece of a date: a word cut through that
+// the cut: a separator, a connecting word ("to", "of", "dated", "…",
+// "…"), a number sign, a dash - or a piece of a date: a word cut through that
 // holds a figure goes whole, and so does what the cut kept of a date
-// ("… от 01.03.2026" is never "… от 01.0" nor "… от").
+// ("…" is never "…" nor "…").
 std::string within_characters(const std::string &text, std::size_t limit) {
 	const std::vector<std::size_t> offsets = character_offsets(text);
 	if (offsets.size() <= limit) return text;
@@ -239,7 +239,7 @@ const std::set<std::string> &document_file_types() {
 
 // A document's name without its file type. Only a document type's own suffix
 // goes: what a name ends with after its last dot is otherwise part of the name
-// - a date ("… от 01.03.2026", "Minutes 14.08.2026"), a company ("Acme, Inc").
+// - a date ("…", "Minutes 14.08.2026"), a company ("Acme, Inc").
 std::string without_document_extension(const std::string &name) {
 	const std::size_t dot = name.rfind('.');
 	if (dot == std::string::npos || dot == 0) return name;
@@ -659,7 +659,7 @@ struct NewDocumentPage {
 std::string primary_language(std::string language);
 
 NewDocumentPage new_document_page(const std::string &language) {
-	// The language as the file is named by it, so "Russian" or "русский" is a
+	// The language as the file is named by it, so "Russian" or "…" is a
 	// Russian page and a Russian proofing language, as the name already says.
 	const std::string primary = primary_language(language);
 	std::string code;
@@ -1613,7 +1613,7 @@ std::size_t column_number(const std::string &cellRef);
 }
 
 // Two sheet names Excel holds to be the same fold to the same text, in any
-// script ("Цели" and "ЦЕЛИ").
+// script ("…" and "…").
 std::string sheet_name_folded(const std::string &name) {
 	return platform::folded_text(name);
 }
@@ -5369,13 +5369,13 @@ struct ArtifactKindWords {
 // never a template for what the document says.
 const ArtifactKindWords *artifact_kind_words(const std::string &kind) {
 	static const ArtifactKindWords words[] = {
-		{"amendment", "Amendment", "to", "Дополнительное соглашение", "к"},
-		{"memorandum", "Memorandum", "on", "Меморандум", "по"},
-		{"summary", "Summary", "of", "Резюме", "по"},
-		{"comparison", "Comparison", "of", "Сравнение", "по"},
-		{"draft_letter", "Draft Letter", "regarding", "Проект письма", "по"},
-		{"board_resolution", "Board Resolution", "on", "Решение совета директоров", "по"},
-		{"issues_list", "Issues List", "for", "Перечень вопросов", "по"},
+		{"amendment", "Amendment", "to", "\320\224\320\276\320\277\320\276\320\273\320\275\320\270\321\202\320\265\320\273\321\214\320\275\320\276\320\265 \321\201\320\276\320\263\320\273\320\260\321\210\320\265\320\275\320\270\320\265", "\320\272"},
+		{"memorandum", "Memorandum", "on", "\320\234\320\265\320\274\320\276\321\200\320\260\320\275\320\264\321\203\320\274", "\320\277\320\276"},
+		{"summary", "Summary", "of", "\320\240\320\265\320\267\321\216\320\274\320\265", "\320\277\320\276"},
+		{"comparison", "Comparison", "of", "\320\241\321\200\320\260\320\262\320\275\320\265\320\275\320\270\320\265", "\320\277\320\276"},
+		{"draft_letter", "Draft Letter", "regarding", "\320\237\321\200\320\276\320\265\320\272\321\202 \320\277\320\270\321\201\321\214\320\274\320\260", "\320\277\320\276"},
+		{"board_resolution", "Board Resolution", "on", "\320\240\320\265\321\210\320\265\320\275\320\270\320\265 \321\201\320\276\320\262\320\265\321\202\320\260 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\276\320\262", "\320\277\320\276"},
+		{"issues_list", "Issues List", "for", "\320\237\320\265\321\200\320\265\321\207\320\265\320\275\321\214 \320\262\320\276\320\277\321\200\320\276\321\201\320\276\320\262", "\320\277\320\276"},
 	};
 	for (const ArtifactKindWords &entry : words)
 		if (kind == entry.kind) return &entry;
@@ -5405,8 +5405,8 @@ std::string joined_words(const std::vector<std::string> &words) {
 
 // A source's name without the kind words it already opens with, in either
 // language, and the connecting word or dash after them: a letter written on
-// "Проект письма – Договор поручительства" is not "Проект письма – Проект
-// письма – …", and one on "Draft Letter regarding Northwind MSA" is not a
+// "…" is not "… – …
+// … – …", and one on "Draft Letter regarding Northwind MSA" is not a
 // "Draft Letter regarding Draft Letter regarding …".
 std::string without_leading_kind(const std::string &documentName, const ArtifactKindWords &kind) {
 	const std::vector<std::string> words = name_words(documentName);
@@ -5458,8 +5458,8 @@ std::string subject_part(const std::string &subject, const std::string &kindWord
 		}
 	}
 	static const std::set<std::string> small{"a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or",
-		"the", "to", "with", "under", "per", "в", "во", "на", "по", "о", "об", "и", "к", "с", "со", "для", "от",
-		"до", "за", "из", "при"};
+		"the", "to", "with", "under", "per", "\320\262", "\320\262\320\276", "\320\275\320\260", "\320\277\320\276", "\320\276", "\320\276\320\261", "\320\270", "\320\272", "\321\201", "\321\201\320\276", "\320\264\320\273\321\217", "\320\276\321\202",
+		"\320\264\320\276", "\320\267\320\260", "\320\270\320\267", "\320\277\321\200\320\270"};
 	std::vector<std::string> kept;
 	for (const std::string &word : name_words(subject)) {
 		const std::string folded = platform::folded_text(word);
@@ -5480,7 +5480,7 @@ std::string primary_language(std::string language) {
 	const std::size_t separator = language.find_first_of("-_ ");
 	if (separator != std::string::npos) language.erase(separator);
 	if (language == "english" || language == "eng") return "en";
-	if (language == "russian" || language == "rus" || language == "русский") return "ru";
+	if (language == "russian" || language == "rus" || language == "\321\200\321\203\321\201\321\201\320\272\320\270\320\271") return "ru";
 	return language;
 }
 
@@ -5517,7 +5517,7 @@ std::string artifact_file_name(const std::string &document_kind, const std::stri
 			documentName = within_characters(documentName, roomForDocument);
 		stem = kindWords;
 		if (!documentName.empty()) {
-			// Russian declines a Russian name after "к" or "по"; a name in another
+			// Russian declines a Russian name after "…" or "…"; a name in another
 			// script is not declined, and a Russian one is set apart instead.
 			if (setApart) stem += dash + documentName;
 			else stem += " " + connector + " " + documentName;
@@ -6783,15 +6783,14 @@ void ensure_production_professional_artifact_tool() {
 	definition.always_asks = [](const tools::ToolExecutionContext &, const Json &arguments) {
 		return professional_artifact_action_always_asks(arguments);
 	};
-	// What "Apply routine changes" lets through (owner's label: "Routine
-	// changes and research go ahead. Anything significant still asks."): a
-	// change to one document that only adds to it or tidies it - a new
-	// document, text or rows added, formatting set, a misspelt word corrected,
-	// values entered in a workbook's cells. Anything that changes what a
-	// document already says is significant, and asks: a passage or row
-	// deleted, a passage emptied, a passage reworded ("Supplier" as
-	// "Customer", "90 days" as "1 day", "unlimited" as "limited to $100", New
-	// York law as Cayman Islands law), a cell cleared or zeroed.
+	// What "Apply routine changes" lets through: a change to one document that
+	// only adds to it or tidies it - a new document, text or rows added,
+	// formatting set, a misspelt word corrected, values entered in a
+	// workbook's cells. Anything that changes what a document already says is
+	// significant, and asks: a passage or row deleted, a passage emptied, a
+	// passage reworded ("Supplier" as "Customer", "90 days" as "1 day",
+	// "unlimited" as "limited to $100", New York law as Cayman Islands law), a
+	// cell cleared or zeroed.
 	definition.effect_of = [](const tools::ToolExecutionContext &, const Json &arguments) {
 		return professional_artifact_action_effect(arguments);
 	};
@@ -7243,7 +7242,7 @@ WorkbookCopyResult write_workbook_cells_to_copy(const std::filesystem::path &sou
 				// read, so a quote of its words only confirms which cell is meant: one
 				// that says them with other quotation marks, dashes, spacing or capitals
 				// is the cell's (Platform/PhraseMatch). A tracker's eleven cells were
-				// refused "as the answer quoted them" (2026-10-31).
+				// refused "as the answer quoted them".
 				if (update.expected_old_value != xlsx_cell_display(*seen)
 						&& platform::phrases_equal(update.expected_old_value, xlsx_cell_display(*seen)))
 					update.expected_old_value = xlsx_cell_display(*seen);
@@ -7984,7 +7983,6 @@ bool about_the_protection(const std::string &sentence) {
 	const auto has = [&](std::initializer_list<const char *> stems) {
 		return std::any_of(stems.begin(), stems.end(), [&](const char *stem) { return folded.find(stem) != std::string::npos; });
 	};
-	// символ, маркер, плейсхолдер, заполнител- / защищ-, восстановл-, маскир-, скрыт-
 	return has({"\xD1\x81\xD0\xB8\xD0\xBC\xD0\xB2\xD0\xBE\xD0\xBB", "\xD0\xBC\xD0\xB0\xD1\x80\xD0\xBA\xD0\xB5\xD1\x80",
 			"\xD0\xBF\xD0\xBB\xD0\xB5\xD0\xB9\xD1\x81\xD1\x85\xD0\xBE\xD0\xBB\xD0\xB4\xD0\xB5\xD1\x80",
 			"\xD0\xB7\xD0\xB0\xD0\xBF\xD0\xBE\xD0\xBB\xD0\xBD\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB"})
@@ -7993,14 +7991,11 @@ bool about_the_protection(const std::string &sentence) {
 			|| std::regex_search(sentence, mechanics));
 }
 
-// "защищённое значение" is Singularity's word before what it protected, as
+// "…" is Singularity's word before what it protected, as
 // "protected value" is: the adjective goes, the noun stays.
 std::string without_russian_protected_word(const std::string &text) {
-	// защищённ-, защищенн-
 	static const std::vector<std::string> stems{"\xD0\xB7\xD0\xB0\xD1\x89\xD0\xB8\xD1\x89\xD1\x91\xD0\xBD\xD0\xBD",
 		"\xD0\xB7\xD0\xB0\xD1\x89\xD0\xB8\xD1\x89\xD0\xB5\xD0\xBD\xD0\xBD"};
-	// значени-, символ-, маркер-, сумм-, дат-, наименовани-, имя/имен-, назван-, организаци-, компани-, средств-,
-	// термин-, слов-, фраз-
 	static const std::vector<std::string> nouns{"\xD0\xB7\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8",
 		"\xD1\x81\xD0\xB8\xD0\xBC\xD0\xB2\xD0\xBE\xD0\xBB", "\xD0\xBC\xD0\xB0\xD1\x80\xD0\xBA\xD0\xB5\xD1\x80",
 		"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC", "\xD0\xB4\xD0\xB0\xD1\x82",

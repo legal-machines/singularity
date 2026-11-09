@@ -6,8 +6,7 @@
 
 namespace singularity::platform::update_helper {
 
-// Singularity's updater on Windows, singularity-update.exe (the owner,
-// 2026-11-05: "from version 0.1.1 everything is automatic"). Windows cannot
+// Singularity's updater on Windows, singularity-update.exe. Windows cannot
 // replace a program while it runs, so as Singularity ends it copies the
 // updater out of its install folder and starts it (UpdateInstallWindows.cpp).
 // The updater waits for Singularity to close, checks the downloaded installer

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { namesAll } from "../components/Composer/mentions.js";
-import { plainOf } from "../components/MessageText/markdown.js";
+import { CITE_CLOSE, CITE_OPEN, plainOf } from "../components/MessageText/markdown.js";
 import { pigmentName, pigments } from "../components/ProjectMark/pigments.js";
 
 import { isEmulation } from "../emulation/emulation.js";
@@ -10,21 +10,20 @@ import { aiUsage, aiWork, expenses, timeEntries } from "./billing.js";
 import { calendarEvents } from "./calendar.js";
 import { ensureDefaultModels } from "./models.js";
 import { projectMail } from "./mail.js";
+import { isUnreadableNow } from "./unreadable.js";
 import { becomeOrganisation, becomeViewer, becomeViewerRights, chats, general, inbox, matters, members, organisation, threads, viewerId } from "./workspace.js";
 
-// The window's native core (the Native API), when Singularity runs this
-// page, and nothing in a plain browser, where the prototype's mock data is all
-// there is (the owner's overnight mandate, 2026-10-24: "replace the critical
-// mock path with the real backend").
+// The window's native core (the Native API), when Singularity runs this page,
+// and nothing in a plain browser, where the prototype's mock data is all there
+// is.
 //
-// In the app every place is the firm's own (2026-10-29: a new firm was shown
-// Marlowe Finch's Amsterdam): its name, its members, its Matters and, of the
-// Matter the member has open, its threads, what its AI colleagues did in them,
-// its documents and the document reviews. All are read from the backend -
-// never kept here as a second truth (ARCH-2) - and read again whenever the
+// In the app every place is the firm's own: its name, its members, its Matters
+// and, of the Matter the member has open, its threads, what its AI colleagues
+// did in them, its documents and the document reviews. All are read from the
+// backend - never kept here as a second truth - and read again whenever the
 // backend says they changed (matter.changed, agent.changed).
 
-// The app's emulation inside onboarding runs on the mock data alone (D-134).
+// The app's emulation inside onboarding runs on the mock data alone.
 export function hasNative() {
 	return isEmulation == false && typeof window != "undefined" && window.nativeApp != null
 		&& typeof window.nativeApp.listDocumentReviews == "function";
@@ -77,7 +76,7 @@ export function realWork() {
 
 // ---- Who is who ----------------------------------------------------------------
 
-// The Agent Family's species an AI colleague's face is drawn as (D-063).
+// The Agent Family's species an AI colleague's face is drawn as.
 const SPECIES = ["kitsune", "unicorn", "phoenix", "griffin", "pegasus", "dragon"];
 
 // The species of a firm's colleague: the one it was hired as, else the one its
@@ -93,9 +92,9 @@ function speciesOf(name, character) {
 
 // A member for someone the backend names: the person at this computer is the
 // viewer; anyone else is the firm's member of that name. In the app the firm's
-// members are its own (2026-10-29): a name is never taken for the prototype's
-// member of the same name, as a plain browser, where the prototype is all
-// there is, still does.
+// members are its own: a name is never taken for the prototype's member of the
+// same name, as a plain browser, where the prototype is all there is, still
+// does.
 function memberIdFor(name, isColleague, isViewer) {
 	if (isViewer == true) return viewerId;
 	const words = (name ?? "").trim() || (isColleague == true ? "AI colleague" : "");
@@ -137,8 +136,8 @@ function placeMember(id, words, isColleague) {
 	});
 }
 
-// Who is who, by what does not change (the owner, 2026-11-02: "Oleg P and
-// Magomed both appeared, though I only renamed Oleg"; an archived Pasha took
+// Who is who, by what does not change (a member renamed once showed under
+// both names, beside another member's row, and an archived colleague took
 // the place of the one at work): a person by their seat, an AI colleague by
 // its own id. A name finds only the row it was last given to, and a renamed
 // member keeps their row, which their old name still finds.
@@ -199,7 +198,7 @@ function isReviewOf(review, agent) {
 
 // An AI colleague by its own id, by its name only where none is known: a
 // deleted colleague's words keep their own author, never another colleague's
-// of the same name (the owner, 2026-11-02).
+// of the same name.
 function colleagueIdFor(agentId, name) {
 	const agent = (agentId ?? "").trim();
 	const known = agent != "" ? colleagueIdsByAgent.get(agent) : null;
@@ -257,19 +256,18 @@ function colleagueMember(agent) {
 		if (office.title) member.role = office.title;
 		if (office.ranksWith) member.ranksWith = office.ranksWith;
 		if (office.practice) member.practice = office.practice;
-		// Its area alone: what it does is said under its own name (the owner,
-		// 2026-11-02).
+		// Its area alone: what it does is said under its own name.
 		member.area = office.area || member.area || "";
 		member.agentId = agent.id;
-		// Where it runs, and the model chosen for it there (D-185): a colleague
-		// another computer runs is known here by its card, which names none.
+		// Where it runs, and the model chosen for it there: a colleague another
+		// computer runs is known here by its card, which names none.
 		member.runsHere = agent.isHere != false;
 		// The seat of the lawyer whose computer runs it, so it is there while
 		// that computer is (components/Avatar/online.js).
 		member.hostActorId = agent.responsibleActorId || member.hostActorId || "";
-		// Held here from the firm's record (D-213): changed where it runs.
+		// Held here from the firm's record: changed where it runs.
 		member.isFirmCopy = agent.firmCopy == true;
-		// Archived (D-214): apart from the team, until restored.
+		// Archived: apart from the team, until restored.
 		member.isArchived = agent.status == "stopped";
 		member.goal = agent.goal ?? member.goal ?? "";
 		member.manner = agent.manner ?? member.manner ?? "";
@@ -280,7 +278,7 @@ function colleagueMember(agent) {
 	return id;
 }
 
-// The models a colleague may think with (D-185): those the firm's connected
+// The models a colleague may think with: those the firm's connected
 // accounts give for its reasoning, and the firm's default among them.
 export async function colleagueModelChoices() {
 	const api = nativeApp();
@@ -302,14 +300,16 @@ export async function chooseColleagueModel(agentId, model) {
 
 // ---- The firm's colleagues ------------------------------------------------------
 
-// Every AI colleague is the firm's (D-157): read whether a Matter is open or
-// none is, each with its personal chat with the member here, kept on the
-// member's desk - never a Matter. Its faces, offices and chats come from here.
+// Every AI colleague is the firm's: read whether a Matter is open or none is,
+// each with its personal chat with the member here, kept on the member's desk
+// - never a Matter. Its faces, offices and chats come from here.
 let isReadingFirm = false;
 let isFirmStale = false;
+// The firm's colleagues at its last read, by id; none before the first.
+let firmColleagueIds = null;
 
-// The firm read again: its people, as its record says who sits in each seat
-// (D-209), and its colleagues; after the member changed who sits in a seat.
+// The firm read again: its people, as its record says who sits in each
+// seat, and its colleagues; after the member changed who sits in a seat.
 export function refreshFirm() {
 	return readFirm();
 }
@@ -319,7 +319,7 @@ function takeOwnName(person) {
 	const current = members.find(item => item.id == viewerId);
 	if (current?.name == name) return;
 	// The member here, renamed: the same row under the new name, never a
-	// second member beside them (the owner, 2026-11-02).
+	// second member beside them.
 	if (current != null && current.isReal == true && current.isSeatStandIn != true) {
 		nameMember(current, name, false);
 		placeOffice(current, person);
@@ -352,14 +352,14 @@ async function readFirm() {
 			isFirmStale = false;
 			const api = nativeApp();
 			// The firm's people: everyone whose Singularity opened one of its
-			// Matters known here, in the office their record states (D-168) -
-			// the team, whichever Matter is open.
+			// Matters known here, in the office their record states - the
+			// team, whichever Matter is open.
 			const team = typeof api.getFirmTeam == "function" ? await api.getFirmTeam().catch(() => null) : null;
 			for (const person of team?.people ?? []) {
 				if ((person.name ?? "").trim() == "") continue;
 				// The member here, as the firm's record names their seat once this
-				// computer is checked (D-205, D-209): their name stands for the seat's
-				// login the window showed until it came.
+				// computer is checked: their name stands for the seat's login the
+				// window showed until it came.
 				if (person.isYou == true) {
 					takeOwnName(person);
 					continue;
@@ -371,9 +371,9 @@ async function readFirm() {
 				const member = members.find(item => item.id == id);
 				if (member != null && member.isReal == true) {
 					placeOffice(member, person);
-					// Their seat, where the firm's record says who sits in it (D-209).
+					// Their seat, where the firm's record says who sits in it.
 					member.actorId = person.actorId ?? null;
-					// Where they stand with the firm (D-214).
+					// Where they stand with the firm.
 					member.isArchived = person.archived == true;
 					member.isRemoved = person.removed == true;
 				}
@@ -387,16 +387,16 @@ async function readFirm() {
 				conversations[agent.chatId] = await api.listChatConversation(agent.chatProjectId, agent.chatId).catch(() => null);
 			}));
 			// The files the member and the colleagues sent each other, kept on the
-			// member's desk (D-157, D-212).
+			// member's desk.
 			const desks = [...new Set(agents.map(agent => agent.chatProjectId ?? "").filter(id => id != ""))];
 			const documents = Object.fromEntries(await Promise.all(desks.map(async id => [id, await personalDocuments(id)])));
 			const firmIds = new Set(agents.map(colleagueMember));
-			// The firm's archived colleagues stand apart on the team (D-214).
+			// The firm's archived colleagues stand apart on the team.
 			for (const agent of (listed?.agents ?? []).filter(entry => entry.status == "stopped" && (entry.matterId ?? "") == "")) {
 				firmIds.add(colleagueMember(agent));
 			}
 			// The firm's colleagues its other computers run, as the firm's record
-			// holds them (D-203): every computer lists the whole firm's.
+			// holds them: every computer lists the whole firm's.
 			const elsewhere = typeof api.listFirmColleagues == "function" ? await api.listFirmColleagues().catch(() => null) : null;
 			const remote = (elsewhere?.colleagues ?? [])
 				.filter(colleague => agents.some(agent => agent.id == colleague.agentId) == false)
@@ -407,12 +407,19 @@ async function readFirm() {
 			for (const colleague of remote) firmIds.add(colleagueMember(colleague));
 			// The firm's colleagues are those it has, here or on its other
 			// computers: one deleted is known only by the record a Matter keeps
-			// of its work, and is no one on the team (the owner, 2026-11-02).
+			// of its work, and is no one on the team.
 			for (const member of members) {
 				if (member.isReal == true && member.kind == "ai_colleague") member.isFirmColleague = firmIds.has(member.id);
 			}
-			// The firm's people, for a personal chat with anyone of them (D-042).
+			// The firm's people, for a personal chat with anyone of them.
 			publish({ firm: { agents, remote, conversations, documents, people: team?.people ?? snapshot.firm?.people ?? [] } });
+			// A colleague the firm did not have at its last read - hired here or
+			// on another of its computers, or restored - stands on every Matter's
+			// team: the Matter open now is read again, once, to show it.
+			const firmNow = new Set([...agents, ...remote].map(agent => agent.id));
+			const isJoined = firmColleagueIds != null && [...firmNow].some(id => firmColleagueIds.has(id) == false);
+			firmColleagueIds = firmNow;
+			if (isJoined == true) scheduleReload();
 		} while (isFirmStale == true);
 	} catch {
 		// The colleagues stay as they were read last.
@@ -422,11 +429,10 @@ async function readFirm() {
 	readColleagueRecords();
 }
 
-// An AI colleague's record (ORG-8, PHIL-13; the owner, 2026-11-02: "what is
-// the record and how does it work?"): what it delivered across the Matters
-// open here and what the lawyers made of it. A result is a review it wrote -
-// each version accepted or returned by a lawyer - or a written step of its
-// work with no review of its own; each decision is one lawyer action, and the
+// An AI colleague's record: what it delivered across the Matters open here
+// and what the lawyers made of it. A result is a review it wrote - each
+// version accepted or returned by a lawyer - or a written step of its work
+// with no review of its own; each decision is one lawyer action, and the
 // attention a result cost is the lawyer's actions until it was accepted.
 let isReadingRecords = false;
 
@@ -489,8 +495,7 @@ export function recordWords(results) {
 	const returned = results.reduce((sum, result) => sum + result.returned, 0);
 	const count = (number, one, many) => `${number} ${number == 1 ? one : many}`;
 	if (accepted.length == 0 && returned == 0) {
-		// Empty, it says what it will count (the owner, 2026-11-02: "so what is
-		// Record for the colleagues?").
+		// Empty, it says what it will count.
 		return delivered == 0 ? "No results yet. Each piece of work it delivers counts here once a lawyer accepts it or sends it back."
 			: `${count(delivered, "result", "results")} delivered, none decided yet.`;
 	}
@@ -508,7 +513,7 @@ function colleagues() {
 	const seen = new Set(firm.map(agent => agent.id));
 	const inMatter = (snapshot.agents ?? []).filter(agent => seen.has(agent.id) == false);
 	for (const agent of inMatter) seen.add(agent.id);
-	// Then those the firm's record names that no Matter here names (D-203).
+	// Then those the firm's record names that no Matter here names.
 	const remote = (snapshot.firm?.remote ?? []).filter(agent => seen.has(agent.id) == false);
 	return [...firm.map(agent => ({ ...agent, isHere: true })), ...inMatter, ...remote];
 }
@@ -534,6 +539,25 @@ function paragraphsOf(text) {
 	return (text ?? "").split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(paragraph => paragraph != "");
 }
 
+// A colleague's words with the web sources they cite: each citation where
+// the words stand it, as MessageText draws it, and every source its work
+// found - the cited first, as the backend numbers them, then those it read
+// and did not cite (number 0). Null for words that cite no web source.
+export function citedOf(turn) {
+	const sources = (turn.citations ?? []).filter(citation => citation.sourceKind == "external" && (citation.url ?? "") != "");
+	if (sources.length == 0) return null;
+	let text = "";
+	for (const segment of turn.responseSegments ?? []) {
+		const number = segment.citationNumber ?? 0;
+		text += number > 0 ? `${CITE_OPEN}${number}${CITE_CLOSE}` : segment.text ?? "";
+	}
+	return {
+		text,
+		sources: sources.map(source => ({ number: source.number, url: source.url, site: source.domain ?? "", title: source.label ?? "",
+			excerpt: source.excerpt ?? "" })),
+	};
+}
+
 function textOf(turn) {
 	if (turn.isMemberMessage == true) return turn.prompt ?? "";
 	if (Array.isArray(turn.responseSegments) && turn.responseSegments.length > 0) {
@@ -557,9 +581,9 @@ function carriedBy(turn, byId, viewerMemberId, documents, memberOfActor) {
 		return { documentId, name: document?.displayName ?? document?.name ?? "A document", sizeBytes: document?.sizeBytes ?? null };
 	});
 	const placed = turn.place?.documentId ? documents.find(entry => entry.id == turn.place.documentId) : null;
-	// When it reached the other (D-212): for the member's own message, the first
-	// time another member's computer had it, and whose; for anyone else's, when
-	// this member's computer had it.
+	// When it reached the other: for the member's own message, the first time
+	// another member's computer had it, and whose; for anyone else's, when this
+	// member's computer had it.
 	const isOwnTurn = turn.isMemberMessage == true && ((turn.authorActorId ?? "") == "" || turn.authorActorId == viewerMemberId);
 	const reached = Object.entries(turn.received ?? {})
 		.filter(([actor, at]) => actor != viewerMemberId && (at ?? "") != "")
@@ -606,8 +630,7 @@ function postsOf(conversation, agents, documents) {
 			actors.set(turn.authorActorId, personIdForActor(turn.authorActorId, turn.authorName));
 		}
 	}
-	// A colleague's reaction is put under its own id (the owner, 2026-10-26:
-	// "teach the AI agents to put reactions on messages").
+	// A colleague's reaction is put under its own id.
 	const memberOfActor = actor => {
 		if (actors.has(actor)) return actors.get(actor);
 		const colleague = actor.startsWith("agent_") ? agents.find(entry => entry.id == actor) : null;
@@ -651,11 +674,13 @@ function postsOf(conversation, agents, documents) {
 				authorId: colleagueIdFor(turn.agentId, agent?.name ?? turn.authorName),
 				at: turn.createdAt,
 				paragraphs: paragraphsOf(textOf(turn)),
+				// What its words cite from the web, where they cite it.
+				cited: citedOf(turn),
 				reviewId: turn.documentReviewId ?? null,
 				isReal: true,
-				// The colleagues and people it names (D-168): a colleague hands a part
-				// of its work to a member by name, and the member it names finds it
-				// among what asks them.
+				// The colleagues and people it names: a colleague hands a part of its
+				// work to a member by name, and the member it names finds it among
+				// what asks them.
 				mentionIds: (turn.mentions ?? []).filter(id => id.startsWith("agent_")),
 				addressesViewer: viewerMemberId != "" && (turn.mentions ?? []).includes(viewerMemberId),
 			};
@@ -722,7 +747,7 @@ function placeMatters(list) {
 function shownMatterOf(matter, kept) {
 	const id = uiMatterIdOf(matter.id);
 	const description = (matter.description ?? "").trim();
-	// Its mark as a member set it (D-200): a colour and an icon, or its
+	// Its mark as a member set it: a colour and an icon, or its
 	// initials, kept with the Matter (matter.update's appearance).
 	const appearance = matter.appearance ?? {};
 	const icon = appearance.markGlyph || appearance.icon || "";
@@ -739,11 +764,11 @@ function shownMatterOf(matter, kept) {
 		directoryPath: matter.directoryPath ?? null,
 		memberIds: kept?.memberIds ?? [viewerId],
 		updatedAt: matter.updatedAt ?? "",
-		// Archived for every computer of it (D-214): out of the open Matters,
-		// as the prototype's closed one stands.
+		// Archived for every computer of it: out of the open Matters, as the
+		// prototype's closed one stands.
 		archivedAt: matter.archivedAt ?? "",
-		// The rules of its correspondence intake (D-228): a letter to `mailbox`
-		// from `from` is filed here as Outlook shows it.
+		// The rules of its correspondence intake: a letter to `mailbox` from
+		// `from` is filed here as Outlook shows it.
 		intake: Array.isArray(matter.correspondenceIntake) ? matter.correspondenceIntake : kept?.intake ?? [],
 		isClosed: (matter.archivedAt ?? "") != "",
 		isReal: true,
@@ -752,8 +777,7 @@ function shownMatterOf(matter, kept) {
 
 // A Matter changed on another computer - renamed, archived, given another
 // mark or client - shows here as it is now, from the summaries every change
-// reads anyway (the owner, 2026-11-02: "I rename the project on macOS, but
-// nothing changes on Windows"). True when one changed.
+// reads anyway. True when one changed.
 function takeSummaries(summaries) {
 	const byId = new Map(summaries.map(summary => [uiMatterIdOf(summary.id), summary]));
 	let isChanged = false;
@@ -771,8 +795,8 @@ function takeSummaries(summaries) {
 	return isChanged;
 }
 
-// The member's personal conversations with people (D-042), each with what
-// was written in it - in every chat of it, as two computers that began it at
+// The member's personal conversations with people, each with what was
+// written in it - in every chat of it, as two computers that began it at
 // once began one each. Read once at a time; asked again while it reads, it
 // reads once more after.
 let isReadingPersonal = false;
@@ -805,8 +829,8 @@ export async function readPersonal() {
 					.sort((first, second) => (first.createdAt ?? "").localeCompare(second.createdAt ?? ""));
 				const viewer = read.find(conversation => conversation?.viewer != null)?.viewer;
 				// What the other wrote is here now: said once, so they see when it
-				// reached this member (D-212). Its record changed: read again, as a
-				// change that came before the window listened is never heard.
+				// reached this member. Its record changed: read again, as a change
+				// that came before the window listened is never heard.
 				const me = viewer?.memberId ?? "";
 				if (me != "" && typeof api.markChatReceived == "function") {
 					read.forEach((conversation, index) => {
@@ -821,7 +845,7 @@ export async function readPersonal() {
 					});
 				}
 				// The files the two sent each other, kept in the conversation's own
-				// folder (D-212): each attachment by its name, kind and size.
+				// folder: each attachment by its name, kind and size.
 				const documents = await personalDocuments(entry.projectId);
 				personal[entry.otherActorId] = { ...entry, documents, conversation: { ...(viewer != null ? { viewer } : {}), turns } };
 			}
@@ -834,9 +858,18 @@ export async function readPersonal() {
 
 // Opens the member's personal conversation with a person of the firm, made
 // when it is not yet: its project and chat, to write the first message in.
-// A conversation cleared by the member here (the owner, 2026-11-04: "a way to
-// clear the messages of a direct conversation"): its messages up to now leave
-// it on this computer, and an AI colleague answering from here begins afresh;
+// The icons of the sites web sources come from: for each site asked, the
+// data of its icon, or null where it has none; nothing where the window runs
+// without Singularity's native side.
+export async function sourceIcons(sites) {
+	const api = nativeApp();
+	if (typeof api?.sourceIcons != "function" || sites.length == 0) return {};
+	const answer = await api.sourceIcons(sites);
+	return answer?.icons ?? {};
+}
+
+// A conversation cleared by the member here: its messages up to now leave it
+// on this computer, and an AI colleague answering from here begins afresh;
 // the other member's are theirs (Chat/ConversationClearing). `entry` is the
 // conversation as Messages holds it. Returns its Undo.
 export async function clearConversation(entry) {
@@ -879,21 +912,57 @@ export function matterNameOf(realMatterId) {
 	return matters.find(matter => matter.isReal == true && matter.realMatterId == realMatterId)?.name ?? null;
 }
 
-// The seat the member here sits in, as the firm's record names them (D-209),
-// or null: what their own profile is edited by, whatever the sign-in's
-// answer says (the owner, 2026-11-02: "as the administrator I must be able
-// to edit my own profile too").
+// The seat the member here sits in, as the firm's record names them, or
+// null: what their own profile is edited by, whatever the sign-in's answer
+// says.
 export function viewerSeatId() {
 	return viewerActorId.startsWith("seat:") ? viewerActorId.slice(5) : null;
 }
 
-// What each Matter says last, as the sidebar shows it under its name
-// (D-200): the latest message of its threads - never a colleague's own chat -
-// from the Matters' summaries. Read once at a time; asked again while it
-// reads, it reads once more after.
+// What each Matter says last, as the sidebar shows it under its name: the
+// latest message of its threads - never a colleague's own chat - from the
+// Matters' summaries. Read once at a time; asked again while it reads, it
+// reads once more after.
 let isReadingSummaries = false;
 let isSummariesStale = false;
 let summariesTimer = null;
+
+// A Matter whose data can't be read just now is summarised by a stand-in: its
+// folder's name, no mark, no threads and no files.
+function isReadableSummary(summary) {
+	return summary.dataState != "damaged" && summary.dataState != "unavailable";
+}
+
+// What each Matter says last and how much it holds, for the sidebar and the
+// Matters page. A Matter whose data can't be read just now keeps what was
+// shown for it, never counted as one with nothing.
+export function summaryLists(summaries, before = {}) {
+	const latest = {};
+	const threadsLatest = [];
+	// How many files and threads each Matter holds, for the Matters page.
+	const counts = {};
+	for (const summary of summaries) {
+		const matterId = uiMatterIdOf(summary.id);
+		if (isReadableSummary(summary) == false) {
+			if (before.counts?.[matterId] != null) counts[matterId] = before.counts[matterId];
+			if (before.latest?.[matterId] != null) latest[matterId] = before.latest[matterId];
+			threadsLatest.push(...(before.threadsLatest ?? []).filter(said => said.matterId == matterId));
+			continue;
+		}
+		const threads = (summary.chats ?? []).filter(chat => chat.archived != true && (chat.deletedAt ?? "") == "" && (chat.agentId ?? "") == "");
+		counts[matterId] = { files: summary.documentCount ?? 0, threads: threads.length };
+		let found = null;
+		for (const chat of summary.chats ?? []) {
+			const message = chat.lastMessage;
+			if (message == null || chat.archived == true || (chat.deletedAt ?? "") != "" || (chat.agentId ?? "") != "") continue;
+			const said = { ...message, at: message.at ?? "", chatId: chat.id, title: chat.title ?? "", matterId };
+			threadsLatest.push(said);
+			if (found == null || said.at > found.at) found = said;
+		}
+		if (found != null) latest[matterId] = found;
+	}
+	return { latest, threadsLatest, counts };
+}
 
 export async function readMatterSummaries() {
 	const api = nativeApp();
@@ -908,25 +977,8 @@ export async function readMatterSummaries() {
 			isSummariesStale = false;
 			const listed = await api.listMatterSummaries().catch(() => null);
 			if (listed == null) break;
-			takeSummaries(listed.matters ?? []);
-			const latest = {};
-			const threadsLatest = [];
-			// How many files and threads each Matter holds, for the Matters page.
-			const counts = {};
-			for (const summary of listed.matters ?? []) {
-				const threads = (summary.chats ?? []).filter(chat => chat.archived != true && (chat.deletedAt ?? "") == "" && (chat.agentId ?? "") == "");
-				counts[uiMatterIdOf(summary.id)] = { files: summary.documentCount ?? 0, threads: threads.length };
-				let found = null;
-				for (const chat of summary.chats ?? []) {
-					const message = chat.lastMessage;
-					if (message == null || chat.archived == true || (chat.deletedAt ?? "") != "" || (chat.agentId ?? "") != "") continue;
-					const said = { ...message, at: message.at ?? "", chatId: chat.id, title: chat.title ?? "", matterId: uiMatterIdOf(summary.id) };
-					threadsLatest.push(said);
-					if (found == null || said.at > found.at) found = said;
-				}
-				if (found != null) latest[uiMatterIdOf(summary.id)] = found;
-			}
-			publish({ latest, threadsLatest, counts });
+			takeSummaries((listed.matters ?? []).filter(isReadableSummary));
+			publish(summaryLists(listed.matters ?? [], snapshot));
 		} while (isSummariesStale == true);
 	} finally {
 		isReadingSummaries = false;
@@ -943,10 +995,10 @@ function scheduleSummaries() {
 	}, 250);
 }
 
-// What a Matter of the firm said last (D-200): who wrote it - "You" for the
-// member here, a person or an AI colleague by name, no one for a model's
-// answer to a person's own request - its words in one line, and how many
-// files it handed over. Null for a Matter with no message yet.
+// What a Matter of the firm said last: who wrote it - "You" for the member
+// here, a person or an AI colleague by name, no one for a model's answer to
+// a person's own request - its words in one line, and how many files it
+// handed over. Null for a Matter with no message yet.
 export function realLatestOf(matterId) {
 	const message = snapshot.latest?.[matterId];
 	if (message == null) return null;
@@ -982,7 +1034,7 @@ export function realThreadsLatest() {
 		.sort((first, second) => second.at.localeCompare(first.at));
 }
 
-// ---- What the member has read (D-202) -------------------------------------------
+// ---- What the member has read -------------------------------------------
 
 // The member's read marks: by chat id, the time of the latest message they
 // have seen there. Read once as the window connects; kept by the backend.
@@ -1046,9 +1098,9 @@ export function unreadInConversation(conversation) {
 	return (conversation.items ?? []).filter(item => isOthersUnread(chatId, item.at, item.isOwn == true)).length;
 }
 
-// A Matter's mark as the member sets it (D-200): its colour, and an icon or
-// its initials, kept with the Matter so every computer it is on shows it.
-// The rest of its appearance stays as it was.
+// A Matter's mark as the member sets it: its colour, and an icon or its
+// initials, kept with the Matter so every computer it is on shows it. The
+// rest of its appearance stays as it was.
 export async function keepMatterMark(matterId, look) {
 	const matter = matters.find(item => item.id == matterId);
 	if (hasNative() == false || matter == null || matter.isReal != true) return;
@@ -1068,14 +1120,13 @@ export async function keepMatterMark(matterId, look) {
 }
 
 // The firm's Matters known here, and those the firm's computers brought that
-// are not open here yet (D-123): the window lists both. Those known here are
-// listed at once. Looking for arrivals walks the folders the member opened to
-// Singularity, which can take minutes, so it never holds the list back
-// (2026-10-31: a home folder's walk kept the window without a Matter).
+// are not open here yet: the window lists both. Those known here are listed
+// at once. Looking for arrivals walks the folders the member opened to
+// Singularity, which can take minutes, so it never holds the list back.
 export async function readMatters() {
 	const api = nativeApp();
-	// This computer's Trash first (project.listTrash, D-247): it deletes what
-	// has stood there 30 days, and what is in it leaves every list here.
+	// This computer's Trash first: it deletes what has stood there 30 days,
+	// and what is in it leaves every list here.
 	const trash = typeof api.listMatterTrash == "function" ? await api.listMatterTrash().catch(() => null) : null;
 	const trashed = new Map((trash?.matters ?? []).map(entry => [entry.id, entry]));
 	const listed = await api.listMatters();
@@ -1156,7 +1207,7 @@ function preferredMatterId(list) {
 // archived, and none that is a colleague's own chat.
 function threadChatsOf(chatList, agents) {
 	const agentChats = new Set((agents ?? []).filter(agent => agent.isHere == true).map(agent => agent.chatId).filter(Boolean));
-	// An archived thread stays readable among the Matter's archived ones (D-214).
+	// An archived thread stays readable among the Matter's archived ones.
 	return (chatList?.chats ?? [])
 		.filter(chat => (chat.deletedAt ?? "") == "" && agentChats.has(chat.id) == false
 			&& (chat.agentId ?? "") == "")
@@ -1172,15 +1223,15 @@ async function readAll(matterId) {
 		api.listDocumentReviews(matterId),
 		// Who works on the Matter on other computers, from its shared folder.
 		api.getSharedActivity(matterId).catch(() => null),
-		// The letters filed to it (D-106).
+		// The letters filed to it.
 		api.listLetters != null ? api.listLetters(matterId).catch(() => null) : Promise.resolve(null),
-		// The assignments colleagues carried out, step by step (D-119).
+		// The assignments colleagues carried out, step by step.
 		api.listAssignments != null ? api.listAssignments(matterId).catch(() => null) : Promise.resolve(null),
 	]);
 	// The Matter's AI colleagues: those this computer runs, and those another
 	// lawyer's computer runs, known from the shared folder. A message names
-	// either; the computer that runs a colleague takes the work up there.
-	// At work only: an archived or unapproved colleague takes no part (D-214).
+	// either; the computer that runs a colleague takes the work up there. At
+	// work only: an archived or unapproved colleague takes no part.
 	const here = (agentList?.agents ?? []).filter(agent => agent.status != "stopped" && agent.status != "draft"
 		&& agent.status != "waiting_for_approval").map(agent => ({ ...agent, isHere: true }));
 	const elsewhere = (shared?.agents ?? [])
@@ -1200,7 +1251,7 @@ async function readAll(matterId) {
 		conversations[chat.id] = await api.listChatConversation(matterId, chat.id);
 	}
 	// Each colleague's own chat, run here: the member's personal chat with it
-	// in Messages (D-042). It is no thread of the Matter.
+	// in Messages. It is no thread of the Matter.
 	for (const agent of here) {
 		if ((agent.chatId ?? "") == "") continue;
 		asked[agent.chatId] = performance.now();
@@ -1214,16 +1265,16 @@ async function readAll(matterId) {
 		letters: letterList?.letters ?? [],
 		assignments: assignmentList?.assignments ?? [],
 		// Each document the Matter took in, lost, or saw change, with when and
-		// whose it was: the overview's history (the owner, 2026-11-02).
+		// whose it was: the overview's history.
 		documentChanges: shared?.changes ?? [],
 		// The Matter's people, by their actor ids: whom "@Name" in a message
-		// names (ORG-14).
+		// names.
 		people: (shared?.members ?? [])
 			.map(member => ({ actorId: member.actorId ?? "", name: (member.name ?? "").trim(), isYou: member.isYou == true,
 				position: (member.position ?? "").trim(), practice: (member.practice ?? "").trim(),
 				// Their computers, by device: where a colleague they answer for runs.
 				computers: (member.computers ?? []).map(computer => computer.deviceId ?? "").filter(device => device != ""),
-				// Given the Matter from this computer, and not on it yet (D-205).
+				// Given the Matter from this computer, and not on it yet.
 				invited: member.invited == true,
 				// When their computer first joined the Matter.
 				firstSeenAt: member.firstSeenAt ?? "" }))
@@ -1234,8 +1285,7 @@ async function readAll(matterId) {
 }
 
 // Who began a thread, as the Matter's records name its people: the member
-// here when it was them or no one is named (2026-10-29: Dana's empty thread
-// was listed on Priya's computer as begun by Priya).
+// here when it was them or no one is named.
 export function beganByOf(actorId, people) {
 	if ((actorId ?? "") == "") return viewerId;
 	const person = (people ?? []).find(entry => entry.actorId == actorId);
@@ -1244,15 +1294,15 @@ export function beganByOf(actorId, people) {
 }
 
 // A person in the office their record states: their position, by which the
-// team orders them (D-059), and their practice; their face as they show it to
-// the firm (D-163). Never a bare "Member" where their record says more.
+// team orders them, and their practice; their face as they show it to the
+// firm. Never a bare "Member" where their record says more.
 function placeOffice(member, person) {
 	if (person.position) {
 		member.position = person.position;
 		member.role = person.position;
 	}
 	if (person.practice) member.practice = person.practice;
-	// Their own words for their position, from the firm's record (D-209).
+	// Their own words for their position, from the firm's record.
 	if (person.title !== undefined) member.title = person.title || null;
 	// What they would have the firm know of them, from the same record.
 	if (person.about !== undefined) member.about = person.about || null;
@@ -1317,10 +1367,7 @@ function placeThreads(matterId, data) {
 
 // The chat of the thread the member has open. When the Matter changes it is
 // read first and shown, and the rest of the Matter follows: a new message in
-// the open thread shows in a fraction of a second (2026-10-26: reading
-// Amsterdam's 21 threads took 2.6 seconds, one at a time in the backend, and a
-// message from the Mac stood 6.5 seconds on this computer's disk before the
-// window showed it).
+// the open thread shows in a fraction of a second.
 let openChatId = null;
 let isReading = false;
 let isStale = false;
@@ -1330,6 +1377,36 @@ let isOpenStale = false;
 // beside the whole Matter, and a read asked for earlier never replaces one
 // asked for later.
 const askedAt = new Map();
+// Each read of the open Matter in the order it was asked, and the one whose
+// threads are shown: a read asked earlier never places its threads over a
+// later one's. A whole read begun before a thread was made took that thread
+// away again for a moment.
+let readsAsked = 0;
+let readPlaced = 0;
+// The last whole read of each Matter opened in this window, in memory only: a
+// Matter opened again shows it while it is read, and keeps it while its data
+// can't be read just now.
+const lastReads = new Map();
+const LAST_READS_KEPT = 8;
+// A read refused because the Matter's data can't be read just now is asked
+// again by itself, sooner first.
+let againTimer = null;
+let againWait = 0;
+
+function readAgainSoon() {
+	if (againTimer != null) return;
+	againWait = Math.min(againWait == 0 ? 2000 : againWait * 2, 30000);
+	againTimer = setTimeout(() => {
+		againTimer = null;
+		reload();
+	}, againWait);
+}
+
+function keepLastRead(matterId, data) {
+	lastReads.delete(matterId);
+	lastReads.set(matterId, data);
+	while (lastReads.size > LAST_READS_KEPT) lastReads.delete(lastReads.keys().next().value);
+}
 
 export function watchRealChat(chatId) {
 	openChatId = chatId ?? null;
@@ -1363,8 +1440,11 @@ async function readOpenThread() {
 			if (matterId == null || chatId == null || snapshot.conversations == null) break;
 			const api = nativeApp();
 			const asked = performance.now();
+			const order = ++readsAsked;
 			const [chatList, conversation] = await Promise.all([api.listProjectChats(matterId), api.listChatConversation(matterId, chatId)]);
 			if (snapshot.matterId != matterId) break;
+			if (order < readPlaced) continue;
+			readPlaced = order;
 			const data = {
 				chats: threadChatsOf(chatList, snapshot.agents),
 				agents: snapshot.agents ?? [],
@@ -1382,8 +1462,7 @@ async function readOpenThread() {
 
 // The whole read under way: one asking for a read while it runs waits for it
 // to end, the Matter now open read last - so a Matter just opened is read
-// before its thread is looked for (2026-11-02: Recent's thread was "no longer
-// here" while a read begun earlier was still running).
+// before its thread is looked for.
 let reading = null;
 
 function reload() {
@@ -1405,17 +1484,30 @@ async function readWhole() {
 		do {
 			isStale = false;
 			const matterId = snapshot.matterId;
+			const order = ++readsAsked;
 			const { asked, ...data } = await readAll(matterId);
 			// The member opened another Matter meanwhile: that one is read instead.
 			if (snapshot.matterId != matterId) {
 				isStale = true;
 				continue;
 			}
+			// A read asked after this one showed its threads meanwhile: this one
+			// is older and would take back what that one showed. It is read again.
+			if (order < readPlaced) {
+				isStale = true;
+				continue;
+			}
+			readPlaced = order;
 			data.conversations = newestConversations(data.conversations, asked);
 			placeThreads(matterId, data);
+			keepLastRead(matterId, data);
+			againWait = 0;
 			publish({ status: "connected", ...data, error: null });
 		} while (isStale == true);
 	} catch (error) {
+		// Its data can't be read just now: what it shows stays, and it is read
+		// again by itself, as the backend's words say.
+		if (isUnreadableNow(error)) readAgainSoon();
 		publish({ status: "connected", error: error?.message ?? String(error) });
 	}
 	isReading = false;
@@ -1438,7 +1530,7 @@ function subscribeToChanges() {
 	// Any Matter's change may change what it says last.
 	nativeApp().on("matter.changed", scheduleSummaries);
 	// The firm's record changed - a colleague's settings, its memory, what the
-	// member read on another computer (D-203), who sits in a seat (D-209).
+	// member read on another computer, who sits in a seat.
 	nativeApp().on("matter.changed", payload => {
 		if ((payload?.projectId ?? "").startsWith("pc_firm_") == false) return;
 		readFirm();
@@ -1483,16 +1575,15 @@ export async function connectRealWork() {
 			typeof nativeApp().getAccountState == "function" ? nativeApp().getAccountState().catch(() => null) : Promise.resolve(null),
 		]);
 		const viewer = organisationView?.viewer;
-		// Whose words are "yours" in what the Matters say last (D-200).
+		// Whose words are "yours" in what the Matters say last.
 		viewerActorId = viewer?.memberId ?? "";
 		becomeOrganisation((viewer?.organisationName || account?.organisationName || "").trim() || "Your firm");
 		// Whether this member hires the firm's AI colleagues and connects its
 		// model accounts: its administrative account does, a member does not.
 		becomeViewerRights(viewer?.may);
 		// A member signed in to a seat whose name has not come yet is that seat
-		// until the firm's record names who sits in it (D-209): never the
-		// prototype's Evelyn (the owner, 2026-11-02: a colleague's new computer
-		// showed Evelyn Hart's profile before its first check).
+		// until the firm's record names who sits in it: never the prototype's
+		// Evelyn.
 		const name = (viewer?.name ?? "").trim() || (account?.signedIn == true ? (account?.seatId ?? "").trim() : "");
 		if (name != "") {
 			const id = memberIdFor(name, false, false);
@@ -1502,13 +1593,12 @@ export async function connectRealWork() {
 				if (standIn != null) standIn.isSeatStandIn = true;
 			}
 			// The member stands in the office they gave (organisation.setOwnOffice,
-			// onboarding's first page), never as a bare "Member" (2026-10-29: a new
-			// firm's partner showed so).
+			// onboarding's first page), never as a bare "Member".
 			const member = members.find(item => item.id == id);
 			if (member != null && member.isReal == true) {
 				if (viewer.position) member.position = viewer.position;
 				if (viewer.practice) member.practice = viewer.practice;
-				// And with the photo they chose (D-163).
+				// And with the photo they chose.
 				member.photo = viewer.photo || null;
 				member.photoSet = null;
 			}
@@ -1517,11 +1607,11 @@ export async function connectRealWork() {
 		// The firm keeps the name it had.
 	}
 	// The firm's colleagues think with the connected accounts' default models
-	// for any role not set yet (D-138), also for accounts connected before.
+	// for any role not set yet, also for accounts connected before.
 	ensureDefaultModels(nativeApp()).catch(() => {});
-	// Its AI colleagues, with or without a Matter open (D-157).
+	// Its AI colleagues, with or without a Matter open.
 	await readFirm();
-	// The member's personal conversations with people (D-042).
+	// The member's personal conversations with people.
 	readPersonal();
 	// What the backend says changed is heard before any Matter is read: a
 	// colleague's new computer has no Matter, and maybe no workspace, when the
@@ -1530,14 +1620,14 @@ export async function connectRealWork() {
 	subscribeToChanges();
 	try {
 		const list = await readMatters();
-		// What each Matter says last, under its name in the sidebar (D-200), and
-		// what the member has read (D-202).
+		// What each Matter says last, under its name in the sidebar, and what
+		// the member has read.
 		readMatterSummaries();
 		readReadMarks();
 		const wanted = snapshot.matterId != null && list.some(matter => matter.id == snapshot.matterId) ? snapshot.matterId : preferredMatterId(list);
 		if (wanted == null) {
-			// No Matter here yet: the firm's computers may bring one (D-123), or
-			// the member opens the first.
+			// No Matter here yet: the firm's computers may bring one, or the
+			// member opens the first.
 			publish({ status: (snapshot.arrivals ?? []).length > 0 ? "discoverable" : "absent" });
 			return;
 		}
@@ -1576,16 +1666,24 @@ export async function bindRealMatter(realMatterId) {
 		people: [],
 		conversations: {},
 	};
-	publish({ status: "connecting" });
+	againWait = 0;
+	// Opened before in this window: what it showed then, while it is read.
+	const known = lastReads.get(realMatterId);
+	if (known != null) {
+		placeThreads(realMatterId, known);
+		publish({ status: "connected", ...known, error: null });
+	} else {
+		publish({ status: "connecting" });
+	}
 	await reload();
 }
 
 // A new Matter of the firm, as a lawyer opens one: its name, its client and
-// what it is. It is open here at once, and the window reads it.
-// A new Matter of the firm (D-211): in the folder the lawyer chose for it (its
-// token from chooseNewMatterFolder), else a new folder named after it; then
-// given to each lawyer chosen (D-205). Answers the window's id for it, and
-// whether each chosen lawyer's computer is reached now.
+// what it is. It is open here at once, and the window reads it. A new Matter
+// of the firm: in the folder the lawyer chose for it (its token from
+// chooseNewMatterFolder), else a new folder named after it; then given to each
+// lawyer chosen. Answers the window's id for it, and whether each chosen
+// lawyer's computer is reached now.
 export async function createFirmMatter({ name, client, about, folderToken = null, shareWith = [], look = null }) {
 	const api = nativeApp();
 	const made = await api.createNamedProject(folderToken != null ? { name: name.trim(), folderToken } : { name: name.trim() });
@@ -1604,12 +1702,29 @@ export async function createFirmMatter({ name, client, about, folderToken = null
 	}
 	await readMatters();
 	await bindRealMatter(made.id);
-	// The mark chosen as it was opened, kept with it (D-200).
+	// The mark chosen as it was opened, kept with it.
 	if (look != null) await keepMatterMark(uiMatterIdOf(made.id), look).catch(() => {});
 	return { uiId: uiMatterIdOf(made.id), realId: made.id, given };
 }
 
-// ---- Archived, deleted, changed (D-214) -------------------------------------------
+// The Matter a folder chosen for a new one holds already, brought back as New
+// Matter offers it: out of the Trash, or opened again from its folder under
+// its own name - never a new Matter over the firm's. Answers the window's id
+// for it.
+export async function openHeldMatter({ folderToken, held }) {
+	const api = nativeApp();
+	let realId = held.id;
+	if (held.state == "trashed") await api.restoreMatterFromTrash(held.id);
+	else if (held.state == "away") {
+		const opened = await api.createNamedProject({ name: held.name || "Matter", folderToken, openExisting: true });
+		realId = opened.id;
+	}
+	await readMatters();
+	await bindRealMatter(realId);
+	return uiMatterIdOf(realId);
+}
+
+// ---- Archived, deleted, changed -------------------------------------------
 
 function realMatterOf(uiMatterId) {
 	const matter = matters.find(item => item.id == uiMatterId && item.isReal == true);
@@ -1641,10 +1756,9 @@ export async function setMatterArchived(uiMatterId, archived) {
 	await readMatters();
 }
 
-// A letter the member takes out of the Matter (the owner, 2026-11-02: "delete
-// these mock letters"): for everyone on it; one filed from the Matter's
-// folder takes its email file to this computer's bin too, or the folder would
-// file it again (D-180).
+// A letter the member takes out of the Matter: for everyone on it; one filed
+// from the Matter's folder takes its email file to this computer's bin too,
+// or the folder would file it again.
 export async function removeLetter(uiMatterId, letter) {
 	const matter = realMatterOf(uiMatterId);
 	if (letter.filing?.from == "folder") {
@@ -1657,7 +1771,7 @@ export async function removeLetter(uiMatterId, letter) {
 }
 
 // The rules of a Matter's correspondence intake, kept as one list for every
-// computer of it (D-228).
+// computer of it.
 export async function setMatterIntake(uiMatterId, rules) {
 	const matter = realMatterOf(uiMatterId);
 	await nativeApp().updateMatter(matter.realMatterId, { correspondenceIntake: rules.map(rule => ({ mailbox: rule.mailbox, from: rule.from })) });
@@ -1678,11 +1792,10 @@ export function readMatterLifeUsage(uiMatterId) {
 	return nativeApp().getUsageSummary("2000-01-01T00:00:00Z", end, matter.realMatterId);
 }
 
-// This computer's Trash of Matters (D-247; the owner, 2026-11-04: "Matters
-// can be cleared away, they go to the Trash and are kept there for 30
-// days"): one in it leaves every list here and comes back whole with Restore;
-// after 30 days, or with Delete now, it is deleted from this computer as
-// deleteMatterHere deletes it. Moving it returns its Undo.
+// This computer's Trash of Matters: one in it leaves every list here and
+// comes back whole with Restore; after 30 days, or with Delete now, it is
+// deleted from this computer as deleteMatterHere deletes it. Moving it
+// returns its Undo.
 export function matterTrash() {
 	return snapshot.trash ?? [];
 }
@@ -1756,8 +1869,8 @@ function colleagueOf(memberId) {
 	return member;
 }
 
-// The administrator's change of a colleague (D-214), from any of their
-// computers (D-219): one this computer runs changes at once; one another
+// The administrator's change of a colleague, from any of their
+// computers: one this computer runs changes at once; one another
 // computer runs is asked of it, and changes once that computer takes it.
 // Whether it was only asked.
 export async function editColleague(memberId, words) {
@@ -1794,11 +1907,10 @@ export async function setPersonState(memberId, state, password = "") {
 }
 
 // A Matter this computer took from the firm's computers - accepted when it was
-// given, or asked for by an invitation (D-205) -, listed among the member's
-// Matters once it has come whole: taking it was the member's choice, so it is
-// never left to be found and opened a second time (the owner, 2026-11-02:
-// "Matters doesn't show what came"). With no Matter open here yet, the window
-// opens on it. Answers the window's id for it.
+// given, or asked for by an invitation -, listed among the member's Matters
+// once it has come whole: taking it was the member's choice, so it is never
+// left to be found and opened a second time. With no Matter open here yet, the
+// window opens on it. Answers the window's id for it.
 export async function listArrivedMatter(realMatterId, folder) {
 	const known = matters.find(matter => matter.isReal == true && matter.realMatterId == realMatterId);
 	if (known != null) return known.id;
@@ -1814,7 +1926,7 @@ export async function listArrivedMatter(realMatterId, folder) {
 }
 
 // The Matters given from this window to a lawyer of the firm, told to whoever
-// listens: the window's coordination says each one's first transfer (D-207).
+// listens: the window's coordination says each one's first transfer.
 const givenListeners = new Set();
 
 export function onMatterGiven(listener) {
@@ -1826,7 +1938,7 @@ export function tellMatterGiven(realMatterId) {
 	for (const listener of givenListeners) listener(realMatterId);
 }
 
-// Opens here a Matter the firm's computers brought (D-123), and reads it.
+// Opens here a Matter the firm's computers brought, and reads it.
 export async function openArrivedMatter(arrival) {
 	const opened = await nativeApp().openDiscoveredMatter(arrival.path);
 	await readMatters();
@@ -1835,10 +1947,10 @@ export async function openArrivedMatter(arrival) {
 	return uiMatterIdOf(id);
 }
 
-// A new AI colleague of the firm (D-157): always the whole firm's, never hired
-// into a Matter. It holds the office and the face it was hired with, is
-// named in any Matter's thread to take work there, and its personal chat with
-// the member opens on their desk at once.
+// A new AI colleague of the firm: always the whole firm's, never hired into a
+// Matter. It holds the office and the face it was hired with, is named in any
+// Matter's thread to take work there, and its personal chat with the member
+// opens on their desk at once.
 export async function hireColleague({ name, species, title, ranksWith, practice, area, answersTo, goal, manner }) {
 	const made = await nativeApp().hireColleague({
 		name: (name ?? "").trim(),
@@ -1856,7 +1968,7 @@ export async function hireColleague({ name, species, title, ranksWith, practice,
 }
 
 // What a colleague remembers, as its page shows it, and a note a member lets
-// go of (D-159).
+// go of.
 export async function colleagueMemory(agentId) {
 	const api = nativeApp();
 	if (typeof api?.getColleagueMemory != "function") return [];
@@ -1870,11 +1982,10 @@ export async function forgetColleagueNote(agentId, noteId) {
 // ---- What the lists show ----------------------------------------------------------
 
 // In Singularity the lists hold the firm's own work only: its real Matter,
-// that Matter's threads and the chats begun here (the owner, 2026-10-24:
-// "start Singularity from zero, with one project and one thread"). The
-// prototype's sample Matters, threads, chats and mail are for a plain
-// browser, where they are all there is. They stay in the data, so a link
-// that names one still opens it.
+// that Matter's threads and the chats begun here. The prototype's sample
+// Matters, threads, chats and mail are for a plain browser, where they are
+// all there is. They stay in the data, so a link that names one still
+// opens it.
 export function shownMatters() {
 	return hasNative() ? matters.filter(matter => matter.isReal == true) : matters;
 }
@@ -1887,8 +1998,7 @@ export function shownMembers() {
 }
 
 // The firm's team: the member here, the people the firm's record names and
-// its AI colleagues - never a name met only in a message (the owner,
-// 2026-11-02: a renamed colleague stood twice).
+// its AI colleagues - never a name met only in a message.
 export function teamMembers() {
 	if (hasNative() == false) return members;
 	return shownMembers().filter(member => member.id == viewerId
@@ -1906,9 +2016,8 @@ function isUnbegun(thread) {
 
 // A thread stands in the lists while its Matter is listed here: the firm's
 // own General, or a Matter neither in this computer's Trash nor deleted from
-// it. What is in the Trash leaves every list here (D-247), its threads with
-// it, and they come back with it (2026-11-05: the Inbox could not show a row
-// of a Matter deleted a moment before).
+// it. What is in the Trash leaves every list here, its threads with it, and
+// they come back with it.
 function isListedMatter(uiMatterId) {
 	return uiMatterId == general.id || matters.some(matter => matter.id == uiMatterId && matter.isReal == true);
 }
@@ -1921,7 +2030,7 @@ export function shownThreads() {
 	return hasNative() ? threads.filter(isListed) : threads;
 }
 
-// A Matter's archived threads (D-214), the latest first: readable, and
+// A Matter's archived threads, the latest first: readable, and
 // restored from its list.
 export function archivedThreads(uiMatterId) {
 	return threads.filter(thread => thread.isReal == true && thread.isArchived == true && thread.matterId == uiMatterId);
@@ -1955,8 +2064,8 @@ export function shownBillables() {
 // The calendar's own events, before any the member adds in it.
 export function shownCalendarEvents() {
 	// In the app none of the prototype's: its member's own meetings were Marlowe
-	// Finch's too (2026-10-29), and the colleagues' working time comes from the
-	// backend (realColleagueEvents).
+	// Finch's too, and the colleagues' working time comes from the backend
+	// (realColleagueEvents).
 	return hasNative() ? [] : calendarEvents;
 }
 
@@ -1967,10 +2076,10 @@ export function isRealMatter(matterId) {
 
 // The real Matter's documents, as its page lists them: each file, its size
 // and when it came, and whether it can be read. A colleague's draft says
-// whose it is and which version.
-// A version its colleague replaced in the same work, before anyone decided on
-// it (D-168): an earlier pass of the work, never handed in - its document and
-// its work product are not listed, the version handed in is.
+// whose it is and which version. A version its colleague replaced in the same
+// work, before anyone decided on it: an earlier pass of the work, never
+// handed in - its document and its work product are not listed, the version
+// handed in is.
 function isReplacedInWork(review, version) {
 	return version?.state == "superseded" && decisionOf(review, version) == null;
 }
@@ -1991,8 +2100,8 @@ export function realMatterDocuments() {
 				documentId: document.id,
 				// The seat whose computer first recorded it in the Matter (its operations' own record).
 				addedByActorId: document.addedByActorId || "",
-				// A picture with no words in it is still a picture the AI model sees
-				// (D-256): only a document that cannot be read says so.
+				// A picture with no words in it is still a picture the AI model
+				// sees: only a document that cannot be read says so.
 				kind: ["processing", "changed"].includes(state) ? "reading"
 					: ["needs_attention", "unsupported"].includes(state) ? (isPictureFile(document.displayName ?? document.name) ? "ready" : "failed")
 					: state == "unavailable" ? "gone"
@@ -2028,8 +2137,8 @@ export function realWorkProducts() {
 			});
 		}
 	}
-	// The documents a colleague wrote as its work (D-141): an issues list, a
-	// memo, a summary - a work product of their own, with no original behind it.
+	// The documents a colleague wrote as its work: an issues list, a memo, a
+	// summary - a work product of their own, with no original behind it.
 	for (const assignment of snapshot.assignments ?? []) {
 		for (const step of assignment.steps ?? []) {
 			if ((step.reviewId ?? "") != "" || step.status != "completed" || present.has(step.documentId) == false) continue;
@@ -2106,13 +2215,12 @@ export function versionOfPost(post) {
 	return { review, version };
 }
 
-// The assignment whose card stands under this message (D-120): under the
-// colleague's reply that took the work up - each result as it is handed in -
-// or, for an assignment from before there was one, under its last word.
-// The work whose results stand under this message: under the one in which the
-// colleague says it has finished, once it has (the owner, 2026-11-02: "she
-// must attach the file to the new message"; D-239); until then under the one
-// in which it took the work up.
+// The assignment whose card stands under this message: under the colleague's
+// reply that took the work up - each result as it is handed in - or, for an
+// assignment from before there was one, under its last word. The work whose
+// results stand under this message: under the one in which the colleague says
+// it has finished, once it has; until then under the one in which it took the
+// work up.
 export function assignmentOfPost(post) {
 	return (snapshot.assignments ?? []).find(assignment => (assignment.summaryMessageId ?? "") != ""
 		? assignment.summaryMessageId == post.id
@@ -2120,7 +2228,7 @@ export function assignmentOfPost(post) {
 }
 
 // The decisions that stand under this message: those the colleague put to the
-// lawyer in it, each with its assignment (D-120).
+// lawyer in it, each with its assignment.
 export function decisionsOfPost(post) {
 	return decisionsUnder(snapshot.assignments, post.id);
 }
@@ -2131,7 +2239,7 @@ export function decisionsUnder(assignments, messageId) {
 	for (const assignment of assignments ?? []) {
 		for (const decision of assignment.decisions ?? []) {
 			// A decision a later version replaced stays in the record, never under
-			// the message (D-174).
+			// the message.
 			if (decision.messageId == messageId && decision.state != "withdrawn") found.push({ assignment, decision });
 		}
 	}
@@ -2139,7 +2247,7 @@ export function decisionsUnder(assignments, messageId) {
 }
 
 // The lawyer's answer to a decision: recorded once, with who gave it, and said
-// to the colleague in the thread, which takes the work up with it (D-120).
+// to the colleague in the thread, which takes the work up with it.
 export async function answerAssignmentDecision(assignmentId, decisionId, answer) {
 	const answered = await nativeApp().answerAssignmentDecision(snapshot.matterId, assignmentId, decisionId, answer);
 	scheduleReload();
@@ -2175,9 +2283,9 @@ export function versionStatus(review, version) {
 	}
 }
 
-// What a real thread waits for: closed when a member closed it (D-088);
+// What a real thread waits for: closed when a member closed it;
 // otherwise what its latest review waits for. An accepted version closes
-// nothing (D-091): the thread is open.
+// nothing: the thread is open.
 export function realThreadStatus(thread) {
 	const events = (thread?.posts ?? []).filter(post => post.kind == "closed" || post.kind == "reopened");
 	if (events.at(-1)?.kind == "closed") return { kind: "settled", words: "Closed with a conclusion" };
@@ -2201,8 +2309,7 @@ export function agentNamed(name) {
 // The actor ids of the Matter's people a message names with @ and their first
 // name ("@Gabriel" names Gabriel Moore), never the member who writes it nor a
 // name an AI colleague goes by. Each finds the message in their own Inbox as
-// asking them, on whichever computer they work (ORG-14; the owner, 2026-10-26:
-// people are tagged with @ as colleagues are).
+// asking them, on whichever computer they work.
 export function peopleNamed(text, people, agents = []) {
 	const found = [];
 	for (const match of (text ?? "").matchAll(/@([A-Za-z][A-Za-z-]*)/g)) {
@@ -2228,8 +2335,7 @@ export function asksViewer(posts, memberId) {
 }
 
 // The member's own messages, shown in their thread the moment they are sent and
-// kept there until a read of the Matter has the message itself (2026-10-26: on
-// a Matter of 2,000 records one's own reply took four seconds to show).
+// kept there until a read of the Matter has the message itself.
 const sending = new Map();
 let sendingCount = 0;
 
@@ -2254,9 +2360,9 @@ function showSending(chatId) {
 	publish({});
 }
 
-// The correspondents of the letters filed to the Matter (D-106), one
-// conversation each: the other party of every letter, by address, its letters
-// oldest first. A letter the member sent is their own.
+// The correspondents of the letters filed to the Matter, one conversation
+// each: the other party of every letter, by address, its letters oldest
+// first. A letter the member sent is their own.
 export function letterConversations(letters) {
 	const byAddress = new Map();
 	for (const letter of letters ?? []) {
@@ -2288,14 +2394,13 @@ export function letterConversations(letters) {
 	}));
 }
 
-// Messages in the real app (D-042): one conversation with each AI colleague
-// this computer runs - its own chat, every message addressed to it - one with
-// each person of the Matter, and one with each correspondent whose letters
-// were filed to it (D-106).
-// The firm's people and the open Matter's, each with their personal chat with
-// the member (D-042): what was written in it, or a first message that begins
-// it. `personal` holds the conversations readPersonal read, by the other
-// member's actor id.
+// Messages in the real app: one conversation with each AI colleague this
+// computer runs - its own chat, every message addressed to it - one with each
+// person of the Matter, and one with each correspondent whose letters were
+// filed to it. The firm's people and the open Matter's, each with their
+// personal chat with the member: what was written in it, or a first message
+// that begins it. `personal` holds the conversations readPersonal read, by
+// the other member's actor id.
 export function personConversations(everyone, personal, agents) {
 	const people = new Map();
 	for (const person of everyone) {
@@ -2327,8 +2432,8 @@ export function realConversations() {
 	const everyColleague = colleagues();
 	for (const agent of everyColleague.filter(agent => agent.isHere == true && (agent.chatId ?? "") != "")) {
 		const memberId = memberIdFor(agent.name, true, false);
-		// One conversation for each colleague the window shows (2026-11-02: an
-		// archived Pasha beside the one at work showed as a second Pasha).
+		// One conversation for each colleague the window shows (an archived
+		// colleague beside the one at work showed as a second one of its name).
 		if (found.some(entry => entry.memberId == memberId)) continue;
 		const conversation = snapshot.firm?.conversations?.[agent.chatId] ?? snapshot.conversations?.[agent.chatId];
 		const documents = snapshot.firm?.documents?.[agent.chatProjectId] ?? snapshot.documents ?? [];
@@ -2340,11 +2445,11 @@ export function realConversations() {
 			kind: "member",
 			memberId,
 			items: posts.filter(post => post.kind == null).map(post => ({ ...post, isOwn: post.authorId == viewerId })),
-			// Its personal chat is on the member's desk (D-157), or, for a colleague
-			// of the zero state, in the Matter it was made for.
+			// Its personal chat is on the member's desk, or, for a colleague of the
+			// zero state, in the Matter it was made for.
 			send: { kind: "chat", chatId: agent.chatId, projectId: agent.chatProjectId ?? snapshot.matterId, mentions: [agent.id] },
-			// It writes its answer in this conversation now, as the backend says
-			// (its run's stage, D-129): Messages says "typing".
+			// It writes its answer in this conversation now, as the backend
+			// says: Messages says "typing".
 			isAnswering: (agent.answeringChatId ?? "") != "" && agent.answeringChatId == agent.chatId,
 		});
 	}
@@ -2363,11 +2468,9 @@ export function realConversations() {
 }
 
 // A letter from or to a person of the firm stands in that person's own
-// conversation, among what the two wrote each other: one row for one person
-// (2026-10-31: Dana stood twice in Marcus's Messages, as the firm's member and
-// as the sender of a letter filed to Project Frost). Matched by name, as the
-// letter names them. The correspondents who are no member of the firm stay
-// conversations of their own: returned.
+// conversation, among what the two wrote each other: one row for one person.
+// Matched by name, as the letter names them. The correspondents who are no
+// member of the firm stay conversations of their own: returned.
 export function foldMembersLetters(conversations, letterEntries, nameOf) {
 	const simple = words => (words ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 	const left = [];
@@ -2385,9 +2488,8 @@ export function foldMembersLetters(conversations, letterEntries, nameOf) {
 }
 
 // A reply to a letter filed to the Matter, as a draft Outlook opens to edit and
-// send (D-079, D-105): Singularity writes it and opens it, never sends it.
-// Files go with it as the Matter's documents, in an unsent email the mail app
-// opens (D-115).
+// send: Singularity writes it and opens it, never sends it. Files go with it as
+// the Matter's documents, in an unsent email the mail app opens.
 export async function draftLetterReply(letterId, text, attachmentDocumentIds = []) {
 	const api = nativeApp();
 	if (typeof api.draftLetterReply != "function") throw new Error("This version of Singularity cannot draft a reply yet.");
@@ -2407,18 +2509,17 @@ export async function postToThread(chatId, text, extras = {}) {
 	const named = [...text.matchAll(/@([A-Za-z][A-Za-z-]*)/g)].map(match => agentNamed(match[1])).filter(Boolean);
 	// @all, where a place offers it, names everyone: those named by name come
 	// first, then "all", then the rest, so a colleague knows whether it was
-	// named or reached through all (the owner, 2026-10-26; the PC's talk keys
-	// on it).
+	// named or reached through all.
 	const isAll = extras.allowsAll == true && namesAll(text);
-	// A personal conversation stays between its two members (D-042): its words
-	// name no one into it, and wake no colleague.
+	// A personal conversation stays between its two members: its words name no
+	// one into it, and wake no colleague.
 	const mentions = extras.isPersonal == true ? [] : [...new Set([...named.map(agent => agent.id),
 		...peopleNamed(text, snapshot.people, snapshot.agents), ...(isAll ? ["all", ...everyoneHere()] : []), ...(extras.mentions ?? [])])];
 	const key = `sending_${++sendingCount}`;
 	sending.set(key, {
 		chatId,
 		messageId: null,
-		// What it carries shows with it at once, as it will once kept (D-212).
+		// What it carries shows with it at once, as it will once kept.
 		post: { id: key, authorId: viewerId, at: new Date().toISOString(), paragraphs: paragraphsOf(text), isReal: true, isSending: true, mentionIds: [],
 			realFiles: (extras.files ?? []).length > 0 ? extras.files : null, quote: extras.quote ?? null },
 	});
@@ -2442,8 +2543,7 @@ export async function postToThread(chatId, text, extras = {}) {
 	const sent = sending.get(key);
 	if (sent != null) sent.messageId = answer?.messageId ?? null;
 	// A personal conversation is read from its own record, not the open Matter:
-	// read at once, so the message stands as sent the moment it is kept (the
-	// owner, 2026-11-02: a reply to a colleague stayed "Sending").
+	// read at once, so the message stands as sent the moment it is kept.
 	if (extras.isPersonal == true) readPersonal();
 	// A thread begun from here takes its name from its first message's words,
 	// its formatting marks gone (a name is never drawn as markdown).
@@ -2463,8 +2563,8 @@ export async function postToThread(chatId, text, extras = {}) {
 	return answer;
 }
 
-// The same tools for every message (the owner, 2026-10-24): its author edits
-// or deletes it, anyone reacts to it - as the backend keeps it.
+// The same tools for every message: its author edits or deletes it, anyone
+// reacts to it - as the backend keeps it.
 export async function editRealPost(chatId, messageId, text) {
 	const answer = await nativeApp().editChatMessage(snapshot.matterId, chatId, messageId, text);
 	scheduleReload();
@@ -2505,7 +2605,7 @@ export function deleteRealPostWithUndo(chatId, messageId, onFailure) {
 	};
 }
 
-// A thread's closing with its conclusion, and its reopening (D-088).
+// A thread's closing with its conclusion, and its reopening.
 export async function closeRealThread(chatId, conclusion) {
 	const answer = await nativeApp().closeChatThread(snapshot.matterId, chatId, conclusion);
 	scheduleReload();
@@ -2524,10 +2624,10 @@ export async function reactToRealPost(chatId, messageId, emoji) {
 	return answer;
 }
 
-// ---- A personal conversation's own tools (D-212) ----------------------------
-// Reactions, replies and files in a conversation of two members, as a
-// messenger has them: its files are kept in the conversation's own folder, so
-// they travel to the other member's computers sealed with it (D-123).
+// ---- A personal conversation's own tools ----------------------------
+// Reactions, replies and files in a conversation of two members, as a messenger
+// has them: its files are kept in the conversation's own folder, so they travel
+// to the other member's computers sealed with it.
 
 // The most one file can be: what the firm's computers carry in one envelope
 // (MatterCoordination's kMostFileBytes); and the most files one message hands
@@ -2580,7 +2680,7 @@ export async function attachFromComputer(projectId, onChosen) {
 }
 
 // Where a file put into a conversation stands: being read, ready, or not
-// readable, in the backend's words (D-212).
+// readable, in the backend's words.
 export async function attachmentState(projectId, documentId) {
 	const document = (await personalDocuments(projectId)).find(known => known.id == documentId);
 	if (document == null) return { state: "gone", detail: null };
@@ -2685,8 +2785,8 @@ export function pictureType(name) {
 	return PICTURE_TYPES[extension] ?? null;
 }
 
-// Whether a file goes to an AI model as a picture (D-256): every kind the
-// window shows, and a phone's HEIC or HEIF photograph or a TIFF scan, which
+// Whether a file goes to an AI model as a picture: every kind the window
+// shows, and a phone's HEIC or HEIF photograph or a TIFF scan, which
 // Singularity redraws for the model.
 export function isPictureFile(name) {
 	const extension = (name ?? "").split(".").pop().toLowerCase();
@@ -2738,13 +2838,11 @@ export function threadIdOfChat(chatId) {
 }
 
 // The Matter's documents a message can hand over, as the backend lists them.
-// The letters filed to the Matter, incoming and outgoing, the latest first
-// (D-106): its correspondence, apart from its threads.
-// What happened on the open Matter, from its own records (the owner,
-// 2026-11-02: "a feed ... and when a new person is added, that too"): each
-// document taken in, taken out or changed, with whose it was where the
-// record says; and each member's arrival - a person's computer joining, an AI
-// colleague made on it here.
+// The letters filed to the Matter, incoming and outgoing, the latest first:
+// its correspondence, apart from its threads. What happened on the open
+// Matter, from its own records: each document taken in, taken out or changed,
+// with whose it was where the record says; and each member's arrival - a
+// person's computer joining, an AI colleague made on it here.
 export function realMatterHistory() {
 	const viewer = members.find(member => member.id == viewerId) ?? null;
 	const byActor = actorId => {
@@ -2788,8 +2886,8 @@ export function realLetter(letterId) {
 export function realDocuments() {
 	const documents = (snapshot.documents ?? []).filter(document => (document.deletedAt ?? "") == "");
 	// When two computers sharing the Matter's folder both recorded the same new
-	// file (before D-109 gave a file the same id on both), the record the
-	// folder no longer answers to is left out: the file is one document.
+	// file, the record the folder no longer answers to is left out: the file is
+	// one document.
 	const available = new Set(documents.filter(document => document.processingState != "unavailable").map(document => document.relativePath));
 	return documents.filter(document => document.processingState != "unavailable" || available.has(document.relativePath) == false);
 }
@@ -2807,7 +2905,23 @@ export async function addDocumentFromComputer() {
 // threads, by where they are on this computer (the window takes a drop
 // itself: Platform/FileDrop): copied into its folder `folder` ("" for the
 // Matter's own), a name already there keeping both, a folder whole. The
-// documents they became, and what could not be added, in words.
+// documents they became, and what could not be added, in words. Files pasted
+// into a Matter's thread - a picture, or a file copied in Finder or Explorer
+// - put into the open Matter as a dropped file is, and read back as its
+// documents.
+export async function addPastedToMatter(files) {
+	const matterId = snapshot.matterId;
+	if (matterId == null) throw new Error("This Matter is not open on this computer.");
+	const tooLarge = files.filter(file => file.size > MOST_ATTACHMENT_BYTES);
+	if (tooLarge.length > 0) {
+		throw new Error(`${tooLarge.map(file => file.name).join(", ")} ${tooLarge.length == 1 ? "is" : "are"} larger than 48 MB, more than the firm's computers carry in one message.`);
+	}
+	const before = new Set(realDocuments().map(document => document.id));
+	for (const file of files) await nativeApp().fileIntoMatter(matterId, file.name, await base64Of(file));
+	await reload();
+	return realDocuments().filter(document => before.has(document.id) == false);
+}
+
 export async function addDroppedToMatter(folder, dropped) {
 	const matterId = snapshot.matterId;
 	if (matterId == null) throw new Error("This Matter is not open on this computer.");
@@ -2830,10 +2944,10 @@ export async function addDroppedToMatter(folder, dropped) {
 // A document the lawyer takes out of the Matter, one added by mistake among
 // them. A file still in the Matter's folder goes to this computer's Recycle
 // Bin, and its deletion goes to the firm's other computers that hold the
-// Matter, sealed as every change is (D-123); the version the window read is the
-// one deleted, so a file changed on another computer meanwhile is not lost
-// unseen. Then the Matter forgets the document, so it is not left listed as
-// missing: the lawyer took it out on purpose.
+// Matter, sealed as every change is; the version the window read is the one
+// deleted, so a file changed on another computer meanwhile is not lost unseen.
+// Then the Matter forgets the document, so it is not left listed as missing:
+// the lawyer took it out on purpose.
 export async function removeDocumentFromMatter(documentId) {
 	const document = realDocument(documentId);
 	if (document == null) return;
@@ -2848,8 +2962,7 @@ export async function removeDocumentFromMatter(documentId) {
 // that do not take it up: the computer that signed it is not one the person
 // here confirmed as its author's, so it is shown and never acted on
 // (Chat/MessageProvenance). Until then the window says so where the message
-// stands (2026-10-29: Priya asked Unicorn, which runs on Marcus's computer,
-// and nothing happened, with nothing said to either of them).
+// stands.
 export function heldColleagues(turn, agents) {
 	if (turn.messageProvenance != "unconfirmed") return [];
 	const named = new Set(turn.mentions ?? []);
@@ -2857,7 +2970,7 @@ export function heldColleagues(turn, agents) {
 }
 
 // The computers of a member of the open Matter that the person here has not
-// confirmed as theirs, each with the code its owner reads out (D-123).
+// confirmed as theirs, each with the code its owner reads out.
 export async function unconfirmedComputersOf(actorId) {
 	if (snapshot.matterId == null) return [];
 	const activity = await nativeApp().getSharedActivity(snapshot.matterId);
@@ -2884,17 +2997,17 @@ export function removalSteps(document) {
 	return ["forget"];
 }
 
-// Where a document a colleague wrote stands for the member (D-143): it asks
-// them until one accepts or returns it, as a revised draft does.
+// Where a document a colleague wrote stands for the member: it asks them
+// until one accepts or returns it, as a revised draft does.
 export function writtenStatus(step) {
 	if (step?.state == "accepted") return { kind: "settled", words: "Accepted" };
 	if (step?.state == "returned") return { kind: "underway", words: step.stateWords || "Returned with comments" };
 	return { kind: "yours", words: "Written for your review" };
 }
 
-// The member's decision on a document a colleague wrote (D-143), as on a
-// revised draft: accepted as it is now, or returned with what should change,
-// which the colleague takes up as its next request.
+// The member's decision on a document a colleague wrote, as on a revised
+// draft: accepted as it is now, or returned with what should change, which
+// the colleague takes up as its next request.
 export async function decideWritten(assignmentId, step, decision, comment) {
 	const assignment = await nativeApp().decideWrittenDocument(snapshot.matterId, assignmentId, step, decision, comment ?? "");
 	scheduleReload();
@@ -2907,9 +3020,9 @@ export async function decideReview(reviewId, version, decision, comment) {
 	return review;
 }
 
-// The version waiting, made again without the changes the lawyer leaves out
-// (D-119): a workbook's cells, a deck's passages, a PDF's marks. No model is
-// asked; the next version is handed in under the lawyer's own word.
+// The version waiting, made again without the changes the lawyer leaves out:
+// a workbook's cells, a deck's passages, a PDF's marks. No model is asked;
+// the next version is handed in under the lawyer's own word.
 export async function leaveOutChanges(reviewId, version, changeIds) {
 	const review = await nativeApp().leaveOutDocumentReviewChanges(snapshot.matterId, reviewId, version, changeIds);
 	scheduleReload();
@@ -2926,10 +3039,9 @@ export function saveReviewCopy(reviewId, version) {
 	return nativeApp().saveDocumentReviewCopy(snapshot.matterId, reviewId, version);
 }
 
-// "Approved by Evelyn Hart on Oct 25 at 14:02, as it was handed in" (D-174).
-// Whether a work product's status is its acceptance: "Accepted", or "Accepted
-// by Marcus Bell on Oct 29, 2026 at 7:58 AM, as it was handed in" (2026-10-29:
-// a version Marcus accepted was listed as Replaced).
+// "Approved by Evelyn Hart on Oct 25 at 14:02, as it was handed in". Whether a
+// work product's status is its acceptance: "Accepted", or "Accepted by Marcus
+// Bell on Oct 29, 2026 at 7:58 AM, as it was handed in".
 export function isAcceptedWork(status) {
 	return status?.kind == "settled" && /^(Version \d+ · )?(Accepted|Approved)/.test(status.words ?? "");
 }
@@ -3014,24 +3126,38 @@ export function isHostAway(agent, connected, people) {
 // runs it knows; any other knows it from the colleague's card, and from the
 // Matter's own record of its reviews, both in the shared folder.
 function isAtWork(agent) {
-	// Writing an answer is no work to act out: the conversation says "typing"
-	// (the owner, 2026-10-26: "no work animation when she just answers my DM").
+	// Writing an answer is no work to act out: the conversation says "typing".
 	if ((agent.answeringChatId ?? "") != "") return false;
-	// The computer that runs it says what its face acts out (D-013): at work
-	// while it works or thinks, not while its run begins, ends or waits.
+	// The computer that runs it says what its face acts out: at work while
+	// it works or thinks, not while its run begins, ends or waits.
 	if (agent.isHere == true && (agent.isRunning == true || agent.state == "running"))
 		return agent.presence == "work" || agent.presence == "think";
 	// One another computer runs is at work only while that computer is there: a
-	// card, or a review, left running as it went away is no work now
-	// (2026-10-31: Unicorn read "Working" with Marcus's computer off).
+	// card, or a review, left running as it went away is no work now.
 	if (isHostAway(agent, connectedByMatter.get(snapshot.matterId) ?? null, snapshot.people)) return false;
 	if (agent.isHere != true && agent.state == "running") return true;
 	return (snapshot.reviews ?? []).some(review => isReviewOf(review, agent)
 		&& isUnderway(review.versions?.at(-1)));
 }
 
-// The colleagues writing an answer in a chat now (their run's stage, D-129),
-// as members: the thread says who is typing, as a messenger does.
+// The colleagues writing an answer in a chat now, as members: the thread
+// says who is typing, as a messenger does. The colleagues at work on what a
+// conversation gave them: writing their answer there, working on work given
+// there, or holding it in line. While any is, the conversation's reply box
+// offers their Stop.
+export function colleaguesWorkingIn(chatId) {
+	if (chatId == null || chatId == "") return [];
+	return colleagues().filter(agent => (agent.answeringChatId ?? "") == chatId || (agent.workChatIds ?? []).includes(chatId));
+}
+
+// A member's Stop in a conversation: every colleague on this computer ends
+// the work it was given there and waits for what it is given next.
+export async function stopColleaguesIn(chatId) {
+	const api = nativeApp();
+	if (typeof api?.stopColleagues != "function") throw new Error("Stopping isn't available in this window.");
+	return api.stopColleagues(chatId);
+}
+
 export function colleaguesTypingIn(chatId) {
 	if (chatId == null || chatId == "") return [];
 	return colleagues()
@@ -3126,6 +3252,5 @@ export function realColleagueEvents() {
 
 // This module keeps the window's state. While the window runs it is never
 // swapped for a fresh copy, which would start empty: a change to it reloads
-// the window (2026-10-26: a hot swap left the Mac's window with no Matter, so
-// it read nothing and every post was refused).
+// the window.
 if (import.meta.hot) import.meta.hot.decline();

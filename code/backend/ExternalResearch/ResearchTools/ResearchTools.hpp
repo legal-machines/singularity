@@ -2,6 +2,8 @@
 
 #include "ExternalResearch/Types/ExternalResearchTypes.hpp"
 #include "PapinianGuard/Policy/Policy.hpp"
+#include "Platform/AppSettings/AppSettings.hpp"
+#include "Platform/HttpClient/HttpsHost.hpp"
 #include "Provider/ProviderRegistry/ProviderRegistry.hpp"
 #include "Tool/ToolBroker/ToolBroker.hpp"
 
@@ -25,6 +27,27 @@
 namespace singularity::research {
 
 void ensure_production_research_tools();
+
+// Which backend a research step goes through, from this computer's settings
+// alone - never a credential: OpenRouter's web search where it is asked for;
+// otherwise OpenAI's hosted search where OpenAI is connected, and
+// OpenRouter's where only an OpenRouter connection is, so a firm that
+// connects OpenRouter alone still searches the web. "openrouter" or
+// "openai_hosted". Chosen before a step, never a failover after one: the
+// step's backend is fixed and recorded as it is.
+inline std::string research_backend_for(const std::optional<std::string> &asked, const platform::LocalNodeSetup &setup) {
+	if (asked.value_or(setup.research_backend) == "openrouter") return "openrouter";
+	const auto connected = [&](const std::string &id) {
+		return std::find_if(setup.connected_providers.begin(), setup.connected_providers.end(),
+			[&](const platform::ConnectedProvider &entry) { return entry.id == id; });
+	};
+	if (connected("openai") != setup.connected_providers.end()) return "openai_hosted";
+	const auto compatible = connected("openai_compatible");
+	if (compatible != setup.connected_providers.end()
+	    && platform::https_host(compatible->base_url.value_or("")) == "openrouter.ai")
+		return "openrouter";
+	return "openai_hosted";
+}
 
 // The production research backend's reason it cannot run for `context` (see
 // routing::research_unavailable_reason()), or std::nullopt.
@@ -514,7 +537,8 @@ inline const nlohmann::json &web_search_model_tool_parameters_schema() {
 			}},
 			{"jurisdiction", nlohmann::json{
 				{"type", nlohmann::json::array({"string", "null"})},
-				{"description", "Jurisdiction when relevant, otherwise null."},
+				{"description", "The country or legal system whose law or register the search is about - US for the USPTO, "
+					"Justia or CourtListener, EU for the EUIPO - or null. A website or a database is never a jurisdiction."},
 			}},
 			{"freshnessRequired", nlohmann::json{
 				{"type", nlohmann::json::array({"boolean", "null"})},

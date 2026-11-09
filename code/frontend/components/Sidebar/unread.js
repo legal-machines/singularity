@@ -4,11 +4,11 @@ import { conversationsFor } from "../../pages/Messages/conversations.js";
 import { isChatUnread, isThreadUnread, lastEvent } from "../../pages/threadState.js";
 import { findMember, firstName } from "../../pages/words.js";
 
-// What waits unread for the member, as the sidebar counts it (D-202; the
-// owner, 2026-11-02): the threads of every Matter with another's message the
-// member has not seen - on the Inbox, and on each Matter its own - and the
-// direct messages not yet seen, on Messages; and whether any of those threads
-// names the member with @, which is marked apart from the count.
+// What waits unread for the member, as the sidebar counts it: the threads of
+// every Matter with another's message the member has not seen - on the Inbox,
+// and on each Matter its own - and the direct messages not yet seen, on
+// Messages; and whether any of those threads names the member with @, which
+// is marked apart from the count.
 export function unreadCounts(state) {
 	const threads = hasNative() ? realUnreadThreads() : sampleUnreadThreads(state);
 	const matters = new Map();

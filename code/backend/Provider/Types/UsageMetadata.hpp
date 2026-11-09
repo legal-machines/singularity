@@ -32,8 +32,8 @@ struct UsageMetadata {
   std::optional<std::string> cost_classification;
   std::optional<std::string> cost_methodology;
   // The provider that served the request, as a gateway names it ("Amazon
-  // Bedrock", "Anthropic"): where a call routed among several went (D-116).
-  // Unset where the response named none.
+  // Bedrock", "Anthropic"): where a call routed among several went. Unset
+  // where the response named none.
   std::optional<std::string> served_by;
 };
 
@@ -44,7 +44,6 @@ struct UsageMetadata {
 // does not know:
 //   - token counts add;
 //   - a call that produced real usage but no price makes the total PARTIAL, so
-//     it is never reported as the actual cost of the operation (USE-6);
 //   - two currencies are never summed and no conversion is invented - the
 //     amount is dropped and the total is partial;
 //   - differing classifications (actual + estimated) are likewise partial.

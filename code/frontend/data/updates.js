@@ -4,19 +4,17 @@ import { endNotice, notice, toast } from "../components/Toast/toast.js";
 import { hasNative, nativeApp } from "./native.js";
 import { sizeWords } from "./transfers.js";
 
-// Singularity's new versions come from Legal Machines' own site (the owner,
-// 2026-11-02, going public: "do all of this"). The backend asks the site for
-// the latest version for this computer's system and processor and keeps it
-// only when Legal Machines' release key signed it (Node/AppUpdate). From 0.1.1
-// on Singularity installs it itself (D-261; the owner, 2026-11-05: "make it so
-// that from version 0.1.1 everything is automatic"): the window asks a little
-// after Singularity opens and every few hours, and a version found downloads
-// on its own, quietly; once it is readied, it is said once, calmly, with
-// Restart now, and it installs as Singularity ends - then, or the next time
-// Singularity closes. Where it cannot install itself, it says why, with the
-// way to the installer. Settings shows it at all times. A check or a download
-// of its own that did not succeed is never an alarm: it says nothing, and
-// Settings keeps the way to try again.
+// Singularity's new versions come from Legal Machines' own site. The backend
+// asks the site for the latest version for this computer's system and
+// processor and keeps it only when Legal Machines' release key signed it
+// (Node/AppUpdate). From 0.1.1 on Singularity installs it itself: the window
+// asks a little after Singularity opens and every few hours, and a version
+// found downloads on its own, quietly; once it is readied, it is said once,
+// calmly, with Restart now, and it installs as Singularity ends - then, or the
+// next time Singularity closes. Where it cannot install itself, it says why,
+// with the way to the installer. Settings shows it at all times. A check or a
+// download of its own that did not succeed is never an alarm: it says nothing,
+// and Settings keeps the way to try again.
 
 const FIRST_CHECK_MILLISECONDS = 20 * 1000;
 const EVERY_MILLISECONDS = 6 * 60 * 60 * 1000;
@@ -153,12 +151,10 @@ function safeStorage() {
 }
 
 // The first start of a newer version says so once, from the window's top, with
-// the way to what is new in it (the owner, 2026-11-05: "after an update, inside
-// Singularity itself, at the top, a notice: the app has been updated to version
-// 0.1.1, see the release notes, with a link to the site"). This computer keeps
-// the version it ran last; onboarding keeps the version it set the computer up
-// with, so a fresh install is never told it was updated, and a computer that ran
-// a version from before this notice, which kept nothing, is told once.
+// the way to what is new in it. This computer keeps the version it ran last;
+// onboarding keeps the version it set the computer up with, so a fresh install
+// is never told it was updated, and a computer that ran a version from before
+// this notice, which kept nothing, is told once.
 const SEEN_KEY = "singularity.versionSeen";
 const RELEASE_NOTES = "https://legalmachines.org/singularity/releases/";
 
@@ -230,11 +226,11 @@ function openReleaseNotes(address) {
 }
 
 // Downloads the version found. Asked for - a build that does not install
-// itself - it is a notice that fills as it comes (D-207's notice); of its own
-// (`isQuiet`) it says nothing while it comes, nor if it does not finish:
-// Settings shows its progress and the way to try again. Either way it ends
-// with what comes next: Restart now once it is readied, or why it is
-// installed by hand, with the way to the installer.
+// itself - it is a notice that fills as it comes; of its own (`isQuiet`) it
+// says nothing while it comes, nor if it does not finish: Settings shows its
+// progress and the way to try again. Either way it ends with what comes next:
+// Restart now once it is readied, or why it is installed by hand, with the
+// way to the installer.
 export async function downloadUpdate({ isQuiet = false } = {}) {
 	const release = current.release;
 	if (isDownloading || release == null || hasUpdates() == false) return;

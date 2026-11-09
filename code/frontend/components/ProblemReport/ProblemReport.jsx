@@ -15,10 +15,10 @@ const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MOST_PICTURES = 3;
 const MOST_PICTURE_BYTES = 10 * 1024 * 1024;
 
-// The bug icon (the owner, 2026-11-05; D-257): a problem told straight to
-// Legal Machines' board, with its screenshots and the build's details. It
-// shows in a Debug build, Legal Machines' own, and for a design partner's
-// seat in any build; nowhere else.
+// The bug icon: a problem told straight to Legal Machines' board, with
+// its screenshots and the build's details. It shows in a Debug build,
+// Legal Machines' own, and for a design partner's seat in any build;
+// nowhere else.
 export function ProblemButton() {
 	const [isOpen, setOpen] = useState(false);
 	const canReport = useCanReportProblems();
@@ -74,7 +74,7 @@ function ProblemDialog({ onClose }) {
 	}
 
 	// A design partner's seat accepts the Diagnostics Consent before its first
-	// report, once (D-257); Legal Machines' own Debug-build reports ask none.
+	// report, once; Legal Machines' own Debug-build reports ask none.
 	const facts = useSeatFacts();
 	const needsConsent = facts.designPartner && facts.diagnosticsConsent != DIAGNOSTICS_CONSENT_VERSION;
 	const [consents, setConsents] = useState(false);
@@ -103,7 +103,7 @@ function ProblemDialog({ onClose }) {
 	}
 
 	// The consent Send waits on, and what went wrong with a send, over the
-	// actions, never under the form's scroll (the owner, 2026-11-05).
+	// actions, never under the form's scroll.
 	const footnote = needsConsent || error != null ? (
 		<>
 			{needsConsent ? (
@@ -126,6 +126,7 @@ function ProblemDialog({ onClose }) {
 	return (
 		<Dialog
 			layout="spacious"
+			fits
 			title="Report a problem"
 			description="It goes straight to Legal Machines' board for this version, with the details of this build and this window."
 			onClose={onClose}
@@ -162,7 +163,7 @@ function ProblemDialog({ onClose }) {
 					</Select>
 				</Field>
 				<Field label="What you did, and what you expected" optional>
-					<TextArea value={description} minRows={3} maxRows={8} onChange={event => setDescription(event.target.value)} />
+					<TextArea value={description} minRows={3} maxRows={4} onChange={event => setDescription(event.target.value)} />
 				</Field>
 				<div className={styles.pictures}>
 					{pictures.map((picture, index) => (
@@ -186,10 +187,6 @@ function ProblemDialog({ onClose }) {
 						}} />
 				</div>
 				<p className={styles.note}>Paste or drop a screenshot here too. Check it shows nothing of a client's you would not send.</p>
-				<details className={styles.details}>
-					<summary>What else goes with it</summary>
-					<pre>{technical || "Reading this build's details..."}</pre>
-				</details>
 			</div>
 		</Dialog>
 	);

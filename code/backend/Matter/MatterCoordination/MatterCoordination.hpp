@@ -17,9 +17,8 @@ namespace singularity::matter::coordination {
 
 /*
  * A firm's shared Matters carried between its computers directly, sealed end to
- * end (D-123), by whatever carries the firm's envelopes (D-124): the firm's own
- * folder in its storage now, a direct link next. Nothing passes through Legal
- * Machines.
+ * end, by whatever carries the firm's envelopes: the firm's own folder in its
+ * storage now, a direct link next. Nothing passes through Legal Machines.
  *
  * Each computer keeps the Matter in its own folder and sends what changed in it -
  * its documents and the Matter's `.lm` records, never a cache, an index, a lock
@@ -27,18 +26,18 @@ namespace singularity::matter::coordination {
  * the others it writes as the folder's own files, so the rest of Singularity
  * reads them as it reads any change to the folder.
  *
- * The way in, by the lawyers' check (D-095, D-123):
+ * The way in, by the lawyers' check.
  * 1. a computer asks to join (0x03), with its own keys;
  * 2. on a computer that carries the Matter its lawyer compares the asking
- *    computer's code and confirms it; that computer then gives it the Matter's
- *    key (0x02) and the Matter whole;
+ * computer's code and confirms it; that computer then gives it the Matter's
+ * key (0x02) and the Matter whole;
  * 3. on the joining computer its lawyer compares the giving computer's code and
- *    accepts the key; until then nothing is taken.
+ * accepts the key; until then nothing is taken.
  *
- * What this computer knows of it - the firm's folder, the Matters it carries,
- * how far each has come, who asked and who offered - is this computer's own
- * record (`Coordination.json`), never a Matter's (STORE-3). Keys are in the
- * credential store: this computer's own and each Matter's.
+ * What this computer knows of it - the firm's folder, the Matters it carries, how
+ * far each has come, who asked and who offered - is this computer's own record
+ * (`Coordination.json`), never a Matter's. Keys are in the credential store: this
+ * computer's own and each Matter's.
  */
 
 // A computer of a Matter's member that the person here confirmed as that
@@ -46,27 +45,32 @@ namespace singularity::matter::coordination {
 struct ConfirmedComputer {
 	std::string actor_id;
 	std::string device_key;
-	// The organisation the member's record in the Matter names (D-203): the
-	// firm's record goes only to the computers of this computer's own.
-	std::string organisation = {};
+	// The organisation the member's record in the Matter names, by Legal
+	// Machines' id for it: the firm's record goes only to the computers of
+	// this computer's own. Two firms of one name are two firms; a record that
+	// names no id is of no firm.
+	std::string organisation_id = {};
 };
 
-// A computer of one of the firm's seats that a lawyer here checked (D-205;
-// Matter/FirmComputers): its member, its device key and the X25519 key the
-// check confirmed, and where its direct link may be reached. It counts as the
-// firm's, as one confirmed in a shared Matter does.
+// A computer of one of the firm's seats that a lawyer here checked: its
+// member, its device key and the X25519 key the check confirmed, and where
+// its direct link may be reached. It counts as the firm's, as one confirmed
+// in a shared Matter does.
 struct CheckedFirmComputer {
 	std::string actor_id;
 	std::string device_id;
 	std::string device_key;
 	std::string coordination_key;
 	std::vector<std::string> candidates;
+	// The organisation it was checked in, by Legal Machines' id: it counts as
+	// the firm's only while this computer is signed in to that one.
+	std::string organisation_id = {};
 };
 
-// One of the firm's model accounts (D-210): the account as this computer's
-// settings keep it (Platform/AppSettings connected_provider_json, no key in
-// it) and its key from the credential store. The engine never writes either
-// down: it seals them to a computer a lawyer here checked, or hands what it
+// One of the firm's model accounts: the account as this computer's settings
+// keep it (Platform/AppSettings connected_provider_json, no key in it) and
+// its key from the credential store. The engine never writes either down:
+// it seals them to a computer a lawyer here checked, or hands what it
 // opened to keep_account.
 struct FirmAccount {
 	std::string provider_id;
@@ -75,9 +79,8 @@ struct FirmAccount {
 };
 
 // What an AI colleague's card in a Matter says of the computer that runs it,
-// as that computer signed it (Agent/AgentCard, D-128): checked here against
-// the id's binding to its key and against the device key a lawyer here
-// confirmed for that computer.
+// as that computer signed it: checked here against the id's binding to its
+// key and against the device key a lawyer here confirmed for that computer.
 struct AgentHostClaim {
 	std::string host_device_id;
 	std::string host_device_key;
@@ -87,8 +90,8 @@ struct AgentHostClaim {
 	std::string signature;
 };
 
-// A Matter on its way between this computer and another (D-207): how much of
-// it there is and how much has come - to this computer from that one, or to
+// A Matter on its way between this computer and another: how much of it
+// there is and how much has come - to this computer from that one, or to
 // that one from this. Sent, its files are the envelopes that carry it.
 struct Transfer {
 	std::string device_id;
@@ -120,7 +123,7 @@ struct Environment {
 	std::function<void(const std::string &name, const std::string &value)> keep_secret;
 	// What carries the firm's envelopes, given the firm's folder this computer
 	// was set to (empty: none set) and this computer's own keys, which its
-	// direct link speaks with (D-124).
+	// direct link speaks with.
 	std::function<std::vector<std::shared_ptr<transport::Transport>>(const std::filesystem::path &firm_folder,
 		const seal::ComputerKeys &keys)> transports;
 	std::function<std::string()> now;
@@ -128,8 +131,8 @@ struct Environment {
 	// starts from. None: the system's.
 	std::function<std::int64_t()> clock_micros;
 	// Where this computer's direct link may be reached ("udp:192.168.1.20:47380"),
-	// told the Matter's other computers in its address card (0x04, D-124); none,
-	// and no card is sent.
+	// told the Matter's other computers in its address card; none, and no card is
+	// sent.
 	std::function<std::vector<std::string>()> candidates;
 	// What a checked card of another of a Matter's computers says: where its
 	// direct link may be reached, and its X25519 key.
@@ -145,23 +148,23 @@ struct Environment {
 	// The person here compared the code of the computer with `device_key` when
 	// they took the Matter in `matter_folder` (accept_key). Once one member's
 	// record there states that key, it counts as that member's computer
-	// (Tool/DeviceTrust), as comparing codes under a message would (D-142);
-	// a computer the person here refused stays refused. True once it counts.
+	// (Tool/DeviceTrust), as comparing codes under a message would; a computer
+	// the person here refused stays refused. True once it counts.
 	std::function<bool(const std::filesystem::path &matter_folder, const std::string &device_key)> compared_when_taken;
 	// The member whose computer `device_id` is, among the members of the Matter
 	// in `matter_folder`, when the person here confirmed it as theirs
 	// (Tool/DeviceTrust) and has not refused it: what a personal channel's key
-	// goes by (D-128). Nothing for any other computer.
+	// goes by. Nothing for any other computer.
 	std::function<std::optional<ConfirmedComputer>(const std::filesystem::path &matter_folder, const std::string &device_id)>
 		confirmed_computer;
-	// The firm's computers a lawyer here checked (D-205): colleagues of this
+	// The firm's computers a lawyer here checked: colleagues of this
 	// computer's own firm, for its record and its members' personal channels.
 	std::function<std::vector<CheckedFirmComputer>()> checked_firm_computers;
 	// The firm's model accounts connected on this computer, which it gives,
-	// sealed, to each of the firm's computers a lawyer here checked (D-210);
-	// and an account one of those computers gave, kept here - its entry in
-	// this computer's settings, its key in its credential store - or taken
-	// away when `removed`.
+	// sealed, to each of the firm's computers a lawyer here checked; and an
+	// account one of those computers gave, kept here - its entry in this
+	// computer's settings, its key in its credential store - or taken away
+	// when `removed`.
 	std::function<std::vector<FirmAccount>()> accounts_here;
 	std::function<void(const FirmAccount &account, bool removed)> keep_account;
 	// How often the accounts here are looked at, besides at once for a computer
@@ -174,27 +177,32 @@ struct Environment {
 	// The AI colleagues this computer runs (Agent/AgentStore), by agent id: it
 	// carries their personal channels as theirs.
 	std::function<std::vector<std::string>()> hosted_agents;
-	// A Matter whose invitation was given lately (D-127): until `until_seconds`
-	// (since 1970) a computer no card names may call this one about it, only
-	// to ask to join.
+	// A Matter whose invitation was given lately: until `until_seconds` (since
+	// 1970) a computer no card names may call this one about it, only to ask to
+	// join.
 	std::function<void(const std::string &matter_id, std::int64_t until_seconds)> open_lobby;
 	// A computer whose request to join the lawyer here refused, by its X25519
 	// key (key_text): its direct link speaks with it no more.
 	std::function<void(const std::string &coordination_key)> refused;
 	// The computers of a Matter the direct link holds a live encrypted session
-	// with now, by device (D-137). None where it is not installed.
+	// with now, by device. None where it is not installed.
 	std::function<std::vector<std::string>(const std::string &matter_id)> connected;
-	// The organisation this computer's member is signed in to: whose firm's
-	// record it carries (D-203). None or empty: this computer's own firm.
+	// The organisation this computer's member is signed in to, by Legal
+	// Machines' id for it: whose firm's record it carries, and the one firm
+	// its computers are of. The firm's record and its key go only to a
+	// computer of the same id, and are taken only from one; never by a name,
+	// which two firms may share. None or empty: no firm, and the firm's record
+	// goes nowhere.
 	std::function<std::string()> organisation_id;
-	// Its name, as the members' records in a Matter state theirs: the firm's
-	// record and its key go only to a computer whose member's record names the
-	// same, and are taken only from one (D-203).
-	std::function<std::string()> organisation_name;
+	// Whether the Matter in `folder` is sealed for another organisation than
+	// the one this computer's member is signed in to: such a Matter is not
+	// carried, to anyone or from anyone, while it is. None: every Matter is
+	// carried.
+	std::function<bool(const std::filesystem::path &folder, const std::string &matter_id)> is_other_organisations;
 	// What the direct link carries of a Matter to each other computer and that
-	// computer confirmed (D-207). None where it is not installed.
+	// computer confirmed. None where it is not installed.
 	std::function<std::vector<Transfer>(const std::string &matter_id)> sending;
-	// The sealed bytes come for a Matter that wait for its key here (D-207).
+	// The sealed bytes come for a Matter that wait for its key here.
 	std::function<std::uint64_t(const std::string &matter_id)> sealed_here;
 };
 void install_environment(Environment environment);
@@ -203,6 +211,11 @@ void install_environment(Environment environment);
 // the credential store, and the firm's folder as a transport
 // (MatterCoordinationProduction.cpp).
 Environment production_environment();
+// The organisation this computer's member is signed in to, by Legal Machines'
+// id, as the application's settings say it: read at most once a minute; empty
+// when none (MatterCoordinationProduction.cpp). Everything of a firm here is
+// told apart by it, never by the firm's name.
+std::string signed_in_organisation_id();
 
 // A computer that asks to join a Matter this computer carries.
 struct AskingComputer {
@@ -220,8 +233,8 @@ struct OfferingComputer {
 	std::string device_id;
 	std::string device_key;
 	std::string code;
-	// The Matter's size as the giving computer said it (D-207): what is coming
-	// before any of it opens. Zero when not said.
+	// The Matter's size as the giving computer said it: what is coming before
+	// any of it opens. Zero when not said.
 	std::uint64_t files = 0;
 	std::uint64_t bytes = 0;
 };
@@ -251,22 +264,21 @@ struct LinkedMatter {
 	std::map<std::string, std::string> given;
 	std::string last_sync_at;
 	std::string last_error;
-	// For a personal channel (D-128): the other member's actor id. Empty for a
-	// Matter.
+	// For a personal channel: the other member's actor id. Empty for a Matter.
 	std::string other_actor_id;
-	// The members this computer gave the Matter to by choosing them (D-205), by
-	// actor, with when, in seconds since the epoch.
+	// The members this computer gave the Matter to by choosing them, by actor,
+	// with when, in seconds since the epoch.
 	std::map<std::string, std::int64_t> offered_to;
-	// Whether the Matter travels, as the lawyer is told it (D-137), for this
-	// run of the program only and never written to the record: the other
-	// computers its direct link holds a live encrypted session with, by device,
-	// and when this computer last took a sealed envelope that opened and held
-	// from each other computer.
+	// Whether the Matter travels, as the lawyer is told it, for this run of the
+	// program only and never written to the record: the other computers its
+	// direct link holds a live encrypted session with, by device, and when this
+	// computer last took a sealed envelope that opened and held from each other
+	// computer.
 	std::vector<std::string> connected;
 	std::map<std::string, std::string> heard;
 	// What of the Matter is on its way, for this run only and never written to
-	// the record (D-207): coming here from each computer that said what it
-	// holds or offered it, and going to each this computer sends it.
+	// the record: coming here from each computer that said what it holds or
+	// offered it, and going to each this computer sends it.
 	std::vector<Transfer> receiving;
 	std::vector<Transfer> sending;
 };
@@ -279,10 +291,10 @@ struct CoordinationStatus {
 	std::vector<LinkedMatter> matters;
 	// The personal channels of this computer's member, never among its Matters.
 	std::vector<LinkedMatter> personal;
-	// The firm's own record (D-203), never among the Matters or the member's
-	// conversations: whether it travels, as a Matter's view says it (D-137,
-	// D-207). A computer that waits for its firm tells by it a record heard
-	// from another of the firm's computers from one that has not come yet.
+	// The firm's own record, never among the Matters or the member's
+	// conversations: whether it travels, as a Matter's view says it. A
+	// computer that waits for its firm tells by it a record heard from
+	// another of the firm's computers from one that has not come yet.
 	// Nothing while this computer holds no record of its firm.
 	std::optional<LinkedMatter> firm;
 };
@@ -296,9 +308,9 @@ CoordinationStatus use_firm_folder(const std::filesystem::path &folder);
 // Where the coordination stands.
 CoordinationStatus status();
 
-// This computer stops carrying a Matter (D-214): it sends and takes nothing of
-// it any more. Its folder stays as it is, and the Matter's other computers
-// keep it. A personal channel or a Matter not carried here is left as it is.
+// This computer stops carrying a Matter: it sends and takes nothing of it any
+// more. Its folder stays as it is, and the Matter's other computers keep it. A
+// personal channel or a Matter not carried here is left as it is.
 CoordinationStatus leave_matter(const std::string &matter_id);
 
 // Carries a Matter open here to the firm's other computers: makes its key when
@@ -311,11 +323,11 @@ CoordinationStatus share_matter(const std::string &matter_id, const std::string 
 CoordinationStatus join_matter(const std::string &matter_id, const std::string &name, const std::filesystem::path &folder);
 
 // A personal channel: the private conversation of this computer's member and
-// one other member (D-042, ORG-15, D-128). It is kept in this computer's own
-// data beside its records, never in a Matter's folder or the firm's storage,
-// and its key goes only to the two members' computers a lawyer here confirmed
-// in a Matter they share, with no invitation. Its id is the same on every
-// computer of the two, so either may make it and both find it.
+// one other member. It is kept in this computer's own data beside its
+// records, never in a Matter's folder or the firm's storage, and its key goes
+// only to the two members' computers a lawyer here confirmed in a Matter they
+// share, with no invitation. Its id is the same on every computer of the two,
+// so either may make it and both find it.
 struct PersonalChannel {
 	std::string id;
 	std::filesystem::path folder;
@@ -334,15 +346,15 @@ PersonalChannel personal_channel(const std::string &other_actor_id);
 // without making it: its key and files come once a computer of the two that
 // carries it gives them. For a member whose colleagues' computers are not
 // known from a shared Matter - an AI colleague, whose channel goes to the
-// member's own computers (D-128) - the window says which channels to listen
-// for. Throws as personal_channel does.
+// member's own computers - the window says which channels to listen for.
+// Throws as personal_channel does.
 void listen_for_personal_channel(const std::string &other_actor_id);
 
-// The firm's own record (D-203): what every one of the firm's computers holds
-// alike - its AI colleagues' settings and instructions, what they remember of
-// the firm and its members, each member's read marks - carried as a personal
-// channel is, sealed, to every computer of the firm a lawyer here confirmed in
-// a Matter they share, with no invitation. It is kept in this computer's own
+// The firm's own record: what every one of the firm's computers holds alike -
+// its AI colleagues' settings and instructions, what they remember of the firm
+// and its members, each member's read marks - carried as a personal channel
+// is, sealed, to every computer of the firm a lawyer here confirmed in a
+// Matter they share, with no invitation. It is kept in this computer's own
 // data, as a `.lm` of its own, never offered or listed as a Matter or as a
 // member's conversation. Its id is the same on every computer of the firm.
 std::string firm_channel_id(const std::string &organisation_id);
@@ -352,18 +364,17 @@ PersonalChannel firm_channel();
 
 // This computer's own X25519 key, its public half as text, and where its
 // direct link may be reached now: what it says of itself to the firm's other
-// computers (D-205).
+// computers.
 std::string own_coordination_key();
 std::vector<std::string> own_candidates();
 
 // What a lawyer gives a colleague to bring a Matter to their computer, as one
 // line of text: the Matter's id and name, and where this computer's direct
-// link may be reached, with its device and its X25519 key ("LMM2:...", D-127),
-// so the colleague's computer calls it with no folder between. "LMM1:..."
-// (id and name alone) is still read. Nothing in it is secret: the key goes
-// only by the lawyers' check, and a changed invitation shows there, in the
-// code of the computer that offers the key. Giving it opens the lobby for an
-// hour.
+// link may be reached, with its device and its X25519 key, so the colleague's
+// computer calls it with no folder between. "LMM1:..." (id and name alone) is
+// still read. Nothing in it is secret: the key goes only by the lawyers'
+// check, and a changed invitation shows there, in the code of the computer
+// that offers the key. Giving it opens the lobby for an hour.
 std::string invitation(const std::string &matter_id);
 struct Invitation {
 	std::string matter_id;
@@ -383,10 +394,9 @@ CoordinationStatus join_matter(const Invitation &invitation, const std::filesyst
 // and its direct link is spoken with no more.
 CoordinationStatus refuse(const std::string &matter_id, const std::string &device_id);
 
-// After the lawyer here confirmed an asking computer (D-095): gives it the
-// Matter's key, sealed to its own key, and sends it the Matter whole. Throws,
-// in words for the lawyer, when no such computer asked or this computer holds
-// no key.
+// After the lawyer here confirmed an asking computer: gives it the Matter's
+// key, sealed to its own key, and sends it the Matter whole. Throws, in words
+// for the lawyer, when no such computer asked or this computer holds no key.
 CoordinationStatus give_key(const std::string &matter_id, const std::string &device_id);
 
 // After the lawyer here compared the code of a computer that offers the
@@ -394,14 +404,14 @@ CoordinationStatus give_key(const std::string &matter_id, const std::string &dev
 // offers none.
 CoordinationStatus accept_key(const std::string &matter_id, const std::string &device_id);
 
-// A Matter given to a member of the firm by choosing them (D-205): their
-// computers that a lawyer here checked (Matter/FirmComputers) - or confirmed
-// in a Matter they share - are told to the direct link as the Matter's and,
-// as they ask to join with the very keys confirmed, given its key, with no
-// code compared: the lawyer chose that member. Returns the Matter's
-// invitation, for the offer that goes to the member in the two members'
-// personal channel. Throws, in words for the lawyer, when this computer does
-// not carry the Matter.
+// A Matter given to a member of the firm by choosing them: their computers
+// that a lawyer here checked (Matter/FirmComputers) - or confirmed in a
+// Matter they share - are told to the direct link as the Matter's and, as
+// they ask to join with the very keys confirmed, given its key, with no code
+// compared: the lawyer chose that member. Returns the Matter's invitation,
+// for the offer that goes to the member in the two members' personal
+// channel. Throws, in words for the lawyer, when this computer does not
+// carry the Matter.
 std::string offer_matter(const std::string &matter_id, const std::string &actor_id);
 
 // What of a Matter travels, as its snapshot would send it.
@@ -411,10 +421,10 @@ struct MatterSize {
 };
 MatterSize matter_size(const std::string &matter_id);
 
-// Takes a Matter a member of the firm offered (D-205), by the invitation the
-// offer carries, from the computer whose device key is `giver_device_key`,
-// one a lawyer here checked: as join_matter, with that computer's key gift
-// taken as it comes, since the lawyer here accepted the offer.
+// Takes a Matter a member of the firm offered, by the invitation the offer
+// carries, from the computer whose device key is `giver_device_key`, one a
+// lawyer here checked: as join_matter, with that computer's key gift taken
+// as it comes, since the lawyer here accepted the offer.
 CoordinationStatus take_offered_matter(const Invitation &invitation, const std::string &giver_device_key,
 		const std::filesystem::path &folder);
 
@@ -426,7 +436,7 @@ void sync_once();
 void start();
 void stop() noexcept;
 // A round at once, not at the next tick: something came for a Matter, or this
-// computer wrote to one (D-127). Wakes merge into one round; never throws.
+// computer wrote to one. Wakes merge into one round; never throws.
 void wake() noexcept;
 
 // Whether a path inside a Matter's folder travels: never a cache, an index or a
@@ -436,8 +446,8 @@ bool travels(const std::string &relative_path);
 
 // Whether this computer carries the Matter `matter_id` in `folder`: its lawyer
 // accepted the Matter's key from a computer they confirmed, or this computer
-// made the key (D-123). Read from the records as last written, apart from any
-// round, so a Matter found on disk never waits behind a sync (D-167).
+// made the key. Read from the records as last written, apart from any round,
+// so a Matter found on disk never waits behind a sync.
 bool carries(const std::string &matter_id, const std::filesystem::path &folder);
 
 // A Matter this computer carries with the firm's other computers, in its folder

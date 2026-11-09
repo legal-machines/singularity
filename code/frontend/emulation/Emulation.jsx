@@ -5,8 +5,8 @@ import { directorOfThisFrame } from "./director.js";
 
 import styles from "./Emulation.module.css";
 
-// The frame's page (D-134): the app itself, driven by its director, and the
-// pointer the director moves.
+// The frame's page: the app itself, driven by its director, and the pointer
+// the director moves.
 export function Emulation() {
 	const director = directorOfThisFrame();
 	const [scene, setScene] = useState(null);

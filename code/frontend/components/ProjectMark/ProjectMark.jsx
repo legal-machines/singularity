@@ -5,18 +5,18 @@ import { projectIcons, projectIconById } from "./projectIcons.js";
 
 import styles from "./ProjectMark.module.css";
 
-// A project's mark (the owner, 2026-10-24): a circle in the project's colour,
-// carrying its initials or an icon. A member's face is a square with G2
-// corners; a project's mark is a circle, so the two never read as one.
+// A project's mark: a circle in the project's colour, carrying its initials
+// or an icon. A member's face is a square with G2 corners; a project's mark
+// is a circle, so the two never read as one.
 export function ProjectMark({ matter, size = 36 }) {
 	const look = useProjectLook(matter);
 	return <Mark name={matter.name} color={look.color} icon={look.icon} size={size} />;
 }
 
-// A project's band (the owner, 2026-10-24): its mark and its name in its
-// colour, where a list of its threads and mail begins. A press opens the
-// project; a band with nothing to open, such as Unsorted, is only words, and
-// `sign` draws its mark's sign in place of initials or an icon.
+// A project's band: its mark and its name in its colour, where a list of its
+// threads and mail begins. A press opens the project; a band with nothing to
+// open, such as Unsorted, is only words, and `sign` draws its mark's sign in
+// place of initials or an icon.
 export function ProjectBand({ matter, onClick, sign }) {
 	const look = useProjectLook(matter);
 	const Tag = onClick != null ? "button" : "span";
@@ -59,10 +59,9 @@ export function MarkPicker({ matter, anchor, onClose }) {
 	);
 }
 
-// A mark chosen before its Matter exists (the owner, 2026-11-02: "when I
-// create a Matter, let me be offered to give it an icon"): the mark as it
-// will be, its initials following the name as it is typed; pressed, the same
-// choices as a Matter's own.
+// A mark chosen before its Matter exists: the mark as it will be, its
+// initials following the name as it is typed; pressed, the same choices as a
+// Matter's own.
 export function MarkChooser({ name, look, onChange }) {
 	const [anchor, setAnchor] = useState(null);
 	return (

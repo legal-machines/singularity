@@ -67,7 +67,7 @@ Json currency_totals_json(const std::vector<usage::CurrencyTotal>& totals) {
   return result;
 }
 
-// One model call's evidence as the bill shows it (D-252): fingerprints, the
+// One model call's evidence as the bill shows it: fingerprints, the
 // provider's own id for the request, and its own tokens and cost.
 Json billed_call_json(const usage::BilledCall& call) {
   const auto text = [](const std::string& value) { return value.empty() ? Json(nullptr) : Json(value); };
@@ -274,7 +274,7 @@ Json breakdowns_json(const usage::UsageSummary& summary) {
           {"consilia", breakdown_json(consilia)},
           {"workflows", breakdown_json(workflows)},
           {"workProducts", breakdown_json(work_products)},
-          // By the AI colleague whose work each request was (D-252).
+          // By the AI colleague whose work each request was.
           {"agents", breakdown_json(colleagues)}};
 }
 
@@ -453,7 +453,7 @@ nlohmann::json finish_work_statement(const PreparedWorkStatement& prepared, cons
               {"requestCount", files.request_count}};
 }
 
-// ---- The provider's confirmation and this computer's work record (D-252) ----------
+// ---- The provider's confirmation and this computer's work record ----------
 
 namespace {
 
@@ -512,7 +512,7 @@ nlohmann::json confirm_costs(const nlohmann::json& params) {
     if (asked.size() >= 200) break;
   }
   // Each OpenRouter connection's address and the firm's key for it, on this
-  // computer only (AG-SEC-1): the key goes to OpenRouter and nowhere else.
+  // computer only: the key goes to OpenRouter and nowhere else.
   std::map<std::string, std::pair<std::string, std::string>> accounts;
   {
     const platform::AppSettings settings = platform::load_app_settings();

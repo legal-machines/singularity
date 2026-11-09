@@ -17,6 +17,7 @@
 #include "Platform/AppSettings/AppSettings.hpp"
 #include "Platform/HttpClient/HttpClient.hpp"
 #include "Platform/SecureRandom/SecureRandom.hpp"
+#include "Routing/ModelCall/CallModel.hpp"
 #include "Routing/RoutingLog/RoutingLog.hpp"
 #include "Tool/OperationAuthority/OperationAuthority.hpp"
 
@@ -54,9 +55,9 @@ std::string clippedWords(const std::string& text, std::size_t most, bool& isComp
 
 routing::ModelTarget modelFor(const std::string& matterId, bool isLocalOnly, const std::string& agentId) {
 
-	// The model chosen on the colleague's page, when one is (D-185): its own
-	// for every piece of its work. A colleague kept to this computer takes only
-	// a model on it.
+	// The model chosen on the colleague's page, when one is: its own for every
+	// piece of its work. A colleague kept to this computer takes only a model
+	// on it.
 	if (agentId.empty() == false) {
 		std::optional<agents::Agent> agent;
 		try {
@@ -80,10 +81,8 @@ routing::ModelTarget modelFor(const std::string& matterId, bool isLocalOnly, con
 		}
 		return routing::ModelTarget{"local", *local};
 	}
-	// Said where it is chosen and by whom (D-184, D-185): a colleague's words
-	// are read on every computer of its Matter (2026-10-31: Unicorn told Dana,
-	// on another computer, to "choose one in AI Setup", a place the window does
-	// not have).
+	// Said where it is chosen and by whom: a colleague's words are read on
+	// every computer of its Matter.
 	if (model.has_value() == false) throw ReviewRefused("No AI model is set for me yet. " + modelChooser(true) + " can choose one on my page.");
 	return *model;
 
@@ -163,12 +162,11 @@ std::string reasonFor(providers::TaskErrorCode code, const std::string& modelId,
 				"then ask again.";
 		// One request turned down is not a reason to change the Matter's model: a
 		// DPA's last turn was, and the thread told the lawyer to choose another
-		// model by its id (2026-10-31).
+		// model by its id.
 		case providers::TaskErrorCode::ProviderRejectedRequest:
-			// An account with no credit left is no refusal of the model's, and no
-			// other model on that account takes the request either: said as the
-			// account and what to do (2026-10-31: Griffin's reply twice read "GPT
-			// 6.1 Sol turned the request down" for an OpenRouter account out of credit).
+			// An account with no credit left is no refusal of the model's, and no other
+			// model on that account takes the request either: said as the account and
+			// what to do.
 			if (const std::optional<std::string> provider = providers::out_of_credit_provider(message); provider.has_value() == true) {
 				const bool isNamed = provider->empty() == false && *provider != "This service" && *provider != "This endpoint";
 				return (isNamed == true ? "The " + *provider + " account" : std::string("The model's account"))
@@ -187,8 +185,13 @@ std::string reasonFor(providers::TaskErrorCode code, const std::string& modelId,
 
 CallDecision decisionOf(const routing::ModelTarget& model, const routing::InferenceRequest& request,
 	const std::optional<providers::TaskErrorCode>& error, const std::string& message) {
+	return decisionOf(model, routing::protection_mode_of(model.provider_id, request), error, message);
+}
+
+CallDecision decisionOf(const routing::ModelTarget& model, const std::string& mode,
+	const std::optional<providers::TaskErrorCode>& error, const std::string& message) {
 	CallDecision made;
-	made.mode = routing::protection_mode_of(model.provider_id, request);
+	made.mode = mode;
 	if (model.provider_id == "local") {
 		made.decision = error.has_value() == true ? "failed" : "local";
 		return made;
@@ -230,6 +233,29 @@ std::string providerWords(const std::string& message) {
 	static const std::regex keyLike("(sk-[A-Za-z0-9_\\-]+|[Bb]earer\\s+\\S+|[A-Za-z0-9_\\-]{24,})");
 	return std::regex_replace(words, keyLike, "[redacted]");
 }
+
+namespace {
+
+// A call stopped before it was sent: its operation ends without an answer.
+// Nothing reached a provider, so the routing log, which keeps attempts against
+// one, has nothing to keep.
+void recordNotSent(const std::string& matterId, const std::string& taskId) {
+
+	try {
+		const persistence::PersistenceLock lock(persistence::persistence_mutex());
+		const std::filesystem::path workspace = node::require_active_workspace_path();
+		std::optional<matters::Matter> matter = matters::load_matter(workspace, matterId);
+		if (matter.has_value() == false) return;
+		for (matters::MatterTask& task : matter->tasks) {
+			if (task.id == taskId) task.status = matters::TaskStatus::Error;
+		}
+		matters::save_matter(workspace, *matter);
+	} catch (...) {
+	}
+
+}
+
+} // namespace
 
 void recordCall(const std::string& matterId, const std::string& taskId, const routing::ModelTarget& model,
 	const routing::InferenceResult* result, const std::optional<providers::TaskErrorCode>& error, long long latency,
@@ -284,6 +310,58 @@ void recordCall(const std::string& matterId, const std::string& taskId, const ro
 			entry.privacy_metadata.decision_reason = decided.reason;
 		}
 		if (error.has_value() == true) entry.error_code = error;
+		routing::append_routing_log_entry(workspace, entry);
+	} catch (...) {
+	}
+
+}
+
+void recordColleagueWebCall(const ColleagueWebCall& call) {
+
+	try {
+		const persistence::PersistenceLock lock(persistence::persistence_mutex());
+		const std::filesystem::path workspace = node::require_active_workspace_path();
+		std::optional<matters::Matter> matter = matters::load_matter(workspace, call.matterId);
+		if (matter.has_value() == false) return;
+		const std::string now = workspaces::current_timestamp();
+		matters::MatterTask operation;
+		operation.id = matters::generate_task_id();
+		operation.created_at = now;
+		operation.operation_type = "document_review";
+		operation.operation_role = "research";
+		operation.work_chat_id = call.chatId;
+		operation.agent_operation_id = call.outboundKey;
+		operation.agent_id = call.agentId;
+		operation.author_actor_id = call.givenByActorId;
+		operation.author_name = call.givenByName;
+		operation.prompt = "Web search";
+		operation.requested_provider_id = call.providerId;
+		operation.requested_model_id = call.modelId;
+		operation.provider_id = call.providerId;
+		operation.model_id = call.modelId;
+		operation.execution_kind = "external";
+		operation.operation_device_id = platform::current_device_id();
+		operation.protected_api_mode = call.protectionMode;
+		if (call.usage.has_value() == true) operation.usage = *call.usage;
+		operation.status = call.isDone == true ? matters::TaskStatus::Success : matters::TaskStatus::Error;
+		matter->tasks.push_back(operation);
+		matters::save_matter(workspace, *matter);
+		routing::RoutingLogEntry entry;
+		entry.matter_id = call.matterId;
+		entry.operation_id = operation.id;
+		entry.task_id = operation.id;
+		entry.time = now;
+		entry.provider_id = call.providerId;
+		entry.model_id = call.modelId;
+		entry.execution_kind = "external";
+		entry.legal_task_preset_id = "colleague-web-search";
+		entry.document_count = 0;
+		entry.success = call.isDone;
+		entry.latency_ms = call.latencyMilliseconds;
+		if (call.usage.has_value() == true) entry.usage = *call.usage;
+		entry.privacy_metadata.mode = call.protectionMode;
+		// The search as it left, noted by the research tools under this key.
+		entry.privacy_metadata.outbound_operation_key = call.outboundKey;
 		routing::append_routing_log_entry(workspace, entry);
 	} catch (...) {
 	}
@@ -346,6 +424,14 @@ DocumentWords wordsOfDocument(const std::filesystem::path& path, std::size_t mos
 ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 
 	ColleagueCallResult outcome;
+	// Work stopped before its call is made sends nothing: no operation is
+	// recorded and no model is asked. A stop while the call is out is seen
+	// below.
+	if (call.cancelled != nullptr && call.cancelled->load() == true) {
+		outcome.isCancelled = true;
+		outcome.failure = "The work was stopped before the model was asked.";
+		return outcome;
+	}
 	try {
 		outcome.model = call.model.has_value() == true && (call.isLocalOnly == false || call.model->provider_id == "local")
 			? *call.model : modelFor(call.matterId, call.isLocalOnly, call.agentId);
@@ -360,8 +446,8 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 	if (call.maximumOutputTokens.has_value() == true) {
 		allowance = allowance.has_value() == true ? std::min(*allowance, *call.maximumOutputTokens) : call.maximumOutputTokens;
 	}
-	// A limit this computer chose on its spend is kept (D-118); with none
-	// chosen, nothing here holds a call back (D-132).
+	// A limit this computer chose on its spend is kept; with none chosen,
+	// nothing here holds a call back.
 	const ReviewBudget budget = isLocal == true ? ReviewBudget() : loadReviewBudget();
 	if (isLocal == false && budget.limitUsd.has_value() == true) {
 		if (allowance.has_value() == false) {
@@ -371,7 +457,7 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 			return outcome;
 		}
 		// What the budget's remainder pays for, where the whole allowance does
-		// not fit (D-118).
+		// not fit.
 		const std::uint64_t affordable = affordableOutputTokens(call.prompt.size(), *allowance,
 			capability.input_price_per_token, capability.output_price_per_token, budget, kLeastStepOutputTokens);
 		if (affordable > 0) allowance = affordable;
@@ -393,7 +479,7 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 	authority.origin = tools::OperationOrigin::Agent;
 	authority.agent_id = call.agentId;
 	authority.actor_id = platform::resolve_actor_identity().actor_id;
-	// What the Matter's own mode lets any member do (D-158).
+	// What the Matter's own mode lets any member do.
 	authority.local_only = call.isLocalOnly;
 	tools::begin_operation_authority(call.matterId, operationId, authority);
 	try {
@@ -406,6 +492,8 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 			operation.created_at = workspaces::current_timestamp();
 			operation.operation_type = "document_review";
 			operation.operation_role = call.operationRole;
+			// Billed under the thread it worked for, never a turn of it.
+			operation.work_chat_id = call.chatId;
 			operation.agent_operation_id = operationId;
 			operation.agent_id = call.agentId;
 			operation.author_actor_id = call.givenByActorId;
@@ -429,52 +517,33 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 		return outcome;
 	}
 
-	routing::InferenceRequest request;
-	request.call_purpose = call.isCorrection == true ? routing::observability::CallPurpose::Correction
+	// The call itself (Routing/ModelCall): sent through the executor, which reads
+	// where this work may run from the operation's record begun above; a Stop on
+	// the colleague, or Singularity closing, abandons it; its failure has one
+	// class. What the call means, and what is kept of it, stay here.
+	inference::ModelCall asked;
+	asked.identity.operation = inference::OperationRef{call.matterId, operationId};
+	asked.purpose = call.isCorrection == true ? routing::observability::CallPurpose::Correction
 		: routing::observability::CallPurpose::SubstantiveGeneration;
-	request.model_target = model;
+	asked.model = model;
 	try {
 		const persistence::PersistenceLock lock(persistence::persistence_mutex());
-		request.workspace_id = platform::load_app_settings().local_node_setup.active_workspace_id;
+		asked.workspace_id = platform::load_app_settings().local_node_setup.active_workspace_id;
 	} catch (const std::exception&) {
 	}
-	request.maximum_output_tokens = allowance;
-	if (isLocal == false) request.project_entity_hints = context_actions::memory_protection_hints(call.matterId);
-	request.prompt = call.prompt;
-	request.pictures = call.pictures;
-	request.prompt_parts = call.promptParts;
-	request.prompt_instruction = call.promptInstruction;
-	request.reasoning_effort = call.reasoningEffort;
-	request.is_conversation = call.isConversation;
-	request.research_mode = research::ResearchMode::Off;
+	asked.maximum_output_tokens = allowance;
+	if (isLocal == false) asked.entity_hints = context_actions::memory_protection_hints(call.matterId);
+	asked.prompt = call.prompt;
+	asked.pictures = call.pictures;
+	asked.prompt_parts = call.promptParts;
+	asked.prompt_instruction = call.promptInstruction;
+	asked.reasoning_effort = call.reasoningEffort;
+	asked.is_conversation = call.isConversation;
 	// A call that answers in words (a colleague's talk) asks for no JSON shape.
-	if (call.schema.is_null() == false) {
-		request.research_final_output_contract = providers::GenerationOutputContract{call.schemaName, call.schema};
-	}
-	request.operation_symbols = call.symbols != nullptr ? call.symbols
-		: std::make_shared<protected_api::papinian::OperationProtectedSymbolTable>();
-	if (request.operation_symbols->operation_id.empty() == true) request.operation_symbols->operation_id = operationId;
+	if (call.schema.is_null() == false) asked.output_contract = providers::GenerationOutputContract{call.schemaName, call.schema};
+	asked.symbols = call.symbols;
+	asked.stopped = call.cancelled;
 
-	// A Stop on the colleague, or Singularity closing, abandons the call.
-	const std::shared_ptr<platform::HttpCancelToken> token = std::make_shared<platform::HttpCancelToken>();
-	const platform::lifecycle::CancelOnClosing closingStops(token);
-	std::atomic<bool> isDone(false);
-	std::thread watcher;
-	if (call.cancelled != nullptr) {
-		watcher = std::thread([&]() {
-			while (isDone.load() == false) {
-				if (call.cancelled->load() == true) {
-					token->cancel();
-					return;
-				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));
-			}
-		});
-	}
-	const auto endWatch = [&]() {
-		isDone.store(true);
-		if (watcher.joinable() == true) watcher.join();
-	};
 	const auto count = [&](const providers::UsageMetadata& usage) {
 		const long long in = usage.input_tokens.value_or(0);
 		const long long out = usage.output_tokens.value_or(0);
@@ -498,70 +567,67 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 		if (isLocal == false) recordReviewSpend(*cost, isEstimated);
 	};
 	const auto started = std::chrono::steady_clock::now();
-	routing::InferenceResult result;
+	inference::CallOutcome answered;
 	try {
-		routing::require_execution_ready(request);
-		const platform::HttpCancelScope scope(token);
 		// What the provider may keep of the conversation's prompt between calls.
 		const providers::PromptCacheScope cached(call.promptCache);
 		// The chat this call works for, whose work log a design partner's
-		// computer keeps it in (D-257).
+		// computer keeps it in.
 		const node::work_log::ChatScope recorded(call.matterId, call.chatId);
-		result = routing::execute(request);
-	} catch (const providers::TaskError& error) {
-		endWatch();
-		outcome.latencyMilliseconds = millisecondsSince(started);
-		const auto* unusable = dynamic_cast<const providers::UnusableGeneration*>(&error);
-		recordCall(call.matterId, outcome.taskId, model, nullptr, error.code(), outcome.latencyMilliseconds,
-			unusable != nullptr ? &unusable->usage : nullptr,
-			unusable != nullptr ? unusable->finish_reason : std::optional<std::string>(), call.presetId, call.documentCount,
-			decisionOf(model, request, error.code(), error.what()));
-		if (unusable != nullptr) count(unusable->usage);
-		if (platform::lifecycle::is_closing() == true) {
-			outcome.isInterrupted = true;
-			outcome.failure = "Singularity closed during the work; it begins again when Singularity opens.";
-			return outcome;
-		}
-		if (token->is_cancelled() == true || (call.cancelled != nullptr && call.cancelled->load() == true)) {
-			outcome.isCancelled = true;
-			outcome.failure = "The work was stopped before the model answered.";
-			return outcome;
-		}
-		outcome.failure = reasonFor(error.code(), model.model_id, error.what());
-		outcome.errorCode = error.code();
-		// Unreachable for now (D-169): asked again at once a few times, as a
-		// network or a busy provider usually comes back in seconds; still so, the
-		// work waits for it, never fails.
-		if (error.code() == providers::TaskErrorCode::NetworkError || error.code() == providers::TaskErrorCode::ProviderRateLimit)
-			outcome.isUnavailable = true;
-		return outcome;
+		answered = inference::call_model(asked);
 	} catch (const platform::CredentialUnavailable& error) {
 		// The Mac is locked: its saved credential is unreadable until it is
-		// unlocked, and the work carries on then (D-169).
-		endWatch();
+		// unlocked, and the work carries on then.
 		outcome.latencyMilliseconds = millisecondsSince(started);
 		outcome.isInterrupted = true;
 		outcome.isUnavailable = true;
 		outcome.failure = std::string("The model cannot be asked yet: ") + error.what();
 		return outcome;
-	} catch (const std::exception& error) {
-		endWatch();
-		outcome.latencyMilliseconds = millisecondsSince(started);
-		recordCall(call.matterId, outcome.taskId, model, nullptr, providers::TaskErrorCode::Unknown,
-			outcome.latencyMilliseconds, nullptr, std::nullopt, call.presetId, call.documentCount,
-			decisionOf(model, request, providers::TaskErrorCode::Unknown, std::string()));
-		if (platform::lifecycle::is_closing() == true) {
+	}
+	outcome.latencyMilliseconds = answered.latency_ms;
+	if (answered.is_sent == false) {
+		// Stopped before it was sent: nothing reached a provider, so there is no
+		// call to log; the operation it would have been ends without an answer.
+		recordNotSent(call.matterId, outcome.taskId);
+		outcome.isCancelled = true;
+		outcome.failure = answered.message;
+		return outcome;
+	}
+	if (answered.result.has_value() == false) {
+		// A failure that is no provider's is kept as an unknown one, as before.
+		const providers::TaskErrorCode kept = answered.code.value_or(providers::TaskErrorCode::Unknown);
+		recordCall(call.matterId, outcome.taskId, model, nullptr, kept, outcome.latencyMilliseconds,
+			answered.failed_usage.has_value() == true ? &*answered.failed_usage : nullptr, answered.failed_finish_reason,
+			call.presetId, call.documentCount,
+			decisionOf(model, answered.protection_mode, kept, answered.code.has_value() == true ? answered.message : std::string()));
+		if (answered.failed_usage.has_value() == true) count(*answered.failed_usage);
+		if (answered.failure == inference::FailureClass::Closing) {
 			outcome.isInterrupted = true;
 			outcome.failure = "Singularity closed during the work; it begins again when Singularity opens.";
 			return outcome;
 		}
-		outcome.failure = std::string("The model could not be asked: ") + error.what();
+		if (answered.failure == inference::FailureClass::Stopped) {
+			outcome.isCancelled = true;
+			outcome.failure = "The work was stopped before the model answered.";
+			return outcome;
+		}
+		if (answered.code.has_value() == false) {
+			outcome.failure = std::string("The model could not be asked: ") + answered.message;
+			return outcome;
+		}
+		outcome.failure = reasonFor(*answered.code, model.model_id, answered.message);
+		outcome.errorCode = answered.code;
+		outcome.failureClass = answered.failure;
+		// Unreachable for now: asked again at once a few times, as a network or a
+		// busy provider usually comes back in seconds; still so, the work waits
+		// for it, never fails.
+		if (*answered.code == providers::TaskErrorCode::NetworkError || *answered.code == providers::TaskErrorCode::ProviderRateLimit)
+			outcome.isUnavailable = true;
 		return outcome;
 	}
-	endWatch();
-	outcome.latencyMilliseconds = millisecondsSince(started);
+	const routing::InferenceResult& result = *answered.result;
 	recordCall(call.matterId, outcome.taskId, model, &result, std::nullopt, outcome.latencyMilliseconds, nullptr,
-		std::nullopt, call.presetId, call.documentCount, decisionOf(model, request, std::nullopt, std::string()));
+		std::nullopt, call.presetId, call.documentCount, decisionOf(model, answered.protection_mode, std::nullopt, std::string()));
 	count(result.usage);
 	outcome.isAnswered = true;
 	outcome.servedBy = result.usage.served_by.value_or(std::string());
@@ -575,12 +641,12 @@ ColleagueCallResult callColleagueModel(const ColleagueCall& call) {
 
 bool isWorthAskingAgain(const ColleagueCallResult& result) {
 	if (result.isAnswered == true || result.isCancelled == true || result.isInterrupted == true) return false;
-	if (result.errorCode.has_value() == false) return false;
-	switch (*result.errorCode) {
-		case providers::TaskErrorCode::ProviderRateLimit:
-		case providers::TaskErrorCode::NetworkError:
-		case providers::TaskErrorCode::ResponseIncomplete:
-		case providers::TaskErrorCode::ProtectedResponseInvalid:
+	if (result.failureClass.has_value() == false) return false;
+	switch (*result.failureClass) {
+		case inference::FailureClass::Passing:
+		case inference::FailureClass::RateLimited:
+		case inference::FailureClass::Incomplete:
+		case inference::FailureClass::Unusable:
 			return true;
 		default:
 			return false;

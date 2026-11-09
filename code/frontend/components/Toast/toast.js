@@ -1,10 +1,10 @@
 import { useSyncExternalStore } from "react";
 
 // What the interface tells the member after an act it took: one line from the
-// window's top (UI-31), with an Undo where the act can be undone, gone after a
-// few seconds or at once when dismissed. An irreversible act gets no Undo, and
-// its toast says what happened, never that it "can". A notice (D-207) stays
-// instead, while what it tells goes on.
+// window's top, with an Undo where the act can be undone, gone after a few
+// seconds or at once when dismissed. An irreversible act gets no Undo, and its
+// toast says what happened, never that it "can". A notice stays instead, while
+// what it tells goes on.
 let toasts = [];
 const listeners = new Set();
 let counter = 0;
@@ -36,11 +36,11 @@ export function toast(text, { action, tone, duration = 5200 } = {}) {
 	return id;
 }
 
-// What is still going on between the firm's computers (D-207): a Matter
-// coming or going, with how much of it is there - `progress` from 0 to 1 -,
-// or this computer waiting for another's answer, with no progress; or what
-// waits for the member's answer (D-205), with the one act that answers it. It
-// stays until it is ended; said again under its key, it changes in place.
+// What is still going on between the firm's computers: a Matter coming or
+// going, with how much of it is there - `progress` from 0 to 1 -, or this
+// computer waiting for another's answer, with no progress; or what waits for
+// the member's answer, with the one act that answers it. It stays until it is
+// ended; said again under its key, it changes in place.
 export function notice(key, { text, progress = null, tone = "working", action }) {
 	const shown = toasts.find(item => item.key == key);
 	if (shown != null) {
@@ -98,6 +98,5 @@ export function useToasts() {
 
 // This module keeps the window's state. While the window runs it is never
 // swapped for a fresh copy, which would start empty: a change to it reloads
-// the window (2026-10-26: a hot swap left the Mac's window with no Matter, so
-// it read nothing and every post was refused).
+// the window.
 if (import.meta.hot) import.meta.hot.decline();

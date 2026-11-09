@@ -67,11 +67,11 @@ Json retry(const Json& params) {
 namespace {
 
 // An assignment as a lawyer reads it now: its record, where each step's review
-// stands, and whether its email is ready to send (D-119, D-120).
+// stands, and whether its email is ready to send.
 Json assignmentViewJson(const review::AssignmentView& view) {
 	Json value = review::assignmentToJson(view.record);
 	// The execution's own record - each tool call, the document handles, the
-	// turns - is the backend's; the window reads the work's results (D-121).
+	// turns - is the backend's; the window reads the work's results.
 	value.erase("toolCalls");
 	value.erase("handles");
 	value.erase("turns");
@@ -79,7 +79,7 @@ Json assignmentViewJson(const review::AssignmentView& view) {
 		const review::AssignmentStepState& state = view.steps[index];
 		Json& step = value["steps"][index];
 		// A written document's decisions are read as a review's are: in its
-		// state, who decided and when (D-143), not as their records.
+		// state, who decided and when, not as their records.
 		step.erase("writtenSha256");
 		step.erase("decisions");
 		step["state"] = state.state;

@@ -383,8 +383,8 @@ std::string bounded_excerpt_text(const std::string &text) {
 // nested url_citation) as a fallback, exactly the same dual-shape tolerance
 // this file's own direct-OpenAI annotation parsing above already uses. This
 // is the one production judgment call the narrow live OpenRouter research
-// probe (see FINAL_ACCEPTANCE_REPORT.md) exists specifically to prove or
-// correct before any paid golden acceptance run.
+// probe exists specifically to prove or correct before any paid golden
+// acceptance run.
 struct OpenRouterCitation {
 	std::string url;
 	std::optional<std::string> title;

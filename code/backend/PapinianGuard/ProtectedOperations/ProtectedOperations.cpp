@@ -500,7 +500,7 @@ private:
 					return operand;
 				}
 		// Local repair: a rate given without its period takes the one the sent
-		// text writes it with ("0.2%" for «0,2 % в день»), when every place it
+		// text writes it with ("0.2%" for «…»), when every place it
 		// writes that rate names the same period; else it keeps none.
 		if (kind == VKind::Percentage && parsed->basis == semantic::RateBasis::None) {
 			operand.value->basis = written_basis(*parsed);
@@ -860,7 +860,7 @@ private:
 			return unknown("not_a_quantity");
 		// A rate of no known period is never counted over a period: 5 % a year
 		// for 45 days is not 5 % * 45. Its period is the material's own ("5% per
-		// annum", «0,1 % в день»), or the answer is UNKNOWN.
+		// annum", «…»), or the answer is UNKNOWN.
 		if (op_ == "rate" && operands_.size() == 3 && operands_[2].value->kind == VKind::Duration
 				&& operands_[1].value->kind == VKind::Percentage && operands_[1].value->basis == semantic::RateBasis::None)
 			return unknown("rate_basis_unknown");
@@ -1466,8 +1466,8 @@ FigureCheck check_figures(const std::string &provider_text, const std::string &s
 		if (known.count(whole) != 0 || known.count(integer) != 0) continue;
 		check.untraced.push_back(start);
 	}
-	// An amount written in words ("forty-three thousand dollars", «сорок три
-	// тысячи рублей") is a figure too.
+	// An amount written in words ("forty-three thousand dollars", «…
+	// …") is a figure too.
 	{
 		const std::string folded = lower(text);
 		for (const char *currency : {"dollar", "\xD1\x80\xD1\x83\xD0\xB1\xD0\xBB", "euro"}) {
@@ -1984,7 +1984,7 @@ std::string column_letter(const tables::ProtectedTable &table, const std::string
 			space = false;
 			out.push_back(character);
 		}
-		// Case in every script (utf8proc): "Сумма к уплате" is "сумма к уплате".
+		// Case in every script (utf8proc): "…" is "…".
 		return singularity::platform::folded_text(out);
 	};
 	const auto described = [&](const std::string &letter) {

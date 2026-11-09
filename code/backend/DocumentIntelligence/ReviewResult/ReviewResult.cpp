@@ -920,9 +920,9 @@ ValidatedReview validateReviewAnswer(const std::string& answer, const LegalDocum
 			change.clauseNumber = block->number;
 			std::string words = withoutClauseNumber(text, block->number);
 			std::string action = verb;
-			// The other side's pending change undone (D-115): the clause reads as it
-			// did before it - their inserted words out, their struck words back - and
-			// a clause they added whole goes. A live run struck a whole payment clause
+			// The other side's pending change undone: the clause reads as it did
+			// before it - their inserted words out, their struck words back - and a
+			// clause they added whole goes. A live run struck a whole payment clause
 			// to "undo" the other side's change, for want of this (25 Oct 2026).
 			bool isRejectedInsertion = false;
 			if (action == "reject") {
@@ -1144,8 +1144,8 @@ ValidatedReview validateReviewAnswer(const std::string& answer, const LegalDocum
 
 	/* - - - - - - */
 
-	// Comments for the margin (D-117): each on a clause the agreement has, one a
-	// clause, in the words the mark-up's reader sees.
+	// Comments for the margin: each on a clause the agreement has, one a clause,
+	// in the words the mark-up's reader sees.
 	if (parsed.contains("comments") == true && parsed.at("comments").is_array() == true) {
 		std::set<std::string> commented;
 		for (const Json& entry : parsed.at("comments")) {

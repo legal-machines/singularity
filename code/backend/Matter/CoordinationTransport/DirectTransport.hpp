@@ -17,12 +17,11 @@
 
 namespace singularity::matter::coordination::transport {
 
-// The firm's computers linked directly (D-124): the engine's sealed envelopes
-// carried over one DirectLink to the computers a Matter's address cards named
-// (D-123, 0x04), each by its X25519 key and the addresses it may be reached at.
-// A computer it knows no key or address for, or one that is away, the firm's
-// folder carries to: the engine sends every envelope by every carrier, and
-// takes each once, by its id.
+// The firm's computers linked directly: the engine's sealed envelopes carried
+// over one DirectLink to the computers a Matter's address cards named, each by
+// its X25519 key and the addresses it may be reached at. A computer it knows no
+// key or address for, or one that is away, the firm's folder carries to: the
+// engine sends every envelope by every carrier, and takes each once, by its id.
 // - Only a computer some Matter's checked card named is spoken with, and what
 //   it sends is taken only for the Matters whose cards named it.
 // - What came waits for the engine until it is taken, as in the firm's folder:
@@ -45,7 +44,7 @@ public:
 	// The program's own, made with this computer's X25519 keys the first time
 	// it is asked for: on the port Singularity prefers, or any free one when
 	// that is taken; with Legal Machines' relay for the computers no direct
-	// way reaches (D-242), when one is given.
+	// way reaches, when one is given.
 	static std::shared_ptr<DirectTransport> shared(const noise::KeyPair& self,
 		std::shared_ptr<link::Relay> relay = nullptr);
 	// The program's own, if one was made; never makes one.
@@ -53,12 +52,12 @@ public:
 	static constexpr std::uint16_t kPreferredPort = 47380;
 
 	// What one of a Matter's address cards said of a computer, once its seal and
-	// its signature were checked (D-123): it may be spoken with about that Matter.
+	// its signature were checked: it may be spoken with about that Matter.
 	void learn(const std::string& matterId, const Peer& peer);
-	// A Matter whose invitation was given lately (D-127): until `untilSeconds`
-	// (since 1970) a computer no card named may call this one about it - and
-	// what it sends is taken only as a request to join (0x03) whose X25519 key
-	// is the one it called with, from at most kMostAsking computers.
+	// A Matter whose invitation was given lately: until `untilSeconds` (since
+	// 1970) a computer no card named may call this one about it - and what it
+	// sends is taken only as a request to join (0x03) whose X25519 key is the
+	// one it called with, from at most kMostAsking computers.
 	void open_lobby(const std::string& matterId, std::int64_t untilSeconds);
 	// A computer whose request the lawyer here refused: nothing it sends is
 	// taken, and it is not answered again.
@@ -68,16 +67,16 @@ public:
 	// link's port.
 	std::vector<std::string> candidates() const;
 	// The computers of a Matter this one holds a live encrypted session with
-	// now, by device (D-137): the link keeps each session alive while both ends
-	// answer, so this is what the lawyer is told is connected.
+	// now, by device: the link keeps each session alive while both ends answer,
+	// so this is what the lawyer is told is connected.
 	std::vector<std::string> connected_devices(const std::string& matterId) const;
 	std::uint16_t port() const { return link_.local_port(); }
 
 	// What went to one computer about one Matter in the transfer under way, and
-	// how much of it that computer holds whole, as its link confirmed (D-207):
-	// the lawyer is shown a Matter going by its bytes. A new transfer starts
-	// from nothing once every message of the last was confirmed, which is shown
-	// for kFlowKept and then forgotten.
+	// how much of it that computer holds whole, as its link confirmed: the
+	// lawyer is shown a Matter going by its bytes. A new transfer starts from
+	// nothing once every message of the last was confirmed, which is shown for
+	// kFlowKept and then forgotten.
 	struct Flow {
 		std::string device_id;
 		std::uint64_t messages = 0;
@@ -92,7 +91,7 @@ public:
 	static constexpr std::chrono::seconds kFlowKept{8};
 	// The sealed bytes come for a Matter that still wait for the engine to take
 	// them: before its key is taken here, what of the Matter is already on this
-	// computer, closed (D-207).
+	// computer, closed.
 	std::uint64_t waiting_bytes(const std::string& matterId) const;
 
 	void send(const std::string& matterId, const SealedBytes& bytes, const std::vector<std::string>& toDevices) override;
@@ -137,7 +136,7 @@ private:
 	std::map<link::PeerKey, std::size_t> queued_;
 	std::map<std::uint64_t, Sent> sent_;
 	std::set<std::uint64_t> early_;
-	// Each transfer under way, by Matter and computer (D-207).
+	// Each transfer under way, by Matter and computer.
 	struct Sending {
 		link::PeerKey key{};
 		std::uint64_t messages = 0;

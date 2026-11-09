@@ -309,7 +309,7 @@ Json outbound_call_to_json(const protected_api::papinian::OutboundCall &call) {
 	};
 	if (call.url.empty() == false) value["url"] = call.url;
 	if (call.payload_sha256.empty() == false) value["payloadSha256"] = call.payload_sha256;
-	// What came back, as a bill's line reads it (D-252).
+	// What came back, as a bill's line reads it.
 	if (call.provider_request_id.empty() == false) value["providerRequestId"] = call.provider_request_id;
 	if (call.response_sha256.empty() == false) value["responseSha256"] = call.response_sha256;
 	if (call.input_tokens) value["inputTokens"] = *call.input_tokens;
@@ -802,11 +802,11 @@ void forget_project_sent_passages(const std::filesystem::path &workspace_path, c
 
 namespace {
 
-// The routing log as last read, kept while its file stays the same (Beta 1
-// #266): every privacy and usage read used to parse the whole file again, and
-// it grows with every request ever made. Its own write forgets it, and a file
-// of another size or time is read again. Never destroyed: a read may come as
-// the process ends.
+// The routing log as last read, kept while its file stays the same: every
+// privacy and usage read used to parse the whole file again, and it grows
+// with every request ever made. Its own write forgets it, and a file of
+// another size or time is read again. Never destroyed: a read may come as the
+// process ends.
 struct KeptRoutingLog {
   std::mutex mutex;
   bool is_kept = false;

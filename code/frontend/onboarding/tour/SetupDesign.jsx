@@ -8,10 +8,10 @@ import entry from "../entry/EntryForm.module.css";
 import tour from "./Tour.module.css";
 import styles from "./SetupDesign.module.css";
 
-// The first AI colleague is hired for the whole firm through the bridge
-// (agent.hire, D-157): no Matter is asked for or bound. Until it is created
-// its face, name and place are a draft of this onboarding session. The app
-// connections below follow Office's verified status and pairing (D-156).
+// The first AI colleague is hired for the whole firm through the bridge: no
+// Matter is asked for or bound. Until it is created its face, name and
+// place are a draft of this onboarding session. The app connections below
+// follow Office's verified status and pairing.
 const FAMILY = Object.keys(characters);
 const EMPTY_COLLEAGUE = { name: "", species: "kitsune", role: "", position: "", area: "", step: 0 };
 
@@ -83,7 +83,7 @@ const onMac = () => document.documentElement.dataset.nativePlatform == "darwin" 
 
 // What the system asks as Singularity's certificate goes onto this computer,
 // and the answer to give: said before the person presses, and while the
-// system waits for them (D-191).
+// system waits for them.
 function trustWords(mac) {
 	return mac
 		? "macOS asks for your Mac’s password to trust Singularity’s certificate. Enter it."
@@ -98,9 +98,9 @@ const menus = (...names) => names.map(keep).join(" → ");
 
 // Outlook takes an add-in only from the person, in its own Add-ins window:
 // Microsoft lets no program add one on a Mac, and on Windows only through the
-// mailbox (docs/OFFICE.md). So the steps name Outlook's own way on each
-// system, and the add-in's file is pasted where Outlook asks for it, not read
-// out: its place goes onto the clipboard ("copy").
+// mailbox. So the steps name Outlook's own way on each system, and the
+// add-in's file is pasted where Outlook asks for it, not read out: its place
+// goes onto the clipboard ("copy").
 function instructions(app, status, { needsTrust, mac }) {
 	const trust = needsTrust ? [["Allow it on this computer", trustWords(mac)]] : [];
 	if (app.key === "outlook") return [
@@ -113,7 +113,7 @@ function instructions(app, status, { needsTrust, mac }) {
 			: ["Add Singularity", `Choose ${menus("Add a custom add-in", "Add from file")}. Paste into ${keep("File name")}, then Open and Install.`, "copy"],
 		["Open it in an email", `Choose Singularity in an email. Check that both show the same code, then press ${keep("Allow Outlook")}.`],
 	];
-	// On a Mac, Office finds a new add-in only as it starts (docs/OFFICE.md).
+	// On a Mac, Office finds a new add-in only as it starts.
 	const opens = mac && status?.documentsRegistered !== true
 		? `Singularity opens ${app.name} with its pane. Quit ${app.name} first if it is open: it finds the pane only as it starts.`
 		: `Singularity opens ${app.name} with its pane on the right.`;
@@ -134,13 +134,13 @@ function isReady(status, app) {
 		&& (app.key === "outlook" || status?.documentsRegistered === true);
 }
 
-// Each app connects on this computer as Office reports it (D-105, D-156,
-// D-191): this computer first, where the system asks the person; then
-// Singularity opens the app itself, Word, Excel and PowerPoint with a file of
-// its own whose pane opens and asks to connect; the window shows the pane's
-// code and one button. Only a pane whose code the member sees here is
-// allowed. Every wait says what it waits for, and ends in words and a button.
-// Connected is what Office's allowed panes say, never a stage passed.
+// Each app connects on this computer as Office reports it: this computer
+// first, where the system asks the person; then Singularity opens the app
+// itself, Word, Excel and PowerPoint with a file of its own whose pane opens
+// and asks to connect; the window shows the pane's code and one button. Only
+// a pane whose code the member sees here is allowed. Every wait says what it
+// waits for, and ends in words and a button. Connected is what Office's
+// allowed panes say, never a stage passed.
 export function ConnectionAsk({ draft, onChange, onDone, setup, busy = false, setBusy }) {
 	const [local, setLocal] = useState({ selected: null, stage: 0, connected: {} });
 	const [office, setOffice] = useState({ status: null, clients: [], pending: [] });
@@ -263,8 +263,7 @@ export function ConnectionAsk({ draft, onChange, onDone, setup, busy = false, se
 		if (request == null) return;
 		// The pane takes its key on its next ask, a second or so after the
 		// press: Office's panes are read again until they name it, for a few
-		// seconds at most, so the app reads Connected once it is (2026-11-01:
-		// Outlook stood Not connected for ten seconds after Allow).
+		// seconds at most, so the app reads Connected once it is.
 		const found = await run(async () => {
 			await setup.allowPane(request.pairingId);
 			let listed = null;

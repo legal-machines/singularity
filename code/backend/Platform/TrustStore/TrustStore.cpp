@@ -50,11 +50,11 @@ bool holds(const wchar_t *name, PCCERT_CONTEXT certificate) {
 // Windows asks about the Trusted Root store in its own security warning, a
 // dialog of this process with no window of its own above it: it opened behind
 // Singularity's window, and the person, who never saw it, was left on
-// "Connecting…" (2026-11-01). So while the store changes, Singularity's
-// window owns each dialog of this process that opens with no owner: the
-// question stands in front of it, and comes forward while the person is in
-// Singularity. The watcher waits on the windows this process shows, never
-// polling, and ends with the call.
+// "Connecting…". So while the store changes, Singularity's window owns each
+// dialog of this process that opens with no owner: the question stands in
+// front of it, and comes forward while the person is in Singularity. The
+// watcher waits on the windows this process shows, never polling, and ends
+// with the call.
 
 // Whether a window belongs to this process.
 bool is_ours(HWND window) {

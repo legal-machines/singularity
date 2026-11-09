@@ -50,9 +50,8 @@ struct AgentCard {
 	std::string responsible_name;
 	// The computer that runs it (Platform/ActorIdentity device id), its device
 	// key, the nonce the agent's id was bound with to that key, the card's
-	// counter, and that computer's signature over agent_card_signed_text
-	// (Agent/Types/AgentIdentity, D-128). An older card has no signature and
-	// never counts as the agent's host.
+	// counter, and that computer's signature over agent_card_signed_text. An
+	// older card has no signature and never counts as the agent's host.
 	std::string host_device_id;
 	std::string host_device_key;
 	std::string id_nonce;

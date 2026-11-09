@@ -5,6 +5,7 @@
 #include "Provider/Types/PromptCache.hpp"
 #include "Provider/Types/ReasoningEffort.hpp"
 #include "Routing/InferenceExecutor/InferenceExecutor.hpp"
+#include "Routing/ModelCall/ModelCall.hpp"
 
 #include <atomic>
 #include <cstdint>
@@ -18,15 +19,15 @@
 
 namespace singularity::document_review {
 
-// What every piece of a colleague's work on documents shares (D-115): the model
-// it runs on, a document's words as it reads them, and one call of the model -
+// What every piece of a colleague's work on documents shares: the model it runs
+// on, a document's words as it reads them, and one call of the model -
 // protected, within this computer's budget, and recorded where the lawyer can
 // see it.
 
-// The model the colleague `agentId` thinks with: the one its page chose
-// (D-185), or else the one the Matter's AI Setup gives its reasoning; for a
-// colleague that works only on this computer, a model on it. Throws
-// ReviewRefused, in the lawyer's words, when there is none.
+// The model the colleague `agentId` thinks with: the one its page chose, or
+// else the one the Matter's AI Setup gives its reasoning; for a colleague
+// that works only on this computer, a model on it. Throws ReviewRefused, in
+// the lawyer's words, when there is none.
 routing::ModelTarget modelFor(const std::string& matterId, bool isLocalOnly, const std::string& agentId);
 
 // The computer this colleague runs on, as every member reading its thread
@@ -35,9 +36,9 @@ routing::ModelTarget modelFor(const std::string& matterId, bool isLocalOnly, con
 // where no member's name is kept here.
 std::string computerWords();
 
-// Who chooses a colleague's model, on its page (D-184, D-185): the member at
-// the computer that runs it, by name - its administrator - or "the firm's
-// administrator" where no name is kept here. Capitalised to begin a sentence.
+// Who chooses a colleague's model, on its page: the member at the computer
+// that runs it, by name - its administrator - or "the firm's administrator"
+// where no name is kept here. Capitalised to begin a sentence.
 std::string modelChooser(bool isSentenceStart);
 
 // Why a call could not be made, in words a lawyer reads, naming `model`;
@@ -59,11 +60,15 @@ struct CallDecision {
 
 CallDecision decisionOf(const routing::ModelTarget& model, const routing::InferenceRequest& request,
 	const std::optional<providers::TaskErrorCode>& error, const std::string& message);
+// The same, from the protection mode the request went out under
+// (inference::CallOutcome::protection_mode).
+CallDecision decisionOf(const routing::ModelTarget& model, const std::string& mode,
+	const std::optional<providers::TaskErrorCode>& error, const std::string& message);
 
-// A provider's own words for why it failed a request, value-free (D-172): what
-// it quotes ("..." or `...`) becomes "...", and every key-like or long token is
-// "[redacted]", so the log says why a request failed without what it held.
-// Five rejections in ten minutes could not be told apart (2026-10-31).
+// A provider's own words for why it failed a request, value-free: what it
+// quotes ("..." or `...`) becomes "...", and every key-like or long token is
+// "[redacted]", so the log says why a request failed without what it held. Five
+// rejections in ten minutes could not be told apart.
 std::string providerWords(const std::string& message);
 
 // The operation Usage and "What left this device" count, with the call logged.
@@ -91,7 +96,7 @@ DocumentWords wordsOfDocument(const std::filesystem::path& path, std::size_t mos
 struct ColleagueCall {
 	std::string matterId;
 	// The conversation or thread the work is for: a design partner's computer
-	// keeps the call in that chat's work log (Node/WorkLog, D-257).
+	// keeps the call in that chat's work log.
 	std::string chatId;
 	std::string agentId;
 	std::string givenByActorId;
@@ -113,7 +118,7 @@ struct ColleagueCall {
 	std::string promptInstruction;
 	std::shared_ptr<const providers::PromptCache> promptCache;
 	// The pictures members attached that the call carries as they are, as image
-	// inputs (D-256); none for a call of words only.
+	// inputs; none for a call of words only.
 	std::shared_ptr<const std::vector<providers::InputPicture>> pictures;
 	// A short think for a conversational answer; the model's own otherwise.
 	providers::ReasoningEffort reasoningEffort = providers::ReasoningEffort::Default;
@@ -122,7 +127,7 @@ struct ColleagueCall {
 	// The protection table the calls of one talk share, so a name or a value
 	// keeps its symbol from one of its calls to the next: the colleague reads
 	// one conversation, and the provider's cache of it holds. A table of the
-	// call's own when unset. Kept in memory for the talk alone (AG-SEC-3).
+	// call's own when unset. Kept in memory for the talk alone.
 	std::shared_ptr<protected_api::papinian::OperationProtectedSymbolTable> symbols;
 	std::string schemaName;
 	nlohmann::json schema;
@@ -133,7 +138,7 @@ struct ColleagueCall {
 	bool isCorrection = false;
 	const std::atomic<bool>* cancelled = nullptr;
 	// The model for this call when it is not the colleague's own: what gathers
-	// its memory (D-206). A colleague kept to this computer takes only one on it.
+	// its memory. A colleague kept to this computer takes only one on it.
 	std::optional<routing::ModelTarget> model;
 	// The routing log's word for the call's part: "reasoning", or "context" for
 	// its memory.
@@ -144,16 +149,18 @@ struct ColleagueCallResult {
 	bool isAnswered = false;
 	bool isCancelled = false;
 	bool isInterrupted = false;
-	// The model cannot be asked now for a cause that clears by itself (D-169):
-	// the Mac is locked, so its saved credential cannot be read (interrupted at
-	// once); the network is down, or the provider asks to slow down (asked again
-	// a few times first). The work is interrupted, never failed: it waits and
-	// carries on when the model can be asked, and nothing is said meanwhile.
+	// The model cannot be asked now for a cause that clears by itself: the Mac
+	// is locked, so its saved credential cannot be read (interrupted at once);
+	// the network is down, or the provider asks to slow down (asked again a few
+	// times first). The work is interrupted, never failed: it waits and carries
+	// on when the model can be asked, and nothing is said meanwhile.
 	bool isUnavailable = false;
 	std::string text;
 	// Why there is no answer, in the lawyer's words, and the error it was.
 	std::string failure;
 	std::optional<providers::TaskErrorCode> errorCode;
+	// The failure's one class (Routing/ModelCall), when the call brought no answer.
+	std::optional<inference::FailureClass> failureClass;
 	routing::ModelTarget model;
 	// The provider that served the call, as the gateway named it.
 	std::string servedBy;
@@ -176,6 +183,30 @@ struct ColleagueCallResult {
 	std::string taskId;
 };
 
+// One web search of a colleague's work, as it is kept: under the colleague,
+// in its thread's Matter, with the research service that ran it, what that
+// service reported it cost, whether it was done, the protection it was held
+// to, and the key the research tools noted what left this computer under.
+struct ColleagueWebCall {
+	std::string matterId;
+	std::string chatId;
+	std::string agentId;
+	std::string givenByActorId;
+	std::string givenByName;
+	std::string providerId;
+	std::string modelId;
+	std::optional<providers::UsageMetadata> usage;
+	bool isDone = false;
+	std::string protectionMode;
+	std::string outboundKey;
+	long long latencyMilliseconds = 0;
+};
+
+// The search kept as each of the colleague's calls is: an operation of the
+// Matter, which Usage counts as web research under the colleague, and its line
+// in the routing log, which carries the search as it left. Never throws.
+void recordColleagueWebCall(const ColleagueWebCall& call);
+
 // The call, protected as every call of the colleague is (Papinian Guard on
 // everything that leaves this computer), within what is left of this
 // computer's budget for colleagues' work by external models - refused before
@@ -184,10 +215,10 @@ struct ColleagueCallResult {
 // Singularity closing. Never throws.
 ColleagueCallResult callColleagueModel(const ColleagueCall& call);
 
-// Whether a call that brought no answer is worth asking again as it was
-// (D-119): the provider busy or out of reach for a moment, or its answer cut
-// off or unreadable - never a Stop, Singularity closing, a refusal, a key,
-// the budget, or protection that held.
+// Whether a call that brought no answer is worth asking again as it was, by
+// its failure's one class (Routing/ModelCall): the provider busy or out of
+// reach for a moment, or its answer cut off or unreadable - never a Stop,
+// Singularity closing, a refusal, a key, the budget, or protection that held.
 bool isWorthAskingAgain(const ColleagueCallResult& result);
 
 // A pause before asking again, longer each time, that a Stop or Singularity

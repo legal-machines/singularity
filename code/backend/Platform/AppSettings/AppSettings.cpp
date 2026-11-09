@@ -253,7 +253,7 @@ providers::ModelDescriptor model_descriptor_from_json(const Json &value) {
   if (value.contains("supportsToolChoice") && value.at("supportsToolChoice").is_boolean()) {
     model.supports_tool_choice = value.at("supportsToolChoice").get<bool>();
   }
-  // What the model reads (D-256); absent in settings written before it was kept.
+  // What the model reads; absent in settings written before it was kept.
   if (value.contains("inputModalities") && value.at("inputModalities").is_array()) {
     for (const auto &modality : value.at("inputModalities"))
       if (modality.is_string()) model.input_modalities.push_back(modality.get<std::string>());
@@ -390,15 +390,15 @@ void migrate_v1_protected_api(const Json &local, LocalNodeSetup &setup) {
 }
 
 // role_assignments (not default_model) is the canonical Node default AI
-// Setup for every Beta 1 role, including Reasoning (Phase 06,
-// AI_SETUP_CONTRACT.md) - there must never be two independently writable
-// persisted sources of truth for Reasoning. This keeps the two in sync on
-// every load: a pre-Phase-06 settings.json only ever set default_model, so
-// its value becomes role_assignments' own Reasoning entry exactly once;
-// once role_assignments carries a real Reasoning entry, that entry is
-// authoritative and default_model is recomputed from it, never the reverse.
-// Deliberately does not call Routing::parse_model_target() - Platform must
-// not depend on the Routing domain built on top of it.
+// Setup for every Beta 1 role, including Reasoning - there must never be
+// two independently writable persisted sources of truth for Reasoning. This
+// keeps the two in sync on every load: a pre-Phase-06 settings.json only
+// ever set default_model, so its value becomes role_assignments' own
+// Reasoning entry exactly once; once role_assignments carries a real
+// Reasoning entry, that entry is authoritative and default_model is
+// recomputed from it, never the reverse. Deliberately does not call
+// Routing::parse_model_target - Platform must not depend on the Routing
+// domain built on top of it.
 void synchronize_reasoning_role_assignment(LocalNodeSetup &setup) {
   const auto reasoning = std::find_if(setup.role_assignments.begin(), setup.role_assignments.end(),
       [](const RoleModelAssignment &assignment) { return assignment.role == "reasoning"; });
@@ -735,7 +735,7 @@ AppSettings load_app_settings_from_disk() {
         }
       }
     }
-    // The seats that finished onboarding here (D-250).
+    // The seats that finished onboarding here.
     if (data.contains("onboardedSeats") && data.at("onboardedSeats").is_array()) {
       for (const auto &seat : data.at("onboardedSeats")) {
         if (seat.is_string() && seat.get<std::string>().empty() == false) {

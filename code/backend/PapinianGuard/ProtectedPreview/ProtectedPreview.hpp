@@ -24,10 +24,7 @@ struct OriginSources {
 	std::vector<Document> documents;
 };
 
-// One entry from a request's ProtectionResult, redacted down to what "What
-// leaves this device?" may show before an explicit "Reveal original locally"
-// click - PRIVACY_CONTRACT.md/phase-11's ProtectionOccurrence. Never carries
-// entity.value/RequestMappingEntry::original.
+// Never carries entity.value/RequestMappingEntry::original.
 struct ProtectedOccurrenceSummary {
 	// Stable for identical request content regardless of request_namespace
 	// (which is regenerated per protect() call) - a category plus its

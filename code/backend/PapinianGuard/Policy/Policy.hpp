@@ -6,14 +6,12 @@
 
 namespace singularity::protected_api {
 
-// A deterministic category Protected API can reliably find and replace on
-// its own, with no cloud calls and no guesswork - see detector.hpp.
-// Deliberately narrow: person/company/location names are handled by Papinian
-// NER (protected_api/papinian/), which runs semantically rather than by
-// pattern match and is not gated per-category here - it is always active
-// whenever Policy::mode != Off (see PapinianGuard::protect in
-// PapinianGuard/PapinianGuardService/PapinianGuardService.cpp), so it is not offered as a toggleable
-// category (see docs/ARCHITECTURE.md and the onboarding Protected API step).
+// A deterministic category Protected API can reliably find and replace on its own, with no cloud
+// calls and no guesswork - see detector.hpp. Deliberately narrow: person/company/location names are
+// handled by Papinian NER (protected_api/papinian/), which runs semantically rather than by pattern
+// match and is not gated per-category here - it is always active whenever Policy::mode != Off (see
+// PapinianGuard::protect in PapinianGuard/PapinianGuardService/PapinianGuardService.cpp), so it is
+// not offered as a toggleable category.
 enum class Category {
   // The financial facts of a matter: amounts of money, the financial ratios a
   // company keeps confidential, and a party's holding - its shares, units or

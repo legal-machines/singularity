@@ -219,8 +219,8 @@ bool proposed_value_reproduces_region_label(const ConnectedDocumentActionPlan &p
 }
 
 // A real lawyer's own prompt names a Project document by its descriptive
-// title, never its file extension ("the 'Северный берег - Корпоративные риски'
-// document", never "...риски.docx") - a live design-partner acceptance run
+// title, never its file extension ("the '… - …
+// document", never "...…docx") - a live design-partner acceptance run
 // proved the exact-filename match below used to require silently fell back
 // to the legacy chat-only path for this reason alone, on every real prompt
 // that named its target document the way people actually write. Comparing
@@ -257,9 +257,9 @@ bool is_methodology_reference(const std::string &instruction, const std::string 
 	std::transform(prefix.begin(), prefix.end(), prefix.begin(), [](unsigned char value) {
 		return value >= 'A' && value <= 'Z' ? static_cast<char>(value - 'A' + 'a') : static_cast<char>(value);
 	});
-	const std::size_t methodologyCue = last_cue(prefix, {"правил", "методолог", "rules", "methodolog"});
+	const std::size_t methodologyCue = last_cue(prefix, {"\320\277\321\200\320\260\320\262\320\270\320\273", "\320\274\320\265\321\202\320\276\320\264\320\276\320\273\320\276\320\263", "rules", "methodolog"});
 	const std::size_t mutationCue = last_cue(prefix,
-		{"внеси изменения", "обнови", "добав", "исправ", "перепиш", "напиш",
+		{"\320\262\320\275\320\265\321\201\320\270 \320\270\320\267\320\274\320\265\320\275\320\265\320\275\320\270\321\217", "\320\276\320\261\320\275\320\276\320\262\320\270", "\320\264\320\276\320\261\320\260\320\262", "\320\270\321\201\320\277\321\200\320\260\320\262", "\320\277\320\265\321\200\320\265\320\277\320\270\321\210", "\320\275\320\260\320\277\320\270\321\210",
 			"update", "change", "add", "edit", "revise", "replace", "write"});
 	// A sentence may mention research "rules" before naming the actual file
 	// to update ("rules ..., and update Status in Worklist.csv"). The closest
@@ -571,7 +571,7 @@ struct NumericToken {
 
 std::vector<NumericToken> numeric_tokens(const std::string &text) {
 	static const std::regex pattern(
-		R"((RUB|USD|EUR|GBP|₽|\$|€|£)?\s*([0-9]+(?:[\.,][0-9]+)?)\s*(billion|million|thousand|bln|mln|bn|млрд|млн|тыс|m|k)?)",
+		"(RUB|USD|EUR|GBP|₽|\\$|€|£)?\\s*([0-9]+(?:[\\.,][0-9]+)?)\\s*(billion|million|thousand|bln|mln|bn|\320\274\320\273\321\200\320\264|\320\274\320\273\320\275|\321\202\321\213\321\201|m|k)?",
 		std::regex_constants::icase);
 	std::vector<NumericToken> result;
 	for (std::sregex_iterator it(text.begin(), text.end(), pattern), end; it != end; ++it) {
@@ -583,9 +583,9 @@ std::vector<NumericToken> numeric_tokens(const std::string &text) {
 		std::transform(scale.begin(), scale.end(), scale.begin(), [](unsigned char c) {
 			return c >= 'A' && c <= 'Z' ? static_cast<char>(c - 'A' + 'a') : static_cast<char>(c);
 		});
-		if (scale == "billion" || scale == "bln" || scale == "bn" || scale == "млрд") value *= 1'000'000'000.0;
-		else if (scale == "million" || scale == "mln" || scale == "m" || scale == "млн") value *= 1'000'000.0;
-		else if (scale == "thousand" || scale == "k" || scale == "тыс") value *= 1'000.0;
+		if (scale == "billion" || scale == "bln" || scale == "bn" || scale == "\320\274\320\273\321\200\320\264") value *= 1'000'000'000.0;
+		else if (scale == "million" || scale == "mln" || scale == "m" || scale == "\320\274\320\273\320\275") value *= 1'000'000.0;
+		else if (scale == "thousand" || scale == "k" || scale == "\321\202\321\213\321\201") value *= 1'000.0;
 		std::string currency = (*it)[1].str();
 		std::transform(currency.begin(), currency.end(), currency.begin(), [](unsigned char c) {
 			return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : static_cast<char>(c);
@@ -644,11 +644,11 @@ std::optional<NumericComparisonIssue> impossible_numeric_comparison(const std::s
 	static const std::vector<Phrase> phrases{
 		{"greater than", Relation::Greater, false}, {"exceeds", Relation::Greater, false},
 		{"exceed", Relation::Greater, false}, {"above", Relation::Greater, false},
-		{"превышает", Relation::Greater, false}, {"превышают", Relation::Greater, false},
-		{"больше", Relation::Greater, false}, {"выше", Relation::Greater, false},
+		{"\320\277\321\200\320\265\320\262\321\213\321\210\320\260\320\265\321\202", Relation::Greater, false}, {"\320\277\321\200\320\265\320\262\321\213\321\210\320\260\321\216\321\202", Relation::Greater, false},
+		{"\320\261\320\276\320\273\321\214\321\210\320\265", Relation::Greater, false}, {"\320\262\321\213\321\210\320\265", Relation::Greater, false},
 		{"less than", Relation::Less, false}, {"below", Relation::Less, false},
-		{"under", Relation::Less, false}, {"меньше", Relation::Less, false},
-		{"ниже", Relation::Less, false}, {">", Relation::Greater, true}, {"<", Relation::Less, true},
+		{"under", Relation::Less, false}, {"\320\274\320\265\320\275\321\214\321\210\320\265", Relation::Less, false},
+		{"\320\275\320\270\320\266\320\265", Relation::Less, false}, {">", Relation::Greater, true}, {"<", Relation::Less, true},
 	};
 	std::string normalized = statement;
 	std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char c) {
@@ -664,7 +664,7 @@ std::optional<NumericComparisonIssue> impossible_numeric_comparison(const std::s
 				return preceding.size() >= suffix.size()
 					&& preceding.compare(preceding.size() - suffix.size(), suffix.size(), suffix) == 0;
 			};
-			if (!phrase.symbol && (endsWith("not ") || endsWith("не ") || endsWith("не  "))) {
+			if (!phrase.symbol && (endsWith("not ") || endsWith("\320\275\320\265 ") || endsWith("\320\275\320\265  "))) {
 				position += std::string(phrase.text).size();
 				continue;
 			}
@@ -1407,12 +1407,11 @@ research::OperationWorkFrontier connected_document_operation_frontier(const Conn
 		[](const auto &entry) { return entry.second.state == DocumentDraftItemState::NeedsResearch; });
 	if (researchItem != plan.draft->items.end()) return research::OperationWorkFrontier::NeedsResearch;
 	// A structurally-complete draft is not yet a professionally-complete one
-	// (Run 20's own product_evaluation.md proved this concretely) - the
-	// Professional Completion Challenge is a second, independent gate that
-	// must record a Pass at the draft's CURRENT revision before Complete is
-	// ever reached. See submit_connected_document_professional_review()'s own
-	// routing: a non-Pass verdict resets whichever state makes this same
-	// draft_is_complete() check false again (finished, output agenda or
+	// - the Professional Completion Challenge is a second, independent gate
+	// that must record a Pass at the draft's CURRENT revision before Complete
+	// is ever reached. See submit_connected_document_professional_review's
+	// own routing: a non-Pass verdict resets whichever state makes this same
+	// draft_is_complete check false again (finished, output agenda or
 	// evidence sufficiency), so this frontier naturally falls through to
 	// wherever that verdict's own issues actually need fixing.
 	if (draft_is_complete(plan)) {
@@ -1458,8 +1457,8 @@ std::vector<std::string> quoted_phrases(const std::string &text) {
 // comment): whether `instruction` plausibly refers to the Project document
 // `name`. Bidirectional on purpose - a real design-partner prompt quoted a
 // document by a shortened, descriptive phrase missing that file's own date
-// prefix ("Выгрузка по первоначальному запросу" for a file actually named
-// "2026-07-30 - Северный берег - Выгрузка по первоначальному запросу.docx"), so the
+// prefix ("…" for a file actually named
+// "…"), so the
 // document's own (stemmed) name being found inside the instruction is not
 // the only real-world direction; a quoted phrase from the instruction being
 // found inside the document's own stem catches that shortened-reference
@@ -1702,7 +1701,7 @@ std::optional<ConnectedDocumentActionPlan> prepare_connected_document_action(
 					// generic OOXML formatting evidence, never from what the text
 					// says - and an ordinary drafting action may only ever write
 					// to a body cell. A structural label/title/metadata cell is
-					// visible (the model needs to read "Описание риска" to
+					// visible (the model needs to read "…" to
 					// understand what column-1 means) but is never offered as an
 					// editable target through the normal drafting tool, exactly
 					// like an existing read-only evidence field already was not.
@@ -2874,28 +2873,27 @@ std::string working_evidence_repair_signature(
 	signature += !noteSupplied ? "_noteAbsent" : (noteTooLong ? "_noteTooLong" : "_noteValid");
 	signature += !tablesExplicit ? "_tablesAbsent" : (tablesShapeValid ? "_tablesValid" : "_tablesInvalid");
 	if (evidenceSufficientArg) signature += "_sufficient";
-	// Real product bug (caught live, Run-28+): this signature previously
-	// recorded only THAT an evidenceObjective/evidenceObjectiveClosure was
-	// proposed, never WHICH one - two genuinely different objective/closure
-	// proposals at the same table/row window, both still missing a working
-	// evidence note, produced the identical signature and were wrongly
-	// treated as the model repeating itself (the exact class of defect this
-	// function's own header comment and item17 already document, here for a
-	// dimension that one fix did not cover). The objective/closure's own
-	// "id" is a short model-authored structural handle, not narrative
-	// content - the same kind of identifier callers already pass around
-	// (see ConnectedDocumentAction.test-style objective ids) - so including
-	// it keeps this signature's own "never raw note text, never sensitive
-	// content" contract intact.
-	// ":" is never used here (even though the id itself never contains one -
-	// see evidence_objective_id_looks_unsafe()'s own "[[" check elsewhere,
-	// not a colon check): ResearchToolLoop.hpp's inspectCorrectionKey()
-	// extracts this whole signature's OWN category by splitting the
-	// surrounding rejection message on its FIRST ':' (the category:
-	// description separator) - an earlier colon inside the signature itself
-	// would truncate the category right there, silently discarding
-	// everything meant to disambiguate it. "=" cannot collide with that
-	// separator.
+	// Real product bug: this signature previously recorded only THAT an
+	// evidenceObjective/evidenceObjectiveClosure was proposed, never WHICH
+	// one - two genuinely different objective/closure proposals at the same
+	// table/row window, both still missing a working evidence note, produced
+	// the identical signature and were wrongly treated as the model
+	// repeating itself (the exact class of defect this function's own header
+	// comment and item17 already document, here for a dimension that one fix
+	// did not cover). The objective/closure's own "id" is a short
+	// model-authored structural handle, not narrative content - the same
+	// kind of identifier callers already pass around (see
+	// ConnectedDocumentAction.test-style objective ids) - so including it
+	// keeps this signature's own "never raw note text, never sensitive
+	// content" contract intact. ":" is never used here (even though the id
+	// itself never contains one - see evidence_objective_id_looks_unsafe's
+	// own "[[" check elsewhere, not a colon check): ResearchToolLoop.hpp's
+	// inspectCorrectionKey extracts this whole signature's OWN category by
+	// splitting the surrounding rejection message on its FIRST ':' (the
+	// category: description separator) - an earlier colon inside the
+	// signature itself would truncate the category right there, silently
+	// discarding everything meant to disambiguate it. "=" cannot collide
+	// with that separator.
 	if (hasObjectiveArg) {
 		signature += "_objective";
 		const Json &objective = arguments.at("evidenceObjective");
@@ -4398,7 +4396,7 @@ routing::TurnDataPlane compile_connected_document_turn_data(
 		// only the concrete example plus the two facts fieldsVisible does not
 		// state, for a small local model's own real per-turn budget - see
 		// item13's own investigation).
-		instruction += " A header/title/metadata label (e.g. \"Описание риска\") names its column but is never "
+		instruction += " A header/title/metadata label (e.g. \"\320\236\320\277\320\270\321\201\320\260\320\275\320\270\320\265 \321\200\320\270\321\201\320\272\320\260\") names its column but is never "
 			"content: never echo it, or a sibling field's label, into newValue. Once outputs are defined, each "
 			"selected region shows only its own exact fields and dispositions; do not reconstruct document layout "
 			"from prose.";

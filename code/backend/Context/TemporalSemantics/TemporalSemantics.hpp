@@ -36,8 +36,8 @@ enum class SlashOrder { Unknown, MonthFirst, DayFirst };
 
 // One date as written: English ("March 3, 2026", "Mar. 3, 2026", "3 March 2026",
 // "03/03/2026", "2026-03-03", "February 2026", "Q3 2026", "2026") or Russian
-// ("03.03.2026", "3 марта 2026 г.", "«03» марта 2026 г.", "март 2026 г.",
-// "III квартал 2026 г."). Nothing for text that is not wholly a date.
+// ("03.03.2026", "…",
+// "…"). Nothing for text that is not wholly a date.
 // A slashed day both orders read differently is no date here unless the text
 // or `order` settles it: "05/06/2026" alone is nothing, "06/15/2026" is June 15.
 [[nodiscard]] std::optional<TemporalValue> parse(const std::string &text);
@@ -74,7 +74,7 @@ struct FoundDate {
 [[nodiscard]] std::vector<FoundDate> find(const std::string &text, SlashOrder order);
 
 // A day of the year with no year: "July 1", "1 July", "July 1st", "1st of
-// July", «1 июля», «"1" июля» - the day a yearly event falls on ("each
+// July"…"1"…"each
 // twelve-month period beginning on July 1"). No interval of days: which July 1
 // it is depends on the year, so it is before or after nothing by itself. "The
 // first day of each month" names no day of the year.

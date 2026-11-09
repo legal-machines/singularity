@@ -231,7 +231,7 @@ std::string Rational::to_string() const {
 namespace {
 
 // ---------------------------------------------------------------------------
-// Text as it is written: spaces of every kind, capitals, ё.
+// Text as it is written: spaces of every kind, capitals, …
 
 bool starts_at(std::string_view text, std::size_t at, std::string_view piece) {
 	return at <= text.size() && text.size() - at >= piece.size() && text.compare(at, piece.size(), piece) == 0;
@@ -256,7 +256,7 @@ bool cyrillic_at(std::string_view text, std::size_t at) {
 	return at + 1 < text.size() && is_cyrillic_lead(text[at]) && (static_cast<unsigned char>(text[at + 1]) & 0xC0) == 0x80;
 }
 
-// Lower case for ASCII and Cyrillic, ё read as е, byte for byte the same length.
+// Lower case for ASCII and Cyrillic, … read as …, byte for byte the same length.
 std::string lowered(std::string_view text) {
 	std::string result(text);
 	for (std::size_t index = 0; index < result.size(); ++index) {
@@ -338,39 +338,39 @@ const std::vector<WordNumber> &english_numbers() {
 const std::vector<WordNumber> &russian_numbers() {
 	static const std::vector<WordNumber> all = [] {
 		std::vector<WordNumber> forms{
-			{"ноль", 0}, {"нуля", 0}, {"нулю", 0}, {"нулем", 0},
-			{"один", 1}, {"одна", 1}, {"одно", 1}, {"одного", 1}, {"одной", 1}, {"одному", 1}, {"одним", 1},
-			{"одном", 1}, {"одну", 1},
-			{"два", 2}, {"две", 2}, {"двух", 2}, {"двум", 2}, {"двумя", 2},
-			{"три", 3}, {"трех", 3}, {"трем", 3}, {"тремя", 3},
-			{"четыре", 4}, {"четырех", 4}, {"четырем", 4}, {"четырьмя", 4},
-			{"восемь", 8}, {"восьми", 8}, {"восемью", 8}, {"восьмью", 8},
-			{"сорок", 40}, {"сорока", 40},
-			{"пятьдесят", 50}, {"пятидесяти", 50}, {"пятьюдесятью", 50},
-			{"шестьдесят", 60}, {"шестидесяти", 60}, {"шестьюдесятью", 60},
-			{"семьдесят", 70}, {"семидесяти", 70}, {"семьюдесятью", 70},
-			{"восемьдесят", 80}, {"восьмидесяти", 80}, {"восемьюдесятью", 80},
-			{"девяносто", 90}, {"девяноста", 90},
-			{"сто", 100}, {"ста", 100},
-			{"двести", 200}, {"двухсот", 200}, {"двумстам", 200}, {"двумястами", 200}, {"двухстах", 200},
-			{"триста", 300}, {"трехсот", 300}, {"тремстам", 300}, {"тремястами", 300}, {"трехстах", 300},
-			{"четыреста", 400}, {"четырехсот", 400}, {"четыремстам", 400}, {"четырьмястами", 400}, {"четырехстах", 400},
-			{"пятьсот", 500}, {"пятисот", 500}, {"пятистам", 500}, {"пятьюстами", 500}, {"пятистах", 500},
-			{"шестьсот", 600}, {"шестисот", 600}, {"шестистам", 600}, {"шестьюстами", 600}, {"шестистах", 600},
-			{"семьсот", 700}, {"семисот", 700}, {"семистам", 700}, {"семьюстами", 700}, {"семистах", 700},
-			{"восемьсот", 800}, {"восьмисот", 800}, {"восьмистам", 800}, {"восемьюстами", 800}, {"восьмистах", 800},
-			{"девятьсот", 900}, {"девятисот", 900}, {"девятистам", 900}, {"девятьюстами", 900}, {"девятистах", 900},
+			{"\320\275\320\276\320\273\321\214", 0}, {"\320\275\321\203\320\273\321\217", 0}, {"\320\275\321\203\320\273\321\216", 0}, {"\320\275\321\203\320\273\320\265\320\274", 0},
+			{"\320\276\320\264\320\270\320\275", 1}, {"\320\276\320\264\320\275\320\260", 1}, {"\320\276\320\264\320\275\320\276", 1}, {"\320\276\320\264\320\275\320\276\320\263\320\276", 1}, {"\320\276\320\264\320\275\320\276\320\271", 1}, {"\320\276\320\264\320\275\320\276\320\274\321\203", 1}, {"\320\276\320\264\320\275\320\270\320\274", 1},
+			{"\320\276\320\264\320\275\320\276\320\274", 1}, {"\320\276\320\264\320\275\321\203", 1},
+			{"\320\264\320\262\320\260", 2}, {"\320\264\320\262\320\265", 2}, {"\320\264\320\262\321\203\321\205", 2}, {"\320\264\320\262\321\203\320\274", 2}, {"\320\264\320\262\321\203\320\274\321\217", 2},
+			{"\321\202\321\200\320\270", 3}, {"\321\202\321\200\320\265\321\205", 3}, {"\321\202\321\200\320\265\320\274", 3}, {"\321\202\321\200\320\265\320\274\321\217", 3},
+			{"\321\207\320\265\321\202\321\213\321\200\320\265", 4}, {"\321\207\320\265\321\202\321\213\321\200\320\265\321\205", 4}, {"\321\207\320\265\321\202\321\213\321\200\320\265\320\274", 4}, {"\321\207\320\265\321\202\321\213\321\200\321\214\320\274\321\217", 4},
+			{"\320\262\320\276\321\201\320\265\320\274\321\214", 8}, {"\320\262\320\276\321\201\321\214\320\274\320\270", 8}, {"\320\262\320\276\321\201\320\265\320\274\321\214\321\216", 8}, {"\320\262\320\276\321\201\321\214\320\274\321\214\321\216", 8},
+			{"\321\201\320\276\321\200\320\276\320\272", 40}, {"\321\201\320\276\321\200\320\276\320\272\320\260", 40},
+			{"\320\277\321\217\321\202\321\214\320\264\320\265\321\201\321\217\321\202", 50}, {"\320\277\321\217\321\202\320\270\320\264\320\265\321\201\321\217\321\202\320\270", 50}, {"\320\277\321\217\321\202\321\214\321\216\320\264\320\265\321\201\321\217\321\202\321\214\321\216", 50},
+			{"\321\210\320\265\321\201\321\202\321\214\320\264\320\265\321\201\321\217\321\202", 60}, {"\321\210\320\265\321\201\321\202\320\270\320\264\320\265\321\201\321\217\321\202\320\270", 60}, {"\321\210\320\265\321\201\321\202\321\214\321\216\320\264\320\265\321\201\321\217\321\202\321\214\321\216", 60},
+			{"\321\201\320\265\320\274\321\214\320\264\320\265\321\201\321\217\321\202", 70}, {"\321\201\320\265\320\274\320\270\320\264\320\265\321\201\321\217\321\202\320\270", 70}, {"\321\201\320\265\320\274\321\214\321\216\320\264\320\265\321\201\321\217\321\202\321\214\321\216", 70},
+			{"\320\262\320\276\321\201\320\265\320\274\321\214\320\264\320\265\321\201\321\217\321\202", 80}, {"\320\262\320\276\321\201\321\214\320\274\320\270\320\264\320\265\321\201\321\217\321\202\320\270", 80}, {"\320\262\320\276\321\201\320\265\320\274\321\214\321\216\320\264\320\265\321\201\321\217\321\202\321\214\321\216", 80},
+			{"\320\264\320\265\320\262\321\217\320\275\320\276\321\201\321\202\320\276", 90}, {"\320\264\320\265\320\262\321\217\320\275\320\276\321\201\321\202\320\260", 90},
+			{"\321\201\321\202\320\276", 100}, {"\321\201\321\202\320\260", 100},
+			{"\320\264\320\262\320\265\321\201\321\202\320\270", 200}, {"\320\264\320\262\321\203\321\205\321\201\320\276\321\202", 200}, {"\320\264\320\262\321\203\320\274\321\201\321\202\320\260\320\274", 200}, {"\320\264\320\262\321\203\320\274\321\217\321\201\321\202\320\260\320\274\320\270", 200}, {"\320\264\320\262\321\203\321\205\321\201\321\202\320\260\321\205", 200},
+			{"\321\202\321\200\320\270\321\201\321\202\320\260", 300}, {"\321\202\321\200\320\265\321\205\321\201\320\276\321\202", 300}, {"\321\202\321\200\320\265\320\274\321\201\321\202\320\260\320\274", 300}, {"\321\202\321\200\320\265\320\274\321\217\321\201\321\202\320\260\320\274\320\270", 300}, {"\321\202\321\200\320\265\321\205\321\201\321\202\320\260\321\205", 300},
+			{"\321\207\320\265\321\202\321\213\321\200\320\265\321\201\321\202\320\260", 400}, {"\321\207\320\265\321\202\321\213\321\200\320\265\321\205\321\201\320\276\321\202", 400}, {"\321\207\320\265\321\202\321\213\321\200\320\265\320\274\321\201\321\202\320\260\320\274", 400}, {"\321\207\320\265\321\202\321\213\321\200\321\214\320\274\321\217\321\201\321\202\320\260\320\274\320\270", 400}, {"\321\207\320\265\321\202\321\213\321\200\320\265\321\205\321\201\321\202\320\260\321\205", 400},
+			{"\320\277\321\217\321\202\321\214\321\201\320\276\321\202", 500}, {"\320\277\321\217\321\202\320\270\321\201\320\276\321\202", 500}, {"\320\277\321\217\321\202\320\270\321\201\321\202\320\260\320\274", 500}, {"\320\277\321\217\321\202\321\214\321\216\321\201\321\202\320\260\320\274\320\270", 500}, {"\320\277\321\217\321\202\320\270\321\201\321\202\320\260\321\205", 500},
+			{"\321\210\320\265\321\201\321\202\321\214\321\201\320\276\321\202", 600}, {"\321\210\320\265\321\201\321\202\320\270\321\201\320\276\321\202", 600}, {"\321\210\320\265\321\201\321\202\320\270\321\201\321\202\320\260\320\274", 600}, {"\321\210\320\265\321\201\321\202\321\214\321\216\321\201\321\202\320\260\320\274\320\270", 600}, {"\321\210\320\265\321\201\321\202\320\270\321\201\321\202\320\260\321\205", 600},
+			{"\321\201\320\265\320\274\321\214\321\201\320\276\321\202", 700}, {"\321\201\320\265\320\274\320\270\321\201\320\276\321\202", 700}, {"\321\201\320\265\320\274\320\270\321\201\321\202\320\260\320\274", 700}, {"\321\201\320\265\320\274\321\214\321\216\321\201\321\202\320\260\320\274\320\270", 700}, {"\321\201\320\265\320\274\320\270\321\201\321\202\320\260\321\205", 700},
+			{"\320\262\320\276\321\201\320\265\320\274\321\214\321\201\320\276\321\202", 800}, {"\320\262\320\276\321\201\321\214\320\274\320\270\321\201\320\276\321\202", 800}, {"\320\262\320\276\321\201\321\214\320\274\320\270\321\201\321\202\320\260\320\274", 800}, {"\320\262\320\276\321\201\320\265\320\274\321\214\321\216\321\201\321\202\320\260\320\274\320\270", 800}, {"\320\262\320\276\321\201\321\214\320\274\320\270\321\201\321\202\320\260\321\205", 800},
+			{"\320\264\320\265\320\262\321\217\321\202\321\214\321\201\320\276\321\202", 900}, {"\320\264\320\265\320\262\321\217\321\202\320\270\321\201\320\276\321\202", 900}, {"\320\264\320\265\320\262\321\217\321\202\320\270\321\201\321\202\320\260\320\274", 900}, {"\320\264\320\265\320\262\321\217\321\202\321\214\321\216\321\201\321\202\320\260\320\274\320\270", 900}, {"\320\264\320\265\320\262\321\217\321\202\320\270\321\201\321\202\320\260\321\205", 900},
 		};
-		// пять, пяти, пятью - the numerals in -ь decline alike.
+		// … - the numerals in -… decline alike.
 		static const std::vector<std::pair<std::string, int>> stems{
-			{"пят", 5}, {"шест", 6}, {"сем", 7}, {"девят", 9}, {"десят", 10}, {"одиннадцат", 11}, {"двенадцат", 12},
-			{"тринадцат", 13}, {"четырнадцат", 14}, {"пятнадцат", 15}, {"шестнадцат", 16}, {"семнадцат", 17},
-			{"восемнадцат", 18}, {"девятнадцат", 19}, {"двадцат", 20}, {"тридцат", 30},
+			{"\320\277\321\217\321\202", 5}, {"\321\210\320\265\321\201\321\202", 6}, {"\321\201\320\265\320\274", 7}, {"\320\264\320\265\320\262\321\217\321\202", 9}, {"\320\264\320\265\321\201\321\217\321\202", 10}, {"\320\276\320\264\320\270\320\275\320\275\320\260\320\264\321\206\320\260\321\202", 11}, {"\320\264\320\262\320\265\320\275\320\260\320\264\321\206\320\260\321\202", 12},
+			{"\321\202\321\200\320\270\320\275\320\260\320\264\321\206\320\260\321\202", 13}, {"\321\207\320\265\321\202\321\213\321\200\320\275\320\260\320\264\321\206\320\260\321\202", 14}, {"\320\277\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202", 15}, {"\321\210\320\265\321\201\321\202\320\275\320\260\320\264\321\206\320\260\321\202", 16}, {"\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202", 17},
+			{"\320\262\320\276\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202", 18}, {"\320\264\320\265\320\262\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202", 19}, {"\320\264\320\262\320\260\320\264\321\206\320\260\321\202", 20}, {"\321\202\321\200\320\270\320\264\321\206\320\260\321\202", 30},
 		};
 		static std::vector<std::string> generated;
 		generated.reserve(stems.size() * 3);
 		for (const auto &stem : stems)
-			for (const char *ending : {"ь", "и", "ью"}) generated.push_back(stem.first + ending);
+			for (const char *ending : {"\321\214", "\320\270", "\321\214\321\216"}) generated.push_back(stem.first + ending);
 		for (std::size_t index = 0; index < generated.size(); ++index)
 			forms.push_back({generated[index].c_str(), stems[index / 3].second});
 		return forms;
@@ -386,24 +386,24 @@ std::optional<int> small_number(const std::string &word) {
 	return std::nullopt;
 }
 
-// thousand, million, тысяча/тысячи/тысяч, миллионов, млн, тыс.
+// thousand, million, …
 std::optional<Int128> scale_word(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	if (word == "thousand" || word == "thousands" || word == "тыс" || starts_with(word, "тысяч")) return Int128(1000);
-	if (word == "million" || word == "millions" || word == "mm" || word == "mn" || word == "mln" || word == "млн"
-		|| starts_with(word, "миллион"))
+	if (word == "thousand" || word == "thousands" || word == "\321\202\321\213\321\201" || starts_with(word, "\321\202\321\213\321\201\321\217\321\207")) return Int128(1000);
+	if (word == "million" || word == "millions" || word == "mm" || word == "mn" || word == "mln" || word == "\320\274\320\273\320\275"
+		|| starts_with(word, "\320\274\320\270\320\273\320\273\320\270\320\276\320\275"))
 		return Int128(1000000);
-	if (word == "billion" || word == "billions" || word == "bn" || word == "млрд" || starts_with(word, "миллиард"))
+	if (word == "billion" || word == "billions" || word == "bn" || word == "\320\274\320\273\321\200\320\264" || starts_with(word, "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264"))
 		return Int128(1000000000);
-	if (word == "trillion" || word == "trillions" || word == "трлн" || starts_with(word, "триллион"))
+	if (word == "trillion" || word == "trillions" || word == "\321\202\321\200\320\273\320\275" || starts_with(word, "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275"))
 		return Int128(1000000000000LL);
 	return std::nullopt;
 }
 
 bool spelled_scale(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	return scale_word(word) && word != "mm" && word != "mn" && word != "mln" && word != "bn" && word != "тыс"
-		&& word != "млн" && word != "млрд" && word != "трлн";
+	return scale_word(word) && word != "mm" && word != "mn" && word != "mln" && word != "bn" && word != "\321\202\321\213\321\201"
+		&& word != "\320\274\320\273\320\275" && word != "\320\274\320\273\321\200\320\264" && word != "\321\202\321\200\320\273\320\275";
 }
 
 // A word of a number written out: "twenty-one" is two.
@@ -436,7 +436,7 @@ std::optional<Rational> words_value(const std::vector<std::string> &raw) {
 		const std::string &word = words[index];
 		// "zero" is a number only alone.
 		if (zero) return std::nullopt;
-		if (word == "and" || word == "и") {
+		if (word == "and" || word == "\320\270") {
 			if (!any || index + 1 == words.size()) return std::nullopt;
 			continue;
 		}
@@ -445,7 +445,7 @@ std::optional<Rational> words_value(const std::vector<std::string> &raw) {
 				if (any) return std::nullopt;
 				zero = true;
 			}
-			// "twenty five", "сто двадцать": a smaller part follows a larger one;
+			// "twenty five", "…": a smaller part follows a larger one;
 			// only a unit follows a ten, and nothing follows ten itself or a teen
 			// ("ten one" is not a number).
 			if (current != 0 && *small >= 100 && current % 1000 != 0) return std::nullopt;
@@ -505,11 +505,11 @@ std::string currency_of_code(const std::string &word) {
 std::string currency_of_word(const std::string &raw) {
 	const std::string word = without_dot(raw);
 	if (const std::string code = currency_of_code(word); !code.empty()) return code;
-	if (word == "dollar" || word == "dollars" || starts_with(word, "доллар") || word == "долл") return "USD";
-	if (word == "euro" || word == "euros" || word == "евро") return "EUR";
-	if (word == "pound" || word == "pounds" || starts_with(word, "фунт")) return "GBP";
-	if (word == "yen" || starts_with(word, "иен") || starts_with(word, "йен")) return "JPY";
-	if (word == "руб" || starts_with(word, "рубл") || word == "ruble" || word == "rubles" || word == "rouble" || word == "roubles")
+	if (word == "dollar" || word == "dollars" || starts_with(word, "\320\264\320\276\320\273\320\273\320\260\321\200") || word == "\320\264\320\276\320\273\320\273") return "USD";
+	if (word == "euro" || word == "euros" || word == "\320\265\320\262\321\200\320\276") return "EUR";
+	if (word == "pound" || word == "pounds" || starts_with(word, "\321\204\321\203\320\275\321\202")) return "GBP";
+	if (word == "yen" || starts_with(word, "\320\270\320\265\320\275") || starts_with(word, "\320\271\320\265\320\275")) return "JPY";
+	if (word == "\321\200\321\203\320\261" || starts_with(word, "\321\200\321\203\320\261\320\273") || word == "ruble" || word == "rubles" || word == "rouble" || word == "roubles")
 		return "RUB";
 	return "";
 }
@@ -517,50 +517,50 @@ std::string currency_of_word(const std::string &raw) {
 // A sub-unit and the currency it belongs to ("*": cents of dollars or euros).
 std::string subunit_of_word(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	if (word == "коп" || starts_with(word, "копе")) return "RUB";
+	if (word == "\320\272\320\276\320\277" || starts_with(word, "\320\272\320\276\320\277\320\265")) return "RUB";
 	if (word == "kopecks" || word == "kopeks" || word == "kopeck" || word == "kopek") return "RUB";
-	if (word == "cent" || word == "cents" || starts_with(word, "цент")) return "*";
-	if (word == "pence" || word == "penny" || starts_with(word, "пенс")) return "GBP";
+	if (word == "cent" || word == "cents" || starts_with(word, "\321\206\320\265\320\275\321\202")) return "*";
+	if (word == "pence" || word == "penny" || starts_with(word, "\320\277\320\265\320\275\321\201")) return "GBP";
 	return "";
 }
 
 bool percent_word(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	return word == "percent" || word == "pct" || word == "percentage" || starts_with(word, "процент");
+	return word == "percent" || word == "pct" || word == "percentage" || starts_with(word, "\320\277\321\200\320\276\321\206\320\265\320\275\321\202");
 }
 
 std::optional<DurationUnit> base_unit_word(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	static const char *days[] = {"day", "days", "день", "дня", "дней", "дню", "днями", "днях", "дн", "сутки", "суток"};
+	static const char *days[] = {"day", "days", "\320\264\320\265\320\275\321\214", "\320\264\320\275\321\217", "\320\264\320\275\320\265\320\271", "\320\264\320\275\321\216", "\320\264\320\275\321\217\320\274\320\270", "\320\264\320\275\321\217\321\205", "\320\264\320\275", "\321\201\321\203\321\202\320\272\320\270", "\321\201\321\203\321\202\320\276\320\272"};
 	for (const char *form : days)
 		if (word == form) return DurationUnit::Day;
-	if (word == "week" || word == "weeks" || starts_with(word, "недел")) return DurationUnit::Week;
-	if (word == "month" || word == "months" || starts_with(word, "месяц")) return DurationUnit::Month;
-	static const char *years[] = {"year", "years", "год", "года", "лет", "году", "годом", "годах", "годам"};
+	if (word == "week" || word == "weeks" || starts_with(word, "\320\275\320\265\320\264\320\265\320\273")) return DurationUnit::Week;
+	if (word == "month" || word == "months" || starts_with(word, "\320\274\320\265\321\201\321\217\321\206")) return DurationUnit::Month;
+	static const char *years[] = {"year", "years", "\320\263\320\276\320\264", "\320\263\320\276\320\264\320\260", "\320\273\320\265\321\202", "\320\263\320\276\320\264\321\203", "\320\263\320\276\320\264\320\276\320\274", "\320\263\320\276\320\264\320\260\321\205", "\320\263\320\276\320\264\320\260\320\274"};
 	for (const char *form : years)
 		if (word == form) return DurationUnit::Year;
 	// The protected computation protocol's own units (DESIGN4 §2.4): hours and
-	// minutes (an SLA's downtime), quarters. Whole words only: «часть» is no
-	// hour, «минимум» no minute.
-	static const char *hours[] = {"hour", "hours", "hr", "hrs", "час", "часа", "часов", "часу", "часам", "часами", "часах"};
+	// minutes (an SLA's downtime), quarters. Whole words only: «…» is no
+	// hour, «…» no minute.
+	static const char *hours[] = {"hour", "hours", "hr", "hrs", "\321\207\320\260\321\201", "\321\207\320\260\321\201\320\260", "\321\207\320\260\321\201\320\276\320\262", "\321\207\320\260\321\201\321\203", "\321\207\320\260\321\201\320\260\320\274", "\321\207\320\260\321\201\320\260\320\274\320\270", "\321\207\320\260\321\201\320\260\321\205"};
 	for (const char *form : hours)
 		if (word == form) return DurationUnit::Hour;
-	static const char *minutes[] = {"minute", "minutes", "min", "mins", "минута", "минуты", "минут", "минуту", "минутой",
-		"минутам", "минутами", "минутах"};
+	static const char *minutes[] = {"minute", "minutes", "min", "mins", "\320\274\320\270\320\275\321\203\321\202\320\260", "\320\274\320\270\320\275\321\203\321\202\321\213", "\320\274\320\270\320\275\321\203\321\202", "\320\274\320\270\320\275\321\203\321\202\321\203", "\320\274\320\270\320\275\321\203\321\202\320\276\320\271",
+		"\320\274\320\270\320\275\321\203\321\202\320\260\320\274", "\320\274\320\270\320\275\321\203\321\202\320\260\320\274\320\270", "\320\274\320\270\320\275\321\203\321\202\320\260\321\205"};
 	for (const char *form : minutes)
 		if (word == form) return DurationUnit::Minute;
-	static const char *quarters[] = {"quarter", "quarters", "квартал", "квартала", "кварталов", "кварталу", "кварталом",
-		"кварталам", "кварталами", "кварталах"};
+	static const char *quarters[] = {"quarter", "quarters", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\276\320\262", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\321\203", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\276\320\274",
+		"\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260\320\274", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260\320\274\320\270", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260\321\205"};
 	for (const char *form : quarters)
 		if (word == form) return DurationUnit::Quarter;
 	return std::nullopt;
 }
 
-// "calendar", "business", «календарных», «рабочих»: 0 none, 1 calendar, 2 business.
+// "calendar", "business", «…»: 0 none, 1 calendar, 2 business.
 int day_modifier(const std::string &raw) {
 	const std::string word = without_dot(raw);
-	if (word == "calendar" || starts_with(word, "календарн")) return 1;
-	if (word == "business" || word == "working" || word == "banking" || starts_with(word, "рабоч") || starts_with(word, "банковск"))
+	if (word == "calendar" || starts_with(word, "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275")) return 1;
+	if (word == "business" || word == "working" || word == "banking" || starts_with(word, "\321\200\320\260\320\261\320\276\321\207") || starts_with(word, "\320\261\320\260\320\275\320\272\320\276\320\262\321\201\320\272"))
 		return 2;
 	return 0;
 }
@@ -584,7 +584,7 @@ std::optional<std::pair<DurationUnit, std::size_t>> unit_at(const std::vector<st
 struct BasisPhrase {
 	std::vector<std::string> words;
 	RateBasis basis;
-	bool open;  // the words of the clause that follow belong to it ("за каждый день просрочки")
+	bool open;  // the words of the clause that follow belong to it ("…")
 };
 
 const std::vector<BasisPhrase> &basis_phrases() {
@@ -593,19 +593,19 @@ const std::vector<BasisPhrase> &basis_phrases() {
 		{{"per", "calendar", "day"}, RateBasis::PerDay, false}, {{"daily"}, RateBasis::PerDay, false},
 		{{"a", "day"}, RateBasis::PerDay, false}, {{"each", "day"}, RateBasis::PerDay, false},
 		{{"for", "each", "day"}, RateBasis::PerDay, true}, {{"for", "every", "day"}, RateBasis::PerDay, true},
-		{{"for", "each", "calendar", "day"}, RateBasis::PerDay, true}, {{"в", "день"}, RateBasis::PerDay, false},
-		{{"в", "сутки"}, RateBasis::PerDay, false}, {{"за", "каждый", "день"}, RateBasis::PerDay, true},
-		{{"за", "каждый", "календарный", "день"}, RateBasis::PerDay, true}, {{"за", "день"}, RateBasis::PerDay, true},
-		{{"ежедневно"}, RateBasis::PerDay, false},
+		{{"for", "each", "calendar", "day"}, RateBasis::PerDay, true}, {{"\320\262", "\320\264\320\265\320\275\321\214"}, RateBasis::PerDay, false},
+		{{"\320\262", "\321\201\321\203\321\202\320\272\320\270"}, RateBasis::PerDay, false}, {{"\320\267\320\260", "\320\272\320\260\320\266\320\264\321\213\320\271", "\320\264\320\265\320\275\321\214"}, RateBasis::PerDay, true},
+		{{"\320\267\320\260", "\320\272\320\260\320\266\320\264\321\213\320\271", "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275\321\213\320\271", "\320\264\320\265\320\275\321\214"}, RateBasis::PerDay, true}, {{"\320\267\320\260", "\320\264\320\265\320\275\321\214"}, RateBasis::PerDay, true},
+		{{"\320\265\320\266\320\265\320\264\320\275\320\265\320\262\320\275\320\276"}, RateBasis::PerDay, false},
 		{{"per", "annum"}, RateBasis::PerYear, false}, {{"per", "year"}, RateBasis::PerYear, false},
 		{{"a", "year"}, RateBasis::PerYear, false}, {{"annual"}, RateBasis::PerYear, false},
 		{{"annually"}, RateBasis::PerYear, false}, {{"yearly"}, RateBasis::PerYear, false},
-		{{"p.a"}, RateBasis::PerYear, false}, {{"годовых"}, RateBasis::PerYear, false},
-		{{"годовые"}, RateBasis::PerYear, false}, {{"в", "год"}, RateBasis::PerYear, false},
-		{{"ежегодно"}, RateBasis::PerYear, false},
+		{{"p.a"}, RateBasis::PerYear, false}, {{"\320\263\320\276\320\264\320\276\320\262\321\213\321\205"}, RateBasis::PerYear, false},
+		{{"\320\263\320\276\320\264\320\276\320\262\321\213\320\265"}, RateBasis::PerYear, false}, {{"\320\262", "\320\263\320\276\320\264"}, RateBasis::PerYear, false},
+		{{"\320\265\320\266\320\265\320\263\320\276\320\264\320\275\320\276"}, RateBasis::PerYear, false},
 		{{"per", "month"}, RateBasis::PerMonth, false}, {{"a", "month"}, RateBasis::PerMonth, false},
-		{{"monthly"}, RateBasis::PerMonth, false}, {{"в", "месяц"}, RateBasis::PerMonth, false},
-		{{"ежемесячно"}, RateBasis::PerMonth, false},
+		{{"monthly"}, RateBasis::PerMonth, false}, {{"\320\262", "\320\274\320\265\321\201\321\217\321\206"}, RateBasis::PerMonth, false},
+		{{"\320\265\320\266\320\265\320\274\320\265\321\201\321\217\321\207\320\275\320\276"}, RateBasis::PerMonth, false},
 	};
 	return all;
 }
@@ -662,7 +662,7 @@ std::optional<Token> read_number(const std::string &raw, bool russian) {
 		ambiguous = groups[1].size() == 3 && groups[0].size() <= 3 && groups[0] != "0";
 		if (!ambiguous || russian) decimal = ',';
 	} else if (points == 1) {
-		// "150.000 руб.", "€150.000": the continental way of grouping. Read as
+		// "…", "€150.000": the continental way of grouping. Read as
 		// a decimal, with the thousands reading kept for a currency to settle
 		// (no currency writes three decimals).
 		decimal = '.';
@@ -776,14 +776,14 @@ bool is_symbol(const Token &token, std::string_view symbol) { return token.type 
 
 bool is_number_word(const Token &token) { return token.type == TokenType::Word && number_word(without_dot(token.text)); }
 
-// The fraction a number in words may end with: «ноль целых одна десятая»,
+// The fraction a number in words may end with: «…»,
 // "zero point one", "five tenths".
 bool fraction_word(const std::string &word) {
 	if (word == "point" || starts_with(word, "tenth") || starts_with(word, "hundredth") || starts_with(word, "thousandth")) return true;
-	if (starts_with(word, "цел")) return true;
-	for (const char *stem : {"десят", "сот", "тысячн", "десятитысячн", "стотысячн", "миллионн"})
+	if (starts_with(word, "\321\206\320\265\320\273")) return true;
+	for (const char *stem : {"\320\264\320\265\321\201\321\217\321\202", "\321\201\320\276\321\202", "\321\202\321\213\321\201\321\217\321\207\320\275", "\320\264\320\265\321\201\321\217\321\202\320\270\321\202\321\213\321\201\321\217\321\207\320\275", "\321\201\321\202\320\276\321\202\321\213\321\201\321\217\321\207\320\275", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275\320\275"})
 		if (starts_with(word, stem))
-			for (const char *ending : {"ая", "ых", "ой", "ую", "ые"})
+			for (const char *ending : {"\320\260\321\217", "\321\213\321\205", "\320\276\320\271", "\321\203\321\216", "\321\213\320\265"})
 				if (word.size() == std::string(stem).size() + std::string(ending).size() && word.compare(std::string(stem).size(), std::string::npos, ending) == 0)
 					return true;
 	return false;
@@ -793,20 +793,20 @@ bool fraction_word(const std::string &word) {
 bool amount_word(const Token &token) {
 	if (token.type != TokenType::Word) return false;
 	const std::string word = without_dot(token.text);
-	return number_word(word) || fraction_word(word) || word == "and" || word == "и" || !currency_of_word(word).empty()
+	return number_word(word) || fraction_word(word) || word == "and" || word == "\320\270" || !currency_of_word(word).empty()
 		|| !subunit_of_word(word).empty() || percent_word(word) || base_unit_word(word) || day_modifier(word) != 0 || scale_word(word)
-		|| word == "сша" || word == "стерлингов" || word == "sterling"
+		|| word == "\321\201\321\210\320\260" || word == "\321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262" || word == "sterling"
 		// "US dollars", "U.S. dollars", "United States dollars".
 		|| word == "us" || word == "u" || word == "s" || word == "united" || word == "states" || word == "of" || word == "america";
 }
 
 // What an amount-in-words beside digits says: its currency, whether it
-// writes the minor unit ("рублей 00 копеек", "and 00/100 dollars"), and the
+// writes the minor unit ("…", "and 00/100 dollars"), and the
 // whole number its words spell, when they spell one.
 struct WordsNote {
 	std::string currency;
 	bool cents = false;
-	bool fraction = false;  // «одна целая пять десятых»: the words write a fraction
+	bool fraction = false;  // «…»: the words write a fraction
 	std::optional<Rational> value;
 };
 
@@ -817,7 +817,7 @@ bool read_words_group(const std::vector<Token> &tokens, std::size_t open, std::s
 	for (std::size_t index = open + 1; index < close; ++index) {
 		const Token &token = tokens[index];
 		if (token.type == TokenType::Number) {
-			// Only the minor unit is written in digits: "00 копеек", "00/100".
+			// Only the minor unit is written in digits: "…", "00/100".
 			if (!token.number.is_integer() || token.decimals != 0 || token.text.size() > 2) return false;
 			runDone = true;
 			if (index + 2 < close && is_symbol(tokens[index + 1], "/") && tokens[index + 2].type == TokenType::Number && tokens[index + 2].text == "100") {
@@ -838,7 +838,7 @@ bool read_words_group(const std::vector<Token> &tokens, std::size_t open, std::s
 			if (!note.currency.empty() && note.currency != currency) return false;
 			note.currency = currency;
 		}
-		const bool joins = (word == "and" || word == "и") && !run.empty() && index + 1 < close && is_number_word(tokens[index + 1]);
+		const bool joins = (word == "and" || word == "\320\270") && !run.empty() && index + 1 < close && is_number_word(tokens[index + 1]);
 		if (!runDone && (is_number_word(token) || joins)) {
 			run.push_back(word);
 		} else if (!run.empty()) {
@@ -857,7 +857,7 @@ bool read_words_group(const std::vector<Token> &tokens, std::size_t open, std::s
 }
 
 // A value written twice - in digits and in words - read once, from the digits.
-// "18 400 000 (восемнадцать миллионов …) рублей", "ten (10) days",
+// "…", "ten (10) days",
 // "twenty thousand dollars ($20,000)", and an accounting negative "$(1,250)".
 std::optional<std::vector<Token>> resolved_parentheses(const std::vector<Token> &tokens, bool &negative, WordsNote &note) {
 	struct Group {
@@ -1007,7 +1007,7 @@ std::optional<Reading> read_quantity(const std::vector<Token> &input) {
 		// "$2.125 million" is a decimal before a scale, never 2 125 million.
 		const bool scaled = at + 1 < size && tokens[at + 1].type == TokenType::Word && scale_word(words[at + 1]).has_value();
 		if (number.other && !(scaled && number.text.find('.') != std::string::npos)) {
-			// "$61,300 (шестьдесят одна тысяча триста долларов США)": the words
+			// "…": the words
 			// say which reading the comma has; failing them, a currency written
 			// before the digits writes them the English way ("USD 1,500").
 			const bool wordsSayThis = note.value && *note.value == number.number;
@@ -1055,7 +1055,7 @@ std::optional<Reading> read_quantity(const std::vector<Token> &input) {
 			return std::nullopt;
 		}
 		if (token.type == TokenType::Number || (words[at] == "and" && at + 1 < size && tokens[at + 1].type == TokenType::Number)) {
-			// "рублей 00 копеек", "dollars and 50 cents".
+			// "…", "dollars and 50 cents".
 			const std::size_t numberAt = token.type == TokenType::Number ? at : at + 1;
 			const Token &minor = tokens[numberAt];
 			if (numberAt + 1 >= size || !minor.number.is_integer() || minor.decimals != 0 || minor.text.size() > 2) return std::nullopt;
@@ -1079,8 +1079,8 @@ std::optional<Reading> read_quantity(const std::vector<Token> &input) {
 		if (!currency_of_word(word).empty()) {
 			if (!set_currency(reading, currency_of_word(word))) return std::nullopt;
 			++at;
-			// «долларов США», "pounds sterling".
-			if (at < size && (words[at] == "сша" || words[at] == "sterling" || words[at] == "стерлингов")) ++at;
+			// «…», "pounds sterling".
+			if (at < size && (words[at] == "\321\201\321\210\320\260" || words[at] == "sterling" || words[at] == "\321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262")) ++at;
 			continue;
 		}
 		if (percent_word(word)) { reading.percent = true; ++at; continue; }
@@ -1108,11 +1108,11 @@ std::optional<Reading> read_quantity(const std::vector<Token> &input) {
 		if (phrase) continue;
 		return std::nullopt;
 	}
-	// "100 000 (Сто тысяч рублей 00 копеек)": the currency is in the words.
+	// "…": the currency is in the words.
 	if (!note.currency.empty()) {
 		if (reading.percent || reading.unit || !set_currency(reading, note.currency)) return std::nullopt;
 	}
-	// No currency writes three decimals: "1,000 долларов США" is a thousand.
+	// No currency writes three decimals: "…" is a thousand.
 	if (thousands && !reading.currency.empty() && reading.decimals == 3) {
 		reading.amount = *thousands;
 		reading.decimals = 0;
@@ -1238,8 +1238,8 @@ bool english_date_words(const std::string &lower) {
 }
 
 // How Russian contracts write the listed forms: a day in straight or curly
-// quotes ("10" февраля), «г.» against the year (2026г.), and the year with
-// «год» in any case («в 2026 году»).
+// quotes ("10" …), «…» against the year (2026…), and the year with
+// «…» in any case («…»).
 std::string russian_date_forms(const std::string &text, std::string &bare) {
 	static const std::regex quoted("^(?:\"|\xE2\x80\x9C|\xE2\x80\x9D|\xE2\x80\x9E)(\\d{1,2})(?:\"|\xE2\x80\x9C|\xE2\x80\x9D) ");
 	static const std::regex year("(\\d{4}) ?(?:\xD0\xB3\\.?|\xD0\xB3\xD0\xBE\xD0\xB4(?:\xD0\xB0|\xD1\x83|\xD0\xB5)?)$");
@@ -1258,7 +1258,7 @@ std::optional<Value> read_date(const std::string &raw) {
 	const std::string text = russian_date_forms(written, bare);
 	auto date = temporal::parse(text);
 	if (!date) {
-		// "July 1", «1 июля»: a day of the year, which no year places in time.
+		// "July 1", «…»: a day of the year, which no year places in time.
 		const auto day = temporal::parse_day_of_year(bare);
 		if (!day) return std::nullopt;
 		return make_day_of_year(day->month, day->day, has_cyrillic(bare) ? "russian" : "english");
@@ -1395,7 +1395,7 @@ std::string currency_named(std::string_view label) {
 		}
 		if (!word.empty()) {
 			if (const std::string currency = currency_of_word(word); !currency.empty()) return currency;
-			// «р.», the ruble's shortest writing.
+			// «…», the ruble's shortest writing.
 			if (word == "\xD1\x80.") return "RUB";
 		}
 		word.clear();
@@ -1428,21 +1428,21 @@ std::optional<NamedMeasure> measure_named(std::string_view label) {
 			return std::any_of(forms.begin(), forms.end(), [&](const char *form) { return each == form; });
 		});
 	};
-	if (has({"days", "\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9", "\xD0\xB4\xD0\xBD\xD0\xB8", "\xD0\xB4\xD0\xBD"})) {  // дней, дни, дн
-		const bool business = has({"business", "working", "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD1\x85"});  // рабочих
+	if (has({"days", "\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9", "\xD0\xB4\xD0\xBD\xD0\xB8", "\xD0\xB4\xD0\xBD"})) {  // …
+		const bool business = has({"business", "working", "\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD1\x85"});  // …
 		return NamedMeasure{Kind::Duration, business ? DurationUnit::BusinessDay : DurationUnit::Day};
 	}
-	if (has({"months", "\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86\xD0\xB5\xD0\xB2", "\xD0\xBC\xD0\xB5\xD1\x81"}))  // месяцев, мес
+	if (has({"months", "\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86\xD0\xB5\xD0\xB2", "\xD0\xBC\xD0\xB5\xD1\x81"}))  // …
 		return NamedMeasure{Kind::Duration, DurationUnit::Month};
-	if (has({"hours", "\xD1\x87\xD0\xB0\xD1\x81\xD0\xBE\xD0\xB2"}))  // часов
+	if (has({"hours", "\xD1\x87\xD0\xB0\xD1\x81\xD0\xBE\xD0\xB2"}))  // …
 		return NamedMeasure{Kind::Duration, DurationUnit::Hour};
-	if (has({"minutes", "\xD0\xBC\xD0\xB8\xD0\xBD\xD1\x83\xD1\x82", "\xD0\xBC\xD0\xB8\xD0\xBD"}))  // минут, мин
+	if (has({"minutes", "\xD0\xBC\xD0\xB8\xD0\xBD\xD1\x83\xD1\x82", "\xD0\xBC\xD0\xB8\xD0\xBD"}))  // …
 		return NamedMeasure{Kind::Duration, DurationUnit::Minute};
 	const bool numberOf = std::adjacent_find(words.begin(), words.end(), [](const std::string &first, const std::string &second) {
 		return first == "number" && second == "of";
 	}) != words.end();
-	if (numberOf || has({"count", "qty", "quantity", "\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB8\xD1\x87\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2\xD0\xBE",  // количество
-			"\xD0\xBA\xD0\xBE\xD0\xBB-\xD0\xB2\xD0\xBE"}))  // кол-во
+	if (numberOf || has({"count", "qty", "quantity", "\xD0\xBA\xD0\xBE\xD0\xBB\xD0\xB8\xD1\x87\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2\xD0\xBE",  // …
+			"\xD0\xBA\xD0\xBE\xD0\xBB-\xD0\xB2\xD0\xBE"}))  // …
 		return NamedMeasure{Kind::Count, DurationUnit::Day};
 	return std::nullopt;
 }
@@ -1559,7 +1559,7 @@ struct ClauseWord {
 	std::size_t start = 0;
 	std::size_t end = 0;
 	std::string word;
-	bool rate = false;  // a figure written as a rate: "5%", "5 percent", «5 процентов»
+	bool rate = false;  // a figure written as a rate: "5%", "5 percent", «…»
 };
 
 bool clause_letter(std::string_view text, std::size_t at) { return at < text.size() && (is_ascii_letter(text[at]) || cyrillic_at(text, at)); }
@@ -1590,8 +1590,8 @@ std::vector<ClauseWord> clause_words(std::string_view text, std::size_t from, st
 	while (at < lower.size()) {
 		// A protected symbol is one word, and a rate's symbol ([[Rate4]]) is a
 		// rate: the sent text writes the clause's earlier rate so, and a period
-		// after it is still that rate's (live R1 c27: «[[Rate4]] ... за каждый
-		// день просрочки, но не более 10 %» made the 10 % cap daily).
+		// after it is still that rate's (live R1 c27: «[[Rate4]] ... …
+		// … 10 %» made the 10 % cap daily).
 		if (lower.compare(at, 2, "[[") == 0) {
 			const std::size_t close = lower.find("]]", at + 2);
 			if (close != std::string::npos && close - at < 48) {
@@ -1642,8 +1642,8 @@ std::optional<std::pair<const BasisPhrase *, std::size_t>> basis_phrase_at(const
 }
 
 // A phrase that names a period by itself anywhere in the clause ("per annum",
-// «за каждый день»), or only right beside the rate ("annual", "a day",
-// «годовых»), where it could otherwise be the year of a statement or a report.
+// «…»), or only right beside the rate ("annual", "a day",
+// «…»), where it could otherwise be the year of a statement or a report.
 bool names_period_alone(const BasisPhrase &phrase) {
 	return phrase.words.size() >= 2 && phrase.words.front() != "a" && phrase.words.front() != "each";
 }
@@ -1671,9 +1671,9 @@ RateBasis rate_basis_of_clause(std::string_view text, std::size_t start, std::si
 	for (std::size_t index = 0; index < before.size(); ++index)
 		if (before[index].rate) from = index + 1;
 	// A period written after an earlier rate of the clause is that rate's -
-	// «0,1 % ... за каждый день просрочки, но не более 10 % цены работ»: the
+	// «…»: the
 	// cap is 10 % of the price, never 10 % a day (live R1 c26: the cap and the
-	// penalty under it were restored "в день"). This rate takes it only when
+	// penalty under it were restored "…"). This rate takes it only when
 	// the period stands right before it.
 	std::optional<RateBasis> nearest;
 	for (std::size_t index = from; index < before.size(); ++index) {
@@ -1696,10 +1696,10 @@ std::string say(Language language, const std::string &english, const std::string
 
 std::string precision_noun(temporal::Precision precision, Language language) {
 	switch (precision) {
-		case temporal::Precision::Day: return say(language, "a day", "день");
-		case temporal::Precision::Month: return say(language, "a month", "месяц");
-		case temporal::Precision::Quarter: return say(language, "a quarter", "квартал");
-		case temporal::Precision::Year: return say(language, "a year", "год");
+		case temporal::Precision::Day: return say(language, "a day", "\320\264\320\265\320\275\321\214");
+		case temporal::Precision::Month: return say(language, "a month", "\320\274\320\265\321\201\321\217\321\206");
+		case temporal::Precision::Quarter: return say(language, "a quarter", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273");
+		case temporal::Precision::Year: return say(language, "a year", "\320\263\320\276\320\264");
 	}
 	return "";
 }
@@ -1717,23 +1717,23 @@ std::string named(const Value &value, std::string_view written, Language languag
 // ⟦July 25, 2026⟧, so which comes first is not known from the dates".
 std::string dates_reason(const Value &a, const Value &b, const std::string &nameA, const std::string &nameB, bool ordering,
 	Language language) {
-	const std::string question = ordering ? say(language, "which comes first", "что было раньше")
-		: say(language, "whether they are the same day", "один ли это день");
+	const std::string question = ordering ? say(language, "which comes first", "\321\207\321\202\320\276 \320\261\321\213\320\273\320\276 \321\200\320\260\320\275\321\214\321\210\320\265")
+		: say(language, "whether they are the same day", "\320\276\320\264\320\270\320\275 \320\273\320\270 \321\215\321\202\320\276 \320\264\320\265\320\275\321\214");
 	const std::string tail = say(language, ", so " + question + " is not known from the dates",
-		", поэтому " + question + ", по датам неизвестно");
+		", \320\277\320\276\321\215\321\202\320\276\320\274\321\203 " + question + ", \320\277\320\276 \320\264\320\260\321\202\320\260\320\274 \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\276");
 	switch (relate_dates(a.date, b.date)) {
 		case DateRelation::Contains:
 			return say(language, nameA + " is " + precision_noun(a.date.precision, language) + " that contains " + nameB,
-				nameA + " - это " + precision_noun(a.date.precision, language) + ", в который входит " + nameB) + tail;
+				nameA + " - \321\215\321\202\320\276 " + precision_noun(a.date.precision, language) + ", \320\262 \320\272\320\276\321\202\320\276\321\200\321\213\320\271 \320\262\321\205\320\276\320\264\320\270\321\202 " + nameB) + tail;
 		case DateRelation::Within:
 			return say(language, nameB + " is " + precision_noun(b.date.precision, language) + " that contains " + nameA,
-				nameB + " - это " + precision_noun(b.date.precision, language) + ", в который входит " + nameA) + tail;
+				nameB + " - \321\215\321\202\320\276 " + precision_noun(b.date.precision, language) + ", \320\262 \320\272\320\276\321\202\320\276\321\200\321\213\320\271 \320\262\321\205\320\276\320\264\320\270\321\202 " + nameA) + tail;
 		case DateRelation::SamePeriod:
 			return say(language, nameA + " and " + nameB + " are the same " + precision_noun(a.date.precision, language).substr(2)
 					+ ", not a day",
-				nameA + " и " + nameB + " - один и тот же " + precision_noun(a.date.precision, language) + ", а не день") + tail;
+				nameA + " \320\270 " + nameB + " - \320\276\320\264\320\270\320\275 \320\270 \321\202\320\276\321\202 \320\266\320\265 " + precision_noun(a.date.precision, language) + ", \320\260 \320\275\320\265 \320\264\320\265\320\275\321\214") + tail;
 		default:
-			return say(language, nameA + " and " + nameB + " overlap", nameA + " и " + nameB + " пересекаются") + tail;
+			return say(language, nameA + " and " + nameB + " overlap", nameA + " \320\270 " + nameB + " \320\277\320\265\321\200\320\265\321\201\320\265\320\272\320\260\321\216\321\202\321\201\321\217") + tail;
 	}
 }
 
@@ -1808,34 +1808,34 @@ Span month_span_in_days(const Rational &months) {
 // so of the year, anything else of the month.
 std::string why_not_days(const Value &months, Language language) {
 	const Rational count = in_months(months);
-	if (!count.is_zero() && (count / Rational(12)).is_integer()) return say(language, "a year has 365 or 366 days", "в году 365 или 366 дней");
-	return say(language, "a month has 28 to 31 days", "в месяце от 28 до 31 дня");
+	if (!count.is_zero() && (count / Rational(12)).is_integer()) return say(language, "a year has 365 or 366 days", "\320\262 \320\263\320\276\320\264\321\203 365 \320\270\320\273\320\270 366 \320\264\320\275\320\265\320\271");
+	return say(language, "a month has 28 to 31 days", "\320\262 \320\274\320\265\321\201\321\217\321\206\320\265 \320\276\321\202 28 \320\264\320\276 31 \320\264\320\275\321\217");
 }
 
 std::string unit_words(DurationUnit unit, Language language) {
 	switch (unit) {
-		case DurationUnit::BusinessDay: return say(language, "business days", "рабочие дни");
-		case DurationUnit::Day: return say(language, "days", "дни");
-		case DurationUnit::Week: return say(language, "weeks", "недели");
-		case DurationUnit::Month: return say(language, "months", "месяцы");
-		case DurationUnit::Year: return say(language, "years", "годы");
-		case DurationUnit::Quarter: return say(language, "quarters", "кварталы");
-		case DurationUnit::Hour: return say(language, "hours", "часы");
-		case DurationUnit::Minute: return say(language, "minutes", "минуты");
+		case DurationUnit::BusinessDay: return say(language, "business days", "\321\200\320\260\320\261\320\276\321\207\320\270\320\265 \320\264\320\275\320\270");
+		case DurationUnit::Day: return say(language, "days", "\320\264\320\275\320\270");
+		case DurationUnit::Week: return say(language, "weeks", "\320\275\320\265\320\264\320\265\320\273\320\270");
+		case DurationUnit::Month: return say(language, "months", "\320\274\320\265\321\201\321\217\321\206\321\213");
+		case DurationUnit::Year: return say(language, "years", "\320\263\320\276\320\264\321\213");
+		case DurationUnit::Quarter: return say(language, "quarters", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\321\213");
+		case DurationUnit::Hour: return say(language, "hours", "\321\207\320\260\321\201\321\213");
+		case DurationUnit::Minute: return say(language, "minutes", "\320\274\320\270\320\275\321\203\321\202\321\213");
 	}
 	return "";
 }
 
 std::string kind_words(Kind kind, Language language) {
 	switch (kind) {
-		case Kind::Money: return say(language, "an amount of money", "денежная сумма");
-		case Kind::Number: return say(language, "a number", "число");
-		case Kind::Count: return say(language, "a count", "количество");
-		case Kind::Percentage: return say(language, "a percentage", "процент");
-		case Kind::Duration: return say(language, "a period", "срок");
-		case Kind::Date: return say(language, "a date", "дата");
-		case Kind::Boolean: return say(language, "true or false", "да или нет");
-		case Kind::DayOfYear: return say(language, "a day of the year with no year", "день года без указания года");
+		case Kind::Money: return say(language, "an amount of money", "\320\264\320\265\320\275\320\265\320\266\320\275\320\260\321\217 \321\201\321\203\320\274\320\274\320\260");
+		case Kind::Number: return say(language, "a number", "\321\207\320\270\321\201\320\273\320\276");
+		case Kind::Count: return say(language, "a count", "\320\272\320\276\320\273\320\270\321\207\320\265\321\201\321\202\320\262\320\276");
+		case Kind::Percentage: return say(language, "a percentage", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202");
+		case Kind::Duration: return say(language, "a period", "\321\201\321\200\320\276\320\272");
+		case Kind::Date: return say(language, "a date", "\320\264\320\260\321\202\320\260");
+		case Kind::Boolean: return say(language, "true or false", "\320\264\320\260 \320\270\320\273\320\270 \320\275\320\265\321\202");
+		case Kind::DayOfYear: return say(language, "a day of the year with no year", "\320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260 \320\261\320\265\320\267 \321\203\320\272\320\260\320\267\320\260\320\275\320\270\321\217 \320\263\320\276\320\264\320\260");
 	}
 	return "";
 }
@@ -1844,8 +1844,8 @@ AlgebraError different_currencies(const Value &a, const Value &b, const std::str
 	return AlgebraError("currency", say(language,
 		nameA + " and " + nameB + " are amounts in different currencies (" + a.currency + " and " + b.currency
 			+ "), and Singularity does not convert between them",
-		nameA + " и " + nameB + " - суммы в разных валютах (" + a.currency + " и " + b.currency
-			+ "), а Singularity не пересчитывает валюты"));
+		nameA + " \320\270 " + nameB + " - \321\201\321\203\320\274\320\274\321\213 \320\262 \321\200\320\260\320\267\320\275\321\213\321\205 \320\262\320\260\320\273\321\216\321\202\320\260\321\205 (" + a.currency + " \320\270 " + b.currency
+			+ "), \320\260 Singularity \320\275\320\265 \320\277\320\265\321\200\320\265\321\201\321\207\320\270\321\202\321\213\320\262\320\260\320\265\321\202 \320\262\320\260\320\273\321\216\321\202\321\213"));
 }
 
 // An amount whose currency is not known is not an amount in any currency: it
@@ -1858,8 +1858,8 @@ AlgebraError unknown_currency(const Value &a, const Value &b, const std::string 
 	return AlgebraError("currency", say(language,
 		unknown + " is an amount whose currency is not known and " + known + " is in " + code
 			+ ", so Singularity cannot take them as one currency",
-		"валюта суммы " + unknown + " неизвестна, а " + known + " указана в " + code
-			+ ", поэтому Singularity не может считать их суммами в одной валюте"));
+		"\320\262\320\260\320\273\321\216\321\202\320\260 \321\201\321\203\320\274\320\274\321\213 " + unknown + " \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\260, \320\260 " + known + " \321\203\320\272\320\260\320\267\320\260\320\275\320\260 \320\262 " + code
+			+ ", \320\277\320\276\321\215\321\202\320\276\320\274\321\203 Singularity \320\275\320\265 \320\274\320\276\320\266\320\265\321\202 \321\201\321\207\320\270\321\202\320\260\321\202\321\214 \320\270\321\205 \321\201\321\203\320\274\320\274\320\260\320\274\320\270 \320\262 \320\276\320\264\320\275\320\276\320\271 \320\262\320\260\320\273\321\216\321\202\320\265"));
 }
 
 // Two amounts in one currency, or why they are not.
@@ -1874,23 +1874,23 @@ void require_one_currency(const Value &a, const Value &b, const std::string &nam
 AlgebraError number_is_not_money(const std::string &number, const std::string &whole, Language language) {
 	return AlgebraError("type", say(language,
 		whole + " mixes an amount of money with " + number + ", a number with no currency; write that amount with its currency",
-		whole + " смешивает денежную сумму и " + number + " - число без валюты; запишите эту сумму с ее валютой"));
+		whole + " \321\201\320\274\320\265\321\210\320\270\320\262\320\260\320\265\321\202 \320\264\320\265\320\275\320\265\320\266\320\275\321\203\321\216 \321\201\321\203\320\274\320\274\321\203 \320\270 " + number + " - \321\207\320\270\321\201\320\273\320\276 \320\261\320\265\320\267 \320\262\320\260\320\273\321\216\321\202\321\213; \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\215\321\202\321\203 \321\201\321\203\320\274\320\274\321\203 \321\201 \320\265\320\265 \320\262\320\260\320\273\321\216\321\202\320\276\320\271"));
 }
 
 AlgebraError do_not_compare(const Value &a, const Value &b, const std::string &nameA, const std::string &nameB, Language language) {
 	return AlgebraError("type", say(language,
 		nameA + " is " + kind_words(a.kind, language) + " and " + nameB + " is " + kind_words(b.kind, language)
 			+ ", so they do not compare",
-		nameA + " - " + kind_words(a.kind, language) + ", а " + nameB + " - " + kind_words(b.kind, language)
-			+ ", их нельзя сравнить"));
+		nameA + " - " + kind_words(a.kind, language) + ", \320\260 " + nameB + " - " + kind_words(b.kind, language)
+			+ ", \320\270\321\205 \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\321\200\320\260\320\262\320\275\320\270\321\202\321\214"));
 }
 
 std::string basis_name(RateBasis basis, Language language) {
 	switch (basis) {
 		case RateBasis::None: return "";
-		case RateBasis::PerDay: return say(language, "per day", "в день");
-		case RateBasis::PerMonth: return say(language, "per month", "в месяц");
-		case RateBasis::PerYear: return say(language, "per annum", "в год");
+		case RateBasis::PerDay: return say(language, "per day", "\320\262 \320\264\320\265\320\275\321\214");
+		case RateBasis::PerMonth: return say(language, "per month", "\320\262 \320\274\320\265\321\201\321\217\321\206");
+		case RateBasis::PerYear: return say(language, "per annum", "\320\262 \320\263\320\276\320\264");
 	}
 	return "";
 }
@@ -1942,15 +1942,15 @@ AlgebraError per_period_and_lump_sum(const Value &a, const Value &b, const std::
 	const std::string &per = firstPer ? nameA : nameB;
 	const std::string &lump = firstPer ? nameB : nameA;
 	const RateBasis basis = firstPer ? a.basis : b.basis;
-	const std::string example = basis == RateBasis::PerDay ? say(language, "* 45 days", "* 45 дней")
-		: basis == RateBasis::PerMonth ? say(language, "* 6 months", "* 6 месяцев") : say(language, "* 2 years", "* 2 года");
+	const std::string example = basis == RateBasis::PerDay ? say(language, "* 45 days", "* 45 \320\264\320\275\320\265\320\271")
+		: basis == RateBasis::PerMonth ? say(language, "* 6 months", "* 6 \320\274\320\265\321\201\321\217\321\206\320\265\320\262") : say(language, "* 2 years", "* 2 \320\263\320\276\320\264\320\260");
 	return AlgebraError("type", say(language,
 		per + " is an amount " + basis_name(basis, language) + " and " + lump
 			+ " is a lump sum, so they do not add up or compare: multiply the amount " + basis_name(basis, language)
 			+ " by its period first (for example " + example + ")",
-		per + " - сумма " + basis_name(basis, language) + ", а " + lump
-			+ " - единовременная сумма, их нельзя складывать и сравнивать: сначала умножьте сумму " + basis_name(basis, language)
-			+ " на ее срок (например, " + example + ")"));
+		per + " - \321\201\321\203\320\274\320\274\320\260 " + basis_name(basis, language) + ", \320\260 " + lump
+			+ " - \320\265\320\264\320\270\320\275\320\276\320\262\321\200\320\265\320\274\320\265\320\275\320\275\320\260\321\217 \321\201\321\203\320\274\320\274\320\260, \320\270\321\205 \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\320\272\320\273\320\260\320\264\321\213\320\262\320\260\321\202\321\214 \320\270 \321\201\321\200\320\260\320\262\320\275\320\270\320\262\320\260\321\202\321\214: \321\201\320\275\320\260\321\207\320\260\320\273\320\260 \321\203\320\274\320\275\320\276\320\266\321\214\321\202\320\265 \321\201\321\203\320\274\320\274\321\203 " + basis_name(basis, language)
+			+ " \320\275\320\260 \320\265\320\265 \321\201\321\200\320\276\320\272 (\320\275\320\260\320\277\321\200\320\270\320\274\320\265\321\200, " + example + ")"));
 }
 
 std::pair<Span, Span> yearly_spans(const Value &a, const Value &b, const std::string &nameA, const std::string &nameB, Language language,
@@ -1958,8 +1958,8 @@ std::pair<Span, Span> yearly_spans(const Value &a, const Value &b, const std::st
 	undecided = say(language,
 		nameA + " is " + basis_name(a.basis, language) + " and " + nameB + " is " + basis_name(b.basis, language)
 			+ ", and a year has 365 or 366 days, so they cannot be compared exactly",
-		nameA + " - " + basis_name(a.basis, language) + ", а " + nameB + " - " + basis_name(b.basis, language)
-			+ ", а в году 365 или 366 дней, поэтому точно их сравнить нельзя");
+		nameA + " - " + basis_name(a.basis, language) + ", \320\260 " + nameB + " - " + basis_name(b.basis, language)
+			+ ", \320\260 \320\262 \320\263\320\276\320\264\321\203 365 \320\270\320\273\320\270 366 \320\264\320\275\320\265\320\271, \320\277\320\276\321\215\321\202\320\276\320\274\321\203 \321\202\320\276\321\207\320\275\320\276 \320\270\321\205 \321\201\321\200\320\260\320\262\320\275\320\270\321\202\321\214 \320\275\320\265\320\273\321\214\320\267\321\217");
 	return {per_year(a.amount, a.basis), per_year(b.amount, b.basis)};
 }
 
@@ -1981,13 +1981,13 @@ std::pair<Span, Span> spans(const Value &a, const Value &b, const std::string &n
 			if (businessA && businessB) return {point(a.amount), point(b.amount)};
 			throw AlgebraError("undetermined", say(language,
 				nameA + " and " + nameB + " cannot be compared: business days depend on a holiday calendar Singularity does not have",
-				nameA + " и " + nameB + " нельзя сравнить: рабочие дни зависят от календаря праздников, которого у Singularity нет"));
+				nameA + " \320\270 " + nameB + " \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\321\200\320\260\320\262\320\275\320\270\321\202\321\214: \321\200\320\260\320\261\320\276\321\207\320\270\320\265 \320\264\320\275\320\270 \320\267\320\260\320\262\320\270\321\201\321\217\321\202 \320\276\321\202 \320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\321\217 \320\277\321\200\320\260\320\267\320\264\320\275\320\270\320\272\320\276\320\262, \320\272\320\276\321\202\320\276\321\200\320\276\320\263\320\276 \321\203 Singularity \320\275\320\265\321\202"));
 		}
 		if (day_class(a.unit) && day_class(b.unit)) return {point(in_days(a)), point(in_days(b))};
 		if (month_class(a.unit) && month_class(b.unit)) return {point(in_months(a)), point(in_months(b))};
 		const std::string why = why_not_days(month_class(a.unit) ? a : b, language);
 		undecided = say(language, nameA + " and " + nameB + " cannot be compared exactly: " + why,
-			nameA + " и " + nameB + " нельзя сравнить точно: " + why);
+			nameA + " \320\270 " + nameB + " \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\321\200\320\260\320\262\320\275\320\270\321\202\321\214 \321\202\320\276\321\207\320\275\320\276: " + why);
 		const Span first = day_class(a.unit) ? point(in_days(a)) : month_span_in_days(in_months(a));
 		const Span second = day_class(b.unit) ? point(in_days(b)) : month_span_in_days(in_months(b));
 		return {first, second};
@@ -2010,7 +2010,7 @@ std::pair<Span, Span> spans(const Value &a, const Value &b, const std::string &n
 		const Value &other = numberFirst ? a : b;
 		if (other.kind != Kind::Number) throw do_not_compare(a, b, nameA, nameB, language);
 		if (!other.amount.is_zero())
-			throw number_is_not_money(numberFirst ? nameA : nameB, say(language, "comparing " + nameA + " with " + nameB, "сравнение " + nameA + " и " + nameB), language);
+			throw number_is_not_money(numberFirst ? nameA : nameB, say(language, "comparing " + nameA + " with " + nameB, "\321\201\321\200\320\260\320\262\320\275\320\265\320\275\320\270\320\265 " + nameA + " \320\270 " + nameB), language);
 		return {point(a.amount), point(b.amount)};
 	}
 	// Numbers and percentages: a percentage is its fraction, and rates for
@@ -2054,8 +2054,8 @@ Relation compare(const Value &a, Comparator comparator, const Value &b, Language
 			throw AlgebraError("type", say(language,
 				day + " is a day of the year with no year, so it is before or after nothing: ask same_day_of_year() whether a "
 					"date falls on it, or next_occurrence() for the date it next comes on",
-				day + " - день года без указания года, он не раньше и не позже чего-либо: спросите same_day_of_year(), "
-					"приходится ли дата на него, или next_occurrence() - когда он наступит"));
+				day + " - \320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260 \320\261\320\265\320\267 \321\203\320\272\320\260\320\267\320\260\320\275\320\270\321\217 \320\263\320\276\320\264\320\260, \320\276\320\275 \320\275\320\265 \321\200\320\260\320\275\321\214\321\210\320\265 \320\270 \320\275\320\265 \320\277\320\276\320\267\320\266\320\265 \321\207\320\265\320\263\320\276-\320\273\320\270\320\261\320\276: \321\201\320\277\321\200\320\276\321\201\320\270\321\202\320\265 same_day_of_year(), "
+					"\320\277\321\200\320\270\321\205\320\276\320\264\320\270\321\202\321\201\321\217 \320\273\320\270 \320\264\320\260\321\202\320\260 \320\275\320\260 \320\275\320\265\320\263\320\276, \320\270\320\273\320\270 next_occurrence() - \320\272\320\276\320\263\320\264\320\260 \320\276\320\275 \320\275\320\260\321\201\321\202\321\203\320\277\320\270\321\202"));
 		}
 		const bool same = a.day_of_year.month == b.day_of_year.month && a.day_of_year.day == b.day_of_year.day;
 		return {(same == (comparator == Comparator::Equal)) ? Truth::True : Truth::False, ""};
@@ -2063,7 +2063,7 @@ Relation compare(const Value &a, Comparator comparator, const Value &b, Language
 	std::string undecided;
 	const auto [x, y] = spans(a, b, nameA, nameB, language, undecided);
 	if (a.kind == Kind::Boolean && comparator != Comparator::Equal && comparator != Comparator::NotEqual)
-		throw AlgebraError("type", say(language, "true and false have no order", "у «да» и «нет» нет порядка"));
+		throw AlgebraError("type", say(language, "true and false have no order", "\321\203 «\320\264\320\260» \320\270 «\320\275\320\265\321\202» \320\275\320\265\321\202 \320\277\320\276\321\200\321\217\320\264\320\272\320\260"));
 	Truth truth = Truth::Undetermined;
 	switch (comparator) {
 		case Comparator::Less: truth = truth_of(x.high < y.low, x.low >= y.high); break;
@@ -2092,7 +2092,7 @@ namespace {
 void require_dates(const Value &a, const Value &b, const std::string &nameA, const std::string &nameB, Language language) {
 	for (const auto &[value, name] : {std::make_pair(&a, &nameA), std::make_pair(&b, &nameB)})
 		if (value->kind != Kind::Date)
-			throw AlgebraError("type", say(language, *name + " is not a date", *name + " - не дата"));
+			throw AlgebraError("type", say(language, *name + " is not a date", *name + " - \320\275\320\265 \320\264\320\260\321\202\320\260"));
 }
 
 } // namespace
@@ -2125,8 +2125,8 @@ Relation within(const Value &date, const Value &period, Language language, std::
 		relation.reason = say(language,
 			nameA + " is " + precision_noun(d.precision, language) + " only partly inside " + nameB
 				+ ", so whether it falls within it is not known from the dates",
-			nameA + " - " + precision_noun(d.precision, language) + ", лишь частью входящий в " + nameB
-				+ ", поэтому, попадает ли он в этот период, по датам неизвестно");
+			nameA + " - " + precision_noun(d.precision, language) + ", \320\273\320\270\321\210\321\214 \321\207\320\260\321\201\321\202\321\214\321\216 \320\262\321\205\320\276\320\264\321\217\321\211\320\270\320\271 \320\262 " + nameB
+				+ ", \320\277\320\276\321\215\321\202\320\276\320\274\321\203, \320\277\320\276\320\277\320\260\320\264\320\260\320\265\321\202 \320\273\320\270 \320\276\320\275 \320\262 \321\215\321\202\320\276\321\202 \320\277\320\265\321\200\320\270\320\276\320\264, \320\277\320\276 \320\264\320\260\321\202\320\260\320\274 \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\276");
 	return relation;
 }
 
@@ -2135,10 +2135,10 @@ Relation within(const Value &date, const Value &from, const Value &to, Language 
 	require_dates(from, to, nameFrom, nameTo, language);
 	if (from.date.first_day > to.date.last_day)
 		throw AlgebraError("type", say(language, "the period from " + nameFrom + " to " + nameTo + " ends before it starts",
-			"период с " + nameFrom + " по " + nameTo + " заканчивается раньше, чем начинается"));
+			"\320\277\320\265\321\200\320\270\320\276\320\264 \321\201 " + nameFrom + " \320\277\320\276 " + nameTo + " \320\267\320\260\320\272\320\260\320\275\321\207\320\270\320\262\320\260\320\265\321\202\321\201\321\217 \321\200\320\260\320\275\321\214\321\210\320\265, \321\207\320\265\320\274 \320\275\320\260\321\207\320\270\320\275\320\260\320\265\321\202\321\201\321\217"));
 	Value period = make_date({from.date.first_day, to.date.last_day, temporal::Precision::Day});
 	return within(date, period, language, written_date,
-		say(language, "the period from " + nameFrom + " to " + nameTo, "период с " + nameFrom + " по " + nameTo));
+		say(language, "the period from " + nameFrom + " to " + nameTo, "\320\277\320\265\321\200\320\270\320\276\320\264 \321\201 " + nameFrom + " \320\277\320\276 " + nameTo));
 }
 
 Relation overlaps(const Value &a, const Value &b) {
@@ -2168,7 +2168,7 @@ bool falls_on(long long days, const temporal::DayOfYear &day) {
 void require_day_or_date(const Value &value, const std::string &name, Language language) {
 	if (value.kind != Kind::DayOfYear && value.kind != Kind::Date)
 		throw AlgebraError("type", say(language, name + " is neither a date nor a day of the year",
-			name + " - не дата и не день года"));
+			name + " - \320\275\320\265 \320\264\320\260\321\202\320\260 \320\270 \320\275\320\265 \320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260"));
 }
 
 // The first day from `from` on that is `day`: at most eight years on, for a
@@ -2193,8 +2193,8 @@ Relation same_day_of_year(const Value &a, const Value &b, Language language, std
 	if (dayA && dayB) return {dayA->month == dayB->month && dayA->day == dayB->day ? Truth::True : Truth::False, ""};
 	if (!dayA && !dayB)
 		return {Truth::Undetermined, say(language, nameA + " and " + nameB + " are periods, not days, so whether they fall on the same "
-			"day of the year is not known from the dates", nameA + " и " + nameB + " - периоды, а не дни, поэтому, приходятся ли они "
-			"на один день года, по датам неизвестно")};
+			"day of the year is not known from the dates", nameA + " \320\270 " + nameB + " - \320\277\320\265\321\200\320\270\320\276\320\264\321\213, \320\260 \320\275\320\265 \320\264\320\275\320\270, \320\277\320\276\321\215\321\202\320\276\320\274\321\203, \320\277\321\200\320\270\321\205\320\276\320\264\321\217\321\202\321\201\321\217 \320\273\320\270 \320\276\320\275\320\270 "
+			"\320\275\320\260 \320\276\320\264\320\270\320\275 \320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260, \320\277\320\276 \320\264\320\260\321\202\320\260\320\274 \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\276")};
 	// A day of the year against a period: false when no day of the period is it.
 	const temporal::DayOfYear day = dayA ? *dayA : *dayB;
 	const Value &period = dayA ? b : a;
@@ -2207,8 +2207,8 @@ Relation same_day_of_year(const Value &a, const Value &b, Language language, std
 	return {Truth::Undetermined, say(language,
 		periodName + " is " + precision_noun(period.date.precision, language) + " that holds " + dayName
 			+ ", so whether it is that day is not known from the dates",
-		periodName + " - " + precision_noun(period.date.precision, language) + ", в который входит " + dayName
-			+ ", поэтому, тот ли это день, по датам неизвестно")};
+		periodName + " - " + precision_noun(period.date.precision, language) + ", \320\262 \320\272\320\276\321\202\320\276\321\200\321\213\320\271 \320\262\321\205\320\276\320\264\320\270\321\202 " + dayName
+			+ ", \320\277\320\276\321\215\321\202\320\276\320\274\321\203, \321\202\320\276\321\202 \320\273\320\270 \321\215\321\202\320\276 \320\264\320\265\320\275\321\214, \320\277\320\276 \320\264\320\260\321\202\320\260\320\274 \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\276")};
 }
 
 Value next_occurrence(const Value &day_of_year, const Value &on_or_after, Language language, std::string_view written_day,
@@ -2216,17 +2216,17 @@ Value next_occurrence(const Value &day_of_year, const Value &on_or_after, Langua
 	const std::string nameDay = named(day_of_year, written_day, language), nameDate = named(on_or_after, written_date, language);
 	const std::optional<temporal::DayOfYear> day = day_of_year_of(day_of_year);
 	if (!day)
-		throw AlgebraError("type", say(language, nameDay + " is not a day of the year", nameDay + " - не день года"));
+		throw AlgebraError("type", say(language, nameDay + " is not a day of the year", nameDay + " - \320\275\320\265 \320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260"));
 	if (on_or_after.kind != Kind::Date)
-		throw AlgebraError("type", say(language, nameDate + " is not a date", nameDate + " - не дата"));
+		throw AlgebraError("type", say(language, nameDate + " is not a date", nameDate + " - \320\275\320\265 \320\264\320\260\321\202\320\260"));
 	const long long first = occurrence_from(on_or_after.date.first_day, *day);
 	const long long last = occurrence_from(on_or_after.date.last_day, *day);
 	if (first != last)
 		throw AlgebraError("undetermined", say(language,
 			nameDate + " is " + precision_noun(on_or_after.date.precision, language) + ", and the next " + nameDay
 				+ " on or after it depends on which day of it is meant",
-			nameDate + " - " + precision_noun(on_or_after.date.precision, language) + ", и когда после него наступит " + nameDay
-				+ ", зависит от того, какой это день"));
+			nameDate + " - " + precision_noun(on_or_after.date.precision, language) + ", \320\270 \320\272\320\276\320\263\320\264\320\260 \320\277\320\276\321\201\320\273\320\265 \320\275\320\265\320\263\320\276 \320\275\320\260\321\201\321\202\321\203\320\277\320\270\321\202 " + nameDay
+				+ ", \320\267\320\260\320\262\320\270\321\201\320\270\321\202 \320\276\321\202 \321\202\320\276\320\263\320\276, \320\272\320\260\320\272\320\276\320\271 \321\215\321\202\320\276 \320\264\320\265\320\275\321\214"));
 	// Written as the date it is counted from is written: "08.09.2026" gives "01.07.2027".
 	return make_date(day_value(first), on_or_after.date_style.empty() ? "english" : on_or_after.date_style);
 }
@@ -2304,10 +2304,10 @@ std::string english_hundreds(int number) {
 	return result;
 }
 
-const char *russian_units_masculine[] = {"", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять",
-	"одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"};
-const char *russian_tens[] = {"", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"};
-const char *russian_hundreds_words[] = {"", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"};
+const char *russian_units_masculine[] = {"", "\320\276\320\264\320\270\320\275", "\320\264\320\262\320\260", "\321\202\321\200\320\270", "\321\207\320\265\321\202\321\213\321\200\320\265", "\320\277\321\217\321\202\321\214", "\321\210\320\265\321\201\321\202\321\214", "\321\201\320\265\320\274\321\214", "\320\262\320\276\321\201\320\265\320\274\321\214", "\320\264\320\265\320\262\321\217\321\202\321\214", "\320\264\320\265\321\201\321\217\321\202\321\214",
+	"\320\276\320\264\320\270\320\275\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\320\264\320\262\320\265\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\321\202\321\200\320\270\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\321\207\320\265\321\202\321\213\321\200\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\320\277\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\321\210\320\265\321\201\321\202\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\320\262\320\276\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202\321\214", "\320\264\320\265\320\262\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202\321\214"};
+const char *russian_tens[] = {"", "", "\320\264\320\262\320\260\320\264\321\206\320\260\321\202\321\214", "\321\202\321\200\320\270\320\264\321\206\320\260\321\202\321\214", "\321\201\320\276\321\200\320\276\320\272", "\320\277\321\217\321\202\321\214\320\264\320\265\321\201\321\217\321\202", "\321\210\320\265\321\201\321\202\321\214\320\264\320\265\321\201\321\217\321\202", "\321\201\320\265\320\274\321\214\320\264\320\265\321\201\321\217\321\202", "\320\262\320\276\321\201\320\265\320\274\321\214\320\264\320\265\321\201\321\217\321\202", "\320\264\320\265\320\262\321\217\320\275\320\276\321\201\321\202\320\276"};
+const char *russian_hundreds_words[] = {"", "\321\201\321\202\320\276", "\320\264\320\262\320\265\321\201\321\202\320\270", "\321\202\321\200\320\270\321\201\321\202\320\260", "\321\207\320\265\321\202\321\213\321\200\320\265\321\201\321\202\320\260", "\320\277\321\217\321\202\321\214\321\201\320\276\321\202", "\321\210\320\265\321\201\321\202\321\214\321\201\320\276\321\202", "\321\201\320\265\320\274\321\214\321\201\320\276\321\202", "\320\262\320\276\321\201\320\265\320\274\321\214\321\201\320\276\321\202", "\320\264\320\265\320\262\321\217\321\202\321\214\321\201\320\276\321\202"};
 
 std::string russian_hundreds(int number, bool feminine) {
 	std::vector<std::string> parts;
@@ -2318,8 +2318,8 @@ std::string russian_hundreds(int number, bool feminine) {
 		number %= 10;
 	}
 	if (number > 0) {
-		if (feminine && number == 1) parts.push_back("одна");
-		else if (feminine && number == 2) parts.push_back("две");
+		if (feminine && number == 1) parts.push_back("\320\276\320\264\320\275\320\260");
+		else if (feminine && number == 2) parts.push_back("\320\264\320\262\320\265");
 		else parts.push_back(russian_units_masculine[number]);
 	}
 	std::string result;
@@ -2354,20 +2354,20 @@ std::optional<std::string> english_minor_noun(const std::string &currency, bool 
 }
 
 std::string russian_money_noun(const std::string &currency, Int128 count, bool fraction) {
-	if (currency == "USD") return fraction ? "доллара США" : russian_plural(count, "доллар США", "доллара США", "долларов США");
-	if (currency == "EUR") return "евро";
-	if (currency == "GBP") return fraction ? "фунта стерлингов" : russian_plural(count, "фунт стерлингов", "фунта стерлингов", "фунтов стерлингов");
-	if (currency == "JPY") return fraction ? "иены" : russian_plural(count, "иена", "иены", "иен");
-	if (currency == "RUB") return fraction ? "рубля" : russian_plural(count, "рубль", "рубля", "рублей");
+	if (currency == "USD") return fraction ? "\320\264\320\276\320\273\320\273\320\260\321\200\320\260 \320\241\320\250\320\220" : russian_plural(count, "\320\264\320\276\320\273\320\273\320\260\321\200 \320\241\320\250\320\220", "\320\264\320\276\320\273\320\273\320\260\321\200\320\260 \320\241\320\250\320\220", "\320\264\320\276\320\273\320\273\320\260\321\200\320\276\320\262 \320\241\320\250\320\220");
+	if (currency == "EUR") return "\320\265\320\262\321\200\320\276";
+	if (currency == "GBP") return fraction ? "\321\204\321\203\320\275\321\202\320\260 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262" : russian_plural(count, "\321\204\321\203\320\275\321\202 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262", "\321\204\321\203\320\275\321\202\320\260 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262", "\321\204\321\203\320\275\321\202\320\276\320\262 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262");
+	if (currency == "JPY") return fraction ? "\320\270\320\265\320\275\321\213" : russian_plural(count, "\320\270\320\265\320\275\320\260", "\320\270\320\265\320\275\321\213", "\320\270\320\265\320\275");
+	if (currency == "RUB") return fraction ? "\321\200\321\203\320\261\320\273\321\217" : russian_plural(count, "\321\200\321\203\320\261\320\273\321\214", "\321\200\321\203\320\261\320\273\321\217", "\321\200\321\203\320\261\320\273\320\265\320\271");
 	return currency;
 }
 
 std::optional<std::string> russian_minor_noun(const std::string &currency, Int128 count) {
-	if (currency == "RUB") return russian_plural(count, "копейка", "копейки", "копеек");
-	if (currency == "GBP") return russian_plural(count, "пенс", "пенса", "пенсов");
-	if (counted_in_cents(currency)) return russian_plural(count, "цент", "цента", "центов");
-	if (currency == "CHF") return russian_plural(count, "сантим", "сантима", "сантимов");
-	if (currency == "KZT") return std::string("тиын");
+	if (currency == "RUB") return russian_plural(count, "\320\272\320\276\320\277\320\265\320\271\320\272\320\260", "\320\272\320\276\320\277\320\265\320\271\320\272\320\270", "\320\272\320\276\320\277\320\265\320\265\320\272");
+	if (currency == "GBP") return russian_plural(count, "\320\277\320\265\320\275\321\201", "\320\277\320\265\320\275\321\201\320\260", "\320\277\320\265\320\275\321\201\320\276\320\262");
+	if (counted_in_cents(currency)) return russian_plural(count, "\321\206\320\265\320\275\321\202", "\321\206\320\265\320\275\321\202\320\260", "\321\206\320\265\320\275\321\202\320\276\320\262");
+	if (currency == "CHF") return russian_plural(count, "\321\201\320\260\320\275\321\202\320\270\320\274", "\321\201\320\260\320\275\321\202\320\270\320\274\320\260", "\321\201\320\260\320\275\321\202\320\270\320\274\320\276\320\262");
+	if (currency == "KZT") return std::string("\321\202\320\270\321\213\320\275");
 	return std::nullopt;
 }
 
@@ -2383,22 +2383,22 @@ std::string symbol_of(const std::string &currency) {
 }
 
 bool mark_after(const std::string &mark, Language language) {
-	if (mark == "\xE2\x82\xBD" || mark == "руб.") return true;
+	if (mark == "\xE2\x82\xBD" || mark == "\321\200\321\203\320\261.") return true;
 	if (mark == "$" || mark == "US$" || mark == "\xE2\x82\xAC" || mark == "\xC2\xA3" || mark == "\xC2\xA5") return false;
 	return language == Language::Russian;  // a code: "USD 1,000", "1 000 USD"
 }
 
-bool is_word_mark(const std::string &mark) { return starts_with(mark, "рубл"); }
+bool is_word_mark(const std::string &mark) { return starts_with(mark, "\321\200\321\203\320\261\320\273"); }
 
 std::string ru_month_genitive(unsigned month) {
-	static const char *names[] = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября",
-		"ноября", "декабря"};
+	static const char *names[] = {"\321\217\320\275\320\262\320\260\321\200\321\217", "\321\204\320\265\320\262\321\200\320\260\320\273\321\217", "\320\274\320\260\321\200\321\202\320\260", "\320\260\320\277\321\200\320\265\320\273\321\217", "\320\274\320\260\321\217", "\320\270\321\216\320\275\321\217", "\320\270\321\216\320\273\321\217", "\320\260\320\262\320\263\321\203\321\201\321\202\320\260", "\321\201\320\265\320\275\321\202\321\217\320\261\321\200\321\217", "\320\276\320\272\321\202\321\217\320\261\321\200\321\217",
+		"\320\275\320\276\321\217\320\261\321\200\321\217", "\320\264\320\265\320\272\320\260\320\261\321\200\321\217"};
 	return names[month - 1];
 }
 
 std::string ru_month_nominative(unsigned month) {
-	static const char *names[] = {"январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь",
-		"ноябрь", "декабрь"};
+	static const char *names[] = {"\321\217\320\275\320\262\320\260\321\200\321\214", "\321\204\320\265\320\262\321\200\320\260\320\273\321\214", "\320\274\320\260\321\200\321\202", "\320\260\320\277\321\200\320\265\320\273\321\214", "\320\274\320\260\320\271", "\320\270\321\216\320\275\321\214", "\320\270\321\216\320\273\321\214", "\320\260\320\262\320\263\321\203\321\201\321\202", "\321\201\320\265\320\275\321\202\321\217\320\261\321\200\321\214", "\320\276\320\272\321\202\321\217\320\261\321\200\321\214",
+		"\320\275\320\276\321\217\320\261\321\200\321\214", "\320\264\320\265\320\272\320\260\320\261\321\200\321\214"};
 	return names[month - 1];
 }
 
@@ -2417,25 +2417,25 @@ std::string date_text(const Value &value, Language language) {
 		case temporal::Precision::Day:
 			if (dotted) return two_digits(first.day) + "." + two_digits(first.month) + "." + year;
 			if (slashed) return two_digits(first.month) + "/" + two_digits(first.day) + "/" + year;
-			if (language == Language::Russian) return std::to_string(first.day) + " " + ru_month_genitive(first.month) + " " + year + " г.";
+			if (language == Language::Russian) return std::to_string(first.day) + " " + ru_month_genitive(first.month) + " " + year + " \320\263.";
 			return en_month(first.month) + " " + std::to_string(first.day) + ", " + year;
 		case temporal::Precision::Month:
 			if (dotted) return two_digits(first.month) + "." + year;
-			if (language == Language::Russian) return ru_month_nominative(first.month) + " " + year + " г.";
+			if (language == Language::Russian) return ru_month_nominative(first.month) + " " + year + " \320\263.";
 			return en_month(first.month) + " " + year;
 		case temporal::Precision::Quarter: {
 			static const char *roman[] = {"I", "II", "III", "IV"};
 			const unsigned quarter = (first.month - 1) / 3;
-			if (language == Language::Russian) return std::string(roman[quarter]) + " квартал " + year + " г.";
+			if (language == Language::Russian) return std::string(roman[quarter]) + " \320\272\320\262\320\260\321\200\321\202\320\260\320\273 " + year + " \320\263.";
 			return "Q" + std::to_string(quarter + 1) + " " + year;
 		}
 		case temporal::Precision::Year:
-			return language == Language::Russian ? year + " г." : year;
+			return language == Language::Russian ? year + " \320\263." : year;
 	}
 	return year;
 }
 
-// "July 1", «1 июля»: the day and the month, and no year.
+// "July 1", «…»: the day and the month, and no year.
 std::string day_of_year_text(const Value &value, Language language) {
 	const temporal::DayOfYear &day = value.day_of_year;
 	if (day.month < 1 || day.month > 12) return value_key(value);
@@ -2448,15 +2448,15 @@ std::string duration_noun(DurationUnit unit, const Rational &count, Language lan
 	const Int128 number = whole ? abs128(count.numerator()) : 0;
 	if (language == Language::Russian) {
 		switch (unit) {
-			case DurationUnit::Day: return whole ? russian_plural(number, "день", "дня", "дней") : "дня";
+			case DurationUnit::Day: return whole ? russian_plural(number, "\320\264\320\265\320\275\321\214", "\320\264\320\275\321\217", "\320\264\320\275\320\265\320\271") : "\320\264\320\275\321\217";
 			case DurationUnit::BusinessDay:
-				return whole ? russian_plural(number, "рабочий день", "рабочих дня", "рабочих дней") : "рабочего дня";
-			case DurationUnit::Week: return whole ? russian_plural(number, "неделя", "недели", "недель") : "недели";
-			case DurationUnit::Month: return whole ? russian_plural(number, "месяц", "месяца", "месяцев") : "месяца";
-			case DurationUnit::Year: return whole ? russian_plural(number, "год", "года", "лет") : "года";
-			case DurationUnit::Quarter: return whole ? russian_plural(number, "квартал", "квартала", "кварталов") : "квартала";
-			case DurationUnit::Hour: return whole ? russian_plural(number, "час", "часа", "часов") : "часа";
-			case DurationUnit::Minute: return whole ? russian_plural(number, "минута", "минуты", "минут") : "минуты";
+				return whole ? russian_plural(number, "\321\200\320\260\320\261\320\276\321\207\320\270\320\271 \320\264\320\265\320\275\321\214", "\321\200\320\260\320\261\320\276\321\207\320\270\321\205 \320\264\320\275\321\217", "\321\200\320\260\320\261\320\276\321\207\320\270\321\205 \320\264\320\275\320\265\320\271") : "\321\200\320\260\320\261\320\276\321\207\320\265\320\263\320\276 \320\264\320\275\321\217";
+			case DurationUnit::Week: return whole ? russian_plural(number, "\320\275\320\265\320\264\320\265\320\273\321\217", "\320\275\320\265\320\264\320\265\320\273\320\270", "\320\275\320\265\320\264\320\265\320\273\321\214") : "\320\275\320\265\320\264\320\265\320\273\320\270";
+			case DurationUnit::Month: return whole ? russian_plural(number, "\320\274\320\265\321\201\321\217\321\206", "\320\274\320\265\321\201\321\217\321\206\320\260", "\320\274\320\265\321\201\321\217\321\206\320\265\320\262") : "\320\274\320\265\321\201\321\217\321\206\320\260";
+			case DurationUnit::Year: return whole ? russian_plural(number, "\320\263\320\276\320\264", "\320\263\320\276\320\264\320\260", "\320\273\320\265\321\202") : "\320\263\320\276\320\264\320\260";
+			case DurationUnit::Quarter: return whole ? russian_plural(number, "\320\272\320\262\320\260\321\200\321\202\320\260\320\273", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260", "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\276\320\262") : "\320\272\320\262\320\260\321\200\321\202\320\260\320\273\320\260";
+			case DurationUnit::Hour: return whole ? russian_plural(number, "\321\207\320\260\321\201", "\321\207\320\260\321\201\320\260", "\321\207\320\260\321\201\320\276\320\262") : "\321\207\320\260\321\201\320\260";
+			case DurationUnit::Minute: return whole ? russian_plural(number, "\320\274\320\270\320\275\321\203\321\202\320\260", "\320\274\320\270\320\275\321\203\321\202\321\213", "\320\274\320\270\320\275\321\203\321\202") : "\320\274\320\270\320\275\321\203\321\202\321\213";
 		}
 	}
 	const bool one = whole && number == 1;
@@ -2476,9 +2476,9 @@ std::string duration_noun(DurationUnit unit, const Rational &count, Language lan
 std::string basis_words(RateBasis basis, Language language) {
 	switch (basis) {
 		case RateBasis::None: return "";
-		case RateBasis::PerDay: return say(language, " per day", " в день");
-		case RateBasis::PerMonth: return say(language, " per month", " в месяц");
-		case RateBasis::PerYear: return say(language, " per annum", " годовых");
+		case RateBasis::PerDay: return say(language, " per day", " \320\262 \320\264\320\265\320\275\321\214");
+		case RateBasis::PerMonth: return say(language, " per month", " \320\262 \320\274\320\265\321\201\321\217\321\206");
+		case RateBasis::PerYear: return say(language, " per annum", " \320\263\320\276\320\264\320\276\320\262\321\213\321\205");
 	}
 	return "";
 }
@@ -2487,9 +2487,9 @@ std::string basis_words(RateBasis basis, Language language) {
 std::string money_basis_words(RateBasis basis, Language language) {
 	switch (basis) {
 		case RateBasis::None: return "";
-		case RateBasis::PerDay: return say(language, " per day", " в день");
-		case RateBasis::PerMonth: return say(language, " per month", " в месяц");
-		case RateBasis::PerYear: return say(language, " per year", " в год");
+		case RateBasis::PerDay: return say(language, " per day", " \320\262 \320\264\320\265\320\275\321\214");
+		case RateBasis::PerMonth: return say(language, " per month", " \320\262 \320\274\320\265\321\201\321\217\321\206");
+		case RateBasis::PerYear: return say(language, " per year", " \320\262 \320\263\320\276\320\264");
 	}
 	return "";
 }
@@ -2510,7 +2510,7 @@ Value duration_as(const Value &value, DurationUnit unit, Language language) {
 	if (value.kind == Kind::Number) return make_duration(value.amount, unit);
 	if (value.kind != Kind::Duration)
 		throw AlgebraError("format", say(language, kind_words(value.kind, language) + " cannot be written in " + unit_words(unit, language),
-			"значение (" + kind_words(value.kind, language) + ") нельзя записать в единицах «" + unit_words(unit, language) + "»"));
+			"\320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265 (" + kind_words(value.kind, language) + ") \320\275\320\265\320\273\321\214\320\267\321\217 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\321\214 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «" + unit_words(unit, language) + "»"));
 	if (value.unit == unit) return value;
 	if (value.unit == DurationUnit::Week && unit == DurationUnit::Day) return make_duration(value.amount * Rational(7), unit);
 	if (value.unit == DurationUnit::Day && unit == DurationUnit::Week) return make_duration(value.amount / Rational(7), unit);
@@ -2525,12 +2525,12 @@ Value duration_as(const Value &value, DurationUnit unit, Language language) {
 		throw AlgebraError("undetermined", say(language,
 			display(value, {}, language) + " cannot be written in " + unit_words(unit, language)
 				+ ": business days depend on a holiday calendar Singularity does not have",
-			display(value, {}, language) + " нельзя выразить в единицах «" + unit_words(unit, language)
-				+ "»: рабочие дни зависят от календаря праздников, которого у Singularity нет"));
+			display(value, {}, language) + " \320\275\320\265\320\273\321\214\320\267\321\217 \320\262\321\213\321\200\320\260\320\267\320\270\321\202\321\214 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «" + unit_words(unit, language)
+				+ "»: \321\200\320\260\320\261\320\276\321\207\320\270\320\265 \320\264\320\275\320\270 \320\267\320\260\320\262\320\270\321\201\321\217\321\202 \320\276\321\202 \320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\321\217 \320\277\321\200\320\260\320\267\320\264\320\275\320\270\320\272\320\276\320\262, \320\272\320\276\321\202\320\276\321\200\320\276\320\263\320\276 \321\203 Singularity \320\275\320\265\321\202"));
 	const std::string why = why_not_days(month_class(value.unit) ? value : make_duration(Rational(1), unit), language);
 	throw AlgebraError("undetermined", say(language,
 		display(value, {}, language) + " cannot be written exactly in " + unit_words(unit, language) + ": " + why,
-		display(value, {}, language) + " нельзя точно выразить в единицах «" + unit_words(unit, language) + "»: " + why));
+		display(value, {}, language) + " \320\275\320\265\320\273\321\214\320\267\321\217 \321\202\320\276\321\207\320\275\320\276 \320\262\321\213\321\200\320\260\320\267\320\270\321\202\321\214 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «" + unit_words(unit, language) + "»: " + why));
 }
 
 std::string money_text(const Value &value, const Format &format, Language language) {
@@ -2539,7 +2539,7 @@ std::string money_text(const Value &value, const Format &format, Language langua
 		if (!currency.empty() && currency != format.currency)
 			throw AlgebraError("currency", say(language,
 				"the amount is in " + currency + ", not " + format.currency + ", and Singularity does not convert between them",
-				"сумма указана в " + currency + ", а не в " + format.currency + ", а Singularity не пересчитывает валюты"));
+				"\321\201\321\203\320\274\320\274\320\260 \321\203\320\272\320\260\320\267\320\260\320\275\320\260 \320\262 " + currency + ", \320\260 \320\275\320\265 \320\262 " + format.currency + ", \320\260 Singularity \320\275\320\265 \320\277\320\265\321\200\320\265\321\201\321\207\320\270\321\202\321\213\320\262\320\260\320\265\321\202 \320\262\320\260\320\273\321\216\321\202\321\213"));
 		currency = format.currency;
 	}
 	// Yen have no sub-unit: the figure and its words are whole yen.
@@ -2550,7 +2550,7 @@ std::string money_text(const Value &value, const Format &format, Language langua
 	const Int128 whole = magnitude.floored().numerator();
 	const Int128 minor = ((magnitude - Rational(whole)) * Rational(100)).numerator();
 	std::string mark = format.mark.empty() ? (currency.empty() ? "" : symbol_of(currency)) : format.mark;
-	// The words form in Russian: «828 000 (восемьсот двадцать восемь тысяч) рублей 00 копеек».
+	// The words form in Russian: «…».
 	if (format.words && language == Language::Russian) {
 		std::string text = written_decimal(int_text(whole), language) + " ("
 			+ number_in_words(whole, language, currency == "JPY") + ")";
@@ -2563,14 +2563,14 @@ std::string money_text(const Value &value, const Format &format, Language langua
 		} else if (minor != 0) {
 			text = written_decimal(magnitude.to_decimal(2), language);
 		}
-		return negative ? "минус " + text : text;
+		return negative ? "\320\274\320\270\320\275\321\203\321\201 " + text : text;
 	}
 	const bool cents_shown = format.words || !magnitude.is_integer() || value.source_decimals > 0;
 	const int decimals = cents_shown && (currency.empty() || has_minor_unit(currency)) ? 2 : 0;
 	std::string digits = written_decimal(magnitude.to_decimal(decimals), language);
 	std::string text;
 	if (is_word_mark(mark)) {
-		// «рублей» asked: the noun agrees with the amount; kopecks as a lawyer writes them.
+		// «…» asked: the noun agrees with the amount; kopecks as a lawyer writes them.
 		const std::string whole_digits = written_decimal(int_text(whole), language);
 		text = whole_digits + " " + russian_money_noun("RUB", whole, false);
 		if (minor != 0 || value.source_decimals > 0) text += " " + two_digits(static_cast<unsigned>(minor)) + " " + *russian_minor_noun("RUB", minor);
@@ -2610,8 +2610,8 @@ std::string russian_plural(Int128 count, std::string_view one, std::string_view 
 }
 
 std::string number_in_words(Int128 number, Language language, bool feminine) {
-	if (number < 0) return (language == Language::Russian ? "минус " : "minus ") + number_in_words(neg128(number), language, feminine);
-	if (number == 0) return language == Language::Russian ? "ноль" : "zero";
+	if (number < 0) return (language == Language::Russian ? "\320\274\320\270\320\275\321\203\321\201 " : "minus ") + number_in_words(neg128(number), language, feminine);
+	if (number == 0) return language == Language::Russian ? "\320\275\320\276\320\273\321\214" : "zero";
 	struct Scale {
 		Int128 size;
 		const char *english;
@@ -2621,10 +2621,10 @@ std::string number_in_words(Int128 number, Language language, bool feminine) {
 		bool feminine;
 	};
 	static const Scale scales[] = {
-		{Int128(1000000000000LL), "trillion", "триллион", "триллиона", "триллионов", false},
-		{Int128(1000000000), "billion", "миллиард", "миллиарда", "миллиардов", false},
-		{Int128(1000000), "million", "миллион", "миллиона", "миллионов", false},
-		{Int128(1000), "thousand", "тысяча", "тысячи", "тысяч", true},
+		{Int128(1000000000000LL), "trillion", "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275", "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275\320\260", "\321\202\321\200\320\270\320\273\320\273\320\270\320\276\320\275\320\276\320\262", false},
+		{Int128(1000000000), "billion", "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264", "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264\320\260", "\320\274\320\270\320\273\320\273\320\270\320\260\321\200\320\264\320\276\320\262", false},
+		{Int128(1000000), "million", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275\320\260", "\320\274\320\270\320\273\320\273\320\270\320\276\320\275\320\276\320\262", false},
+		{Int128(1000), "thousand", "\321\202\321\213\321\201\321\217\321\207\320\260", "\321\202\321\213\321\201\321\217\321\207\320\270", "\321\202\321\213\321\201\321\217\321\207", true},
 	};
 	if (number >= Int128(1000000000000LL) * 1000) return int_text(number);
 	std::vector<std::string> parts;
@@ -2691,7 +2691,7 @@ std::optional<Format> parse_format(std::string_view raw) {
 		return true;
 	};
 	for (const std::string &each : words) {
-		if (each == "words" || each == "прописью") { format.words = true; continue; }
+		if (each == "words" || each == "\320\277\321\200\320\276\320\277\320\270\321\201\321\214\321\216") { format.words = true; continue; }
 		if (each == "money" || each == "currency") { if (!style(FormatStyle::Money)) return std::nullopt; continue; }
 		std::string currency;
 		std::string mark;
@@ -2700,8 +2700,8 @@ std::optional<Format> parse_format(std::string_view raw) {
 		else if (each == "\xC2\xA3") { currency = "GBP"; mark = each; }
 		else if (each == "\xC2\xA5") { currency = "JPY"; mark = each; }
 		else if (each == "\xE2\x82\xBD") { currency = "RUB"; mark = each; }
-		else if (each == "руб." || each == "руб") { currency = "RUB"; mark = "руб."; }
-		else if (starts_with(each, "рубл")) { currency = "RUB"; mark = "рублей"; }
+		else if (each == "\321\200\321\203\320\261." || each == "\321\200\321\203\320\261") { currency = "RUB"; mark = "\321\200\321\203\320\261."; }
+		else if (starts_with(each, "\321\200\321\203\320\261\320\273")) { currency = "RUB"; mark = "\321\200\321\203\320\261\320\273\320\265\320\271"; }
 		else if (!currency_of_code(each).empty()) { currency = currency_of_code(each); mark = currency; }
 		if (!currency.empty()) {
 			if (!format.currency.empty() && format.currency != currency) return std::nullopt;
@@ -2711,15 +2711,15 @@ std::optional<Format> parse_format(std::string_view raw) {
 			continue;
 		}
 		FormatStyle chosen;
-		if (each == "percent" || each == "percentage" || each == "%" || each == "процент" || each == "процентах") chosen = FormatStyle::Percent;
-		else if (each == "number" || each == "число") chosen = FormatStyle::Number;
+		if (each == "percent" || each == "percentage" || each == "%" || each == "\320\277\321\200\320\276\321\206\320\265\320\275\321\202" || each == "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\260\321\205") chosen = FormatStyle::Percent;
+		else if (each == "number" || each == "\321\207\320\270\321\201\320\273\320\276") chosen = FormatStyle::Number;
 		else if (each == "integer" || each == "whole") chosen = FormatStyle::Integer;
-		else if (each == "days" || each == "day" || each == "дней" || each == "дни") chosen = FormatStyle::Days;
-		else if (each == "weeks" || each == "недель") chosen = FormatStyle::Weeks;
-		else if (each == "months" || each == "месяцев") chosen = FormatStyle::Months;
-		else if (each == "years" || each == "лет") chosen = FormatStyle::Years;
-		else if (each == "date" || each == "дата") chosen = FormatStyle::Date;
-		else if (each == "yes/no" || each == "yesno" || each == "boolean" || each == "да/нет") chosen = FormatStyle::YesNo;
+		else if (each == "days" || each == "day" || each == "\320\264\320\275\320\265\320\271" || each == "\320\264\320\275\320\270") chosen = FormatStyle::Days;
+		else if (each == "weeks" || each == "\320\275\320\265\320\264\320\265\320\273\321\214") chosen = FormatStyle::Weeks;
+		else if (each == "months" || each == "\320\274\320\265\321\201\321\217\321\206\320\265\320\262") chosen = FormatStyle::Months;
+		else if (each == "years" || each == "\320\273\320\265\321\202") chosen = FormatStyle::Years;
+		else if (each == "date" || each == "\320\264\320\260\321\202\320\260") chosen = FormatStyle::Date;
+		else if (each == "yes/no" || each == "yesno" || each == "boolean" || each == "\320\264\320\260/\320\275\320\265\321\202") chosen = FormatStyle::YesNo;
 		else return std::nullopt;
 		if (!style(chosen)) return std::nullopt;
 	}
@@ -2729,7 +2729,7 @@ std::optional<Format> parse_format(std::string_view raw) {
 std::string display(const Value &value, const Format &format, Language language) {
 	const auto refuse = [&](const std::string &asked) {
 		return AlgebraError("format", say(language, kind_words(value.kind, language) + " cannot be written as " + asked,
-			"значение (" + kind_words(value.kind, language) + ") нельзя записать как " + asked));
+			"\320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265 (" + kind_words(value.kind, language) + ") \320\275\320\265\320\273\321\214\320\267\321\217 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\321\214 \320\272\320\260\320\272 " + asked));
 	};
 	switch (format.style) {
 		case FormatStyle::Default:
@@ -2745,7 +2745,7 @@ std::string display(const Value &value, const Format &format, Language language)
 					const Rational points = value.amount * Rational(100);
 					if (format.words && points.is_integer()) {
 						text += " (" + number_in_words(points.numerator(), language)
-							+ (language == Language::Russian ? " " + russian_plural(points.numerator(), "процент", "процента", "процентов")
+							+ (language == Language::Russian ? " " + russian_plural(points.numerator(), "\320\277\321\200\320\276\321\206\320\265\320\275\321\202", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\260", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\276\320\262")
 															 : std::string(" percent"))
 							+ ")";
 					}
@@ -2760,13 +2760,13 @@ std::string display(const Value &value, const Format &format, Language language)
 					return digits + " " + noun;
 				}
 				case Kind::Date: return date_text(value, language);
-				case Kind::Boolean: return value.truth ? say(language, "yes", "да") : say(language, "no", "нет");
+				case Kind::Boolean: return value.truth ? say(language, "yes", "\320\264\320\260") : say(language, "no", "\320\275\320\265\321\202");
 				case Kind::DayOfYear: return day_of_year_text(value, language);
 			}
 			break;
 		case FormatStyle::Money:
 			if (value.kind == Kind::Money || value.kind == Kind::Number) return money_text(value, format, language) + money_basis_words(value.basis, language);
-			throw refuse(say(language, "money", "денежная сумма"));
+			throw refuse(say(language, "money", "\320\264\320\265\320\275\320\265\320\266\320\275\320\260\321\217 \321\201\321\203\320\274\320\274\320\260"));
 		case FormatStyle::Percent:
 			if (value.kind == Kind::Percentage || value.kind == Kind::Number) {
 				Value rate = make_percentage(value.amount, RateBasis::None);
@@ -2774,11 +2774,11 @@ std::string display(const Value &value, const Format &format, Language language)
 				plain.words = format.words;
 				return display(rate, plain, language);
 			}
-			throw refuse(say(language, "a percentage", "процент"));
+			throw refuse(say(language, "a percentage", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202"));
 		case FormatStyle::Number:
 		case FormatStyle::Integer: {
 			if (value.kind == Kind::Date || value.kind == Kind::Boolean || value.kind == Kind::DayOfYear)
-				throw refuse(say(language, "a number", "число"));
+				throw refuse(say(language, "a number", "\321\207\320\270\321\201\320\273\320\276"));
 			const Rational number = format.style == FormatStyle::Integer ? value.amount.rounded(0) : value.amount;
 			const std::string digits = number_text(number, language);
 			return format.words ? with_words(digits, number, language, false) : digits;
@@ -2798,11 +2798,11 @@ std::string display(const Value &value, const Format &format, Language language)
 		}
 		case FormatStyle::Date:
 			if (value.kind == Kind::DayOfYear) return day_of_year_text(value, language);
-			if (value.kind != Kind::Date) throw refuse(say(language, "a date", "дата"));
+			if (value.kind != Kind::Date) throw refuse(say(language, "a date", "\320\264\320\260\321\202\320\260"));
 			return date_text(value, language);
 		case FormatStyle::YesNo:
 			if (value.kind != Kind::Boolean) throw refuse("yes/no");
-			return value.truth ? say(language, "yes", "да") : say(language, "no", "нет");
+			return value.truth ? say(language, "yes", "\320\264\320\260") : say(language, "no", "\320\275\320\265\321\202");
 	}
 	return "";
 }
@@ -2841,7 +2841,7 @@ std::vector<Lexeme> lexemes_of(const std::string &text, Language language) {
 		if (starts_at(text, index, kOpen)) {
 			const std::size_t close = text.find(kClose, index + kOpen.size());
 			if (close == std::string::npos)
-				throw Failure{"syntax", say(language, "a value opened with ⟦ is not closed with ⟧", "значение, открытое ⟦, не закрыто ⟧")};
+				throw Failure{"syntax", say(language, "a value opened with ⟦ is not closed with ⟧", "\320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265, \320\276\321\202\320\272\321\200\321\213\321\202\320\276\320\265 ⟦, \320\275\320\265 \320\267\320\260\320\272\321\200\321\213\321\202\320\276 ⟧")};
 			result.push_back({Lex::Operand, text.substr(index + kOpen.size(), close - index - kOpen.size()), begin, close + kClose.size()});
 			index = close + kClose.size();
 			continue;
@@ -2895,14 +2895,14 @@ std::vector<Lexeme> lexemes_of(const std::string &text, Language language) {
 				whole = (static_cast<unsigned char>(text[at]) & 0xC0) == 0x80;
 			if (!whole)
 				throw Failure{"syntax", say(language, "the expression has a broken character (text cut in the middle of a letter)",
-					"в выражении испорченный символ (текст обрезан посреди буквы)")};
+					"\320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270 \320\270\321\201\320\277\320\276\321\200\321\207\320\265\320\275\320\275\321\213\320\271 \321\201\320\270\320\274\320\262\320\276\320\273 (\321\202\320\265\320\272\321\201\321\202 \320\276\320\261\321\200\320\265\320\267\320\260\320\275 \320\277\320\276\321\201\321\200\320\265\320\264\320\270 \320\261\321\203\320\272\320\262\321\213)")};
 			if (what == "[") {
 				const std::size_t end = text.find("]]", index);
 				const std::string symbol = end == std::string::npos ? what : text.substr(index, end + 2 - index);
 				throw Failure{"operand", say(language, symbol + " is a protected symbol whose value Singularity could not put back",
-					symbol + " - защищенное обозначение, значение которого Singularity не смог подставить")};
+					symbol + " - \320\267\320\260\321\211\320\270\321\211\320\265\320\275\320\275\320\276\320\265 \320\276\320\261\320\276\320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265, \320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265 \320\272\320\276\321\202\320\276\321\200\320\276\320\263\320\276 Singularity \320\275\320\265 \321\201\320\274\320\276\320\263 \320\277\320\276\320\264\321\201\321\202\320\260\320\262\320\270\321\202\321\214")};
 			}
-			throw Failure{"syntax", say(language, "\"" + what + "\" is not part of an expression", "«" + what + "» не может стоять в выражении")};
+			throw Failure{"syntax", say(language, "\"" + what + "\" is not part of an expression", "«" + what + "» \320\275\320\265 \320\274\320\276\320\266\320\265\321\202 \321\201\321\202\320\276\321\217\321\202\321\214 \320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270")};
 		}
 	}
 	result.push_back({Lex::End, "", text.size(), text.size()});
@@ -2968,10 +2968,10 @@ private:
 	[[noreturn]] void unexpected() const {
 		const Lexeme &here = peek();
 		if (here.type == Lex::End)
-			throw Failure{"syntax", say(language_, "the expression \"" + excerpt() + "\" ends too early", "выражение «" + excerpt() + "» не закончено")};
+			throw Failure{"syntax", say(language_, "the expression \"" + excerpt() + "\" ends too early", "\320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\265 «" + excerpt() + "» \320\275\320\265 \320\267\320\260\320\272\320\276\320\275\321\207\320\265\320\275\320\276")};
 		const std::string what = text_.substr(here.begin, here.end - here.begin);
 		throw Failure{"syntax", say(language_, "\"" + what + "\" is not expected where it stands in \"" + excerpt() + "\"",
-			"«" + what + "» стоит не на своем месте в «" + excerpt() + "»")};
+			"«" + what + "» \321\201\321\202\320\276\320\270\321\202 \320\275\320\265 \320\275\320\260 \321\201\320\262\320\276\320\265\320\274 \320\274\320\265\321\201\321\202\320\265 \320\262 «" + excerpt() + "»")};
 	}
 
 	// Nesting is bounded so that working an expression out fits a small thread
@@ -2979,7 +2979,7 @@ private:
 	// KB). A chain of any length is one level.
 	void deeper() {
 		if (++depth_ > 32)
-			throw Failure{"syntax", say(language_, "the expression is nested too deeply", "в выражении слишком глубокая вложенность")};
+			throw Failure{"syntax", say(language_, "the expression is nested too deeply", "\320\262 \320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\270 \321\201\320\273\320\270\321\210\320\272\320\276\320\274 \320\263\320\273\321\203\320\261\320\276\320\272\320\260\321\217 \320\262\320\273\320\276\320\266\320\265\320\275\320\275\320\276\321\201\321\202\321\214")};
 	}
 
 	void expect(const char *wanted) {
@@ -3085,7 +3085,7 @@ private:
 		return postfix();
 	}
 
-	// A unit of time after a number or a parenthesis: "30 days", "5 business days", "45 дней".
+	// A unit of time after a number or a parenthesis: "30 days", "5 business days", "…".
 	std::optional<std::pair<DurationUnit, std::size_t>> unit_here() const {
 		std::vector<std::string> words;
 		for (std::size_t ahead = 0; ahead < 2 && peek(ahead).type == Lex::Word; ++ahead) words.push_back(lower_ascii(peek(ahead).text));
@@ -3119,7 +3119,7 @@ private:
 			++at_;
 			NodePtr node = made(NodeType::Literal, begin);
 			const auto number = Rational::parse_decimal(here.text);
-			if (!number) throw Failure{"syntax", say(language_, here.text + " has too many digits", "в " + here.text + " слишком много цифр")};
+			if (!number) throw Failure{"syntax", say(language_, here.text + " has too many digits", "\320\262 " + here.text + " \321\201\320\273\320\270\321\210\320\272\320\276\320\274 \320\274\320\275\320\276\320\263\320\276 \321\206\320\270\321\204\321\200")};
 			node->literal = make_number(*number);
 			return node;
 		}
@@ -3163,7 +3163,7 @@ private:
 				return node;
 			}
 			throw Failure{"syntax", say(language_, "\"" + here.text + "\" is not a value or a function Singularity knows",
-				"«" + here.text + "» - не значение и не функция, известная Singularity")};
+				"«" + here.text + "» - \320\275\320\265 \320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265 \320\270 \320\275\320\265 \321\204\321\203\320\275\320\272\321\206\320\270\321\217, \320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\260\321\217 Singularity")};
 		}
 		unexpected();
 	}
@@ -3205,7 +3205,7 @@ private:
 	void no_day_of_year(const Value &value, const Node &node) const {
 		if (value.kind == Kind::DayOfYear)
 			type_error(name(node) + " is a day of the year with no year: use same_day_of_year() or next_occurrence() with a date",
-				name(node) + " - день года без указания года: используйте same_day_of_year() или next_occurrence() с датой");
+				name(node) + " - \320\264\320\265\320\275\321\214 \320\263\320\276\320\264\320\260 \320\261\320\265\320\267 \321\203\320\272\320\260\320\267\320\260\320\275\320\270\321\217 \320\263\320\276\320\264\320\260: \320\270\321\201\320\277\320\276\320\273\321\214\320\267\321\203\320\271\321\202\320\265 same_day_of_year() \320\270\320\273\320\270 next_occurrence() \321\201 \320\264\320\260\321\202\320\276\320\271");
 	}
 
 	// Only dispatches: every case works in a function of its own, so a nested
@@ -3232,7 +3232,7 @@ private:
 		Value value = eval(*node.children[0]);
 		no_day_of_year(value, *node.children[0]);
 		if (value.kind == Kind::Date || value.kind == Kind::Boolean)
-			type_error(name(*node.children[0]) + " is not a quantity", name(*node.children[0]) + " - не величина");
+			type_error(name(*node.children[0]) + " is not a quantity", name(*node.children[0]) + " - \320\275\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260");
 		return value;
 	}
 
@@ -3310,7 +3310,7 @@ private:
 		const Value value = eval(*node.children[0]);
 		if (value.kind != Kind::Number)
 			type_error(name(*node.children[0]) + " is not a number, so it cannot be a percentage",
-				name(*node.children[0]) + " - не число и не может быть процентом");
+				name(*node.children[0]) + " - \320\275\320\265 \321\207\320\270\321\201\320\273\320\276 \320\270 \320\275\320\265 \320\274\320\276\320\266\320\265\321\202 \320\261\321\213\321\202\321\214 \320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\276\320\274");
 		return make_percentage(value.amount / Rational(100));
 	}
 
@@ -3318,7 +3318,7 @@ private:
 		const Value value = eval(*node.children[0]);
 		if (value.kind != Kind::Number)
 			type_error(name(*node.children[0]) + " is not a number of " + unit_words(node.unit, language_),
-				name(*node.children[0]) + " - не число, а срок считается в числах");
+				name(*node.children[0]) + " - \320\275\320\265 \321\207\320\270\321\201\320\273\320\276, \320\260 \321\201\321\200\320\276\320\272 \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\262 \321\207\320\270\321\201\320\273\320\260\321\205");
 		return make_duration(value.amount, node.unit);
 	}
 
@@ -3326,18 +3326,18 @@ private:
 		const std::string written = "⟦" + node.op + "⟧";
 		if (node.op.find("[[") != std::string::npos)
 			throw Failure{"operand", say(written + " is a protected symbol Singularity could not put the value back into",
-				written + " - защищенное обозначение, вместо которого Singularity не смог подставить значение")};
+				written + " - \320\267\320\260\321\211\320\270\321\211\320\265\320\275\320\275\320\276\320\265 \320\276\320\261\320\276\320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265, \320\262\320\274\320\265\321\201\321\202\320\276 \320\272\320\276\321\202\320\276\321\200\320\276\320\263\320\276 Singularity \320\275\320\265 \321\201\320\274\320\276\320\263 \320\277\320\276\320\264\321\201\321\202\320\260\320\262\320\270\321\202\321\214 \320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\265")};
 		auto value = parse_value(node.op);
 		if (!value)
 			throw Failure{"operand", say(written + " is not a quantity or a date Singularity can calculate with",
-				written + " - не величина и не дата, с которой Singularity может считать")};
+				written + " - \320\275\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260 \320\270 \320\275\320\265 \320\264\320\260\321\202\320\260, \321\201 \320\272\320\276\321\202\320\276\321\200\320\276\320\271 Singularity \320\274\320\276\320\266\320\265\321\202 \321\201\321\207\320\270\321\202\320\260\321\202\321\214")};
 		return *value;
 	}
 
 	bool condition(const Node &node) {
 		const Value value = eval(node);
 		if (value.kind != Kind::Boolean)
-			type_error(name(node) + " is not a condition (true or false)", name(node) + " - не условие (да или нет)");
+			type_error(name(node) + " is not a condition (true or false)", name(node) + " - \320\275\320\265 \321\203\321\201\320\273\320\276\320\262\320\270\320\265 (\320\264\320\260 \320\270\320\273\320\270 \320\275\320\265\321\202)");
 		return value.truth;
 	}
 
@@ -3383,7 +3383,7 @@ private:
 	Value negate(Value value, const Node &node) const {
 		no_day_of_year(value, node);
 		if (value.kind == Kind::Date || value.kind == Kind::Boolean)
-			type_error(name(node) + " cannot be negative", name(node) + " не может быть отрицательным");
+			type_error(name(node) + " cannot be negative", name(node) + " \320\275\320\265 \320\274\320\276\320\266\320\265\321\202 \320\261\321\213\321\202\321\214 \320\276\321\202\321\200\320\270\321\206\320\260\321\202\320\265\320\273\321\214\320\275\321\213\320\274");
 		value.amount = -value.amount;
 		return value;
 	}
@@ -3397,7 +3397,7 @@ private:
 
 	[[noreturn]] void business_days(const Node &node) const {
 		throw Failure{"undetermined", say(name(node) + " is counted in business days, which depend on a holiday calendar Singularity does not have",
-			name(node) + " считается в рабочих днях, а они зависят от календаря праздников, которого у Singularity нет")};
+			name(node) + " \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\262 \321\200\320\260\320\261\320\276\321\207\320\270\321\205 \320\264\320\275\321\217\321\205, \320\260 \320\276\320\275\320\270 \320\267\320\260\320\262\320\270\321\201\321\217\321\202 \320\276\321\202 \320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\321\217 \320\277\321\200\320\260\320\267\320\264\320\275\320\270\320\272\320\276\320\262, \320\272\320\276\321\202\320\276\321\200\320\276\320\263\320\276 \321\203 Singularity \320\275\320\265\321\202")};
 	}
 
 	Value add(const Value &a, const Value &b, const Node &left, const Node &right, bool subtract) {
@@ -3406,16 +3406,16 @@ private:
 		// Dates.
 		if (a.kind == Kind::Date && b.kind == Kind::Date) {
 			if (!subtract) type_error(name(left) + " and " + name(right) + " are dates, and dates do not add up",
-				name(left) + " и " + name(right) + " - даты, их нельзя складывать");
+				name(left) + " \320\270 " + name(right) + " - \320\264\320\260\321\202\321\213, \320\270\321\205 \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\320\272\320\273\320\260\320\264\321\213\320\262\320\260\321\202\321\214");
 			return make_duration(Rational(days_between(a, b, left, right)) * Rational(-1), DurationUnit::Day);
 		}
 		if (a.kind == Kind::Date) return shifted(a, b, left, right, subtract);
 		if (b.kind == Kind::Date) {
-			if (subtract) type_error("a date cannot be taken from " + name(left), "дату нельзя вычесть из " + name(left));
+			if (subtract) type_error("a date cannot be taken from " + name(left), "\320\264\320\260\321\202\321\203 \320\275\320\265\320\273\321\214\320\267\321\217 \320\262\321\213\321\207\320\265\321\201\321\202\321\214 \320\270\320\267 " + name(left));
 			return shifted(b, a, right, left, false);
 		}
 		if (a.kind == Kind::Boolean || b.kind == Kind::Boolean)
-			type_error("true or false cannot be added", "«да» и «нет» нельзя складывать");
+			type_error("true or false cannot be added", "«\320\264\320\260» \320\270 «\320\275\320\265\321\202» \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\320\272\320\273\320\260\320\264\321\213\320\262\320\260\321\202\321\214");
 		// Money.
 		if (a.kind == Kind::Money || b.kind == Kind::Money) {
 			const Value &money = a.kind == Kind::Money ? a : b;
@@ -3438,9 +3438,9 @@ private:
 			}
 			if (other.kind == Kind::Percentage)
 				type_error("a percentage cannot be added to an amount: write the amount times (1 + " + name(otherNode) + ")",
-					"процент нельзя прибавить к сумме: запишите сумму, умноженную на (1 + " + name(otherNode) + ")");
+					"\320\277\321\200\320\276\321\206\320\265\320\275\321\202 \320\275\320\265\320\273\321\214\320\267\321\217 \320\277\321\200\320\270\320\261\320\260\320\262\320\270\321\202\321\214 \320\272 \321\201\321\203\320\274\320\274\320\265: \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\201\321\203\320\274\320\274\321\203, \321\203\320\274\320\275\320\276\320\266\320\265\320\275\320\275\321\203\321\216 \320\275\320\260 (1 + " + name(otherNode) + ")");
 			type_error(name(left) + " " + op + " " + name(right) + " mixes an amount of money with " + kind_words(other.kind, language_),
-				name(left) + " " + op + " " + name(right) + " смешивает денежную сумму и " + kind_words(other.kind, language_));
+				name(left) + " " + op + " " + name(right) + " \321\201\320\274\320\265\321\210\320\270\320\262\320\260\320\265\321\202 \320\264\320\265\320\275\320\265\320\266\320\275\321\203\321\216 \321\201\321\203\320\274\320\274\321\203 \320\270 " + kind_words(other.kind, language_));
 		}
 		// Periods.
 		if (a.kind == Kind::Duration || b.kind == Kind::Duration) {
@@ -3451,13 +3451,13 @@ private:
 				if (day_class(a.unit) && day_class(b.unit)) return make_duration(combine(in_days(a), in_days(b)), DurationUnit::Day);
 				if (month_class(a.unit) && month_class(b.unit)) return make_duration(combine(in_months(a), in_months(b)), DurationUnit::Month);
 				throw Failure{"undetermined", say(name(left) + " " + op + " " + name(right) + " is not exact: a month has 28 to 31 days",
-					name(left) + " " + op + " " + name(right) + " нельзя посчитать точно: в месяце от 28 до 31 дня")};
+					name(left) + " " + op + " " + name(right) + " \320\275\320\265\320\273\321\214\320\267\321\217 \320\277\320\276\321\201\321\207\320\270\321\202\320\260\321\202\321\214 \321\202\320\276\321\207\320\275\320\276: \320\262 \320\274\320\265\321\201\321\217\321\206\320\265 \320\276\321\202 28 \320\264\320\276 31 \320\264\320\275\321\217")};
 			}
 			const Value &period = a.kind == Kind::Duration ? a : b;
 			const Value &other = a.kind == Kind::Duration ? b : a;
 			if (other.kind != Kind::Number)
 				type_error(name(left) + " " + op + " " + name(right) + " mixes a period with " + kind_words(other.kind, language_),
-					name(left) + " " + op + " " + name(right) + " смешивает срок и " + kind_words(other.kind, language_));
+					name(left) + " " + op + " " + name(right) + " \321\201\320\274\320\265\321\210\320\270\320\262\320\260\320\265\321\202 \321\201\321\200\320\276\320\272 \320\270 " + kind_words(other.kind, language_));
 			return make_duration(combine(a.amount, b.amount), period.unit);
 		}
 		// Numbers and percentages.
@@ -3478,8 +3478,8 @@ private:
 			if (number.amount != Rational(1))
 				type_error(name(left) + " " + op + " " + name(right) + " adds a plain number to a percentage: write " + name(numberNode)
 						+ "% for percentage points, or 1 " + op + " the rate for a growth factor",
-					name(left) + " " + op + " " + name(right) + " складывает число и процент: запишите " + name(numberNode)
-						+ "%, если это процентные пункты, или 1 " + op + " ставка для коэффициента роста");
+					name(left) + " " + op + " " + name(right) + " \321\201\320\272\320\273\320\260\320\264\321\213\320\262\320\260\320\265\321\202 \321\207\320\270\321\201\320\273\320\276 \320\270 \320\277\321\200\320\276\321\206\320\265\320\275\321\202: \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 " + name(numberNode)
+						+ "%, \320\265\321\201\320\273\320\270 \321\215\321\202\320\276 \320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\275\321\213\320\265 \320\277\321\203\320\275\320\272\321\202\321\213, \320\270\320\273\320\270 1 " + op + " \321\201\321\202\320\260\320\262\320\272\320\260 \320\264\320\273\321\217 \320\272\320\276\321\215\321\204\321\204\320\270\321\206\320\270\320\265\320\275\321\202\320\260 \321\200\320\276\321\201\321\202\320\260");
 		}
 		Value result = make_number(combine(a.amount, b.amount));
 		result.source_decimals = std::max(a.source_decimals, b.source_decimals);
@@ -3489,27 +3489,27 @@ private:
 	[[noreturn]] void different_periods(const Value &a, const Value &b, const Node &left, const Node &right, const std::string &op) const {
 		type_error(name(left) + " " + op + " " + name(right) + " mixes " + basis_name(a.basis, language_) + " and "
 				+ basis_name(b.basis, language_) + ": put both for the same period first",
-			name(left) + " " + op + " " + name(right) + " смешивает " + basis_name(a.basis, language_) + " и "
-				+ basis_name(b.basis, language_) + ": сначала приведите их к одному периоду");
+			name(left) + " " + op + " " + name(right) + " \321\201\320\274\320\265\321\210\320\270\320\262\320\260\320\265\321\202 " + basis_name(a.basis, language_) + " \320\270 "
+				+ basis_name(b.basis, language_) + ": \321\201\320\275\320\260\321\207\320\260\320\273\320\260 \320\277\321\200\320\270\320\262\320\265\320\264\320\270\321\202\320\265 \320\270\321\205 \320\272 \320\276\320\264\320\275\320\276\320\274\321\203 \320\277\320\265\321\200\320\270\320\276\320\264\321\203");
 	}
 
 	// `months`: the count asked for is of months (months_between), and the
 	// reason says so.
 	long long days_between(const Value &from, const Value &to, const Node &fromNode, const Node &toNode, bool months = false) const {
 		for (const auto &[value, node] : {std::make_pair(&from, &fromNode), std::make_pair(&to, &toNode)}) {
-			if (value->kind != Kind::Date) type_error(name(*node) + " is not a date", name(*node) + " - не дата");
+			if (value->kind != Kind::Date) type_error(name(*node) + " is not a date", name(*node) + " - \320\275\320\265 \320\264\320\260\321\202\320\260");
 			if (value->date.precision != temporal::Precision::Day)
 				throw Failure{"undetermined", say(name(*node) + " is " + precision_noun(value->date.precision, language_)
 						+ ", not a day, so the number of " + (months ? "months" : "days") + " is not known from the dates",
-					name(*node) + " - " + precision_noun(value->date.precision, language_) + ", а не день, поэтому число "
-						+ (months ? "месяцев" : "дней") + " по датам неизвестно")};
+					name(*node) + " - " + precision_noun(value->date.precision, language_) + ", \320\260 \320\275\320\265 \320\264\320\265\320\275\321\214, \320\277\320\276\321\215\321\202\320\276\320\274\321\203 \321\207\320\270\321\201\320\273\320\276 "
+						+ (months ? "\320\274\320\265\321\201\321\217\321\206\320\265\320\262" : "\320\264\320\275\320\265\320\271") + " \320\277\320\276 \320\264\320\260\321\202\320\260\320\274 \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\276")};
 		}
 		return to.date.first_day - from.date.first_day;
 	}
 
 	Int128 whole_count(const Value &value, const Node &node) const {
 		if (!value.amount.is_integer())
-			throw Failure{"type", say(name(node) + " is not a whole number", name(node) + " - не целое число")};
+			throw Failure{"type", say(name(node) + " is not a whole number", name(node) + " - \320\275\320\265 \321\206\320\265\320\273\320\276\320\265 \321\207\320\270\321\201\320\273\320\276")};
 		const Int128 count = value.amount.numerator();
 		if (count > 1000000 || count < -1000000) throw overflow();
 		return count;
@@ -3527,14 +3527,14 @@ private:
 		if (period.kind == Kind::Number) amount = make_duration(period.amount, DurationUnit::Day);
 		if (amount.kind != Kind::Duration)
 			type_error(name(periodNode) + " is not a period, so it cannot move the date " + name(dateNode),
-				name(periodNode) + " - не срок, им нельзя сдвинуть дату " + name(dateNode));
+				name(periodNode) + " - \320\275\320\265 \321\201\321\200\320\276\320\272, \320\270\320\274 \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\320\264\320\262\320\270\320\275\321\203\321\202\321\214 \320\264\320\260\321\202\321\203 " + name(dateNode));
 		if (amount.unit == DurationUnit::BusinessDay) business_days(periodNode);
 		// Hours and minutes move a date only by whole days.
 		if (amount.unit == DurationUnit::Hour || amount.unit == DurationUnit::Minute) {
 			const Rational days = in_days(amount);
 			if (!days.is_integer())
 				type_error(name(periodNode) + " is not a whole number of days, so it cannot move the date " + name(dateNode),
-					name(periodNode) + " - не целое число дней, им нельзя сдвинуть дату " + name(dateNode));
+					name(periodNode) + " - \320\275\320\265 \321\206\320\265\320\273\320\276\320\265 \321\207\320\270\321\201\320\273\320\276 \320\264\320\275\320\265\320\271, \320\270\320\274 \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\320\264\320\262\320\270\320\275\321\203\321\202\321\214 \320\264\320\260\321\202\321\203 " + name(dateNode));
 			amount = make_duration(days, DurationUnit::Day);
 		}
 		Int128 count = whole_count(amount, periodNode);
@@ -3562,8 +3562,8 @@ private:
 		if (date.date.precision != temporal::Precision::Day)
 			throw Failure{"undetermined", say(name(dateNode) + " is " + precision_noun(date.date.precision, language_)
 					+ ", not a day, so the date " + period + (earlier ? " earlier" : " later") + " is not known",
-				name(dateNode) + " - " + precision_noun(date.date.precision, language_) + ", а не день, поэтому дата "
-					+ (earlier ? "за " + period + " до нее" : "через " + period) + " неизвестна")};
+				name(dateNode) + " - " + precision_noun(date.date.precision, language_) + ", \320\260 \320\275\320\265 \320\264\320\265\320\275\321\214, \320\277\320\276\321\215\321\202\320\276\320\274\321\203 \320\264\320\260\321\202\320\260 "
+					+ (earlier ? "\320\267\320\260 " + period + " \320\264\320\276 \320\275\320\265\320\265" : "\321\207\320\265\321\200\320\265\320\267 " + period) + " \320\275\320\265\320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\260")};
 		Value result = date;
 		result.date = day_value(date.date.first_day + days);
 		check_year(result, dateNode);
@@ -3574,7 +3574,7 @@ private:
 		const Civil civil = civil_from_days(value.date.first_day);
 		if (civil.year < 1 || civil.year > 9999)
 			throw Failure{"overflow", say("the date from " + name(node) + " falls outside any calendar year Singularity writes",
-				"дата от " + name(node) + " выходит за пределы календаря")};
+				"\320\264\320\260\321\202\320\260 \320\276\321\202 " + name(node) + " \320\262\321\213\321\205\320\276\320\264\320\270\321\202 \320\267\320\260 \320\277\321\200\320\265\320\264\320\265\320\273\321\213 \320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\321\217")};
 	}
 
 	Value add_months_to(const Value &date, long long months, const Node &dateNode) const {
@@ -3610,7 +3610,7 @@ private:
 		}
 		throw Failure{"undetermined", say(name(dateNode) + " is " + precision_noun(date.date.precision, language_)
 				+ ", so a date some months from it is not a whole period of the same kind",
-			name(dateNode) + " - " + precision_noun(date.date.precision, language_) + ", и сдвиг на эти месяцы не дает такой же целый период")};
+			name(dateNode) + " - " + precision_noun(date.date.precision, language_) + ", \320\270 \321\201\320\264\320\262\320\270\320\263 \320\275\320\260 \321\215\321\202\320\270 \320\274\320\265\321\201\321\217\321\206\321\213 \320\275\320\265 \320\264\320\260\320\265\321\202 \321\202\320\260\320\272\320\276\320\271 \320\266\320\265 \321\206\320\265\320\273\321\213\320\271 \320\277\320\265\321\200\320\270\320\276\320\264")};
 	}
 
 	// ---- * and /
@@ -3619,12 +3619,12 @@ private:
 	Value multiply(const Value &a, const Value &b, const Node &left, const Node &right, std::optional<Failure> *pending = nullptr) {
 		const std::string both = name(left) + " * " + name(right);
 		if (a.kind == Kind::Date || b.kind == Kind::Date || a.kind == Kind::Boolean || b.kind == Kind::Boolean)
-			type_error(both + ": only quantities multiply", both + ": умножать можно только величины");
+			type_error(both + ": only quantities multiply", both + ": \321\203\320\274\320\275\320\276\320\266\320\260\321\202\321\214 \320\274\320\276\320\266\320\275\320\276 \321\202\320\276\320\273\321\214\320\272\320\276 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\321\213");
 		if (a.kind == Kind::Money && b.kind == Kind::Money)
 			type_error(both + " multiplies an amount by an amount, which is not an amount",
-				both + " умножает сумму на сумму, и результат - не сумма");
+				both + " \321\203\320\274\320\275\320\276\320\266\320\260\320\265\321\202 \321\201\321\203\320\274\320\274\321\203 \320\275\320\260 \321\201\321\203\320\274\320\274\321\203, \320\270 \321\200\320\265\320\267\321\203\320\273\321\214\321\202\320\260\321\202 - \320\275\320\265 \321\201\321\203\320\274\320\274\320\260");
 		if (a.kind == Kind::Duration && b.kind == Kind::Duration)
-			type_error(both + " multiplies a period by a period", both + " умножает срок на срок");
+			type_error(both + " multiplies a period by a period", both + " \321\203\320\274\320\275\320\276\320\266\320\260\320\265\321\202 \321\201\321\200\320\276\320\272 \320\275\320\260 \321\201\321\200\320\276\320\272");
 		if (a.kind == Kind::Duration || b.kind == Kind::Duration) {
 			const bool periodFirst = a.kind == Kind::Duration;
 			const Value &period = periodFirst ? a : b;
@@ -3651,7 +3651,7 @@ private:
 				if (money.basis != RateBasis::None && other.basis != RateBasis::None)
 					type_error(both + " applies a rate " + basis_name(other.basis, language_) + " to an amount that is already "
 							+ basis_name(money.basis, language_),
-						both + " применяет ставку " + basis_name(other.basis, language_) + " к сумме, которая уже "
+						both + " \320\277\321\200\320\270\320\274\320\265\320\275\321\217\320\265\321\202 \321\201\321\202\320\260\320\262\320\272\321\203 " + basis_name(other.basis, language_) + " \320\272 \321\201\321\203\320\274\320\274\320\265, \320\272\320\276\321\202\320\276\321\200\320\260\321\217 \321\203\320\266\320\265 "
 							+ basis_name(money.basis, language_));
 				result.basis = money.basis != RateBasis::None ? money.basis : other.basis;
 			}
@@ -3662,7 +3662,7 @@ private:
 		if (a.kind == Kind::Percentage && b.kind == Kind::Percentage) {
 			if (a.basis != RateBasis::None && b.basis != RateBasis::None)
 				type_error(both + " multiplies a rate " + basis_name(a.basis, language_) + " by a rate " + basis_name(b.basis, language_),
-					both + " умножает ставку " + basis_name(a.basis, language_) + " на ставку " + basis_name(b.basis, language_));
+					both + " \321\203\320\274\320\275\320\276\320\266\320\260\320\265\321\202 \321\201\321\202\320\260\320\262\320\272\321\203 " + basis_name(a.basis, language_) + " \320\275\320\260 \321\201\321\202\320\260\320\262\320\272\321\203 " + basis_name(b.basis, language_));
 			return make_percentage(a.amount * b.amount, a.basis != RateBasis::None ? a.basis : b.basis);
 		}
 		if (a.kind == Kind::Percentage || b.kind == Kind::Percentage) {
@@ -3691,8 +3691,8 @@ private:
 			throw Failure{"undetermined", say(both + ": the text does not say what period " + name(ratedNode)
 					+ " is for (per day, per month or per annum); write the period as plain numbers (rate * 45 / 365) "
 					"or ask the lawyer",
-				both + ": из текста не видно, за какой период " + name(ratedNode)
-					+ " (в день, в месяц или годовых); запишите период числами (ставка * 45 / 365) или спросите юриста")};
+				both + ": \320\270\320\267 \321\202\320\265\320\272\321\201\321\202\320\260 \320\275\320\265 \320\262\320\270\320\264\320\275\320\276, \320\267\320\260 \320\272\320\260\320\272\320\276\320\271 \320\277\320\265\321\200\320\270\320\276\320\264 " + name(ratedNode)
+					+ " (\320\262 \320\264\320\265\320\275\321\214, \320\262 \320\274\320\265\321\201\321\217\321\206 \320\270\320\273\320\270 \320\263\320\276\320\264\320\276\320\262\321\213\321\205); \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \320\277\320\265\321\200\320\270\320\276\320\264 \321\207\320\270\321\201\320\273\320\260\320\274\320\270 (\321\201\321\202\320\260\320\262\320\272\320\260 * 45 / 365) \320\270\320\273\320\270 \321\201\320\277\321\200\320\276\321\201\320\270\321\202\320\265 \321\216\321\200\320\270\321\201\321\202\320\260")};
 		}
 		if (period.unit == DurationUnit::BusinessDay) business_days(periodNode);
 		const std::string both = name(ratedNode) + " * " + name(periodNode);
@@ -3705,24 +3705,24 @@ private:
 						+ " is counted in " + unit_words(period.unit, language_) + ", and "
 						+ (years ? "a year has 365 or 366 days" : "a month has 28 to 31 days")
 						+ "; count the days (days_between) or write the period in days",
-					both + ": " + name(ratedNode) + " - в день, а " + name(periodNode) + " считается в единицах «"
-						+ unit_words(period.unit, language_) + "», а " + (years ? "в году 365 или 366 дней" : "в месяце от 28 до 31 дня")
-						+ "; посчитайте дни (days_between) или запишите срок в днях")};
+					both + ": " + name(ratedNode) + " - \320\262 \320\264\320\265\320\275\321\214, \320\260 " + name(periodNode) + " \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «"
+						+ unit_words(period.unit, language_) + "», \320\260 " + (years ? "\320\262 \320\263\320\276\320\264\321\203 365 \320\270\320\273\320\270 366 \320\264\320\275\320\265\320\271" : "\320\262 \320\274\320\265\321\201\321\217\321\206\320\265 \320\276\321\202 28 \320\264\320\276 31 \320\264\320\275\321\217")
+						+ "; \320\277\320\276\321\201\321\207\320\270\321\202\320\260\320\271\321\202\320\265 \320\264\320\275\320\270 (days_between) \320\270\320\273\320\270 \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\201\321\200\320\276\320\272 \320\262 \320\264\320\275\321\217\321\205")};
 			}
 			case RateBasis::PerMonth:
 				if (month_class(period.unit)) return in_months(period);
 				throw Failure{"undetermined", say(both + ": " + name(ratedNode) + " is per month and " + name(periodNode)
 						+ " is counted in " + unit_words(period.unit, language_) + ", and a month has 28 to 31 days; write the period in months",
-					both + ": " + name(ratedNode) + " - в месяц, а " + name(periodNode) + " считается в единицах «"
-						+ unit_words(period.unit, language_) + "», а в месяце от 28 до 31 дня; запишите срок в месяцах")};
+					both + ": " + name(ratedNode) + " - \320\262 \320\274\320\265\321\201\321\217\321\206, \320\260 " + name(periodNode) + " \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «"
+						+ unit_words(period.unit, language_) + "», \320\260 \320\262 \320\274\320\265\321\201\321\217\321\206\320\265 \320\276\321\202 28 \320\264\320\276 31 \320\264\320\275\321\217; \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\201\321\200\320\276\320\272 \320\262 \320\274\320\265\321\201\321\217\321\206\320\260\321\205")};
 			case RateBasis::PerYear: {
 				if (month_class(period.unit)) return in_months(period) / Rational(12);
 				const Failure failure{"undetermined", say(both + ": " + name(ratedNode) + " is per annum and " + name(periodNode)
 						+ " is counted in " + unit_words(period.unit, language_)
 						+ "; how many days make the year (365, 366 or 360) is for the contract to say, so write it out: rate * days / 365",
-					both + ": " + name(ratedNode) + " - годовых, а " + name(periodNode) + " считается в единицах «"
+					both + ": " + name(ratedNode) + " - \320\263\320\276\320\264\320\276\320\262\321\213\321\205, \320\260 " + name(periodNode) + " \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «"
 						+ unit_words(period.unit, language_)
-						+ "»; сколько дней в году (365, 366 или 360), решает договор, поэтому запишите это явно: ставка * дни / 365")};
+						+ "»; \321\201\320\272\320\276\320\273\321\214\320\272\320\276 \320\264\320\275\320\265\320\271 \320\262 \320\263\320\276\320\264\321\203 (365, 366 \320\270\320\273\320\270 360), \321\200\320\265\321\210\320\260\320\265\321\202 \320\264\320\276\320\263\320\276\320\262\320\276\321\200, \320\277\320\276\321\215\321\202\320\276\320\274\321\203 \320\267\320\260\320\277\320\270\321\210\320\270\321\202\320\265 \321\215\321\202\320\276 \321\217\320\262\320\275\320\276: \321\201\321\202\320\260\320\262\320\272\320\260 * \320\264\320\275\320\270 / 365")};
 				// The days, to be divided by the year the chain writes next.
 				if (pending != nullptr && day_class(period.unit)) {
 					*pending = failure;
@@ -3737,10 +3737,10 @@ private:
 	Value divide(const Value &a, const Value &b, const Node &left, const Node &right) {
 		const std::string both = name(left) + " / " + name(right);
 		if (a.kind == Kind::Date || b.kind == Kind::Date || a.kind == Kind::Boolean || b.kind == Kind::Boolean)
-			type_error(both + ": only quantities divide", both + ": делить можно только величины");
+			type_error(both + ": only quantities divide", both + ": \320\264\320\265\320\273\320\270\321\202\321\214 \320\274\320\276\320\266\320\275\320\276 \321\202\320\276\320\273\321\214\320\272\320\276 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\321\213");
 		if (b.amount.is_zero())
 			throw Failure{"division_by_zero", say("division by zero: " + name(right) + " is zero, so " + both + " has no value",
-				"деление на ноль: " + name(right) + " равно нулю, поэтому у " + both + " нет значения")};
+				"\320\264\320\265\320\273\320\265\320\275\320\270\320\265 \320\275\320\260 \320\275\320\276\320\273\321\214: " + name(right) + " \321\200\320\260\320\262\320\275\320\276 \320\275\321\203\320\273\321\216, \320\277\320\276\321\215\321\202\320\276\320\274\321\203 \321\203 " + both + " \320\275\320\265\321\202 \320\267\320\275\320\260\321\207\320\265\320\275\320\270\321\217")};
 		if (a.kind == Kind::Money) {
 			if (b.kind == Kind::Money) {
 				merged_currency(a, b, left, right);
@@ -3754,8 +3754,8 @@ private:
 				if (b.basis != RateBasis::None && b.basis != a.basis)
 					type_error(both + " divides " + (a.basis == RateBasis::None ? std::string("a lump sum") : "an amount " + basis_name(a.basis, language_))
 							+ " by a rate " + basis_name(b.basis, language_),
-						both + " делит " + (a.basis == RateBasis::None ? std::string("единовременную сумму") : "сумму " + basis_name(a.basis, language_))
-							+ " на ставку " + basis_name(b.basis, language_));
+						both + " \320\264\320\265\320\273\320\270\321\202 " + (a.basis == RateBasis::None ? std::string("\320\265\320\264\320\270\320\275\320\276\320\262\321\200\320\265\320\274\320\265\320\275\320\275\321\203\321\216 \321\201\321\203\320\274\320\274\321\203") : "\321\201\321\203\320\274\320\274\321\203 " + basis_name(a.basis, language_))
+							+ " \320\275\320\260 \321\201\321\202\320\260\320\262\320\272\321\203 " + basis_name(b.basis, language_));
 				result.basis = b.basis == a.basis ? RateBasis::None : a.basis;
 			} else {
 				result.basis = a.basis;
@@ -3764,7 +3764,7 @@ private:
 		}
 		if (b.kind == Kind::Money)
 			type_error(both + " divides " + kind_words(a.kind, language_) + " by an amount of money",
-				both + " делит " + kind_words(a.kind, language_) + " на денежную сумму");
+				both + " \320\264\320\265\320\273\320\270\321\202 " + kind_words(a.kind, language_) + " \320\275\320\260 \320\264\320\265\320\275\320\265\320\266\320\275\321\203\321\216 \321\201\321\203\320\274\320\274\321\203");
 		if (a.kind == Kind::Duration) {
 			if (b.kind == Kind::Duration) {
 				if (a.unit == b.unit) return make_number(a.amount / b.amount);
@@ -3773,14 +3773,14 @@ private:
 				if (day_class(a.unit) && day_class(b.unit)) return make_number(in_days(a) / in_days(b));
 				if (month_class(a.unit) && month_class(b.unit)) return make_number(in_months(a) / in_months(b));
 				throw Failure{"undetermined", say(both + " is not exact: a month has 28 to 31 days",
-					both + " нельзя посчитать точно: в месяце от 28 до 31 дня")};
+					both + " \320\275\320\265\320\273\321\214\320\267\321\217 \320\277\320\276\321\201\321\207\320\270\321\202\320\260\321\202\321\214 \321\202\320\276\321\207\320\275\320\276: \320\262 \320\274\320\265\321\201\321\217\321\206\320\265 \320\276\321\202 28 \320\264\320\276 31 \320\264\320\275\321\217")};
 			}
-			if (b.kind == Kind::Percentage) type_error(both + " divides a period by a percentage", both + " делит срок на процент");
+			if (b.kind == Kind::Percentage) type_error(both + " divides a period by a percentage", both + " \320\264\320\265\320\273\320\270\321\202 \321\201\321\200\320\276\320\272 \320\275\320\260 \320\277\321\200\320\276\321\206\320\265\320\275\321\202");
 			return make_duration(a.amount / b.amount, a.unit);
 		}
 		if (b.kind == Kind::Duration)
 			type_error(both + " divides " + kind_words(a.kind, language_) + " by a period",
-				both + " делит " + kind_words(a.kind, language_) + " на срок");
+				both + " \320\264\320\265\320\273\320\270\321\202 " + kind_words(a.kind, language_) + " \320\275\320\260 \321\201\321\200\320\276\320\272");
 		// 18 % per annum / 365 is a daily rate, / 2 half the yearly one.
 		if (a.kind == Kind::Percentage && b.kind == Kind::Number) return make_percentage(a.amount / b.amount, rescaled_basis(a.basis, b.amount, true));
 		return make_number(a.amount / b.amount);
@@ -3795,17 +3795,17 @@ private:
 				: most == static_cast<std::size_t>(-1) ? "at least " + std::to_string(least)
 				: std::to_string(least) + " or " + std::to_string(most);
 			const std::string wantedRu = least == most ? std::to_string(least)
-				: most == static_cast<std::size_t>(-1) ? "не меньше " + std::to_string(least)
-				: std::to_string(least) + " или " + std::to_string(most);
+				: most == static_cast<std::size_t>(-1) ? "\320\275\320\265 \320\274\320\265\320\275\321\214\321\210\320\265 " + std::to_string(least)
+				: std::to_string(least) + " \320\270\320\273\320\270 " + std::to_string(most);
 			throw Failure{"arity", say(node.op + "(...) takes " + wanted + (least == 1 && (most == 1 || most == static_cast<std::size_t>(-1)) ? " value" : " values") + ", and " + name(node)
 					+ " gives " + std::to_string(count),
-				"число значений в " + node.op + "(...): " + wantedRu + ", а в " + name(node) + " - " + std::to_string(count))};
+				"\321\207\320\270\321\201\320\273\320\276 \320\267\320\275\320\260\321\207\320\265\320\275\320\270\320\271 \320\262 " + node.op + "(...): " + wantedRu + ", \320\260 \320\262 " + name(node) + " - " + std::to_string(count))};
 		}
 	}
 
 	Value date_argument(const Node &node) {
 		Value value = eval(node);
-		if (value.kind != Kind::Date) type_error(name(node) + " is not a date", name(node) + " - не дата");
+		if (value.kind != Kind::Date) type_error(name(node) + " is not a date", name(node) + " - \320\275\320\265 \320\264\320\260\321\202\320\260");
 		return value;
 	}
 
@@ -3822,7 +3822,7 @@ private:
 		bool money = best.kind == Kind::Money;
 		for (std::size_t index = 1; index < node.children.size(); ++index) {
 			const Value next = eval(*node.children[index]);
-			if (next.kind == Kind::Boolean) type_error(name(*node.children[index]) + " is not a quantity", name(*node.children[index]) + " - не величина");
+			if (next.kind == Kind::Boolean) type_error(name(*node.children[index]) + " is not a quantity", name(*node.children[index]) + " - \320\275\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260");
 			if (next.kind == Kind::Money) {
 				money = true;
 				if (currency.empty()) currency = next.currency;
@@ -3834,7 +3834,7 @@ private:
 				bestAt = index;
 			}
 		}
-		if (best.kind == Kind::Boolean) type_error(name(*node.children[0]) + " is not a quantity", name(*node.children[0]) + " - не величина");
+		if (best.kind == Kind::Boolean) type_error(name(*node.children[0]) + " is not a quantity", name(*node.children[0]) + " - \320\275\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260");
 		if (money && best.kind == Kind::Number) best = make_money(best.amount, currency);
 		return best;
 	}
@@ -3843,7 +3843,7 @@ private:
 		if (node.children.size() <= index) return 0;
 		const Value places = eval(*node.children[index]);
 		if (places.kind != Kind::Number || !places.amount.is_integer() || places.amount < Rational(-12) || places.amount > Rational(12))
-			type_error(name(*node.children[index]) + " is not a number of decimal places", name(*node.children[index]) + " - не число знаков после запятой");
+			type_error(name(*node.children[index]) + " is not a number of decimal places", name(*node.children[index]) + " - \320\275\320\265 \321\207\320\270\321\201\320\273\320\276 \320\267\320\275\320\260\320\272\320\276\320\262 \320\277\320\276\321\201\320\273\320\265 \320\267\320\260\320\277\321\217\321\202\320\276\320\271");
 		return static_cast<int>(places.amount.numerator());
 	}
 
@@ -3852,7 +3852,7 @@ private:
 		Value value = eval(*node.children[0]);
 		no_day_of_year(value, *node.children[0]);
 		if (value.kind == Kind::Date || value.kind == Kind::Boolean)
-			type_error(name(*node.children[0]) + " cannot be rounded", name(*node.children[0]) + " нельзя округлить");
+			type_error(name(*node.children[0]) + " cannot be rounded", name(*node.children[0]) + " \320\275\320\265\320\273\321\214\320\267\321\217 \320\276\320\272\321\200\321\203\320\263\320\273\320\270\321\202\321\214");
 		const int places = places_of(node, 1);
 		const auto apply = [mode, places](const Rational &number) {
 			if (places < 0) {
@@ -3902,7 +3902,7 @@ private:
 			const Value from = eval(*node.children[1]);
 			return next_occurrence(day, from, language_, name(*node.children[0]), name(*node.children[1]));
 		}
-		throw Failure{"unknown_function", say("\"" + function + "\" is not a function Singularity knows", "«" + function + "» - не функция, известная Singularity")};
+		throw Failure{"unknown_function", say("\"" + function + "\" is not a function Singularity knows", "«" + function + "» - \320\275\320\265 \321\204\321\203\320\275\320\272\321\206\320\270\321\217, \320\270\320\267\320\262\320\265\321\201\321\202\320\275\320\260\321\217 Singularity")};
 	}
 
 	Value total(const Node &node, bool sum) {
@@ -3910,11 +3910,11 @@ private:
 		Value result = eval(*node.children[0]);
 		no_day_of_year(result, *node.children[0]);
 		if (result.kind == Kind::Date || result.kind == Kind::Boolean)
-			type_error(name(*node.children[0]) + " cannot be summed", name(*node.children[0]) + " нельзя суммировать");
+			type_error(name(*node.children[0]) + " cannot be summed", name(*node.children[0]) + " \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\321\203\320\274\320\274\320\270\321\200\320\276\320\262\320\260\321\202\321\214");
 		for (std::size_t index = 1; index < node.children.size(); ++index) {
 			const Value next = eval(*node.children[index]);
 			no_day_of_year(next, *node.children[index]);
-			if (next.kind == Kind::Date) type_error(name(*node.children[index]) + " cannot be summed", name(*node.children[index]) + " нельзя суммировать");
+			if (next.kind == Kind::Date) type_error(name(*node.children[index]) + " cannot be summed", name(*node.children[index]) + " \320\275\320\265\320\273\321\214\320\267\321\217 \321\201\321\203\320\274\320\274\320\270\321\200\320\276\320\262\320\260\321\202\321\214");
 			result = add(result, next, *node.children[0], *node.children[index], false);
 		}
 		if (sum) return result;
@@ -3928,7 +3928,7 @@ private:
 		Value value = eval(*node.children[0]);
 		no_day_of_year(value, *node.children[0]);
 		if (value.kind == Kind::Date || value.kind == Kind::Boolean)
-			type_error(name(*node.children[0]) + " has no absolute value", name(*node.children[0]) + " не имеет модуля");
+			type_error(name(*node.children[0]) + " has no absolute value", name(*node.children[0]) + " \320\275\320\265 \320\270\320\274\320\265\320\265\321\202 \320\274\320\276\320\264\321\203\320\273\321\217");
 		value.amount = value.amount.abs();
 		return value;
 	}
@@ -3939,7 +3939,7 @@ private:
 		const Value low = eval(*node.children[1]);
 		const Value high = eval(*node.children[2]);
 		if (less(high, low, *node.children[2], *node.children[1]))
-			type_error("in " + name(node) + " the upper bound is below the lower one", "в " + name(node) + " верхняя граница ниже нижней");
+			type_error("in " + name(node) + " the upper bound is below the lower one", "\320\262 " + name(node) + " \320\262\320\265\321\200\321\205\320\275\321\217\321\217 \320\263\321\200\320\260\320\275\320\270\321\206\320\260 \320\275\320\270\320\266\320\265 \320\275\320\270\320\266\320\275\320\265\320\271");
 		if (less(value, low, *node.children[0], *node.children[1])) return low;
 		if (less(high, value, *node.children[2], *node.children[0])) return high;
 		return value;
@@ -3963,11 +3963,11 @@ private:
 		if (bare) count = make_duration(count.amount, unit);
 		if (count.kind != Kind::Duration)
 			type_error(name(*node.children[1]) + " is not a number of " + unit_words(unit, language_),
-				name(*node.children[1]) + " - не число: " + unit_words(unit, language_));
+				name(*node.children[1]) + " - \320\275\320\265 \321\207\320\270\321\201\320\273\320\276: " + unit_words(unit, language_));
 		if (count.unit == DurationUnit::BusinessDay) business_days(*node.children[1]);
 		if ((unit == DurationUnit::Day) != day_class(count.unit))
 			type_error(name(*node.children[1]) + " is not counted in " + unit_words(unit, language_),
-				name(*node.children[1]) + " считается не в единицах «" + unit_words(unit, language_) + "»");
+				name(*node.children[1]) + " \321\201\321\207\320\270\321\202\320\260\320\265\321\202\321\201\321\217 \320\275\320\265 \320\262 \320\265\320\264\320\270\320\275\320\270\321\206\320\260\321\205 «" + unit_words(unit, language_) + "»");
 		return shifted(date, count, *node.children[0], *node.children[1], false, bare);
 	}
 
@@ -3986,11 +3986,11 @@ private:
 		const Value to = date_argument(*node.children[2]);
 		if (from.date.first_day > to.date.last_day)
 			type_error("the period from " + name(*node.children[1]) + " to " + name(*node.children[2]) + " ends before it starts",
-				"период с " + name(*node.children[1]) + " по " + name(*node.children[2]) + " заканчивается раньше, чем начинается");
+				"\320\277\320\265\321\200\320\270\320\276\320\264 \321\201 " + name(*node.children[1]) + " \320\277\320\276 " + name(*node.children[2]) + " \320\267\320\260\320\272\320\260\320\275\321\207\320\270\320\262\320\260\320\265\321\202\321\201\321\217 \321\200\320\260\320\275\321\214\321\210\320\265, \321\207\320\265\320\274 \320\275\320\260\321\207\320\270\320\275\320\260\320\265\321\202\321\201\321\217");
 		const Value period = make_date({from.date.first_day, to.date.last_day, temporal::Precision::Day});
 		return settled(within(date, period, language_, name(*node.children[0]),
 			say("the period from " + name(*node.children[1]) + " to " + name(*node.children[2]),
-				"период с " + name(*node.children[1]) + " по " + name(*node.children[2]))));
+				"\320\277\320\265\321\200\320\270\320\276\320\264 \321\201 " + name(*node.children[1]) + " \320\277\320\276 " + name(*node.children[2]))));
 	}
 
 	bool related(const Node &node, const std::string &function) {
@@ -4019,7 +4019,7 @@ private:
 Evaluation evaluate(const std::string &expression, Language language) {
 	Evaluation evaluation;
 	try {
-		if (expression.size() > 20000) throw Failure{"syntax", say(language, "the expression is too long", "выражение слишком длинное")};
+		if (expression.size() > 20000) throw Failure{"syntax", say(language, "the expression is too long", "\320\262\321\213\321\200\320\260\320\266\320\265\320\275\320\270\320\265 \321\201\320\273\320\270\321\210\320\272\320\276\320\274 \320\264\320\273\320\270\320\275\320\275\320\276\320\265")};
 		Parser parser(expression, language);
 		const NodePtr root = parser.parse();
 		Evaluator evaluator(expression, language);
@@ -4687,8 +4687,8 @@ Value days_in(const Value &date) {
 // the answer contract's raw-figure check (what a model wrote outside a
 // symbol). A figure is read by parse_value() - the one reading of a value Singularity
 // has - from the widest span around its digits or number words that reads
-// as one value: "$1,275.00", «1 183 452,05 ₽», "ten (10) days", «десяти
-// процентов», "0,1 % за каждый день". Numbers that only point somewhere - a
+// as one value: "$1,275.00", «1 183 452,05 ₽», "ten (10) days", «…
+// …», "…". Numbers that only point somewhere - a
 // clause, an article, a row, a cell, a list item, a function code - are found
 // and marked structural; a date is one figure, never its digits.
 
@@ -4766,18 +4766,18 @@ bool figure_tail_word(const std::string &raw) {
 	if (number_word(word) || scale_word(word) || !currency_of_word(word).empty() || !subunit_of_word(word).empty()
 		|| percent_word(word) || base_unit_word(word) || day_modifier(word) != 0)
 		return true;
-	static const char *others[] = {"per", "cent", "and", "и", "сша", "sterling", "стерлингов", "us", "united", "states",
-		"annum", "diem", "annual", "annually", "daily", "yearly", "monthly", "годовых", "годовые", "ежедневно",
-		"ежегодно", "ежемесячно", "в", "за", "каждый", "календарный", "a", "each", "every", "for", "p.a", "день",
-		"сутки", "год", "месяц", "day", "year", "month"};
+	static const char *others[] = {"per", "cent", "and", "\320\270", "\321\201\321\210\320\260", "sterling", "\321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262", "us", "united", "states",
+		"annum", "diem", "annual", "annually", "daily", "yearly", "monthly", "\320\263\320\276\320\264\320\276\320\262\321\213\321\205", "\320\263\320\276\320\264\320\276\320\262\321\213\320\265", "\320\265\320\266\320\265\320\264\320\275\320\265\320\262\320\275\320\276",
+		"\320\265\320\266\320\265\320\263\320\276\320\264\320\275\320\276", "\320\265\320\266\320\265\320\274\320\265\321\201\321\217\321\207\320\275\320\276", "\320\262", "\320\267\320\260", "\320\272\320\260\320\266\320\264\321\213\320\271", "\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200\320\275\321\213\320\271", "a", "each", "every", "for", "p.a", "\320\264\320\265\320\275\321\214",
+		"\321\201\321\203\321\202\320\272\320\270", "\320\263\320\276\320\264", "\320\274\320\265\321\201\321\217\321\206", "day", "year", "month"};
 	for (const char *other : others)
 		if (word == other) return true;
 	return false;
 }
 
-// Abbreviations whose full stop belongs to them ("руб.", "тыс."), not to the sentence.
+// Abbreviations whose full stop belongs to them ("…"), not to the sentence.
 bool keeps_full_stop(const std::string &word) {
-	static const char *abbreviations[] = {"руб", "коп", "тыс", "млн", "млрд", "трлн", "долл", "дн", "мин", "p.a", "pct", "mln", "hrs", "mins"};
+	static const char *abbreviations[] = {"\321\200\321\203\320\261", "\320\272\320\276\320\277", "\321\202\321\213\321\201", "\320\274\320\273\320\275", "\320\274\320\273\321\200\320\264", "\321\202\321\200\320\273\320\275", "\320\264\320\276\320\273\320\273", "\320\264\320\275", "\320\274\320\270\320\275", "p.a", "pct", "mln", "hrs", "mins"};
 	for (const char *abbreviation : abbreviations)
 		if (word == abbreviation) return true;
 	return false;
@@ -4805,55 +4805,55 @@ std::size_t currency_sign_at(std::string_view text, std::size_t at) {
 bool structural_word(const std::string &word) {
 	static const char *exact[] = {"section", "sections", "sec", "clause", "clauses", "subclause", "subsection", "article",
 		"articles", "art", "paragraph", "paragraphs", "para", "item", "items", "schedule", "annex", "appendix", "exhibit",
-		"chapter", "part", "rule", "row", "rows", "line", "lines", "page", "pages", "p", "pp", "doc", "п", "пп", "ст",
-		"ч", "гл", "стр", "абз", "подп", "разд", "прил"};
+		"chapter", "part", "rule", "row", "rows", "line", "lines", "page", "pages", "p", "pp", "doc", "\320\277", "\320\277\320\277", "\321\201\321\202",
+		"\321\207", "\320\263\320\273", "\321\201\321\202\321\200", "\320\260\320\261\320\267", "\320\277\320\276\320\264\320\277", "\321\200\320\260\320\267\320\264", "\320\277\321\200\320\270\320\273"};
 	for (const char *each : exact)
 		if (word == each) return true;
-	static const char *stems[] = {"пункт", "подпункт", "стать", "част", "раздел", "глав", "приложени", "строк", "абзац"};
+	static const char *stems[] = {"\320\277\321\203\320\275\320\272\321\202", "\320\277\320\276\320\264\320\277\321\203\320\275\320\272\321\202", "\321\201\321\202\320\260\321\202\321\214", "\321\207\320\260\321\201\321\202", "\321\200\320\260\320\267\320\264\320\265\320\273", "\320\263\320\273\320\260\320\262", "\320\277\321\200\320\270\320\273\320\276\320\266\320\265\320\275\320\270", "\321\201\321\202\321\200\320\276\320\272", "\320\260\320\261\320\267\320\260\321\206"};
 	for (const char *stem : stems)
 		if (starts_with(word, stem)) return true;
 	return false;
 }
 
 // Words between two numbers that make the second one of the same range or
-// list: "rows 4-18", "sections 4 and 5", «пп. 3, 4».
+// list: "rows 4-18", "sections 4 and 5", «…».
 bool range_joiner(std::string_view between) {
 	const std::string words = lowered(normalized(between));
 	if (words.empty()) return false;
-	static const char *joiners[] = {"-", ",", "and", "to", "through", "or", "&", "и", "по", "или", ", and"};
+	static const char *joiners[] = {"-", ",", "and", "to", "through", "or", "&", "\320\270", "\320\277\320\276", "\320\270\320\273\320\270", ", and"};
 	for (const char *joiner : joiners)
 		if (words == joiner) return true;
 	return false;
 }
 
 // A pointer word that names more than one pointer - "sections", "rows",
-// «пп.», «статьи» - so that the numbers joined after it are pointers too.
+// «…» - so that the numbers joined after it are pointers too.
 // "Section 4.2, 1,250,000 remains" names one: the number after it is a figure.
 bool plural_pointer_word(const std::string &word) {
 	static const char *exact[] = {"sections", "secs", "clauses", "subclauses", "subsections", "articles", "arts", "paragraphs",
 		"paras", "items", "schedules", "annexes", "appendices", "exhibits", "chapters", "parts", "rules", "rows", "lines", "pages",
-		"pp", "\xD0\xBF\xD0\xBF" /* пп */};
+		"pp", "\xD0\xBF\xD0\xBF" /* … */};
 	for (const char *each : exact)
 		if (word == each) return true;
 	// Russian plural forms (nominative, genitive, prepositional, dative, instrumental).
-	static const char *plural[] = {"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD1\x8B" /* пункты */,
-		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xBE\xD0\xB2" /* пунктов */,
-		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xB0\xD1\x85" /* пунктах */,
-		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xB0\xD0\xBC" /* пунктам */,
-		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD1\x8B" /* подпункты */,
-		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xBE\xD0\xB2" /* подпунктов */,
-		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD0\xB8" /* статьи */, "\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB9" /* статей */,
-		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD1\x8F\xD1\x85" /* статьях */,
-		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD1\x8F\xD0\xBC" /* статьям */,
-		"\xD1\x87\xD0\xB0\xD1\x81\xD1\x82\xD0\xB8" /* части */, "\xD1\x87\xD0\xB0\xD1\x81\xD1\x82\xD0\xB5\xD0\xB9" /* частей */,
-		"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xB4\xD0\xB5\xD0\xBB\xD1\x8B" /* разделы */,
-		"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xBE\xD0\xB2" /* разделов */,
-		"\xD0\xB3\xD0\xBB\xD0\xB0\xD0\xB2\xD1\x8B" /* главы */, "\xD0\xB3\xD0\xBB\xD0\xB0\xD0\xB2" /* глав */,
-		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBB\xD0\xBE\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F" /* приложения */,
-		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBB\xD0\xBE\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB9" /* приложений */,
-		"\xD1\x81\xD1\x82\xD1\x80\xD0\xBE\xD0\xBA\xD0\xB8" /* строки */, "\xD1\x81\xD1\x82\xD1\x80\xD0\xBE\xD0\xBA" /* строк */,
-		"\xD0\xB0\xD0\xB1\xD0\xB7\xD0\xB0\xD1\x86\xD1\x8B" /* абзацы */,
-		"\xD0\xB0\xD0\xB1\xD0\xB7\xD0\xB0\xD1\x86\xD0\xB5\xD0\xB2" /* абзацев */};
+	static const char *plural[] = {"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD1\x8B" /* … */,
+		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xBE\xD0\xB2" /* … */,
+		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xB0\xD1\x85" /* … */,
+		"\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xB0\xD0\xBC" /* … */,
+		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD1\x8B" /* … */,
+		"\xD0\xBF\xD0\xBE\xD0\xB4\xD0\xBF\xD1\x83\xD0\xBD\xD0\xBA\xD1\x82\xD0\xBE\xD0\xB2" /* … */,
+		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD0\xB8" /* … */, "\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB9" /* … */,
+		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD1\x8F\xD1\x85" /* … */,
+		"\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD1\x8C\xD1\x8F\xD0\xBC" /* … */,
+		"\xD1\x87\xD0\xB0\xD1\x81\xD1\x82\xD0\xB8" /* … */, "\xD1\x87\xD0\xB0\xD1\x81\xD1\x82\xD0\xB5\xD0\xB9" /* … */,
+		"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xB4\xD0\xB5\xD0\xBB\xD1\x8B" /* … */,
+		"\xD1\x80\xD0\xB0\xD0\xB7\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xBE\xD0\xB2" /* … */,
+		"\xD0\xB3\xD0\xBB\xD0\xB0\xD0\xB2\xD1\x8B" /* … */, "\xD0\xB3\xD0\xBB\xD0\xB0\xD0\xB2" /* … */,
+		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBB\xD0\xBE\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xB8\xD1\x8F" /* … */,
+		"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBB\xD0\xBE\xD0\xB6\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB9" /* … */,
+		"\xD1\x81\xD1\x82\xD1\x80\xD0\xBE\xD0\xBA\xD0\xB8" /* … */, "\xD1\x81\xD1\x82\xD1\x80\xD0\xBE\xD0\xBA" /* … */,
+		"\xD0\xB0\xD0\xB1\xD0\xB7\xD0\xB0\xD1\x86\xD1\x8B" /* … */,
+		"\xD0\xB0\xD0\xB1\xD0\xB7\xD0\xB0\xD1\x86\xD0\xB5\xD0\xB2" /* … */};
 	for (const char *each : plural)
 		if (word == each) return true;
 	return false;
@@ -4910,7 +4910,7 @@ std::size_t digits_end(std::string_view text, std::size_t at) {
 }
 
 // A run of number words from `at`: "one million two hundred fifty thousand",
-// «восемнадцать миллионов четыреста тысяч». Its end, or `at` when none.
+// «…». Its end, or `at` when none.
 std::size_t number_words_end(std::string_view text, std::size_t at) {
 	std::size_t cursor = at;
 	std::size_t last = at;
@@ -4918,7 +4918,7 @@ std::size_t number_words_end(std::string_view text, std::size_t at) {
 		const std::size_t end = word_end(text, cursor);
 		if (end == cursor) break;
 		const std::string word = lowered(text.substr(cursor, end - cursor));
-		const bool joins = (word == "and" || word == "и") && last != at;
+		const bool joins = (word == "and" || word == "\320\270") && last != at;
 		if (!number_word(word) && !joins) break;
 		if (!joins) last = end;
 		const std::size_t space = figure_space_at(text, end);
@@ -4977,8 +4977,8 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 		const std::size_t next = after + space;
 		const std::string following = lowered(text.substr(next, word_end(text, next) - next));
 		const bool bareYear = date.value.precision == temporal::Precision::Year && date.length == 4;
-		if (bareYear && ((!following.empty() && figure_tail_word(following) && following != "a" && following != "for" && following != "в"
-				&& following != "за" && following != "and" && following != "и")
+		if (bareYear && ((!following.empty() && figure_tail_word(following) && following != "a" && following != "for" && following != "\320\262"
+				&& following != "\320\267\320\260" && following != "and" && following != "\320\270")
 				|| currency_sign_at(text, next) > 0 || starts_at(text, after, "%") || currency_sign_before(text, date.offset) > 0))
 			continue;
 		RecognisedFigure figure;
@@ -5081,7 +5081,7 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 						break;
 					at = close + 1;
 				} else if (is_digit(text[next]) && next == at + figure_space_at(text, at) && next != at) {
-					// "рублей 00 копеек": the minor unit in figures.
+					// "…": the minor unit in figures.
 					std::size_t end = next;
 					while (end < text.size() && is_digit(text[end])) ++end;
 					if (end - next > 2) break;
@@ -5145,7 +5145,7 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 				default: figure.kind = core.digits ? RecognisedFigure::Kind::Number : RecognisedFigure::Kind::Words; break;
 			}
 		}
-		// A number word alone in prose ("one of the parties", «два экземпляра»).
+		// A number word alone in prose ("one of the parties", «…»).
 		if (!core.digits && bare && value && value->amount < Rational(10) && start == core.start && end == core.end
 				&& word_end(text, core.start) == core.end)
 			figure.incidental = true;
@@ -5159,7 +5159,7 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 			if (letter_at(text, core.end)) {
 				const std::size_t suffix = word_end(text, core.end);
 				const std::string word = lowered(text.substr(core.end, suffix - core.end));
-				if (word == "st" || word == "nd" || word == "rd" || word == "th" || word == "го" || word == "й" || word == "я")
+				if (word == "st" || word == "nd" || word == "rd" || word == "th" || word == "\320\263\320\276" || word == "\320\271" || word == "\321\217")
 					structural = true;
 				if (text[core.end] == '_') structural = true;
 			}
@@ -5170,7 +5170,7 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 				while (at > 0 && text[at - 1] == ' ') --at;
 				if (at >= length && lowered(text.substr(at - length, length)) == function) structural = true;
 			}
-			// The word before it: "Section 5.2", "§ 4", «п. 3.1», «ст. 193», «Приложение № 1».
+			// The word before it: "Section 5.2", "§ 4", «…».
 			{
 				std::size_t at = core.start;
 				at -= figure_space_before(text, at);
@@ -5212,7 +5212,7 @@ std::vector<RecognisedFigure> FigureRecogniser::find(std::string_view text, Lang
 				}
 			}
 			// The second number of a range or list of pointers: "rows 4-18",
-			// "sections 4 and 5", «пп. 3, 4» - only after a word naming more
+			// "sections 4 and 5", «…» - only after a word naming more
 			// than one pointer, and only a number shaped like one. After a
 			// single pointer ("Section 4.2, 1,250,000 remains", "clause 7 and
 			// 737 units") the next number is a figure, so it is looked at.

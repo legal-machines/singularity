@@ -92,7 +92,7 @@ std::pair<std::size_t, std::size_t> sentence_of(const std::string &text, std::si
 const std::pair<std::string, std::string> kQuotes[] = {{"\"", "\""}, {"\xE2\x80\x9C", "\xE2\x80\x9D"}, {"\xC2\xAB", "\xC2\xBB"}};
 
 // 1. A defined term that governs the sentence the fact stands in: '"X" means',
-// '(the "X")', '(hereinafter "X")', «X» означает, (далее – «X»), под X понимается.
+// '(the "X")', '(hereinafter "X")', «X» …, (… – «X»), … X …
 std::optional<std::string> defined_term(const std::string &text, std::size_t start, std::size_t end) {
 	const std::string sentence = text.substr(start, end - start);
 	const std::string lowered = lx::fold(sentence);
@@ -109,16 +109,16 @@ std::optional<std::string> defined_term(const std::string &text, std::size_t sta
 			const std::string before = lx::fold(sentence.substr(at > 24 ? at - 24 : 0, at > 24 ? 24 : at));
 			const bool means = after.rfind("means", 0) == 0 || after.rfind("shall mean", 0) == 0
 				|| after.rfind("has the meaning", 0) == 0 || after.rfind("is defined as", 0) == 0
-				|| after.rfind("\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB0\xD0\xB5\xD1\x82", 0) == 0;  // означает
+				|| after.rfind("\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB0\xD0\xB5\xD1\x82", 0) == 0;  // …
 			const bool bracketed = before.find('(') != std::string::npos
 				&& (before.find("the") != std::string::npos || before.find("hereinafter") != std::string::npos
-					|| before.find("\xD0\xB4\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xB5") != std::string::npos  // далее
+					|| before.find("\xD0\xB4\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xB5") != std::string::npos  // …
 					|| (!before.empty() && before.back() == '('));
 			if (means || bracketed) best = term;
 		}
 	}
-	// (далее — X) without quotes.
-	const std::string further = "(\xD0\xB4\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xB5";  // (далее
+	// (… — X) without quotes.
+	const std::string further = "(\xD0\xB4\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xB5";  // (…
 	const std::size_t opened = lowered.find(further);
 	if (!best && opened != std::string::npos) {
 		std::size_t cursor = opened + further.size();
@@ -132,7 +132,7 @@ std::optional<std::string> defined_term(const std::string &text, std::size_t sta
 }
 
 // 2. A label before a colon or a dash on the fact's line: "Liability Cap:
-// [[Amount1]]", «Цена Договора: …», «Итого — …».
+// [[Amount1]]", «…».
 std::optional<std::string> colon_label(const std::string &text, std::size_t fact) {
 	const auto [lineStart, lineEnd] = line_of(text, fact);
 	(void)lineEnd;
@@ -274,7 +274,7 @@ std::optional<std::string> table_header(const std::string &text, std::size_t fac
 }
 
 // 5. The caption of the numbered clause the fact stands in: "4.2 Annual
-// Escalation." -> {"Annual Escalation", "4.2"}; «7.1. Ответственность сторон».
+// Escalation." -> {"Annual Escalation", "4.2"}; «…».
 std::optional<std::pair<std::string, std::string>> clause_caption(const std::string &text, std::size_t fact) {
 	std::size_t cursor = line_of(text, fact).first;
 	for (int lines = 0; lines < 40; ++lines) {
@@ -305,7 +305,7 @@ std::optional<std::pair<std::string, std::string>> clause_caption(const std::str
 }
 
 // 6. The noun phrase a closed connector joins to the fact: "a late fee of",
-// "a cap equal to", «неустойка в размере», «стоимость составляет».
+// "a cap equal to", «…».
 std::optional<std::string> noun_phrase(const std::string &text, std::size_t fact) {
 	const auto [lineStart, lineEnd] = line_of(text, fact);
 	(void)lineEnd;
@@ -313,11 +313,11 @@ std::optional<std::string> noun_phrase(const std::string &text, std::size_t fact
 	const std::string before = text.substr(from, fact - from);
 	const std::string folded = lx::fold(before);
 	static const std::vector<std::string> connectors{" in the amount of ", " of not less than ", " not exceeding ",
-		" equal to ", " of up to ", " of ", " \xD0\xB2 \xD1\x80\xD0\xB0\xD0\xB7\xD0\xBC\xD0\xB5\xD1\x80\xD0\xB5 ",  // в размере
-		" \xD0\xB2 \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB5 ",                                                      // в сумме
-		" \xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5 ",                                              // не более
-		" \xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5 ",                                              // не менее
-		" \xD1\x81\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x8F\xD0\xB5\xD1\x82 "};                      // составляет
+		" equal to ", " of up to ", " of ", " \xD0\xB2 \xD1\x80\xD0\xB0\xD0\xB7\xD0\xBC\xD0\xB5\xD1\x80\xD0\xB5 ",  // …
+		" \xD0\xB2 \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB5 ",                                                      // …
+		" \xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5 ",                                              // …
+		" \xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5 ",                                              // …
+		" \xD1\x81\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x8F\xD0\xB5\xD1\x82 "};                      // …
 	for (const std::string &connector : connectors) {
 		const std::size_t found = folded.rfind(connector);
 		if (found == std::string::npos) continue;
@@ -339,13 +339,12 @@ std::optional<std::string> noun_phrase(const std::string &text, std::size_t fact
 			}
 		}
 		// Back from the connector to a determiner, a verb or four words: "shall
-		// pay a late fee of" -> "late fee"; «уплачивает неустойку в размере» ->
-		// «неустойку».
+		// pay a late fee of" -> "late fee"; «…» ->
 		static const std::set<std::string> determiners{"the", "a", "an", "any", "such", "this", "that", "each", "its", "their",
 			"shall", "will", "must", "may", "pay", "pays", "is", "are", "be"};
 		const auto verb = [](const std::string &folded) {
 			if (!has_cyrillic(folded) || folded.size() < 8) return false;
-			for (const char *ending : {"\xD0\xB5\xD1\x82", "\xD0\xB8\xD1\x82", "\xD1\x8E\xD1\x82", "\xD1\x8F\xD1\x82"})  // ет ит ют ят
+			for (const char *ending : {"\xD0\xB5\xD1\x82", "\xD0\xB8\xD1\x82", "\xD1\x8E\xD1\x82", "\xD1\x8F\xD1\x82"})  // …
 				if (folded.compare(folded.size() - 4, 4, ending) == 0) return true;
 			return false;
 		};
@@ -648,7 +647,7 @@ std::string symbol_line(const std::string &symbol, const std::string &type, cons
 	std::string line = symbol + " " + type;
 	if (!role_class.empty()) line += " " + role_class;
 	if (request_figure) {
-		line += language == semantic::Language::Russian ? " \xC2\xAB\xD0\xB2\xD0\xB0\xD1\x88\xD0\xB0 \xD1\x86\xD0\xB8\xD1\x84\xD1\x80\xD0\xB0\xC2\xBB"  // «ваша цифра»
+		line += language == semantic::Language::Russian ? " \xC2\xAB\xD0\xB2\xD0\xB0\xD1\x88\xD0\xB0 \xD1\x86\xD0\xB8\xD1\x84\xD1\x80\xD0\xB0\xC2\xBB"  // «…»
 			: " \"your figure\"";
 		if (!words.empty()) line += " " + quoted_label(words);
 		return line;

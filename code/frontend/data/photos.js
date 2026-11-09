@@ -1,7 +1,7 @@
-// A member's photo as the firm sees it (D-163): the middle square of the
-// picture they chose, 256 pixels a side, a JPEG small enough to travel with
-// their record in every Matter. It is cut here, in the window, so no
-// original leaves the member's computer at all.
+// A member's photo as the firm sees it: the middle square of the picture
+// they chose, 256 pixels a side, a JPEG small enough to travel with their
+// record in every Matter. It is cut here, in the window, so no original
+// leaves the member's computer at all.
 export const PHOTO_SIDE = 256;
 
 export async function squarePhoto(source) {

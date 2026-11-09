@@ -13,15 +13,11 @@ import { closeDocumentLens, useDocumentLens } from "./lens.js";
 
 import styles from "./DocumentLens.module.css";
 
-// A document over the window, read two ways (the owner, 2026-11-02: "pressing
-// any document in the system renders it in a window on top, with a switch
-// between how a person sees it and how the machine sees it - the document
-// itself - and there mark what was there and what it was masked to"; D-233):
-// as written, each spelling Papinian Guard masks marked with the symbol it
-// goes out as; and as an AI provider receives it, each symbol where its words
-// stood. It is the white every dialog is (Dialog.jsx), over the whole window,
-// with its own way out; Escape leaves it too. Its own application opens it as
-// it is laid out.
+// A document over the window, read two ways: as written, each spelling
+// Papinian Guard masks marked with the symbol it goes out as; and as an AI
+// provider receives it, each symbol where its words stood. It is the white
+// every dialog is (Dialog.jsx), over the whole window, with its own way out;
+// Escape leaves it too. Its own application opens it as it is laid out.
 export function DocumentLensHost() {
 	const lens = useDocumentLens();
 	return lens != null ? <DocumentLens key={`${lens.projectId}:${lens.documentId}`} {...lens} onClose={closeDocumentLens} /> : null;
@@ -146,9 +142,8 @@ function DocumentLens({ projectId, documentId, name, onClose }) {
 }
 
 // What Papinian Guard masks in it, as a list: each symbol, the words it
-// stands for and their kind (the owner, 2026-11-02: "make it a table, in
-// Apple's manner, not a sentence"). Pointed at, a row marks its symbol
-// wherever it stands in the text.
+// stands for and their kind. Pointed at, a row marks its symbol wherever
+// it stands in the text.
 const SHOWN = 8;
 
 function MaskedTable({ replacements, focused, onFocus }) {

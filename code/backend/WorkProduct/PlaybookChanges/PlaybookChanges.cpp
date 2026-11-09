@@ -204,7 +204,7 @@ std::string change_instruction(const matters::ReviewTable &table, const matters:
 	said += "\nThe positions above are the firm's policy, not law: add no legal citation of your own, and work "
 		"without web search.";
 	// The change is decided here, by whoever prepares it, within the firm's
-	// positions: no point is left open for someone else to settle (D-028).
+	// positions: no point is left open for someone else to settle.
 	said += "\nDecide every point yourself and do not stop to ask anyone. Where the firm's position offers more than one "
 		"acceptable option, choose the one closest to its preferred position that this document can carry. Where the "
 		"document is unclear, settle it from its own words and the firm's positions. Say in the change's summary which "
@@ -286,15 +286,14 @@ std::vector<PreparedChange> prepare(const std::string &project_id, const std::st
 			// record name the agent that prepared it.
 			composition.agent_id = by.agent_id;
 			// Nobody watches a colleague's request as it runs: a wait on the lawyer
-			// would keep its place and return at once (Beta 1 #14). It decides each
-			// point itself and does not stop to ask (D-028); its change still waits
-			// for approval.
+			// would keep its place and return at once. It decides each point itself
+			// and does not stop to ask; its change still waits for approval.
 			composition.unattended = true;
 		}
 		// The change is asked of the Matter's model, as the table's own runs are
 		// (review_table::model_for) - never the model an earlier run asked, which
-		// may since have been retired or moved away from (RT-1); a table that
-		// works only here keeps its change here too (local_only above).
+		// may since have been retired or moved away from; a table that works only
+		// here keeps its change here too (local_only above).
 		change.operation_id = matters::generate_chat_operation_id();
 		// The row names the change made from it, before the change exists: the
 		// version it writes, once approved, is then never taken for a new
@@ -304,7 +303,7 @@ std::vector<PreparedChange> prepare(const std::string &project_id, const std::st
 		} catch (const std::exception &) {
 		}
 		// Each change is made as the Matter's own mode lets any member make it:
-		// in a Matter that asks first it waits for the lawyer (D-158).
+		// in a Matter that asks first it waits for the lawyer.
 		stopWatch.set_running(change.operation_id);
 		try {
 			const chat::ChatExecutionOutcome outcome = chat::run_chat_request(change.operation_id, composition);

@@ -8,15 +8,15 @@ bool open_external_https(const std::string &url);
 
 // A new message in the system's mail app (Outlook, where the firm uses it), to
 // one address, with a subject and a body filled in, for the person to edit and
-// send with their mail app's own Send: Singularity never sends it (D-105).
-// A mailto: link (RFC 6068) carrying exactly those three: the address only
-// when it is one plain address (local@domain, at most 254 characters, none of
-// ? & # % , ; < > quotes, spaces, line breaks or control characters - it
-// comes from mail, and could otherwise add a copy or an attachment), the
-// subject and body as UTF-8 with every byte but the unreserved ones
-// percent-encoded and line breaks as CR LF. A body that would make the link
-// longer than mail apps take is never cut: the link leaves it out
-// (`carries_body` false) and the caller hands the whole text over another way.
+// send with their mail app's own Send: Singularity never sends it. A mailto:
+// link (RFC 6068) carrying exactly those three: the address only when it is
+// one plain address (local@domain, at most 254 characters, none of? & # %,; <
+// > quotes, spaces, line breaks or control characters - it comes from mail,
+// and could otherwise add a copy or an attachment), the subject and body as
+// UTF-8 with every byte but the unreserved ones percent-encoded and line
+// breaks as CR LF. A body that would make the link longer than mail apps take
+// is never cut: the link leaves it out (`carries_body` false) and the caller
+// hands the whole text over another way.
 struct MailCompose {
   std::string link;  // empty: the address was refused
   bool carries_body = false;
@@ -51,8 +51,7 @@ bool open_directory_in_file_manager(const std::string &path);
 // Opens a local file with the OS default application for its type (Preview,
 // Word, ...) - Phase 09's "Open document" action. Singularity does not ship its
 // own document viewer/renderer; this is deliberately the whole viewer
-// architecture (phase-09-documents-actions-source-peek.md: "not a Word
-// replacement"). Best effort, like the functions above.
+// architecture. Best effort, like the functions above.
 bool open_in_default_application(const std::string& path);
 
 // Whether a file may be handed to the system's default application: a document

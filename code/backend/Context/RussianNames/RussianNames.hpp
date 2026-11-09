@@ -14,14 +14,14 @@
 //
 // Papinian Guard keeps a person's or a company's name from a provider's model,
 // which then cannot decline it or agree a word with it: a live Russian draft
-// read «в лице генерального директора А. В. Смирнова, действующего» and
-// «Уважаемый Громова Игоря Викторовича!» (24 Sep 2026). The model asks for the
-// form instead - {{case р [[E5]]}}, {{gender [[E5]]: действующего|действующей}}
+// read «…» and
+// «…» (24 Sep 2026). The model asks for the
+// form instead - {{case … [[E5]]}}, {{gender [[E5]]: …}}
 // (Context/ComputedStatements) - and Singularity writes it here from the restored
 // name. Nothing about the person leaves the device to make that possible.
 //
-// Only regular Russian patterns are declined: surnames in -ов/-ев/-ин/-ын and
-// -ский/-цкий, patronymics, the common first names below, and the organisation
+// Only regular Russian patterns are declined: surnames in -… and
+// -…, patronymics, the common first names below, and the organisation
 // forms a contract names parties by. Anything else is written as it is:
 // a foreign or unusual name is never guessed into a wrong form.
 //
@@ -34,7 +34,7 @@ enum class Case { Nominative, Genitive, Dative, Accusative, Instrumental, Prepos
 
 namespace detail {
 
-// Lower-case Cyrillic (А-Я, Ё) and ASCII; other bytes as they are.
+// Lower-case Cyrillic (…) and ASCII; other bytes as they are.
 inline std::string lowered(const std::string &text) {
 	std::string result;
 	result.reserve(text.size());
@@ -44,7 +44,7 @@ inline std::string lowered(const std::string &text) {
 			const unsigned char next = static_cast<unsigned char>(text[index + 1]);
 			if (next >= 0x90 && next <= 0x9F) { result += '\xD0'; result += static_cast<char>(next + 0x20); ++index; continue; }
 			if (next >= 0xA0 && next <= 0xAF) { result += '\xD1'; result += static_cast<char>(next - 0x20); ++index; continue; }
-			if (next == 0x81) { result += "\xD1\x91"; ++index; continue; }   // Ё -> ё
+			if (next == 0x81) { result += "\xD1\x91"; ++index; continue; }   // … -> …
 		}
 		if (byte < 0x80) { result += static_cast<char>(byte >= 'A' && byte <= 'Z' ? byte + 32 : byte); continue; }
 		result += static_cast<char>(byte);
@@ -68,7 +68,7 @@ inline bool is_cyrillic_word(const std::string &word) {
 // The word's own capitalisation carried onto a new form: all capitals stay
 // capitals, a capitalised word stays capitalised.
 inline std::string shaped_like(const std::string &original, const std::string &lowerForm) {
-	// A hyphenated word («Иванова-Петрова», «Г-ну») is shaped part by part.
+	// A hyphenated word («…») is shaped part by part.
 	if (original.find('-') != std::string::npos
 			&& std::count(original.begin(), original.end(), '-') == std::count(lowerForm.begin(), lowerForm.end(), '-')) {
 		std::string result;
@@ -118,31 +118,31 @@ inline Forms forms_by_ending(const std::string &stem, const std::array<const cha
 // A first name's six forms from its nominative, lower case.
 inline std::optional<Forms> first_name_forms(const std::string &name, Gender gender) {
 	// Names that do not follow the pattern of their ending.
-	if (name == "\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xB5\xD0\xBB")  // павел
+	if (name == "\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xB5\xD0\xBB")  // …
 		return Forms{name, "\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xBB\xD0\xB0", "\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x83",
 			"\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xBB\xD0\xB0", "\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xBB\xD0\xBE\xD0\xBC",
 			"\xD0\xBF\xD0\xB0\xD0\xB2\xD0\xBB\xD0\xB5"};
-	if (name == "\xD0\xBB\xD0\xB5\xD0\xB2")  // лев
+	if (name == "\xD0\xBB\xD0\xB5\xD0\xB2")  // …
 		return Forms{name, "\xD0\xBB\xD1\x8C\xD0\xB2\xD0\xB0", "\xD0\xBB\xD1\x8C\xD0\xB2\xD1\x83", "\xD0\xBB\xD1\x8C\xD0\xB2\xD0\xB0",
 			"\xD0\xBB\xD1\x8C\xD0\xB2\xD0\xBE\xD0\xBC", "\xD0\xBB\xD1\x8C\xD0\xB2\xD0\xB5"};
-	if (name == "\xD0\xBF\xD1\x91\xD1\x82\xD1\x80" || name == "\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80")  // пётр, петр
+	if (name == "\xD0\xBF\xD1\x91\xD1\x82\xD1\x80" || name == "\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80")  // …
 		return Forms{name, "\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80\xD0\xB0", "\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80\xD1\x83",
 			"\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80\xD0\xB0", "\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80\xD0\xBE\xD0\xBC",
 			"\xD0\xBF\xD0\xB5\xD1\x82\xD1\x80\xD0\xB5"};
-	if (name == "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD1\x8C")  // любовь
+	if (name == "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD1\x8C")  // …
 		return Forms{name, "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD0\xB8", "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD0\xB8",
 			name, "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD1\x8C\xD1\x8E", "\xD0\xBB\xD1\x8E\xD0\xB1\xD0\xBE\xD0\xB2\xD0\xB8"};
 	const auto stem = [&](std::size_t letters) { return name.substr(0, name.size() - 2 * letters); };
-	// A name ending in a vowel other than -а/-я (Марко, Нелли) keeps its form.
-	for (const char *vowel : {"\xD0\xBE", "\xD0\xB5", "\xD0\xB8", "\xD1\x83", "\xD1\x8E", "\xD1\x8D", "\xD1\x8B"})  // о е и у ю э ы
+	// A name ending in a vowel other than -… (…) keeps its form.
+	for (const char *vowel : {"\xD0\xBE", "\xD0\xB5", "\xD0\xB8", "\xD1\x83", "\xD1\x8E", "\xD1\x8D", "\xD1\x8B"})  // …
 		if (ends_with(name, vowel)) return Forms{name, name, name, name, name, name};
-	if (ends_with(name, "\xD0\xB8\xD1\x8F"))  // -ия: мария, юлия, наталия
+	if (ends_with(name, "\xD0\xB8\xD1\x8F"))  // -…: …
 		return forms_by_ending(stem(1), {"\xD1\x8F", "\xD0\xB8", "\xD0\xB8", "\xD1\x8E", "\xD0\xB5\xD0\xB9", "\xD0\xB8"});
-	if (ends_with(name, "\xD1\x8C\xD1\x8F"))  // -ья: наталья, дарья, илья
+	if (ends_with(name, "\xD1\x8C\xD1\x8F"))  // -…: …
 		return forms_by_ending(stem(1), {"\xD1\x8F", "\xD0\xB8", "\xD0\xB5", "\xD1\x8E", "\xD0\xB5\xD0\xB9", "\xD0\xB5"});
-	if (ends_with(name, "\xD1\x8F"))  // -я after anything else: зоя, майя
+	if (ends_with(name, "\xD1\x8F"))  // -… after anything else: …
 		return forms_by_ending(stem(1), {"\xD1\x8F", "\xD0\xB8", "\xD0\xB5", "\xD1\x8E", "\xD0\xB5\xD0\xB9", "\xD0\xB5"});
-	if (ends_with(name, "\xD0\xB0")) {  // -а: анна, ольга, никита
+	if (ends_with(name, "\xD0\xB0")) {  // -…: …
 		const std::string base = stem(1);
 		const bool softGenitive = ends_with(base, "\xD0\xB3") || ends_with(base, "\xD0\xBA") || ends_with(base, "\xD1\x85")
 			|| ends_with(base, "\xD0\xB6") || ends_with(base, "\xD1\x88") || ends_with(base, "\xD1\x87") || ends_with(base, "\xD1\x89");
@@ -150,19 +150,19 @@ inline std::optional<Forms> first_name_forms(const std::string &name, Gender gen
 			"\xD0\xBE\xD0\xB9", "\xD0\xB5"});
 	}
 	if (gender == Gender::Feminine) {
-		// A woman's name in -ь is declined (Нинель); one ending in another
-		// consonant is not (Лейсан, Гульнар).
-		if (ends_with(name, "\xD1\x8C")) return forms_by_ending(stem(1), {"\xD1\x8C", "\xD0\xB8", "\xD0\xB8", "\xD1\x8C", "\xD1\x8C\xD1\x8E", "\xD0\xB8"});  // -ь: нинель
+		// A woman's name in -… is declined (…); one ending in another
+		// consonant is not (…).
+		if (ends_with(name, "\xD1\x8C")) return forms_by_ending(stem(1), {"\xD1\x8C", "\xD0\xB8", "\xD0\xB8", "\xD1\x8C", "\xD1\x8C\xD1\x8E", "\xD0\xB8"});  // -…: …
 		return Forms{name, name, name, name, name, name};
 	}
 	if (gender != Gender::Masculine) return std::nullopt;
-	if (ends_with(name, "\xD0\xB8\xD0\xB9"))  // -ий: дмитрий, юрий
+	if (ends_with(name, "\xD0\xB8\xD0\xB9"))  // -…: …
 		return forms_by_ending(stem(1), {"\xD0\xB9", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB8"});
-	if (ends_with(name, "\xD0\xB9"))  // -ей, -ай: сергей, николай
+	if (ends_with(name, "\xD0\xB9"))  // -…, -…: …
 		return forms_by_ending(stem(1), {"\xD0\xB9", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"});
-	if (ends_with(name, "\xD1\x8C"))  // -ь: игорь
+	if (ends_with(name, "\xD1\x8C"))  // -…: …
 		return forms_by_ending(stem(1), {"\xD1\x8C", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"});
-	return forms_by_ending(name, {"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xBE\xD0\xBC", "\xD0\xB5"});  // иван, олег
+	return forms_by_ending(name, {"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xBE\xD0\xBC", "\xD0\xB5"});  // …
 }
 
 struct KnownName {
@@ -236,14 +236,14 @@ inline std::optional<std::pair<Forms, Gender>> recognised_first_name(const std::
 
 // A patronymic in any case: its nominative and gender.
 inline std::optional<std::pair<std::string, Gender>> patronymic_nominative(const std::string &lowerWord) {
-	const std::size_t masculine = lowerWord.rfind("\xD0\xB8\xD1\x87");   // ич
+	const std::size_t masculine = lowerWord.rfind("\xD0\xB8\xD1\x87");   // …
 	if (masculine != std::string::npos && masculine + 4 >= lowerWord.size() - 6 && masculine >= 4) {
 		const std::string rest = lowerWord.substr(masculine + 4);
 		if (rest.empty() || rest == "\xD0\xB0" || rest == "\xD1\x83" || rest == "\xD0\xB5\xD0\xBC" || rest == "\xD0\xBE\xD0\xBC"
 				|| rest == "\xD0\xB5")
 			return std::make_pair(lowerWord.substr(0, masculine + 4), Gender::Masculine);
 	}
-	for (const char *stem : {"\xD0\xB2\xD0\xBD", "\xD1\x87\xD0\xBD"}) {  // вн, чн
+	for (const char *stem : {"\xD0\xB2\xD0\xBD", "\xD1\x87\xD0\xBD"}) {  // …
 		const std::size_t at = lowerWord.rfind(stem);
 		if (at == std::string::npos || at < 4) continue;
 		const std::string rest = lowerWord.substr(at + 4);
@@ -257,7 +257,7 @@ inline std::optional<std::pair<std::string, Gender>> patronymic_nominative(const
 inline bool is_initial(const std::string &word);
 
 // Which word of a name is its patronymic: one that stands right after another
-// name word. A surname in -ич («Абрамович», «Карпович») reads like a
+// name word. A surname in -… («…») reads like a
 // patronymic too, but it begins the name, follows the patronymic or stands
 // with initials - never right after the first name.
 inline std::optional<std::size_t> patronymic_position(const std::vector<std::string> &words) {
@@ -272,10 +272,10 @@ inline std::optional<std::size_t> patronymic_position(const std::vector<std::str
 
 inline Forms patronymic_forms(const std::string &nominative, Gender gender) {
 	if (gender == Gender::Masculine) {
-		// A patronymic stressed on -ич takes -ом: «Ильичом», «Кузьмичом»; the rest -ем: «Игоревичем».
+		// A patronymic stressed on -… takes -…: «…»; the rest -…: «…».
 		bool stressed = false;
 		for (const char *name : {"\xD0\xB8\xD0\xBB\xD1\x8C\xD0\xB8\xD1\x87", "\xD0\xBA\xD1\x83\xD0\xB7\xD1\x8C\xD0\xBC\xD0\xB8\xD1\x87",
-				"\xD0\xBB\xD1\x83\xD0\xBA\xD0\xB8\xD1\x87", "\xD1\x84\xD0\xBE\xD0\xBC\xD0\xB8\xD1\x87"})  // ильич кузьмич лукич фомич
+				"\xD0\xBB\xD1\x83\xD0\xBA\xD0\xB8\xD1\x87", "\xD1\x84\xD0\xBE\xD0\xBC\xD0\xB8\xD1\x87"})  // …
 			if (nominative == name) stressed = true;
 		return forms_by_ending(nominative, {"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", stressed ? "\xD0\xBE\xD0\xBC" : "\xD0\xB5\xD0\xBC", "\xD0\xB5"});
 	}
@@ -294,7 +294,6 @@ inline std::optional<Forms> surname_forms(const std::string &lowerWord, Gender g
 		{"\xD1\x8B\xD0\xBD", {"\xD1\x8B\xD0\xBD", "\xD1\x8B\xD0\xBD\xD0\xB0", "\xD1\x8B\xD0\xBD\xD1\x83", "\xD1\x8B\xD0\xBD\xD0\xB0", "\xD1\x8B\xD0\xBD\xD1\x8B\xD0\xBC", "\xD1\x8B\xD0\xBD\xD0\xB5"}},
 		{"\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9", {"\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x81\xD0\xBA\xD0\xB8\xD0\xBC", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBC"}},
 		{"\xD1\x86\xD0\xBA\xD0\xB8\xD0\xB9", {"\xD1\x86\xD0\xBA\xD0\xB8\xD0\xB9", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x86\xD0\xBA\xD0\xB8\xD0\xBC", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xBC"}},
-		// -ич: Абрамович, Абрамовича, Абрамовичу, Абрамовичем.
 		{"\xD0\xB8\xD1\x87", {"\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87\xD0\xB0", "\xD0\xB8\xD1\x87\xD1\x83", "\xD0\xB8\xD1\x87\xD0\xB0", "\xD0\xB8\xD1\x87\xD0\xB5\xD0\xBC", "\xD0\xB8\xD1\x87\xD0\xB5"}},
 	};
 	static const Pattern feminine[] = {
@@ -305,7 +304,7 @@ inline std::optional<Forms> surname_forms(const std::string &lowerWord, Gender g
 		{"\xD1\x8B\xD0\xBD\xD0\xB0", {"\xD1\x8B\xD0\xBD\xD0\xB0", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9", "\xD1\x8B\xD0\xBD\xD1\x83", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9"}},
 		{"\xD1\x81\xD0\xBA\xD0\xB0\xD1\x8F", {"\xD1\x81\xD0\xBA\xD0\xB0\xD1\x8F", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x81\xD0\xBA\xD1\x83\xD1\x8E", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB9"}},
 		{"\xD1\x86\xD0\xBA\xD0\xB0\xD1\x8F", {"\xD1\x86\xD0\xBA\xD0\xB0\xD1\x8F", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x86\xD0\xBA\xD1\x83\xD1\x8E", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB9", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB9"}},
-		// A woman's -ич keeps its form: «с Абрамович Анной Сергеевной».
+		// A woman's -… keeps its form: «…».
 		{"\xD0\xB8\xD1\x87", {"\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87", "\xD0\xB8\xD1\x87"}},
 	};
 	if (gender != Gender::Masculine && gender != Gender::Feminine) return std::nullopt;
@@ -324,20 +323,20 @@ inline std::optional<Forms> surname_forms(const std::string &lowerWord, Gender g
 	return std::nullopt;
 }
 
-// A man's surname ending in a consonant (Шевчук, Мельник, Бондарь, Гайдай)
+// A man's surname ending in a consonant (…)
 // declines like a noun, from the case the rest of the name shows it is
-// written in; a woman's keeps its form. -ых/-их (Черных) and adjectival
+// written in; a woman's keeps its form. -… (…) and adjectival
 // endings never decline this way.
 inline std::optional<Forms> consonant_surname_forms(const std::string &lowerWord, std::size_t writtenCase) {
-	static const std::array<const char *, 6> hard{"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};                    // ∅ а у а ом е
-	static const std::array<const char *, 6> hushing{"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};                 // ∅ а у а ем е
-	static const std::array<const char *, 6> softSign{"\xD1\x8C", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};       // ь я ю я ем е
-	static const std::array<const char *, 6> shortI{"\xD0\xB9", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};         // й я ю я ем е
+	static const std::array<const char *, 6> hard{"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};                    // ∅ …
+	static const std::array<const char *, 6> hushing{"", "\xD0\xB0", "\xD1\x83", "\xD0\xB0", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};                 // ∅ …
+	static const std::array<const char *, 6> softSign{"\xD1\x8C", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};       // …
+	static const std::array<const char *, 6> shortI{"\xD0\xB9", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};         // …
 	const auto last_letter = [](const std::string &word) { return word.size() >= 2 ? word.substr(word.size() - 2) : std::string(); };
 	const auto consonant = [](const std::string &letter) {
 		static const std::array<const char *, 20> letters{"\xD0\xB1", "\xD0\xB2", "\xD0\xB3", "\xD0\xB4", "\xD0\xB6", "\xD0\xB7",
 			"\xD0\xBA", "\xD0\xBB", "\xD0\xBC", "\xD0\xBD", "\xD0\xBF", "\xD1\x80", "\xD1\x81", "\xD1\x82", "\xD1\x84", "\xD1\x85",
-			"\xD1\x86", "\xD1\x87", "\xD1\x88", "\xD1\x89"};  // б в г д ж з к л м н п р с т ф х ц ч ш щ
+			"\xD1\x86", "\xD1\x87", "\xD1\x88", "\xD1\x89"};  // …
 		return std::find(letters.begin(), letters.end(), letter) != letters.end();
 	};
 	const auto hushed = [](const std::string &letter) {
@@ -359,27 +358,27 @@ inline std::optional<Forms> consonant_surname_forms(const std::string &lowerWord
 		const bool fits = table == &hard ? consonant(last) && !hushed(last)
 			: table == &hushing ? hushed(last)
 			: table == &softSign ? consonant(last)
-			: vowel(last) && last != "\xD0\xB8" && last != "\xD0\xBE" && last != "\xD1\x8B";  // not -ий, -ой, -ый
+			: vowel(last) && last != "\xD0\xB8" && last != "\xD0\xBE" && last != "\xD1\x8B";  // not -…, -…, -…
 		if (!fits) continue;
 		nominative = candidate;
 		break;
 	}
 	if (nominative.empty() || nominative.size() < 6) return std::nullopt;
-	if (ends_with(nominative, "\xD1\x8B\xD1\x85") || ends_with(nominative, "\xD0\xB8\xD1\x85")) return std::nullopt;  // -ых, -их
+	if (ends_with(nominative, "\xD1\x8B\xD1\x85") || ends_with(nominative, "\xD0\xB8\xD1\x85")) return std::nullopt;  // -…, -…
 	const std::string last = last_letter(nominative);
 	if (last == "\xD1\x8C") return forms_by_ending(nominative.substr(0, nominative.size() - 2), softSign);
 	if (last == "\xD0\xB9") return forms_by_ending(nominative.substr(0, nominative.size() - 2), shortI);
 	return forms_by_ending(nominative, hushed(last) ? hushing : hard);
 }
 
-// How surely a word is a surname: 3 for -ов, -ев, -ский (and their feminine
-// forms), 2 for another regular pattern (-ин, -ын, -ич: «Сафина», but also the
-// first names «Карина», «Валентин»), 1 for a man's surname in a consonant, 0 for none.
+// How surely a word is a surname: 3 for -…, -…, -… (and their feminine
+// forms), 2 for another regular pattern (-…, -…, -…: «…», but also the
+// first names «…»), 1 for a man's surname in a consonant, 0 for none.
 inline int surname_rank(const std::string &lowerWord, Gender gender, std::size_t writtenCase = 0) {
 	if (const auto forms = surname_forms(lowerWord, gender)) {
 		for (const char *strong : {"\xD0\xBE\xD0\xB2", "\xD0\xB5\xD0\xB2", "\xD1\x91\xD0\xB2", "\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9",
 				"\xD1\x86\xD0\xBA\xD0\xB8\xD0\xB9", "\xD0\xBE\xD0\xB2\xD0\xB0", "\xD0\xB5\xD0\xB2\xD0\xB0", "\xD1\x91\xD0\xB2\xD0\xB0",
-				"\xD1\x81\xD0\xBA\xD0\xB0\xD1\x8F", "\xD1\x86\xD0\xBA\xD0\xB0\xD1\x8F"})  // ов ев ёв ский цкий ова ева ёва ская цкая
+				"\xD1\x81\xD0\xBA\xD0\xB0\xD1\x8F", "\xD1\x86\xD0\xBA\xD0\xB0\xD1\x8F"})  // …
 			if (ends_with((*forms)[0], strong)) return 3;
 		return 2;
 	}
@@ -395,15 +394,15 @@ inline std::size_t form_index(const Forms &forms, const std::string &lowerWord) 
 }
 
 // A first name Singularity does not know, standing before a patronymic: its forms,
-// from the case the patronymic shows it is written in («Карины Сергеевны» is
-// the genitive of «Карина», «Лейсан Рашидовны» of «Лейсан»).
+// from the case the patronymic shows it is written in («…» is
+// the genitive of «…» of «…»).
 inline std::optional<Forms> unknown_first_name_forms(const std::string &lowerWord, Gender gender, std::size_t writtenCase) {
 	if (writtenCase == 0) return first_name_forms(lowerWord, gender);
 	// A declined reading first; a name that keeps its form last.
 	for (std::size_t letters = 1; letters <= 3; ++letters) {
 		if (lowerWord.size() < 2 * letters + 4) break;
 		const std::string stem = lowerWord.substr(0, lowerWord.size() - 2 * letters);
-		for (const char *ending : {"", "\xD0\xB0", "\xD1\x8F", "\xD1\x8C", "\xD0\xB9", "\xD0\xB8\xD1\x8F", "\xD1\x8C\xD1\x8F"}) {  // ∅ а я ь й ия ья
+		for (const char *ending : {"", "\xD0\xB0", "\xD1\x8F", "\xD1\x8C", "\xD0\xB9", "\xD0\xB8\xD1\x8F", "\xD1\x8C\xD1\x8F"}) {  // ∅ …
 			const auto forms = first_name_forms(stem + ending, gender);
 			if (forms && (*forms)[writtenCase] == lowerWord && (*forms)[0] != lowerWord) return forms;
 		}
@@ -413,9 +412,8 @@ inline std::optional<Forms> unknown_first_name_forms(const std::string &lowerWor
 	return std::nullopt;
 }
 
-// «общество», «товарищество», «партнёрство», «предприятие», «учреждение»
-// (neuter), «компания», «корпорация», «организация», «ассоциация» (feminine),
-// «фонд» (masculine) in any case: how much of the word is its stem, the gender,
+// (neuter), «…» (feminine),
+// «…» (masculine) in any case: how much of the word is its stem, the gender,
 // and the six endings.
 struct OrganisationNoun {
 	std::size_t stem = 0;
@@ -424,19 +422,19 @@ struct OrganisationNoun {
 };
 
 inline std::optional<OrganisationNoun> organisation_noun(const std::string &lowerWord) {
-	static const std::array<const char *, 6> neuter{"\xD0\xBE", "\xD0\xB0", "\xD1\x83", "\xD0\xBE", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};  // о а у о ом е
-	static const std::array<const char *, 6> neuterSoft{"\xD0\xB5", "\xD1\x8F", "\xD1\x8E", "\xD0\xB5", "\xD0\xB5\xD0\xBC", "\xD0\xB8"};  // е я ю е ем и
-	static const std::array<const char *, 6> feminine{"\xD1\x8F", "\xD0\xB8", "\xD0\xB8", "\xD1\x8E", "\xD0\xB5\xD0\xB9", "\xD0\xB8"};  // я и и ю ей и
-	static const std::array<const char *, 6> masculine{"", "\xD0\xB0", "\xD1\x83", "", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};  // ∅ а у ∅ ом е
+	static const std::array<const char *, 6> neuter{"\xD0\xBE", "\xD0\xB0", "\xD1\x83", "\xD0\xBE", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};  // …
+	static const std::array<const char *, 6> neuterSoft{"\xD0\xB5", "\xD1\x8F", "\xD1\x8E", "\xD0\xB5", "\xD0\xB5\xD0\xBC", "\xD0\xB8"};  // …
+	static const std::array<const char *, 6> feminine{"\xD1\x8F", "\xD0\xB8", "\xD0\xB8", "\xD1\x8E", "\xD0\xB5\xD0\xB9", "\xD0\xB8"};  // …
+	static const std::array<const char *, 6> masculine{"", "\xD0\xB0", "\xD1\x83", "", "\xD0\xBE\xD0\xBC", "\xD0\xB5"};  // ∅ … ∅ …
 	struct Family { std::vector<const char *> stems; Gender gender; const std::array<const char *, 6> *endings; };
 	static const std::array<Family, 4> families{{
-		{{"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2", "\xD1\x82\xD0\xBE\xD0\xB2\xD0\xB0\xD1\x80\xD0\xB8\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2", "\xD0\xBF\xD0\xB0\xD1\x80\xD1\x82\xD0\xBD\xD1\x91\xD1\x80\xD1\x81\xD1\x82\xD0\xB2", "\xD0\xBF\xD0\xB0\xD1\x80\xD1\x82\xD0\xBD\xD0\xB5\xD1\x80\xD1\x81\xD1\x82\xD0\xB2"},  // обществ-, товариществ-, партнёрств-, партнерств-
+		{{"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2", "\xD1\x82\xD0\xBE\xD0\xB2\xD0\xB0\xD1\x80\xD0\xB8\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2", "\xD0\xBF\xD0\xB0\xD1\x80\xD1\x82\xD0\xBD\xD1\x91\xD1\x80\xD1\x81\xD1\x82\xD0\xB2", "\xD0\xBF\xD0\xB0\xD1\x80\xD1\x82\xD0\xBD\xD0\xB5\xD1\x80\xD1\x81\xD1\x82\xD0\xB2"},  // …
 			Gender::Neuter, &neuter},
-		{{"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xBF\xD1\x80\xD0\xB8\xD1\x8F\xD1\x82\xD0\xB8", "\xD1\x83\xD1\x87\xD1\x80\xD0\xB5\xD0\xB6\xD0\xB4\xD0\xB5\xD0\xBD\xD0\xB8"},  // предприяти-, учреждени-
+		{{"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xBF\xD1\x80\xD0\xB8\xD1\x8F\xD1\x82\xD0\xB8", "\xD1\x83\xD1\x87\xD1\x80\xD0\xB5\xD0\xB6\xD0\xB4\xD0\xB5\xD0\xBD\xD0\xB8"},  // …
 			Gender::Neuter, &neuterSoft},
-		{{"\xD0\xBA\xD0\xBE\xD0\xBC\xD0\xBF\xD0\xB0\xD0\xBD\xD0\xB8", "\xD0\xBA\xD0\xBE\xD1\x80\xD0\xBF\xD0\xBE\xD1\x80\xD0\xB0\xD1\x86\xD0\xB8", "\xD0\xBE\xD1\x80\xD0\xB3\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB7\xD0\xB0\xD1\x86\xD0\xB8", "\xD0\xB0\xD1\x81\xD1\x81\xD0\xBE\xD1\x86\xD0\xB8\xD0\xB0\xD1\x86\xD0\xB8"},  // компани-, корпораци-, организаци-, ассоциаци-
+		{{"\xD0\xBA\xD0\xBE\xD0\xBC\xD0\xBF\xD0\xB0\xD0\xBD\xD0\xB8", "\xD0\xBA\xD0\xBE\xD1\x80\xD0\xBF\xD0\xBE\xD1\x80\xD0\xB0\xD1\x86\xD0\xB8", "\xD0\xBE\xD1\x80\xD0\xB3\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xB7\xD0\xB0\xD1\x86\xD0\xB8", "\xD0\xB0\xD1\x81\xD1\x81\xD0\xBE\xD1\x86\xD0\xB8\xD0\xB0\xD1\x86\xD0\xB8"},  // …
 			Gender::Feminine, &feminine},
-		{{"\xD1\x84\xD0\xBE\xD0\xBD\xD0\xB4"}, Gender::Masculine, &masculine},  // фонд
+		{{"\xD1\x84\xD0\xBE\xD0\xBD\xD0\xB4"}, Gender::Masculine, &masculine},  // …
 	}};
 	for (const Family &family : families)
 		for (const char *stem : family.stems)
@@ -445,15 +443,15 @@ inline std::optional<OrganisationNoun> organisation_noun(const std::string &lowe
 	return std::nullopt;
 }
 
-// An adjective before such a noun («Акционерное», «Публичного», «Государственной»,
-// «Благотворительный»): the length of its stem, when its ending is one of the gender's.
+// An adjective before such a noun («…»,
+// «…»): the length of its stem, when its ending is one of the gender's.
 inline std::optional<std::size_t> organisation_adjective_stem(const std::string &lowerWord, Gender gender) {
 	if (!is_cyrillic_word(lowerWord)) return std::nullopt;
 	const std::vector<const char *> endings = gender == Gender::Feminine
-		? std::vector<const char *>{"\xD0\xB0\xD1\x8F", "\xD0\xBE\xD0\xB9", "\xD1\x83\xD1\x8E"}  // ая ой ую
+		? std::vector<const char *>{"\xD0\xB0\xD1\x8F", "\xD0\xBE\xD0\xB9", "\xD1\x83\xD1\x8E"}  // …
 		: gender == Gender::Masculine
-		? std::vector<const char *>{"\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x8B\xD0\xB9", "\xD0\xB8\xD0\xB9", "\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBC", "\xD0\xBE\xD0\xBC"}  // ого ому ый ий ым им ом
-		: std::vector<const char *>{"\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD0\xBE\xD0\xB5", "\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // ого ому ое ым им ом
+		? std::vector<const char *>{"\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x8B\xD0\xB9", "\xD0\xB8\xD0\xB9", "\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBC", "\xD0\xBE\xD0\xBC"}  // …
+		: std::vector<const char *>{"\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD0\xBE\xD0\xB5", "\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // …
 	for (const char *ending : endings) {
 		const std::string written = ending;
 		if (ends_with(lowerWord, written) && lowerWord.size() >= written.size() + 4) return lowerWord.size() - written.size();
@@ -461,18 +459,18 @@ inline std::optional<std::size_t> organisation_adjective_stem(const std::string 
 	return std::nullopt;
 }
 
-// The adjective's form in a case: hard endings, -ий / -им after к, г, х and a hushing consonant.
+// The adjective's form in a case: hard endings, -… / -… after … and a hushing consonant.
 inline std::string organisation_adjective_form(const std::string &lowerStem, Gender gender, std::size_t caseIndex) {
-	static const std::array<const char *, 6> neuter{"\xD0\xBE\xD0\xB5", "\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD0\xBE\xD0\xB5", "\xD1\x8B\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // ое ого ому ое ым ом
-	static const std::array<const char *, 6> masculine{"\xD1\x8B\xD0\xB9", "\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x8B\xD0\xB9", "\xD1\x8B\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // ый ого ому ый ым ом
-	static const std::array<const char *, 6> feminine{"\xD0\xB0\xD1\x8F", "\xD0\xBE\xD0\xB9", "\xD0\xBE\xD0\xB9", "\xD1\x83\xD1\x8E", "\xD0\xBE\xD0\xB9", "\xD0\xBE\xD0\xB9"};  // ая ой ой ую ой ой
+	static const std::array<const char *, 6> neuter{"\xD0\xBE\xD0\xB5", "\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD0\xBE\xD0\xB5", "\xD1\x8B\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // …
+	static const std::array<const char *, 6> masculine{"\xD1\x8B\xD0\xB9", "\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x8B\xD0\xB9", "\xD1\x8B\xD0\xBC", "\xD0\xBE\xD0\xBC"};  // …
+	static const std::array<const char *, 6> feminine{"\xD0\xB0\xD1\x8F", "\xD0\xBE\xD0\xB9", "\xD0\xBE\xD0\xB9", "\xD1\x83\xD1\x8E", "\xD0\xBE\xD0\xB9", "\xD0\xBE\xD0\xB9"};  // …
 	if (gender == Gender::Feminine) return lowerStem + feminine[caseIndex];
 	bool soft = false;
-	for (const char *letter : {"\xD0\xBA", "\xD0\xB3", "\xD1\x85", "\xD0\xB6", "\xD1\x88", "\xD1\x87", "\xD1\x89"})  // к г х ж ш ч щ
+	for (const char *letter : {"\xD0\xBA", "\xD0\xB3", "\xD1\x85", "\xD0\xB6", "\xD1\x88", "\xD1\x87", "\xD1\x89"})  // …
 		if (ends_with(lowerStem, letter)) soft = true;
-	if (caseIndex == 4 && soft) return lowerStem + "\xD0\xB8\xD0\xBC";  // -им
+	if (caseIndex == 4 && soft) return lowerStem + "\xD0\xB8\xD0\xBC";  // -…
 	if (gender == Gender::Masculine) {
-		if ((caseIndex == 0 || caseIndex == 3) && soft) return lowerStem + "\xD0\xB8\xD0\xB9";  // -ий: «Российский»
+		if ((caseIndex == 0 || caseIndex == 3) && soft) return lowerStem + "\xD0\xB8\xD0\xB9";  // -…: «…»
 		return lowerStem + masculine[caseIndex];
 	}
 	return lowerStem + neuter[caseIndex];
@@ -494,13 +492,13 @@ inline unsigned organisation_adjective_cases(const std::string &lowerWord, Gende
 	unsigned cases = 0;
 	for (std::size_t index = 0; index < 6; ++index)
 		if (organisation_adjective_form(stemText, gender, index) == lowerWord) cases |= 1u << index;
-	if (gender != Gender::Feminine && ends_with(lowerWord, "\xD0\xB8\xD0\xBC")) cases |= 1u << 4;  // -им
+	if (gender != Gender::Feminine && ends_with(lowerWord, "\xD0\xB8\xD0\xBC")) cases |= 1u << 4;  // -…
 	return cases;
 }
 
 // Where an organisation's noun stands in `words` (after at most four
-// adjectives agreeing with it: «Публичного акционерного общества», never
-// «Уставом Общества»), with the noun.
+// adjectives agreeing with it: «…», never
+// «…»), with the noun.
 inline std::optional<std::pair<std::size_t, OrganisationNoun>> organisation_head(const std::vector<std::string> &words) {
 	for (std::size_t at = 0; at < words.size() && at <= 4; ++at) {
 		if (const auto noun = organisation_noun(lowered(words[at]))) {
@@ -514,7 +512,6 @@ inline std::optional<std::pair<std::size_t, OrganisationNoun>> organisation_head
 }
 
 inline bool is_initial(const std::string &word) {
-	// "И.", "И.В.", "Ю."
 	if (word.empty() || word.back() != '.') return false;
 	std::size_t letters = 0;
 	for (std::size_t index = 0; index < word.size(); ++index) {
@@ -574,8 +571,8 @@ inline PersonReading read_person(const std::vector<std::string> &words, Gender g
 			if (!is_cyrillic_word(word)) continue;
 			if (const auto name = recognised_first_name(lowered(word))) { reading.gender = name->second; anyName = true; break; }
 		}
-	// A surname in -ов, -ев, -ин, -ын, -ский or -цкий is a man's, written in the
-	// nominative («Громов И. В.»); its feminine forms say nothing on their own.
+	// A surname in -…, -…, -…, -…, -… or -… is a man's, written in the
+	// nominative («…»); its feminine forms say nothing on their own.
 	if (reading.gender == Gender::Unknown)
 		for (const std::string &word : words) {
 			if (!is_cyrillic_word(word)) continue;
@@ -585,15 +582,15 @@ inline PersonReading read_person(const std::vector<std::string> &words, Gender g
 				if (ends_with(lower, ending) && lower.size() >= std::string(ending).size() + 4) reading.gender = Gender::Masculine;
 			if (reading.gender != Gender::Unknown) break;
 		}
-	// Forms only a woman's surname takes («Зайцевой», «Сафиной»), or only a
-	// man's («Громовым», «Достоевского»).
+	// Forms only a woman's surname takes («…»), or only a
+	// man's («…»).
 	if (reading.gender == Gender::Unknown)
 		for (const std::string &word : words) {
 			if (!is_cyrillic_word(word)) continue;
 			const std::string lower = lowered(word);
-			for (const char *ending : {"\xD0\xBE\xD0\xB2\xD0\xBE\xD0\xB9", "\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB9", "\xD1\x91\xD0\xB2\xD0\xBE\xD0\xB9", "\xD0\xB8\xD0\xBD\xD0\xBE\xD0\xB9", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9"})  // овой евой ёвой иной ыной
+			for (const char *ending : {"\xD0\xBE\xD0\xB2\xD0\xBE\xD0\xB9", "\xD0\xB5\xD0\xB2\xD0\xBE\xD0\xB9", "\xD1\x91\xD0\xB2\xD0\xBE\xD0\xB9", "\xD0\xB8\xD0\xBD\xD0\xBE\xD0\xB9", "\xD1\x8B\xD0\xBD\xD0\xBE\xD0\xB9"})  // …
 				if (ends_with(lower, ending) && lower.size() >= std::string(ending).size() + 4) reading.gender = Gender::Feminine;
-			for (const char *ending : {"\xD0\xBE\xD0\xB2\xD1\x8B\xD0\xBC", "\xD0\xB5\xD0\xB2\xD1\x8B\xD0\xBC", "\xD1\x91\xD0\xB2\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBD\xD1\x8B\xD0\xBC", "\xD1\x8B\xD0\xBD\xD1\x8B\xD0\xBC", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x81\xD0\xBA\xD0\xB8\xD0\xBC", "\xD1\x86\xD0\xBA\xD0\xB8\xD0\xBC"})  // овым евым ёвым иным ыным ского цкого скому цкому ским цким
+			for (const char *ending : {"\xD0\xBE\xD0\xB2\xD1\x8B\xD0\xBC", "\xD0\xB5\xD0\xB2\xD1\x8B\xD0\xBC", "\xD1\x91\xD0\xB2\xD1\x8B\xD0\xBC", "\xD0\xB8\xD0\xBD\xD1\x8B\xD0\xBC", "\xD1\x8B\xD0\xBD\xD1\x8B\xD0\xBC", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x86\xD0\xBA\xD0\xBE\xD0\xBC\xD1\x83", "\xD1\x81\xD0\xBA\xD0\xB8\xD0\xBC", "\xD1\x86\xD0\xBA\xD0\xB8\xD0\xBC"})  // …
 				if (ends_with(lower, ending) && lower.size() >= std::string(ending).size() + 4) reading.gender = Gender::Masculine;
 			if (reading.gender != Gender::Unknown) break;
 		}
@@ -617,11 +614,11 @@ inline PersonReading read_person(const std::vector<std::string> &words, Gender g
 		if (reading.gender == Gender::Masculine) return consonant_surname_forms(lower, writtenCase.value_or(0));
 		return std::nullopt;
 	};
-	// Two name words and nothing else to tell them apart («Карина Смирнова»,
-	// «Лебедев Мартин»): the surer surname is the surname, and the other word the
+	// Two name words and nothing else to tell them apart («…»,
+	// «…»): the surer surname is the surname, and the other word the
 	// first name, known to Singularity or not, in the surname's case. Two words
-	// either of which could be the surname («Регина Сафина») are left as written:
-	// a first name declined as a surname («Кариной») is a wrong form.
+	// either of which could be the surname («…») are left as written:
+	// a first name declined as a surname («…») is a wrong form.
 	std::optional<std::size_t> firstAt;
 	bool undecided = false;
 	if (!patronymicAt && (reading.gender == Gender::Masculine || reading.gender == Gender::Feminine)) {
@@ -659,7 +656,7 @@ inline PersonReading read_person(const std::vector<std::string> &words, Gender g
 			++declinable;
 			continue;
 		}
-		// A double surname declines part by part: «Ивановой-Петровой».
+		// A double surname declines part by part: «…».
 		if (word.find('-') != std::string::npos) {
 			std::vector<Forms> partForms;
 			const std::string lower = lowered(word);
@@ -712,48 +709,48 @@ inline PersonReading read_person(const std::vector<std::string> &words, Gender g
 
 } // namespace detail
 
-// "р", "род", "родительный", "gen" ... - the case a statement asks for.
+// "…", "gen" ... - the case a statement asks for.
 inline std::optional<Case> case_from_word(const std::string &word) {
 	const std::string lower = detail::lowered(word);
 	const auto starts = [&](const char *prefix) { return lower.rfind(prefix, 0) == 0; };
-	if (lower == "nom" || starts("\xD0\xB8\xD0\xBC") || lower == "\xD0\xB8") return Case::Nominative;                  // им
-	if (lower == "gen" || starts("\xD1\x80\xD0\xBE\xD0\xB4") || lower == "\xD1\x80") return Case::Genitive;           // род
-	if (lower == "dat" || starts("\xD0\xB4\xD0\xB0\xD1\x82") || lower == "\xD0\xB4") return Case::Dative;            // дат
-	if (lower == "acc" || starts("\xD0\xB2\xD0\xB8\xD0\xBD") || lower == "\xD0\xB2") return Case::Accusative;        // вин
-	if (lower == "ins" || starts("\xD1\x82\xD0\xB2") || lower == "\xD1\x82") return Case::Instrumental;            // тв
-	if (lower == "prep" || starts("\xD0\xBF\xD1\x80") || lower == "\xD0\xBF") return Case::Prepositional;         // пр
+	if (lower == "nom" || starts("\xD0\xB8\xD0\xBC") || lower == "\xD0\xB8") return Case::Nominative;                  // …
+	if (lower == "gen" || starts("\xD1\x80\xD0\xBE\xD0\xB4") || lower == "\xD1\x80") return Case::Genitive;           // …
+	if (lower == "dat" || starts("\xD0\xB4\xD0\xB0\xD1\x82") || lower == "\xD0\xB4") return Case::Dative;            // …
+	if (lower == "acc" || starts("\xD0\xB2\xD0\xB8\xD0\xBD") || lower == "\xD0\xB2") return Case::Accusative;        // …
+	if (lower == "ins" || starts("\xD1\x82\xD0\xB2") || lower == "\xD1\x82") return Case::Instrumental;            // …
+	if (lower == "prep" || starts("\xD0\xBF\xD1\x80") || lower == "\xD0\xBF") return Case::Prepositional;         // …
 	return std::nullopt;
 }
 
 // The grammatical gender a name or an organisation takes: a person's from the
 // patronymic or a known first name, an organisation's from its form, in any
-// case («Общество», «Обществом», ООО, АО - neuter; «Компания» - feminine).
+// case («…» - neuter; «…» - feminine).
 // Unknown otherwise.
 inline Gender gender_of(const std::string &value) {
 	const std::vector<std::string> words = detail::words_of(value);
 	if (words.empty()) return Gender::Unknown;
 	const std::string first = detail::lowered(words.front());
-	for (const char *neuter : {"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2\xD0\xBE",             // общество
-			"\xD0\xB0\xD0\xBA\xD1\x86\xD0\xB8\xD0\xBE\xD0\xBD\xD0\xB5\xD1\x80\xD0\xBD\xD0\xBE\xD0\xB5",            // акционерное
-			"\xD0\xBF\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x87\xD0\xBD\xD0\xBE\xD0\xB5",                            // публичное
-			"\xD0\xBD\xD0\xB5\xD0\xBF\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x87\xD0\xBD\xD0\xBE\xD0\xB5",            // непубличное
-			"\xD0\xBE\xD0\xBE\xD0\xBE", "\xD0\xB0\xD0\xBE", "\xD0\xBf\xD0\xB0\xD0\xBE", "\xD0\xB7\xD0\xB0\xD0\xBE",  // ооо, ао, пао, зао
-			"\xD0\xBD\xD0\xB0\xD0\xBE", "\xD0\xBE\xD0\xB0\xD0\xBE"})  // нао, оао
+	for (const char *neuter : {"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB5\xD1\x81\xD1\x82\xD0\xB2\xD0\xBE",             // …
+			"\xD0\xB0\xD0\xBA\xD1\x86\xD0\xB8\xD0\xBE\xD0\xBD\xD0\xB5\xD1\x80\xD0\xBD\xD0\xBE\xD0\xB5",            // …
+			"\xD0\xBF\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x87\xD0\xBD\xD0\xBE\xD0\xB5",                            // …
+			"\xD0\xBD\xD0\xB5\xD0\xBF\xD1\x83\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x87\xD0\xBD\xD0\xBE\xD0\xB5",            // …
+			"\xD0\xBE\xD0\xBE\xD0\xBE", "\xD0\xB0\xD0\xBE", "\xD0\xBf\xD0\xB0\xD0\xBE", "\xD0\xB7\xD0\xB0\xD0\xBE",  // …
+			"\xD0\xBD\xD0\xB0\xD0\xBE", "\xD0\xBE\xD0\xB0\xD0\xBE"})  // …
 		if (first == neuter) return Gender::Neuter;
-	if (first == "\xD0\xBA\xD0\xBE\xD0\xBC\xD0\xBF\xD0\xB0\xD0\xBD\xD0\xB8\xD1\x8F") return Gender::Feminine;  // компания
+	if (first == "\xD0\xBA\xD0\xBE\xD0\xBC\xD0\xBF\xD0\xB0\xD0\xBD\xD0\xB8\xD1\x8F") return Gender::Feminine;  // …
 	if (const auto head = detail::organisation_head(words)) return head->second.gender;
 	std::vector<std::string> person = words;
-	if (first == "\xD0\xB8\xD0\xBF") person.erase(person.begin());                                                // ИП
+	if (first == "\xD0\xB8\xD0\xBF") person.erase(person.begin());                                                // …
 	return detail::read_person(person).gender;
 }
 
 // `value` in the case asked for: a Russian person's name, alone or after
-// «ИП» / «индивидуальный предприниматель», or an organisation named by its form,
-// written in any case («Общество с ограниченной ответственностью «…»»,
-// «Акционерного общества «…»», «Компания «…»»; ООО «…» never changes).
+// «…», or an organisation named by its form,
+// written in any case («…»»,
+// «…»», «…»»; … never changes).
 // `gender` is the person's, when the caller knows it from the fullest writing
-// of the name: it decides what the words cannot («А. В. Смирнова» is a woman,
-// «Громова И. В.» a man in the genitive). Anything Singularity cannot decline with
+// of the name: it decides what the words cannot («…» is a woman,
+// «…» a man in the genitive). Anything Singularity cannot decline with
 // certainty is returned as it is.
 inline std::string declined(const std::string &value, Case target, Gender gender) {
 	std::vector<std::string> words = detail::words_of(value);
@@ -775,7 +772,7 @@ inline std::string declined(const std::string &value, Case target, Gender gender
 	}
 	static const std::array<const char *, 6> masculineAdjective{"\xD1\x8B\xD0\xB9", "\xD0\xBE\xD0\xB3\xD0\xBE", "\xD0\xBE\xD0\xBC\xD1\x83",
 		"\xD0\xBE\xD0\xB3\xD0\xBE", "\xD1\x8B\xD0\xBC", "\xD0\xBE\xD0\xBC"};
-	// «индивидуальный предприниматель» and «ИП» before a person's name.
+	// «…» and «…» before a person's name.
 	std::size_t personStart = 0;
 	if (words.size() >= 3 && first == "\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB8\xD0\xB2\xD0\xB8\xD0\xB4\xD1\x83\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xBD\xD1\x8B\xD0\xB9"
 			&& detail::lowered(words[1]) == "\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBD\xD0\xB8\xD0\xBC\xD0\xB0\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C") {
@@ -783,7 +780,7 @@ inline std::string declined(const std::string &value, Case target, Gender gender
 		static const std::array<const char *, 6> soft{"\xD1\x8C", "\xD1\x8F", "\xD1\x8E", "\xD1\x8F", "\xD0\xB5\xD0\xBC", "\xD0\xB5"};
 		words[1] = words[1].substr(0, words[1].size() - 2) + soft[index];
 		personStart = 2;
-	} else if (first == "\xD0\xB8\xD0\xBF") {  // ИП
+	} else if (first == "\xD0\xB8\xD0\xBF") {  // …
 		personStart = 1;
 	}
 	if (personStart >= words.size()) return value;
@@ -799,7 +796,7 @@ inline std::string declined(const std::string &value, Case target, Gender gender
 inline std::string declined(const std::string &value, Case target) { return declined(value, target, Gender::Unknown); }
 
 // A person's name taken apart, each part as written (in whatever case):
-// surname, first name, patronymic, and initials («А.», «И.» or «А.И.»).
+// surname, first name, patronymic, and initials («…» or «…»).
 struct NameParts {
 	std::string surname;
 	std::string first;
@@ -814,7 +811,7 @@ inline std::optional<NameParts> name_parts(const std::string &value) {
 	const std::vector<std::string> words = detail::words_of(value);
 	if (words.empty() || words.size() > 4) return std::nullopt;
 	NameParts parts;
-	// «Абрамович Роман Аркадьевич»: the patronymic is the -ич word after the first name.
+	// «…»: the patronymic is the -… word after the first name.
 	const std::optional<std::size_t> patronymicAt = detail::patronymic_position(words);
 	std::vector<std::size_t> others;
 	for (std::size_t index = 0; index < words.size(); ++index) {
@@ -834,7 +831,7 @@ inline std::optional<NameParts> name_parts(const std::string &value) {
 		if (before != others.end()) { parts.first = words[*before]; others.erase(before); }
 	}
 	if (others.size() == 2 && parts.first.empty() && parts.initials.empty()) {
-		// «Лейсан Сафина», «Карина Смирнова»: the surname is the word with the surer surname's pattern.
+		// «…»: the surname is the word with the surer surname's pattern.
 		int ranks[2] = {0, 0};
 		for (std::size_t at = 0; at < 2; ++at) {
 			const std::string lower = detail::lowered(words[others[at]]);
@@ -854,8 +851,8 @@ inline std::optional<NameParts> name_parts(const std::string &value) {
 
 // Whether two writings can be one Russian surname in two of its cases: equal,
 // or declined in one gender's regular pattern from the same nominative
-// («Лебедеву» and «Лебедев», «Зайцевой» and «Зайцева»). Which person a surname
-// alone belongs to is not decided here: «Лебедеву» is his dative and her
+// («…» and «…» and «…»). Which person a surname
+// alone belongs to is not decided here: «…» is his dative and her
 // accusative alike; the rest of the name decides.
 inline bool same_surname(const std::string &left, const std::string &right) {
 	const std::string a = detail::lowered(left);

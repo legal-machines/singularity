@@ -9,15 +9,15 @@
 #include <vector>
 
 // A protected figure written the way a document writes it: in digits, in
-// words, or in digits with its words - «828 000,00 (восемьсот двадцать восемь
-// тысяч) рублей 00 копеек», "$21,350.00 (twenty-one thousand three hundred
-// fifty dollars)", «двадцать шестого сентября две тысячи двадцать шестого
-// года» - written on the lawyer's computer from the real value (owner, 26 Sep
+// words, or in digits with its words - «828 000,00 (…
+// …) … 00 …», "$21,350.00 (twenty-one thousand three hundred
+// fifty dollars)", «…
+// …» - written on the lawyer's computer from the real value (owner, 26 Sep
 // 2026). The model never sees the value, so it can never write its words: it
 // asks for them by the symbol's display format ([[Amount3.words]],
 // [[Amount3.digitsandwords]]), and restoration writes them here,
 // deterministically, never by a model. Words a model left beside a figure
-// ("[[Amount9]] (восемьсот двадцать восемь тысяч) рублей") are the words of
+// ("…") are the words of
 // whatever figure stood there before; they are written again from the value
 // the symbol restores to, so a changed figure never keeps stale words.
 //
@@ -56,24 +56,24 @@ inline std::string whole_digits(Int128 number, Language language) {
 }
 
 inline std::string russian_money_noun(const std::string &currency, Int128 count) {
-	if (currency == "RUB") return semantic::russian_plural(count, "рубль", "рубля", "рублей");
-	if (currency == "USD") return semantic::russian_plural(count, "доллар США", "доллара США", "долларов США");
-	if (currency == "EUR") return "евро";
-	if (currency == "GBP") return semantic::russian_plural(count, "фунт стерлингов", "фунта стерлингов", "фунтов стерлингов");
-	if (currency == "CNY") return semantic::russian_plural(count, "юань", "юаня", "юаней");
-	if (currency == "JPY") return semantic::russian_plural(count, "иена", "иены", "иен");
+	if (currency == "RUB") return semantic::russian_plural(count, "\321\200\321\203\320\261\320\273\321\214", "\321\200\321\203\320\261\320\273\321\217", "\321\200\321\203\320\261\320\273\320\265\320\271");
+	if (currency == "USD") return semantic::russian_plural(count, "\320\264\320\276\320\273\320\273\320\260\321\200 \320\241\320\250\320\220", "\320\264\320\276\320\273\320\273\320\260\321\200\320\260 \320\241\320\250\320\220", "\320\264\320\276\320\273\320\273\320\260\321\200\320\276\320\262 \320\241\320\250\320\220");
+	if (currency == "EUR") return "\320\265\320\262\321\200\320\276";
+	if (currency == "GBP") return semantic::russian_plural(count, "\321\204\321\203\320\275\321\202 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262", "\321\204\321\203\320\275\321\202\320\260 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262", "\321\204\321\203\320\275\321\202\320\276\320\262 \321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263\320\276\320\262");
+	if (currency == "CNY") return semantic::russian_plural(count, "\321\216\320\260\320\275\321\214", "\321\216\320\260\320\275\321\217", "\321\216\320\260\320\275\320\265\320\271");
+	if (currency == "JPY") return semantic::russian_plural(count, "\320\270\320\265\320\275\320\260", "\320\270\320\265\320\275\321\213", "\320\270\320\265\320\275");
 	return currency;
 }
 
 inline std::optional<std::string> russian_minor_noun(const std::string &currency, Int128 count) {
-	if (currency == "RUB") return semantic::russian_plural(count, "копейка", "копейки", "копеек");
+	if (currency == "RUB") return semantic::russian_plural(count, "\320\272\320\276\320\277\320\265\320\271\320\272\320\260", "\320\272\320\276\320\277\320\265\320\271\320\272\320\270", "\320\272\320\276\320\277\320\265\320\265\320\272");
 	if (currency == "USD" || currency == "EUR" || currency == "CAD" || currency == "AUD")
-		return semantic::russian_plural(count, "цент", "цента", "центов");
-	if (currency == "GBP") return semantic::russian_plural(count, "пенс", "пенса", "пенсов");
+		return semantic::russian_plural(count, "\321\206\320\265\320\275\321\202", "\321\206\320\265\320\275\321\202\320\260", "\321\206\320\265\320\275\321\202\320\276\320\262");
+	if (currency == "GBP") return semantic::russian_plural(count, "\320\277\320\265\320\275\321\201", "\320\277\320\265\320\275\321\201\320\260", "\320\277\320\265\320\275\321\201\320\276\320\262");
 	return std::nullopt;
 }
 
-// Feminine nouns take «одна», «две» in their count.
+// Feminine nouns take «…» in their count.
 inline bool russian_feminine_currency(const std::string &currency) { return currency == "JPY"; }
 
 // English ordinal from a cardinal's words: "twenty-one" -> "twenty-first".
@@ -95,18 +95,18 @@ inline std::string english_ordinal(Int128 number) {
 	return words.substr(0, start) + ordinal;
 }
 
-// The Russian ordinal in the genitive (masculine and neuter): «двадцать
-// шестого», «две тысячи двадцать шестого», «двухтысячного». Cardinal words
+// The Russian ordinal in the genitive (masculine and neuter): «…
+// …», «…». Cardinal words
 // for every part but the last, as Russian writes a compound ordinal.
 inline std::string russian_ordinal_genitive(Int128 number) {
-	static const char *units[] = {"", "первого", "второго", "третьего", "четвёртого", "пятого", "шестого", "седьмого", "восьмого",
-		"девятого", "десятого", "одиннадцатого", "двенадцатого", "тринадцатого", "четырнадцатого", "пятнадцатого", "шестнадцатого",
-		"семнадцатого", "восемнадцатого", "девятнадцатого"};
-	static const char *tens[] = {"", "", "двадцатого", "тридцатого", "сорокового", "пятидесятого", "шестидесятого", "семидесятого",
-		"восьмидесятого", "девяностого"};
-	static const char *hundreds[] = {"", "сотого", "двухсотого", "трёхсотого", "четырёхсотого", "пятисотого", "шестисотого",
-		"семисотого", "восьмисотого", "девятисотого"};
-	static const char *thousandsStem[] = {"", "", "двух", "трёх", "четырёх", "пяти", "шести", "семи", "восьми", "девяти"};
+	static const char *units[] = {"", "\320\277\320\265\321\200\320\262\320\276\320\263\320\276", "\320\262\321\202\320\276\321\200\320\276\320\263\320\276", "\321\202\321\200\320\265\321\202\321\214\320\265\320\263\320\276", "\321\207\320\265\321\202\320\262\321\221\321\200\321\202\320\276\320\263\320\276", "\320\277\321\217\321\202\320\276\320\263\320\276", "\321\210\320\265\321\201\321\202\320\276\320\263\320\276", "\321\201\320\265\320\264\321\214\320\274\320\276\320\263\320\276", "\320\262\320\276\321\201\321\214\320\274\320\276\320\263\320\276",
+		"\320\264\320\265\320\262\321\217\321\202\320\276\320\263\320\276", "\320\264\320\265\321\201\321\217\321\202\320\276\320\263\320\276", "\320\276\320\264\320\270\320\275\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\320\264\320\262\320\265\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\321\202\321\200\320\270\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\321\207\320\265\321\202\321\213\321\200\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\320\277\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\321\210\320\265\321\201\321\202\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276",
+		"\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\320\262\320\276\321\201\320\265\320\274\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\320\264\320\265\320\262\321\217\321\202\320\275\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276"};
+	static const char *tens[] = {"", "", "\320\264\320\262\320\260\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\321\202\321\200\320\270\320\264\321\206\320\260\321\202\320\276\320\263\320\276", "\321\201\320\276\321\200\320\276\320\272\320\276\320\262\320\276\320\263\320\276", "\320\277\321\217\321\202\320\270\320\264\320\265\321\201\321\217\321\202\320\276\320\263\320\276", "\321\210\320\265\321\201\321\202\320\270\320\264\320\265\321\201\321\217\321\202\320\276\320\263\320\276", "\321\201\320\265\320\274\320\270\320\264\320\265\321\201\321\217\321\202\320\276\320\263\320\276",
+		"\320\262\320\276\321\201\321\214\320\274\320\270\320\264\320\265\321\201\321\217\321\202\320\276\320\263\320\276", "\320\264\320\265\320\262\321\217\320\275\320\276\321\201\321\202\320\276\320\263\320\276"};
+	static const char *hundreds[] = {"", "\321\201\320\276\321\202\320\276\320\263\320\276", "\320\264\320\262\321\203\321\205\321\201\320\276\321\202\320\276\320\263\320\276", "\321\202\321\200\321\221\321\205\321\201\320\276\321\202\320\276\320\263\320\276", "\321\207\320\265\321\202\321\213\321\200\321\221\321\205\321\201\320\276\321\202\320\276\320\263\320\276", "\320\277\321\217\321\202\320\270\321\201\320\276\321\202\320\276\320\263\320\276", "\321\210\320\265\321\201\321\202\320\270\321\201\320\276\321\202\320\276\320\263\320\276",
+		"\321\201\320\265\320\274\320\270\321\201\320\276\321\202\320\276\320\263\320\276", "\320\262\320\276\321\201\321\214\320\274\320\270\321\201\320\276\321\202\320\276\320\263\320\276", "\320\264\320\265\320\262\321\217\321\202\320\270\321\201\320\276\321\202\320\276\320\263\320\276"};
+	static const char *thousandsStem[] = {"", "", "\320\264\320\262\321\203\321\205", "\321\202\321\200\321\221\321\205", "\321\207\320\265\321\202\321\213\321\200\321\221\321\205", "\320\277\321\217\321\202\320\270", "\321\210\320\265\321\201\321\202\320\270", "\321\201\320\265\320\274\320\270", "\320\262\320\276\321\201\321\214\320\274\320\270", "\320\264\320\265\320\262\321\217\321\202\320\270"};
 	if (number <= 0 || number >= 10000) return semantic::number_in_words(number, Language::Russian);
 	// Each part below is a small whole number that indexes one of the lists.
 	const auto at = [](Int128 part) { return static_cast<std::size_t>(part); };
@@ -114,7 +114,7 @@ inline std::string russian_ordinal_genitive(Int128 number) {
 	const Int128 rest = number % 1000;
 	std::string head;
 	if (thousands > 0) {
-		if (rest == 0) return std::string(thousandsStem[at(thousands)]) + "тысячного";
+		if (rest == 0) return std::string(thousandsStem[at(thousands)]) + "\321\202\321\213\321\201\321\217\321\207\320\275\320\276\320\263\320\276";
 		head = semantic::number_in_words(thousands * 1000, Language::Russian) + " ";
 	}
 	const Int128 hundred = rest / 100;
@@ -126,7 +126,7 @@ inline std::string russian_ordinal_genitive(Int128 number) {
 	return head + semantic::number_in_words(tail / 10 * 10, Language::Russian) + " " + units[at(tail % 10)];
 }
 
-// A decimal fraction in words: "one point five", «одна целая пять десятых»
+// A decimal fraction in words: "one point five", «…»
 // (Russian fractions count in the feminine and name their denominator).
 inline std::optional<std::string> decimal_words(const semantic::Rational &number, Language language, bool feminine = false) {
 	if (number.is_integer()) return semantic::number_in_words(number.numerator(), language, feminine);
@@ -140,18 +140,18 @@ inline std::optional<std::string> decimal_words(const semantic::Rational &number
 	for (const char digit : wholeText) whole = whole * 10 + (digit - '0');
 	Int128 part = 0;
 	for (const char digit : fraction) part = part * 10 + (digit - '0');
-	const std::string sign = number.sign() < 0 ? (language == Language::Russian ? "минус " : "minus ") : "";
+	const std::string sign = number.sign() < 0 ? (language == Language::Russian ? "\320\274\320\270\320\275\321\203\321\201 " : "minus ") : "";
 	if (language == Language::English) {
 		std::string words = semantic::number_in_words(whole, Language::English) + " point";
 		static const char *digits[] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
 		for (const char digit : fraction) words += std::string(" ") + digits[digit - '0'];
 		return sign + words;
 	}
-	static const char *one[] = {"", "десятая", "сотая", "тысячная", "десятитысячная"};
-	static const char *many[] = {"", "десятых", "сотых", "тысячных", "десятитысячных"};
+	static const char *one[] = {"", "\320\264\320\265\321\201\321\217\321\202\320\260\321\217", "\321\201\320\276\321\202\320\260\321\217", "\321\202\321\213\321\201\321\217\321\207\320\275\320\260\321\217", "\320\264\320\265\321\201\321\217\321\202\320\270\321\202\321\213\321\201\321\217\321\207\320\275\320\260\321\217"};
+	static const char *many[] = {"", "\320\264\320\265\321\201\321\217\321\202\321\213\321\205", "\321\201\320\276\321\202\321\213\321\205", "\321\202\321\213\321\201\321\217\321\207\320\275\321\213\321\205", "\320\264\320\265\321\201\321\217\321\202\320\270\321\202\321\213\321\201\321\217\321\207\320\275\321\213\321\205"};
 	const std::size_t places = fraction.size();
 	return sign + semantic::number_in_words(whole, Language::Russian, true) + " "
-		+ semantic::russian_plural(whole, "целая", "целых", "целых") + " " + semantic::number_in_words(part, Language::Russian, true)
+		+ semantic::russian_plural(whole, "\321\206\320\265\320\273\320\260\321\217", "\321\206\320\265\320\273\321\213\321\205", "\321\206\320\265\320\273\321\213\321\205") + " " + semantic::number_in_words(part, Language::Russian, true)
 		+ " " + semantic::russian_plural(part, one[places], many[places], many[places]);
 }
 
@@ -162,8 +162,8 @@ inline std::string english_month(unsigned month) {
 }
 
 inline std::string russian_month_genitive(unsigned month) {
-	static const char *names[] = {"января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября",
-		"ноября", "декабря"};
+	static const char *names[] = {"\321\217\320\275\320\262\320\260\321\200\321\217", "\321\204\320\265\320\262\321\200\320\260\320\273\321\217", "\320\274\320\260\321\200\321\202\320\260", "\320\260\320\277\321\200\320\265\320\273\321\217", "\320\274\320\260\321\217", "\320\270\321\216\320\275\321\217", "\320\270\321\216\320\273\321\217", "\320\260\320\262\320\263\321\203\321\201\321\202\320\260", "\321\201\320\265\320\275\321\202\321\217\320\261\321\200\321\217", "\320\276\320\272\321\202\321\217\320\261\321\200\321\217",
+		"\320\275\320\276\321\217\320\261\321\200\321\217", "\320\264\320\265\320\272\320\260\320\261\321\200\321\217"};
 	return month >= 1 && month <= 12 ? names[month - 1] : "";
 }
 
@@ -187,7 +187,6 @@ inline CivilDay civil_of(long long days) {
 }
 
 // A money amount's words: "twenty-one thousand three hundred fifty dollars",
-// «восемьсот двадцать восемь тысяч рублей 00 копеек».
 inline std::string money_words(const semantic::Value &value, Language language) {
 	const bool minorUnit = semantic::minor_unit_places(value.currency) > 0;
 	const semantic::Rational cents = value.amount.rounded(minorUnit ? 2 : 0);
@@ -217,7 +216,7 @@ inline std::string money_words(const semantic::Value &value, Language language) 
 			else if (minor != 0) text += " " + two_digits(minor) + "/100";
 		}
 	}
-	return negative ? "минус " + text : text;
+	return negative ? "\320\274\320\270\320\275\321\203\321\201 " + text : text;
 }
 
 inline std::string money_digits_and_words(const semantic::Value &value, Language language) {
@@ -228,7 +227,7 @@ inline std::string money_digits_and_words(const semantic::Value &value, Language
 		words.words = true;
 		return semantic::display(plain, words, Language::English);
 	}
-	// «828 000,00 (восемьсот двадцать восемь тысяч) рублей 00 копеек»: the
+	// «…»: the
 	// kopecks after the figure when the source wrote them or there are any.
 	const bool minorUnit = semantic::minor_unit_places(value.currency) > 0;
 	const semantic::Rational cents = value.amount.rounded(minorUnit ? 2 : 0);
@@ -245,7 +244,7 @@ inline std::string money_digits_and_words(const semantic::Value &value, Language
 			else if (minor != 0) text += " " + two_digits(minor) + "/100";
 		}
 	}
-	return cents.sign() < 0 ? "минус " + text : text;
+	return cents.sign() < 0 ? "\320\274\320\270\320\275\321\203\321\201 " + text : text;
 }
 
 inline std::optional<std::string> date_words(const semantic::Value &value, Language language) {
@@ -256,7 +255,7 @@ inline std::optional<std::string> date_words(const semantic::Value &value, Langu
 		return "the " + english_ordinal(day.day) + " day of " + english_month(day.month) + ", "
 			+ semantic::number_in_words(day.year, Language::English);
 	return russian_ordinal_genitive(day.day) + " " + russian_month_genitive(day.month) + " " + russian_ordinal_genitive(day.year)
-		+ " года";
+		+ " \320\263\320\276\320\264\320\260";
 }
 
 } // namespace spelled_detail
@@ -293,13 +292,13 @@ inline std::optional<std::string> date_words(const semantic::Value &value, Langu
 					&& !points.is_integer());
 				if (!number) return std::nullopt;
 				if (language == semantic::Language::English) words = *number + " percent";
-				else if (!points.is_integer()) words = *number + " процента";
-				else words = *number + " " + semantic::russian_plural(points.numerator(), "процент", "процента", "процентов");
+				else if (!points.is_integer()) words = *number + " \320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\260";
+				else words = *number + " " + semantic::russian_plural(points.numerator(), "\320\277\321\200\320\276\321\206\320\265\320\275\321\202", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\260", "\320\277\321\200\320\276\321\206\320\265\320\275\321\202\320\276\320\262");
 				break;
 			}
 			case Kind::Duration: {
 				if (!figure.amount.is_integer()) return std::nullopt;
-				// The unit noun as the value's own display writes it: "45 дней", "1 business day".
+				// The unit noun as the value's own display writes it: "…", "1 business day".
 				const std::string shown = digits();
 				const std::size_t space = shown.find(' ');
 				const std::string noun = space == std::string::npos ? std::string() : shown.substr(space + 1);
@@ -346,21 +345,21 @@ inline std::string lowered_ascii(std::string text) {
 }
 
 // Whether `word` (lowered) is a currency's or its sub-unit's noun, or a joining
-// word of an amount in words ("and", "only", «США»).
+// word of an amount in words ("and", "only", «…»).
 inline bool money_word(const std::string &word) {
 	const auto starts = [&](const char *stem) { return word.rfind(stem, 0) == 0; };
 	return starts("dollar") || starts("euro") || starts("rubl") || starts("roubl") || starts("pound") || starts("cent")
 		|| starts("kopeck") || starts("kopek") || starts("penn") || starts("pence") || word == "u.s." || word == "us" || word == "and"
-		|| word == "only" || word == "yen" || starts("рубл") || starts("доллар") || starts("евро") || starts("копе") || starts("цент")
-		|| starts("фунт") || starts("стерлинг") || word == "сша" || word == "ровно";
+		|| word == "only" || word == "yen" || starts("\321\200\321\203\320\261\320\273") || starts("\320\264\320\276\320\273\320\273\320\260\321\200") || starts("\320\265\320\262\321\200\320\276") || starts("\320\272\320\276\320\277\320\265") || starts("\321\206\320\265\320\275\321\202")
+		|| starts("\321\204\321\203\320\275\321\202") || starts("\321\201\321\202\320\265\321\200\320\273\320\270\320\275\320\263") || word == "\321\201\321\210\320\260" || word == "\321\200\320\276\320\262\320\275\320\276";
 }
 
 // Whether `word` (lowered) is a duration's or a percentage's noun.
 inline bool unit_word(const std::string &word) {
 	const auto starts = [&](const char *stem) { return word.rfind(stem, 0) == 0; };
 	return starts("day") || starts("week") || starts("month") || starts("year") || starts("business") || starts("calendar")
-		|| starts("percent") || starts("дн") || starts("ден") || starts("недел") || starts("месяц") || starts("год") || word == "лет"
-		|| starts("рабоч") || starts("календар") || starts("процент");
+		|| starts("percent") || starts("\320\264\320\275") || starts("\320\264\320\265\320\275") || starts("\320\275\320\265\320\264\320\265\320\273") || starts("\320\274\320\265\321\201\321\217\321\206") || starts("\320\263\320\276\320\264") || word == "\320\273\320\265\321\202"
+		|| starts("\321\200\320\260\320\261\320\276\321\207") || starts("\320\272\320\260\320\273\320\265\320\275\320\264\320\260\321\200") || starts("\320\277\321\200\320\276\321\206\320\265\320\275\321\202");
 }
 
 // The words of `text` split on spaces, lowered (ASCII only; Cyrillic is
@@ -384,7 +383,7 @@ inline std::vector<std::string> words_of(const std::string &text) {
 } // namespace spelled_detail
 
 // The words a text writes right after a restored figure that spell some figure
-// - " (восемьсот двадцать восемь тысяч) рублей 00 копеек", " (twenty-one
+// - "…", " (twenty-one
 // thousand dollars)", " ([[Amount5.words]])" - as the length from `at` to
 // their end, or nothing. Such words belong to whatever figure the model saw
 // there before; the caller writes the figure with its own words in their
@@ -421,7 +420,7 @@ inline std::vector<std::string> words_of(const std::string &text) {
 				continue;
 			}
 			if (index == 0) break;
-			// «сорок пять» and "forty-five" grow word by word; "and" joins them.
+			// «…» and "forty-five" grow word by word; "and" joins them.
 			if (words[index] == "and" && index + 1 < words.size()
 					&& semantic::parse_number_words(candidate + " " + words[index + 1])) {
 				joined = candidate;
@@ -447,7 +446,7 @@ inline std::vector<std::string> words_of(const std::string &text) {
 	if (!spelled) return std::nullopt;
 	std::size_t end = close + 1;
 	// The noun a Russian amount or period writes after its words, and its
-	// kopecks: «) рублей 00 копеек», «) дней», "(ten) days".
+	// kopecks: «…», "(ten) days".
 	for (int step = 0; step < 4; ++step) {
 		const std::size_t wordStart = sd::skip_spaces(text, end);
 		std::size_t wordEnd = wordStart;
@@ -478,16 +477,16 @@ inline std::vector<std::string> words_of(const std::string &text) {
 	return end - at;
 }
 
-// The minor units a text writes right after an amount - " 00 копеек", " 50
+// The minor units a text writes right after an amount - "…", " 50
 // cents", " and 50 cents" - as the length from `at` to their end, or nothing.
 // A rendering that already writes them (an amount in words, or its figure and
-// words: «... рублей 00 копеек») takes their place, so they are never written
-// twice ("... рублей 00 копеек 00 копеек").
+// words: «…») takes their place, so they are never written
+// twice ("…").
 [[nodiscard]] inline std::optional<std::size_t> minor_units_after(const std::string &text, std::size_t at) {
 	namespace sd = spelled_detail;
 	std::size_t cursor = sd::skip_spaces(text, at);
 	if (cursor == at) return std::nullopt;
-	if (text.compare(cursor, 4, "and ") == 0 || text.compare(cursor, 3, "\xD0\xB8 ") == 0)  // "and", «и»
+	if (text.compare(cursor, 4, "and ") == 0 || text.compare(cursor, 3, "\xD0\xB8 ") == 0)  // "and", «…»
 		cursor = sd::skip_spaces(text, cursor + (text[cursor] == 'a' ? 3 : 2));
 	const std::size_t digitsStart = cursor;
 	while (cursor < text.size() && text[cursor] >= '0' && text[cursor] <= '9' && cursor - digitsStart < 2) ++cursor;
@@ -501,9 +500,9 @@ inline std::vector<std::string> words_of(const std::string &text) {
 	const std::string word = sd::lowered_ascii(text.substr(wordStart, wordEnd - wordStart));
 	const auto starts = [&](const char *stem) { return word.rfind(stem, 0) == 0; };
 	if (!(starts("cent") || starts("kopeck") || starts("kopek") || starts("penn") || starts("pence")
-			|| starts("\xD0\xBA\xD0\xBE\xD0\xBF\xD0\xB5")        // копе
-			|| starts("\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82")        // цент
-			|| starts("\xD0\xBF\xD0\xB5\xD0\xBD\xD1\x81")))      // пенс
+			|| starts("\xD0\xBA\xD0\xBE\xD0\xBF\xD0\xB5")        // …
+			|| starts("\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82")        // …
+			|| starts("\xD0\xBF\xD0\xB5\xD0\xBD\xD1\x81")))      // …
 		return std::nullopt;
 	return wordEnd - at;
 }
@@ -518,7 +517,7 @@ inline std::vector<std::string> words_of(const std::string &text) {
 
 // A row set Singularity worked out ([[Rows1]], DESIGN4 §4.4) as the lawyer reads
 // it: its rows' own labels, joined as the answer's language joins a list -
-// "July, August and September 2026", «июль, август и сентябрь 2026 г.». The
+// "July, August and September 2026", «…». The
 // issuer writes the labels into the row's `original`, each ended by
 // kRowLabelSeparator; a label list with one label is that label.
 inline constexpr char kRowLabelSeparator = '\x1F';

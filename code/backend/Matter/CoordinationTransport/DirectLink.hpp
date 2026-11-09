@@ -41,16 +41,16 @@ private:
 };
 
 // Whether a computer that calls may be spoken with: one of the firm's computers
-// a lawyer confirmed by its code (D-095, D-123), known by its X25519 key.
+// a lawyer confirmed by its code, known by its X25519 key.
 using Admit = std::function<bool(const PeerKey&)>;
 
-// A computer's direct link to the firm's other computers (D-124), built as
-// WireGuard builds its own: one UDP socket; a Noise IK handshake with each
-// computer it speaks with, whose key it knows from the Matter's confirmed
-// record; datagrams sealed under the session's keys, each with its counter
-// and checked against replay; and whole messages carried over them, each
-// delivered once, whole (ReliableDelivery). No server stands between two
-// computers or knows what passes: it is sealed for the two of them alone.
+// A computer's direct link to the firm's other computers, built as WireGuard
+// builds its own: one UDP socket; a Noise IK handshake with each computer it
+// speaks with, whose key it knows from the Matter's confirmed record;
+// datagrams sealed under the session's keys, each with its counter and checked
+// against replay; and whole messages carried over them, each delivered once,
+// whole (ReliableDelivery). No server stands between two computers or knows
+// what passes: it is sealed for the two of them alone.
 // - A computer is tried at every address it may be reached at (its office
 //   address, the one its router shows outside) until one answers; trying
 //   from both sides at once is what gets through most routers.
@@ -66,16 +66,15 @@ using Admit = std::function<bool(const PeerKey&)>;
 //   goes again from the start.
 // - Where no direct way answers - a router that gives each destination its own
 //   outside port, a network that lets no UDP through - the same sealed
-//   datagrams go through Legal Machines' relay (D-242), which opens none: a
-//   computer is called directly first, then through the relay and directly by
-//   turns once two calls go unanswered, and directly again every half minute
-//   while the relay carries it, so the link goes back to a direct way as soon
-//   as one answers.
-// A thread of its own runs it, from construction to destruction.
+//   datagrams go through Legal Machines' relay, which opens none: a computer
+//   is called directly first, then through the relay and directly by turns
+//   once two calls go unanswered, and directly again every half minute while
+//   the relay carries it, so the link goes back to a direct way as soon as one
+//   answers. A thread of its own runs it, from construction to destruction.
 class DirectLink {
 public:
 	struct Options {
-		// This computer's X25519 key pair (D-123).
+		// This computer's X25519 key pair.
 		noise::KeyPair self;
 		// 0: any free port.
 		std::uint16_t port = 0;
@@ -100,12 +99,12 @@ public:
 		// STUN servers ("stun.l.google.com:19302"), asked when the link starts
 		// and every few minutes after what address this computer's router shows
 		// outside (RFC 8489): what it tells the firm's other computers, so one
-		// behind another router can reach it (D-124). None: its own addresses
-		// alone. A server learns that address and nothing else.
+		// behind another router can reach it. None: its own addresses alone. A
+		// server learns that address and nothing else.
 		std::vector<std::string> stunServers;
 		std::chrono::milliseconds stunEvery{300000};
-		// Legal Machines' relay (D-242), used only where no direct way answers;
-		// none: direct ways alone.
+		// Legal Machines' relay, used only where no direct way answers; none:
+		// direct ways alone.
 		std::shared_ptr<Relay> relay;
 		// While the relay carries a computer, a direct way to it is tried this
 		// often.
@@ -149,7 +148,7 @@ public:
 	bool is_connected(const PeerKey& peer) const;
 	// The address the computer was last heard from; empty before.
 	std::string endpoint_of(const PeerKey& peer) const;
-	// Whether the relay carries the link to the computer now (D-242).
+	// Whether the relay carries the link to the computer now.
 	bool is_relayed(const PeerKey& peer) const;
 	// How many sessions with the computer this link began or took up.
 	std::size_t sessions_with(const PeerKey& peer) const;

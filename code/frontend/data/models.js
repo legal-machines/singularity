@@ -1,10 +1,9 @@
 // The models the firm's AI colleagues think with by default, once a model
-// account is connected (D-138): a colleague asked to work answered
-// "No model is set for this Matter's reasoning. Choose one in AI Setup" with an
-// OpenRouter account connected and no AI Setup in the window to choose in
-// (2026-10-29). A role the firm already set is never changed; each default is
-// the first of these the connected accounts offer, models that run the firm's
-// document requests reliably (OpenAI's first: 2026-09-21, strict schemas).
+// account is connected: a colleague asked to work answered "No model is set for
+// this Matter's reasoning. Choose one in AI Setup" with an OpenRouter account
+// connected and no AI Setup in the window to choose in. A role the firm already
+// set is never changed; each default is the first of these the connected
+// accounts offer, models that run the firm's document requests reliably.
 const PREFERRED = {
 	reasoning: ["gpt-5.6-sol", "gpt-5.5", "gpt-5.4", "gpt-5.1", "gpt-5", "claude-sonnet-5.5", "claude-sonnet-4.5", "gemini-2.5-pro"],
 	drafting: ["gpt-5.6-sol", "gpt-5.5", "gpt-5.4", "gpt-5.1", "gpt-5", "claude-sonnet-5.5", "claude-sonnet-4.5", "gemini-2.5-pro"],

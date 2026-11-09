@@ -27,17 +27,16 @@ import { findMatter, findMember, formatWhen } from "../words.js";
 
 import styles from "./MatterPage.module.css";
 
-// A Matter: one client's whole project (PRODUCT.md, "The places"), opened from
-// its line on the desk. Its sections are tabs under its name: the overview,
-// its threads, its documents, its work products and, for its leads, its
-// billing (D-075). The overview says what waits, who works on it, and what
-// happened, in order, from the first document on.
+// A Matter: one client's whole project, opened from its line on the desk. Its
+// sections are tabs under its name: the overview, its threads, its documents,
+// its work products and, for its leads, its billing. The overview says what
+// waits, who works on it, and what happened, in order, from the first document
+// on.
 export function MatterPage(props) {
 	const { place } = useNavigation();
 	// An address that names no Matter here - one still on its way from the
 	// firm's computers, or an old link - says so on a page of its own, and the
-	// window around it keeps working (2026-10-26: such an address left the
-	// Mac's window blank).
+	// window around it keeps working.
 	if (findMatter(place.matterId) == null) return <MatterNotHere />;
 	return <MatterOverview {...props} />;
 }
@@ -60,7 +59,7 @@ function MatterOverview({ state }) {
 	useRealWork();
 	const firm = useFirmComputers();
 	const [isInviting, setInviting] = useState(false);
-	// Edit or Delete, asked in a dialog (D-214).
+	// Edit or Delete, asked in a dialog.
 	const [managing, setManaging] = useState(null);
 	const { place, open } = useNavigation();
 	const matter = findMatter(place.matterId);
@@ -81,20 +80,20 @@ function MatterOverview({ state }) {
 		? realWorkProducts()
 		: Object.entries(workProducts).filter(([id]) => matterThreads.some(thread => thread.posts.some(post => post.workProductId == id))).map(([id, item]) => ({ id, ...item }));
 	// A colleague the firm let go is no one on the Matter, whatever its record of
-	// the work still names (the owner, 2026-11-02).
+	// the work still names.
 	const people = matter.memberIds.map(findMember)
 		.filter(member => member == null || !(member.kind == "ai_colleague" && member.isFirmColleague === false));
-	// The lawyers it was given to whose computer has not opened it yet (D-205).
+	// The lawyers it was given to whose computer has not opened it yet.
 	const invitedIds = matter.invitedIds ?? [];
 	const isLead = leadsBilling(matter.id, viewerId);
 	const missing = isReal ? null : matterDocuments.find(item => item.kind == "missing" || item.kind == "failed");
 	const goTo = next => open({ ...place, tab: next });
-	// The firm's computers that ask to join the Matter open here (D-123), and
-	// the invitation that brings a colleague's computer in.
+	// The firm's computers that ask to join the Matter open here, and the
+	// invitation that brings a colleague's computer in.
 	const asking = isReal ? firm.asking.filter(computer => computer.matterId == matter.realMatterId) : [];
 	const mayInvite = isReal && matter.realMatterId != null && isFirmCoordination() && matter.isClosed != true;
 	const isArchived = matter.isClosed == true;
-	// Archived for everyone on it, and restored by any of them (D-214).
+	// Archived for everyone on it, and restored by any of them.
 	async function archive(archived) {
 		try {
 			await setMatterArchived(matter.id, archived);
@@ -104,8 +103,8 @@ function MatterOverview({ state }) {
 			toast(error?.message ?? "The Matter could not be changed. Try again.", { tone: "seal" });
 		}
 	}
-	// To this computer's Trash, for 30 days, with its Undo (D-247): no question
-	// first, since nothing is lost.
+	// To this computer's Trash, for 30 days, with its Undo: no question first,
+	// since nothing is lost.
 	async function trashIt() {
 		try {
 			const undo = await moveMatterToTrash(matter.id);
@@ -131,7 +130,7 @@ function MatterOverview({ state }) {
 		{ key: "documents", label: "Documents" },
 		{ key: "work", label: "Work products" },
 		// A real Matter's time and AI work are its members' to see, and their
-		// time theirs to record (D-181); the prototype's bill is its leads'.
+		// time theirs to record; the prototype's bill is its leads'.
 		isLead || isReal ? { key: "billing", label: "Billing" } : null,
 	].filter(section => section && (!isEmulation || ["threads", "documents", "work"].includes(section.key)));
 	const shownTab = sections.some(section => section.key == tab) ? tab : sections[0].key;
@@ -139,11 +138,10 @@ function MatterOverview({ state }) {
 	const openThread = threadId => open({ kind: "thread", threadId, from: "matter" });
 	const what = sentenceCase(matter.description.replace(/^For [^:]+: /, ""));
 
-	// Set as a profile is (the owner, 2026-11-02: "rebuild the Matter's page in
-	// the style we discussed"): its mark and name in the page's one corner, what
-	// it is under them, what can be done with it in the other, carried into the
-	// window's band as the page scrolls; its sections chosen as Team chooses
-	// its members; each section's parts one under another, each a panel.
+	// Set as a profile is: its mark and name in the page's one corner, what it
+	// is under them, what can be done with it in the other, carried into the
+	// window's band as the page scrolls; its sections chosen as Team chooses its
+	// members; each section's parts one under another, each a panel.
 	return (
 		<Page asInbox hardEdge bar={<SheetBar trail={[{ label: "Matters", place: { kind: "matters" } }, matter.client ? { label: matter.client } : null, { label: matter.name }].filter(Boolean)} />}>
 			<PageHead
@@ -183,9 +181,7 @@ function MatterOverview({ state }) {
 			{markAnchor != null ? <MarkPicker matter={matter} anchor={markAnchor} onClose={() => setMarkAnchor(null)} /> : null}
 			{isInviting ? <GiveDialog projectId={matter.realMatterId} matterName={matter.name} memberIds={matter.memberIds} invitedIds={invitedIds} onClose={() => setInviting(false)} /> : null}
 
-			{/* What the Matter is, in its own words under its head (the owner,
-			    2026-11-02: "under the name the client, under the head the
-			    description"). */}
+			{/* What the Matter is, in its own words under its head. */}
 			{!isEmulation && what != "" ? <p className={styles.about}>{what}</p> : null}
 			{sections.length > 1 ? (
 				<div className={!isEmulation && what != "" ? `${styles.toolbar} ${styles.toolbar_after}` : styles.toolbar}>
@@ -268,9 +264,9 @@ function MatterOverview({ state }) {
 	);
 }
 
-// A computer that asks to join the Matter (D-123): the lawyer here compares
-// its code with the colleague, then lets it in, which gives it the Matter, or
-// says it is not theirs, and it stays out for good.
+// A computer that asks to join the Matter: the lawyer here compares its code
+// with the colleague, then lets it in, which gives it the Matter, or says it
+// is not theirs, and it stays out for good.
 function AskingBanner({ computer, matterName }) {
 	const [isDeciding, setDeciding] = useState(false);
 	const first = computer.name.split(/\s+/)[0] ?? "";
@@ -315,7 +311,7 @@ function AskingBanner({ computer, matterName }) {
 
 
 // What a real draft waits for, as its review says it. A draft ready for
-// review is ordinary work, never drawn in the accent of a problem (D-174).
+// review is ordinary work, never drawn in the accent of a problem.
 function workWord(status) {
 	switch (status.kind) {
 		case "yours": return <Word tone="yours">{/Ready for review$/.test(status.words ?? "") ? "Ready for review" : "Asks you"}</Word>;

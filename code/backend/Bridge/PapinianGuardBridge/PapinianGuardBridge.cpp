@@ -163,8 +163,7 @@ nlohmann::json preview_passage(const nlohmann::json &params) {
         {"placeholder", entry.placeholder},
         {"category", entry.type ? protected_api::papinian::to_string(*entry.type) : "other"}});
   }
-  // The passage as it would go out, each symbol where its words stood (the
-  // owner, 2026-11-02: "how the outside AI provider sees it").
+  // The passage as it would go out, each symbol where its words stood.
   return Json{{"protectionMode", "on"}, {"replacements", std::move(replacements)},
               {"protectedText", protection.protected_text}};
 }

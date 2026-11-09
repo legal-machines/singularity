@@ -9,11 +9,11 @@
 namespace singularity::context {
 
 // The only place canonical Context items and suggestions change - Phase
-// 12's actual authority enforcement (phase-12-context-model-authority.md's
-// "Context authority"). Every function mutates `matter` in place and throws
-// std::runtime_error with a plain-language message on an invalid request;
-// the caller persists the result (Matter/MatterActions.hpp's own
-// load-modify-save convention, see Context/ProjectContextActions).
+// 12's actual authority enforcement. Every function mutates `matter` in
+// place and throws std::runtime_error with a plain-language message on an
+// invalid request; the caller persists the result
+// (Matter/MatterActions.hpp's own load-modify-save convention, see
+// Context/ProjectContextActions).
 
 // What happened when a Project-instructions-independent automatic process
 // (future document/AI derivation) proposed one fact. `item_id` is always
@@ -60,12 +60,8 @@ DerivedValueOutcome submit_derived_value(matters::Matter &matter, ContextSection
 // authority the target item currently holds. Every other Pending suggestion for
 // the same slot is settled as Dismissed by the same decision. Returns the
 // affected item's id. Throws if the suggestion does not exist or is no longer
-// Pending.
-// The Project's living memory: what an answer judged worth carrying to later
-// chats (MatterRequestExecution, memoryBrief). Unlike a value derived from a
-// document, such a note has no passage to be checked against - but it is also
-// the only way a Project remembers what was SAID and CONCLUDED in it, which is
-// what the owner asked memory to do on its own (17 Sep 2026).
+// Pending. The Project's living memory: what an answer judged worth carrying to
+// later chats (MatterRequestExecution, memoryBrief).
 //
 //   - a label nobody has used becomes an item at once: AutomaticallyDerived,
 //     sourced to the chat result it came from, never confirmed by anyone;
@@ -122,8 +118,7 @@ ContextItem create_item_from_chat_result(matters::Matter &matter, ContextSection
 // this correction - except a Locked item, which stays Locked (still directly
 // editable by a person, just still protected from automatic re-derivation).
 // When the value actually changes, the item's PREVIOUS value/authority is
-// first captured as a durable ContextItemRevision (COLLABORATION_CONTRACT.md:
-// persist "previous version and resulting version") - never simply discarded.
+// first captured as a durable ContextItemRevision - never simply discarded.
 // Throws if the item does not exist or `value` is empty.
 ContextItem update_item_value(matters::Matter &matter, const std::string &item_id, const std::string &value,
 		const std::string &actor_id, const std::string &timestamp);
@@ -136,13 +131,12 @@ ContextItem update_item_value(matters::Matter &matter, const std::string &item_i
 void delete_item(matters::Matter &matter, const std::string &item_id, const std::string &actor_id = std::string(),
 		const std::string &timestamp = std::string());
 
-// Links/unlinks this item to a stable Project Entity Registry entry
-// (PRIVACY_CONTRACT.md's Registry "links stable identities ... across
-// Documents, Context, Chats and relevant Work Product"). link_item_entity
-// throws if the item does not exist, the entity does not exist, or the
-// entity has been merged into another one (Privacy/Types/ProjectEntity.hpp's
-// merged_into_entity_id) - link the surviving entity instead. Never copies
-// the entity's own data onto the item; only its stable id is stored.
+// Links/unlinks this item to a stable Project Entity Registry entry.
+// link_item_entity throws if the item does not exist, the entity does not
+// exist, or the entity has been merged into another one
+// (Privacy/Types/ProjectEntity.hpp's merged_into_entity_id) - link the
+// surviving entity instead. Never copies the entity's own data onto the
+// item; only its stable id is stored.
 ContextItem link_item_entity(matters::Matter &matter, const std::string &item_id, const std::string &entity_id,
 		const std::string &actor_id, const std::string &timestamp);
 

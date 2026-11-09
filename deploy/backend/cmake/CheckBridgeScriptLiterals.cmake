@@ -1,8 +1,7 @@
 # Fails when a raw string piece of the window's bridge script reaches what MSVC
 # refuses: 16,380 bytes for one piece before adjacent pieces join (C2026), or
 # 65,535 bytes for pieces joined, its terminating null included. Clang and GCC
-# take longer literals, so on the Mac and Linux only this test says so
-# (2026-10-31: 2842891 broke native_app on Windows alone; d0122b6 split it).
+# take longer literals, so on the Mac and Linux only this test says so.
 #   cmake -DSOURCE=<NativeBridge.cpp> -P CheckBridgeScriptLiterals.cmake
 # A script run with -P takes the project's policies only when it says so:
 # without them while(TRUE) reads TRUE as an unset variable.

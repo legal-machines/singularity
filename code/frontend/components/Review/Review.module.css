@@ -11,13 +11,6 @@
 }
 
 /* The two links, in the ink of the time line, one beside the other. */
-.links {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 18px;
-	margin-top: 2px;
-}
-
 .link {
 	padding: 0;
 	font: 500 13.5px/20px var(--font-sans);
@@ -205,7 +198,7 @@
 
 /* The files a message hands over, one under another, as anyone's are. */
 /* The files a message hands over, close under its words: 8 below them, so a
-   file reads as its message's (the owner, 2026-11-02). */
+   file reads as its message's. */
 .files {
 	display: flex;
 	flex-direction: column;
@@ -213,10 +206,10 @@
 	margin-top: 8px;
 }
 
-/* An assignment under the colleague's last word on it (D-119): each result a
-   row of the message's column - its file's kind, its name, where it stands -
-   pressed to open where it is decided on. No card, and no line between rows
-   (UI-22): air and the row's own hover hold them apart. */
+/* An assignment under the colleague's last word on it: each result a row of
+   the message's column - its file's kind, its name, where it stands -
+   pressed to open where it is decided on. No card, and no line between rows:
+   air and the row's own hover hold them apart. */
 .assignment {
 	display: flex;
 	flex-direction: column;
@@ -322,8 +315,8 @@
 	}
 }
 
-/* The decisions under a colleague's message (D-120): each question in the
-   message's own column, held apart by air - no card, no line (UI-22). */
+/* The decisions under a colleague's message: each question in the
+   message's own column, held apart by air - no card, no line. */
 .decisions {
 	display: flex;
 	flex-direction: column;
@@ -360,10 +353,10 @@
 	color: var(--ink-3);
 }
 
-/* A decision's choices (D-174): rows the member takes at a glance, every row
-   alike until one is taken - the recommendation is marked in words on its own
-   row, never filled as if already chosen. An instrument, so grey belongs to
-   it; the rows wrap their words and never run past the column. */
+/* A decision's choices: rows the member takes at a glance, every row alike
+   until one is taken - the recommendation is marked in words on its own row,
+   never filled as if already chosen. An instrument, so grey belongs to it;
+   the rows wrap their words and never run past the column. */
 .choices {
 	display: flex;
 	flex-direction: column;

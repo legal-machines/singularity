@@ -30,8 +30,8 @@ export function RealDocumentPage({ documentId, at = null }) {
 	const found = reviewOfDocument(documentId);
 	const [view, setView] = useState(null);
 	const [problem, setProblem] = useState(null);
-	// The lawyer's decision on the version waiting (D-119): the changes they
-	// leave out, a return's comments, and whether it is being said.
+	// The lawyer's decision on the version waiting: the changes they leave
+	// out, a return's comments, and whether it is being said.
 	const [leftOut, setLeftOut] = useState([]);
 	const [isReturning, setReturning] = useState(false);
 	const [comment, setComment] = useState("");
@@ -52,7 +52,7 @@ export function RealDocumentPage({ documentId, at = null }) {
 
 	const name = view?.documentName ?? document?.displayName ?? "Document";
 	// A document whose file is not on this computer says where it is, and
-	// offers no program to open it in (UI-4).
+	// offers no program to open it in.
 	const elsewhere = document?.processingState == "unavailable" ? (document.attentionDetail ?? "The file is not on this computer.") : null;
 	const matter = findMatter(realWork().uiMatterId);
 	const thread = found != null ? threadOfChat(found.review.chatId) : null;
@@ -64,15 +64,15 @@ export function RealDocumentPage({ documentId, at = null }) {
 	const focus = focusOf(view?.blocks ?? [], at);
 	// What the file is decides how its changes are named and where it opens: a
 	// Word agreement by its Sections, a workbook by its cells, a deck by its
-	// slides, a PDF by its pages (D-115).
+	// slides, a PDF by its pages.
 	const family = familyOf(kindOf(name));
 	const application = family == "sheet" ? "Excel" : family == "slides" ? "PowerPoint" : family == "word" ? "Word" : null;
 	const changeWords = family == "word" ? `tracked ${changes.length == 1 ? "change" : "changes"}`
 		: family == "sheet" ? `changed ${changes.length == 1 ? "cell" : "cells"}`
 		: family == "pdf" ? (changes.length == 1 ? "mark" : "marks") : (changes.length == 1 ? "change" : "changes");
 	const placeOf = change => family == "word" && /^[0-9]/.test(change.clauseNumber ?? "") ? `Section ${change.clauseNumber}` : (change.clauseNumber || "The document");
-	// What the version's own record keeps (D-119): what Singularity checked
-	// in the saved copy, and what is left for the lawyer.
+	// What the version's own record keeps: what Singularity checked in the
+	// saved copy, and what is left for the lawyer.
 	const record = found?.version.result?.record ?? null;
 	const latest = found?.review.versions.at(-1) ?? null;
 	const isWaiting = found != null && found.version.state == "ready_for_review" && latest?.number == found.version.number;

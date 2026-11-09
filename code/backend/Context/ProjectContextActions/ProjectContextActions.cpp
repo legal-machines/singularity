@@ -189,7 +189,7 @@ std::string document_name(const matters::Matter &matter, const std::string &docu
 // Every AI-ready document of this Project, grouped into batches whose own
 // source material fits the Context model's window. A document that cannot be
 // read at all is recorded in `unavailable` and left out, so one unreadable file
-// never costs the Project its whole Context build (CTX-2).
+// never costs the Project its whole Context build.
 std::vector<std::vector<std::string>> context_source_batches(
 		const std::filesystem::path &workspace_path, const matters::Matter &matter,
 		const std::vector<std::string> &source_ids, const routing::ResolvedRoleAssignment &assignment,
@@ -351,13 +351,12 @@ AutomaticContextUpdateResult run_automatic_update(const std::string &id) {
 	std::optional<std::string> workspace_id;
 	std::vector<std::string> source_ids;
 	std::vector<routing::ProjectEntityProtectionHint> project_entity_hints;
-	// CTX-2: the batches this run reads the Project in. Automatic Context used
-	// to retrieve one fixed window of eight passages, which on any real Project
-	// meant it read the first few documents and silently called that the
-	// Project's Context. Every AI-ready document is covered here instead, in
-	// batches the Context model's own window can actually hold, and a document
-	// that cannot be read is skipped and said out loud rather than ending the
-	// whole run.
+	// Automatic Context used to retrieve one fixed window of eight passages,
+	// which on any real Project meant it read the first few documents and
+	// silently called that the Project's Context. Every AI-ready document is
+	// covered here instead, in batches the Context model's own window can
+	// actually hold, and a document that cannot be read is skipped and said out
+	// loud rather than ending the whole run.
 	std::vector<std::vector<std::string>> batches;
 	std::vector<matters::UnavailableSourceDocument> unavailable;
 	{

@@ -5,6 +5,7 @@ import { Reactions } from "../../components/Reactions/Reactions.jsx";
 import { Button, IconButton } from "../../components/Button/Button.jsx";
 import { ComposerAction, ComposerBox } from "../../components/Composer/ComposerBox.jsx";
 import { useWindowFileDrop } from "../../components/FileDrop/windowDrop.js";
+import { pastedFiles, pasteWordsWithoutObjects } from "../../components/FileDrop/paste.js";
 import { FileKindIcon } from "../../components/FileKind/FileKind.jsx";
 import { FileTile, kindOf, wordOf } from "../../components/FileTile/FileTile.jsx";
 import { DropOverlay } from "../../components/FileDrop/DropOverlay.jsx";
@@ -28,7 +29,7 @@ import { ShareWorkLogDialog, useCanShareWorkLog } from "../../components/WorkLog
 import {
 	actorOfPerson, attachDropped, attachFromComputer, clearConversation, attachmentFirstLines, attachmentState, attachPaths, draftLetterReply, hasNative, MOST_ATTACHMENT_BYTES,
 	MOST_ATTACHMENTS, openPersonalChat,
-	isPictureFile, openPersonalFile, personalPicture, pictureType, postToThread, protectionProjectOfChat, reactInConversation, showPersonalFile, useRealWork, watchRealChat,
+	isPictureFile, openPersonalFile, personalPicture, pictureType, postToThread, protectionProjectOfChat, reactInConversation, showPersonalFile, stopColleaguesIn, useRealWork, watchRealChat, colleaguesWorkingIn,
 } from "../../data/native.js";
 import { viewerId } from "../../data/workspace.js";
 import { findMatter, findMember, firstName, formatClock, formatDay, officeLine, positionOf } from "../words.js";
@@ -36,12 +37,12 @@ import { conversationsFor, correspondentFace, idOf, keyOf, previewOf } from "./c
 
 import styles from "./MessagesPage.module.css";
 
-// Messages: a messenger of the firm (D-042; the owner, 2026-10-26: "as an
-// ordinary messenger"). On the left every conversation, the latest first: one
-// with each member - people and AI colleagues side by side (UI-5) - and one
-// with each correspondent whose letters came through Outlook. On the right the
-// conversation open, its words in bubbles, the member's own on the right, and
-// the reply under them; who the other is opens beside it on request.
+// Messages: a messenger of the firm. On the left every conversation, the
+// latest first: one with each member - people and AI colleagues side by side -
+// and one with each correspondent whose letters came through Outlook. On the
+// right the conversation open, its words in bubbles, the member's own on the
+// right, and the reply under them; who the other is opens beside it on
+// request.
 export function MessagesPage({ place, state, onSend, onAnswer }) {
 	const { open } = useNavigation();
 	useRealWork();
@@ -62,9 +63,8 @@ export function MessagesPage({ place, state, onSend, onAnswer }) {
 		return () => watchRealChat(null);
 	}, [chatId]);
 
-	// Only conversations with something in them (the owner, 2026-11-02: "why
-	// are those I have not written to yet shown here?"); one opened from a
-	// profile to begin stands while it is open.
+	// Only conversations with something in them; one opened from a profile
+	// to begin stands while it is open.
 	const shown = conversations
 		.filter(entry => entry.items.length > 0 || entry.key == selected?.key)
 		.filter(entry => view == "everyone" || (view == "colleagues") == isColleagueConversation(entry));
@@ -73,13 +73,11 @@ export function MessagesPage({ place, state, onSend, onAnswer }) {
 		<div className={isAbout && selected != null ? `${styles.page} ${styles.page_about}` : styles.page}>
 			<aside className={styles.list} aria-label="Conversations">
 				{/* The title, and under it which conversations are listed, as Team
-				    and Inbox choose their own (the owner, 2026-11-02: "bring this
-				    switch back to Messages instead of the three dots"); no search
-				    and no pencil: a conversation begins from a colleague's page. */}
+				    and Inbox choose their own; no search and no pencil: a
+				    conversation begins from a colleague's page. */}
 				<div className={styles.list_head}>
 					<div className={styles.list_title_row}>
-						{/* The page names itself in full; the sidebar keeps "Messages"
-						    (the owner, 2026-11-02). */}
+						{/* The page names itself in full; the sidebar keeps "Messages". */}
 						<h1 className={styles.list_title}>Direct Messages</h1>
 					</div>
 					<Views label="Which conversations" views={MESSAGE_VIEWS} view={view} onChange={setView} controls="message-rows" stretch />
@@ -127,8 +125,7 @@ function isColleagueConversation(entry) {
 
 // A member Messages was opened for who has no conversation here: one to start.
 // A person of the firm the member has not written to yet: the first message
-// begins the chat of the two (D-042; the owner, 2026-11-02: "why can't I
-// write if there were no messages yet - precisely so that there are").
+// begins the chat of the two.
 function strangerOf(memberId) {
 	const member = findMember(memberId);
 	if (member == null) return null;
@@ -142,10 +139,10 @@ function strangerOf(memberId) {
 
 // What the member has seen of each conversation: its latest item when they
 // last had it open. A conversation met for the first time counts as seen, so
-// only what comes afterwards is new.
-// Whether client data protection is on, asked while `isAsked`: what a picture
-// attached to a reply says before it goes (D-256). Unknown until asked, so the
-// note never shows and then goes for a computer where protection is off.
+// only what comes afterwards is new. Whether client data protection is on,
+// asked while `isAsked`: what a picture attached to a reply says before it
+// goes. Unknown until asked, so the note never shows and then goes for a
+// computer where protection is off.
 function useProtection(isAsked) {
 	const [isOn, setOn] = useState(null);
 	useEffect(() => {
@@ -204,7 +201,7 @@ function ConversationRow({ entry, isOpen, unread, onOpen }) {
 		<button className={isOpen ? `${styles.row} ${styles.row_open}` : styles.row} type="button" aria-current={isOpen ? "true" : undefined} onClick={onOpen}>
 			{/* A letter's conversation says so on its face, as a messenger marks
 			    a conversation's channel, and its words line up with every other
-			    row's (the owner, 2026-11-02: "redo the mail mark"). */}
+			    row's. */}
 			<span className={styles.row_face}>
 				<Avatar member={faceOf(entry)} size={40} />
 				{entry.kind == "mail" ? <span className={styles.row_mail} aria-label="Mail"><Icon name="at" size={13} /></span> : null}
@@ -224,10 +221,9 @@ function ConversationRow({ entry, isOpen, unread, onOpen }) {
 	);
 }
 
-// A colleague writing its answer, as a messenger shows it (the owner,
-// 2026-10-26: "add 'typing…' so it still feels like a messenger"; no work
-// animation in a chat): the backend says it writes in this conversation now.
-// Once it looks things up it is at work, and its face shows that instead.
+// A colleague writing its answer, as a messenger shows it: the backend says
+// it writes in this conversation now. Once it looks things up it is at work,
+// and its face shows that instead.
 function isTyping(entry) {
 	return entry.kind == "member" && entry.isAnswering == true;
 }
@@ -242,9 +238,12 @@ function whenOf(at) {
 function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	const headMenu = useMenu();
 	// On a design partner's seat the conversation's work log goes to Legal
-	// Machines on request (D-257).
+	// Machines on request.
 	const [isSendingLog, setSendingLog] = useState(false);
-	const canShareWorkLog = useCanShareWorkLog() && entry.send?.kind == "chat" && (entry.send.chatId ?? "") != "" && (entry.send.projectId ?? "") != "";
+	// The log is the AI models' record: a conversation with a person has none,
+	// so the option is not there.
+	const canShareWorkLog = useCanShareWorkLog() && isColleagueConversation(entry) && entry.send?.kind == "chat"
+		&& (entry.send.chatId ?? "") != "" && (entry.send.projectId ?? "") != "";
 	// The conversation cleared for the member, on this computer, with its
 	// Undo; the other member keeps theirs.
 	async function clearHere(conversation) {
@@ -259,14 +258,14 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	}
 	const scrollRef = useRef(null);
 	// The message the member answers, quoted over the reply; and the files put
-	// into the conversation for the next message, as a messenger has them
-	// (D-212): chosen with the paperclip, dropped on the conversation, or pasted.
+	// into the conversation for the next message, as a messenger has them: chosen
+	// with the paperclip, dropped on the conversation, or pasted.
 	const [quote, setQuote] = useState(null);
 	const [pending, setPending] = useState([]);
 	const [isAttaching, setAttaching] = useState(false);
 	// The files being put in, shown at once as tiles - a picture as itself -
 	// each with the mark of its loading over it, never as words alone that read
-	// as if nothing came in (the owner, 2026-11-05).
+	// as if nothing came in.
 	const [placing, setPlacing] = useState([]);
 	function beginPlacing(list) {
 		setPlacing(list);
@@ -282,16 +281,16 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	const [isDropping, setDropping] = useState(false);
 	const dragDepth = useRef(0);
 	// What each file put in stands at: read, or still being read. The reply
-	// goes once each is read (the owner, 2026-11-02).
+	// goes once each is read.
 	const [fileStates, setFileStates] = useState({});
 	// Files go with a message to a colleague, and with a reply to a letter,
-	// where they become the Matter's documents, attached to the draft (D-115).
+	// where they become the Matter's documents, attached to the draft.
 	const canAttach = (entry.kind == "member" && ["chat", "personal"].includes(entry.send?.kind))
 		|| (entry.send?.kind == "mail" && entry.send.letterId != null && (entry.send.matterId ?? "") != "");
 	const first = firstOf(entry.memberId) || nameOf(entry).split(/\s+/)[0];
 
 	// An answer to a colleague's question goes back to it as the member's reply,
-	// quoting the question (D-120); the prototype keeps it in its own state.
+	// quoting the question; the prototype keeps it in its own state.
 	function answer(conversation, item, id, option) {
 		if (conversation.send?.kind != "chat") {
 			onAnswer(id, option, { memberId: conversation.memberId, matterId: item.matterId ?? null });
@@ -312,7 +311,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	}, [latest?.id, items.length]);
 
 	// While the member is at its foot, it stays there as a picture takes its
-	// size once loaded (D-212): a photo never stands cut under the reply.
+	// size once loaded: a photo never stands cut under the reply.
 	const isAtFoot = useRef(true);
 	useEffect(() => {
 		const scroller = scrollRef.current;
@@ -329,7 +328,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	}
 
 	// Where the next message goes: the conversation's chat, begun first when it
-	// is the member's first word to a person (D-042).
+	// is the member's first word to a person.
 	async function placeOfNext() {
 		if (entry.send.kind == "personal") return openPersonalChat(entry.send.actorId);
 		if (entry.send.kind == "mail") return { chatId: null, projectId: entry.send.matterId };
@@ -430,8 +429,12 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	// A picture or a file pasted into the conversation goes with the next
 	// message, as one dropped does.
 	const onPaste = event => {
-		const files = [...(event.clipboardData?.files ?? [])];
-		if (files.length == 0) return;
+		const files = pastedFiles(event);
+		// Words lose the marks a copied file leaves in them.
+		if (files.length == 0) {
+			pasteWordsWithoutObjects(event);
+			return;
+		}
 		event.preventDefault();
 		attachFiles(files);
 	};
@@ -470,10 +473,10 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 	return (
 		<section ref={sectionRef} className={styles.chat} style={{ "--reply-room": `${replyRoom}px` }} aria-label={`Conversation with ${nameOf(entry)}`} data-file-drop={canAttach ? "" : undefined} {...drag}>
 			{/* Who it is with, as Twist's: the face and the name, and its
-			    menu (the owner, 2026-11-02). */}
+			    menu. */}
 			<header className={styles.chat_head}>
-				{/* Until something is written the opening below says who it is
-				    with, so the head shows only its menu (the owner, 2026-11-02). */}
+				{/* Until something is written the opening below says who it is with,
+				    so the head shows only its menu. */}
 				{items.length == 0 ? <span className={styles.chat_who} /> : entry.kind == "member" ? (
 					<PersonButton memberId={entry.memberId} label={nameOf(entry)}><Avatar member={face} size={36} /></PersonButton>
 				) : <Avatar member={face} size={36} />}
@@ -487,7 +490,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 							<span className={styles.chat_line}>{entry.kind == "member" ? officeLine(findMember(entry.memberId)) : lineOf(entry)}</span>
 						) : null}
 				</span>}
-				{/* A DM to an AI colleague can be read as an AI provider receives it (D-233). */}
+				{/* A DM to an AI colleague can be read as an AI provider receives it. */}
 				{isColleagueConversation(entry) && entry.send?.kind == "chat" && entry.send.chatId != null ? <ProviderViewButton chatId={entry.send.chatId} /> : null}
 				<IconButton icon="more" label={`More for ${nameOf(entry)}`} pressed={headMenu.isOpen || isAbout} onClick={event => headMenu.toggle(event.currentTarget)} />
 				{headMenu.isOpen ? (
@@ -495,7 +498,7 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 						{ key: "about", label: entry.kind == "mail" ? "Contact" : "Profile", icon: "info", checked: isAbout, onSelect: onAbout },
 						entry.kind == "member" && entry.memberId != null
 							? { key: "page", label: "Open their page", icon: "team", onSelect: () => onOpen({ kind: "profile", memberId: entry.memberId }) } : null,
-						// Cleared for the member, with its Undo (the owner, 2026-11-04).
+						// Cleared for the member, with its Undo.
 						entry.kind == "member" && items.length > 0 && hasNative()
 							? { key: "clear", label: "Clear conversation", icon: "trash", onSelect: () => clearHere(entry) } : null,
 						canShareWorkLog ? { key: "workLog", label: "Send work log to Legal Machines", icon: "send", onSelect: () => setSendingLog(true) } : null,
@@ -508,14 +511,14 @@ function Chat({ entry, state, isAbout, onAbout, onSend, onAnswer, onOpen }) {
 				) : null}
 			</header>
 			{/* No fade at either edge: the head and the reply box cover what
-			    scrolls under them (the owner, 2026-11-02). */}
+			    scrolls under them. */}
 			<div ref={scrollRef} className={styles.scroll}>
 				<div className={styles.items}>
 					{items.length == 0 ? <Opening entry={entry} /> : null}
 					{items.map((item, index) => (
 						entry.kind == "mail" || item.letterId != null
 							? <Letter key={item.id} item={item} previous={items[index - 1]} />
-							: <Message key={item.id} item={item} previous={items[index - 1]} state={state} send={entry.send} onAnswer={(id, option) => answer(entry, item, id, option)} onOpen={onOpen} onReply={reply} onSized={keepAtFoot} />
+							: <Message key={item.id} item={item} previous={items[index - 1]} state={state} send={entry.send} partnerId={entry.memberId} onAnswer={(id, option) => answer(entry, item, id, option)} onOpen={onOpen} onReply={reply} onSized={keepAtFoot} />
 					))}
 				</div>
 			</div>
@@ -587,23 +590,27 @@ function momentOf(at) {
 	return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}, ${clock}`;
 }
 
-// A message as a messenger shows it (D-212; the owner, 2026-11-02): its words
-// in a bubble with no time on it, the photos it hands over as pictures and
-// its other files as files, the message it answers over it, and its
-// reactions under it. A right-click opens what can be done with it - reply,
-// react, copy its words - and when it was sent and when it reached the other.
-function Message({ item, previous, state, send, onAnswer, onOpen, onReply, onSized }) {
-	// Read as an AI provider receives it, from the conversation's corner (D-233).
+// A message as a messenger shows it: its words in a bubble with no time on
+// it, the photos it hands over as pictures and its other files as files, the
+// message it answers over it, and its reactions under it. A right-click opens
+// what can be done with it - reply, react, copy its words - and when it was
+// sent and when it reached the other.
+function Message({ item, previous, state, send, partnerId, onAnswer, onOpen, onReply, onSized }) {
+	// Read as an AI provider receives it, from the conversation's corner.
 	const isProviderView = useProviderView(send?.kind == "chat" ? send.chatId : null);
 	const isOwn = item.isOwn == true;
 	const author = findMember(item.authorId);
+	// A chat of two shows no face beside its messages: who wrote each is
+	// plain, and its head shows the other's face and name. A third
+	// member's message, should one stand here, keeps its face.
+	const isPartners = isOwn == false && (author == null || author.id == partnerId);
 	const isSameAuthor = previous != null && previous.authorId == item.authorId && formatDay(previous.at) == formatDay(item.at) && item.quote == null;
 	const matter = item.matterId != null ? findMatter(item.matterId) : null;
 	const isNewFiling = matter != null && (previous == null || previous.matterId != item.matterId);
 	const isGone = item.isDeleted == true;
 	const paragraphs = isGone ? ["This message was deleted."] : item.paragraphs ?? [];
-	// Its reactions, a person's and a colleague's alike (D-130), as a messenger
-	// shows them under the bubble.
+	// Its reactions, a person's and a colleague's alike, as a messenger shows
+	// them under the bubble.
 	const reactions = isGone ? {} : item.realReactions ?? {};
 	const files = isGone ? [] : item.realFiles ?? [];
 	const photos = files.filter(file => pictureType(file.name) != null);
@@ -646,6 +653,20 @@ function Message({ item, previous, state, send, onAnswer, onOpen, onReply, onSiz
 		(item.receivedAt ?? "") != "" ? { key: "received", info: isOwn ? `Received by ${firstOf(item.receivedBy) || "them"}` : "Received", icon: "check", hint: momentOf(item.receivedAt) } : null,
 	];
 
+	// What may be done with it - react, and the rest of its menu - beside its
+	// own words while it is pointed at, never beside a file under them;
+	// beside its pictures, or its files, where it has no words.
+	const tools = item.isReal == true ? (
+		<span className={styles.message_actions}>
+			{canAct ? <IconButton icon="smile" size="small" label="React" pressed={picker != null} onClick={event => setPicker(event.currentTarget)} /> : null}
+			<IconButton icon="more" size="small" label="More" pressed={menu.isOpen} onClick={event => menu.toggle(event.currentTarget)} />
+		</span>
+	) : null;
+	const toolsBeside = paragraphs.length > 0 ? "words" : photos.length > 0 ? "photos" : "files";
+	const beside = (place, element) => tools != null && toolsBeside == place
+		? <div className={styles.message_line}>{element}{tools}</div>
+		: element;
+
 	return (
 		<>
 			<DayMark at={item.at} previous={previous} />
@@ -657,44 +678,35 @@ function Message({ item, previous, state, send, onAnswer, onOpen, onReply, onSiz
 			) : null}
 			<div
 				id={`message-${item.id}`}
-				className={[styles.message, isOwn ? styles.message_own : null, isSameAuthor ? styles.message_more : null, menu.isOpen ? styles.message_menu : null].filter(Boolean).join(" ")}
+				className={[styles.message, isOwn ? styles.message_own : null, isPartners ? styles.message_partner : null, isSameAuthor ? styles.message_more : null, menu.isOpen ? styles.message_menu : null].filter(Boolean).join(" ")}
 				onContextMenu={onContextMenu}
 			>
-				{isOwn ? null : (
+				{isOwn || isPartners ? null : (
 					<span className={styles.message_face}>
-						{isSameAuthor || author == null ? null : <PersonButton memberId={author.id} label={author.name}><Avatar member={author} size={32} /></PersonButton>}
+						{isSameAuthor ? null : <PersonButton memberId={author.id} label={author.name}><Avatar member={author} size={32} /></PersonButton>}
 					</span>
 				)}
-				<div className={styles.message_line}>
 				<div className={styles.message_body}>
 					{item.quote != null && isGone == false ? <Quote quote={item.quote} isOwn={isOwn} /> : null}
-					{photos.length > 0 ? <Photos files={photos} send={send} onSized={onSized} /> : null}
-					{paragraphs.length > 0 ? (
+					{photos.length > 0 ? beside("photos", <Photos files={photos} send={send} onSized={onSized} />) : null}
+					{paragraphs.length > 0 ? beside("words", (
 						<div className={isGone ? `${styles.bubble} ${styles.bubble_gone}` : styles.bubble} data-selectable=""
 							data-tooltip={item.isSending == true || (item.at ?? "") == "" ? undefined : momentOf(item.at)}>
 							{isProviderView && isGone == false
 								? <MaskedText projectId={send.projectId ?? protectionProjectOfChat(send.chatId)} text={paragraphs.join("\n\n")} />
-								: <MessageText text={paragraphs.join("\n\n")} />}
+								: <MessageText text={item.cited != null && isGone == false ? item.cited.text : paragraphs.join("\n\n")}
+									sources={isGone ? null : item.cited?.sources} />}
 						</div>
-					) : null}
-					{others.length > 0 ? <Files files={others} send={send} /> : null}
+					)) : null}
+					{others.length > 0 ? beside("files", <Files files={others} send={send} />) : null}
 					{item.isSending == true ? <p className={styles.sending}>Sending</p> : null}
 					{/* Just under the message, on the side it is read from, as a
-					    messenger shows them (the owner, 2026-11-02); a new one comes
-					    from the message's right-click menu. */}
+					    messenger shows them; a new one comes from the message's
+					    right-click menu. */}
 					<Reactions className={styles.message_reactions} reactions={reactions} viewerId={viewerId} resolveMember={findMember}
 						onReact={canAct ? react : undefined} />
 					{Array.isArray(item.files) && item.files.length > 0 ? <Result files={item.files} notChecked={item.notChecked} /> : null}
 					{item.ask != null ? <Answers options={item.ask.options} answer={item.isReal == true ? item.answered ?? null : state.answers[item.id]} isOwn={isOwn} onAnswer={option => onAnswer(item.id, option)} /> : null}
-				</div>
-				{/* What may be done with it, beside it while it is pointed at, as
-				    Twist shows it: react, and the rest of its menu. */}
-				{item.isReal == true ? (
-					<span className={styles.message_actions}>
-						{canAct ? <IconButton icon="smile" size="small" label="React" pressed={picker != null} onClick={event => setPicker(event.currentTarget)} /> : null}
-						<IconButton icon="more" size="small" label="More" pressed={menu.isOpen} onClick={event => menu.toggle(event.currentTarget)} />
-					</span>
-				) : null}
 				</div>
 			</div>
 			{picker != null ? (
@@ -834,19 +846,18 @@ function Letter({ item, previous }) {
 
 // The reply under the conversation. To a member it is a message: Enter sends
 // it, Shift+Enter starts a new line; over it the message it answers and the
-// files it hands over, and the paperclip beside it chooses more (D-212). To a
-// correspondent it is a letter: the draft opens in Outlook, which sends it
-// (D-079, D-105).
+// files it hands over, and the paperclip beside it chooses more. To a
+// correspondent it is a letter: the draft opens in Outlook, which sends it.
 function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeOfFiles = null, isReading = false, onFileState, onRemovePending, onSent, canAttach = false, isAttaching = false, placing = [], onAttach }) {
 	const [draft, setDraft] = useState("");
 	const [isBusy, setBusy] = useState(false);
 	// The draft as it would go out, before it is sent, while the conversation
-	// is read as an AI provider receives it (D-233).
+	// is read as an AI provider receives it.
 	const isProviderView = useProviderView(entry.send?.kind == "chat" ? entry.send.chatId : null);
-	// A picture goes to the AI model as it is: protection masks words, not
-	// pictures, so while it is on the picture says so before it goes, and Send
-	// is the member's consent (D-256). Only an AI colleague's conversation sends
-	// it to a model: one between two people, or a reply drafted in Outlook, does not.
+	// A picture goes to the AI model as it is: protection masks words, not pictures,
+	// so while it is on the picture says so before it goes, and Send is the member's
+	// consent. Only an AI colleague's conversation sends it to a model: one between
+	// two people, or a reply drafted in Outlook, does not.
 	const hasPictures = isColleagueConversation(entry) && pending.some(file => isPictureFile(file.name));
 	const isProtected = useProtection(hasPictures);
 	const name = nameOf(entry);
@@ -865,6 +876,19 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 		quote: quote != null ? { postId: quote.id, authorId: quote.authorId, text: quote.text } : null,
 	};
 	const hasFiles = pending.length > 0;
+	// While a colleague works on what this conversation gave it, the empty
+	// box's send is its Stop: it ends that work at once and waits for the
+	// next.
+	const workChatId = entry.send?.kind == "chat" ? entry.send.chatId : null;
+	const canStop = entry.kind == "member" && workChatId != null && hasFiles == false && isAttaching == false
+		&& colleaguesWorkingIn(workChatId).length > 0;
+	async function stopColleagues() {
+		try {
+			await stopColleaguesIn(workChatId);
+		} catch (error) {
+			toast(error?.message ?? "The work could not be stopped. Try again.", { tone: "seal" });
+		}
+	}
 
 	async function send() {
 		const text = draft.trim();
@@ -904,7 +928,7 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 			setDraft("");
 			return;
 		}
-		// A person's first message begins the personal chat of the two (D-042).
+		// A person's first message begins the personal chat of the two.
 		if (entry.send.kind == "personal") {
 			setDraft("");
 			setBusy(true);
@@ -939,7 +963,7 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 				<p className={styles.reply_wait}>
 					{/* A personal chat travels once a computer of the other has joined the
 					    firm and holds its key (MatterBridge, "reaches"), not through a
-					    Matter (the owner, 2026-11-02: "one line; it's out of date"). */}
+					    Matter. */}
 					{`${first}'s computer hasn't joined the firm yet. What you write goes once it does.`}
 				</p>
 			) : null}
@@ -959,6 +983,8 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 				value={draft}
 				onChange={setDraft}
 				onSubmit={send}
+				onStop={canStop ? stopColleagues : null}
+				stopLabel={`Stop ${first}'s work`}
 				sendsOnEnter={isMail == false}
 				canSend={(draft.trim() != "" || hasFiles) && !isBusy && !isAttaching && !isReading}
 				above={hasFiles || isAttaching || isProviderView ? (
@@ -990,9 +1016,7 @@ function Reply({ entry, onSend, quote = null, onClearQuote, pending = [], placeO
 	);
 }
 
-// The mark of a file's loading, over its picture or its page (the owner,
-// 2026-11-05: the loading mark over the image itself, so it never looks as if
-// nothing came in).
+// The mark of a file's loading, over its picture or its page.
 function Loading({ label }) {
 	return (
 		<span className={styles.attached_busy} role="status" aria-label={label}>
@@ -1025,11 +1049,10 @@ function PlacingFile({ file }) {
 	);
 }
 
-// A file put into the reply, as Codex shows one before it goes (the owner,
-// 2026-11-02): a picture as itself; a document as its first page in small,
-// with its kind and its name under it. While Singularity reads it, the mark
-// of its loading stands over it, and the reply waits for it; one it cannot
-// read says that.
+// A file put into the reply, as Codex shows one before it goes: a picture
+// as itself; a document as its first page in small, with its kind and its
+// name under it. While Singularity reads it, the mark of its loading stands
+// over it, and the reply waits for it; one it cannot read says that.
 function AttachedFile({ projectId, file, onState, isUnmasked = false, onRemove }) {
 	const [found, setFound] = useState({ state: "reading", detail: null });
 	const [picture, setPicture] = useState(null);
@@ -1068,8 +1091,8 @@ function AttachedFile({ projectId, file, onState, isUnmasked = false, onRemove }
 		};
 	}, [projectId, file.documentId, found.state]);
 
-	// A picture with no words in it is still a picture the AI model sees
-	// (D-256): only a document that cannot be read says so.
+	// A picture with no words in it is still a picture the AI model
+	// sees: only a document that cannot be read says so.
 	const shownState = isPictureFile(file.name) && found.state == "failed" ? "ready" : found.state;
 	const words = shownState == "failed" ? "Can't be read" : shownState == "gone" ? "No longer here" : null;
 	const open = () => openPersonalFile(projectId, file.documentId).catch(() => {});
@@ -1099,9 +1122,9 @@ function AttachedFile({ projectId, file, onState, isUnmasked = false, onRemove }
 			</button>
 			{found.state == "reading" ? <Loading label={`Reading ${file.name}`} /> : null}
 			{/* While protection is on, a picture says in its own corner that the AI
-			    model sees it as it is, and why on hover (D-256): a plain fact, no
-			    alarm, once it is read. Where the tile shows the picture, at its
-			    foot; otherwise at its head, where nothing else is said. */}
+			    model sees it as it is, and why on hover: a plain fact, no alarm,
+			    once it is read. Where the tile shows the picture, at its foot;
+			    otherwise at its head, where nothing else is said. */}
 			{isUnmasked && found.state != "reading" && (words == null || isPicture && picture != null) ? (
 				<span className={styles.attached_badge} data-place={isPicture && picture != null ? "foot" : "head"}
 					data-tooltip="Protection masks words, not pictures.">Not masked</span>

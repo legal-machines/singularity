@@ -123,7 +123,7 @@ std::vector<GroundedFigure> grounded_figures(const std::string &payload, const s
 			GroundedFigure grounded;
 			grounded.value = *figure.value;
 			// A rate is for the period its own clause gives it ("0.05% of the
-			// overdue amount per day", «0,2 % ... за каждый день»).
+			// overdue amount per day", «…»).
 			if (grounded.value.kind == semantic::Kind::Percentage && grounded.value.basis == semantic::RateBasis::None)
 				grounded.value.basis = semantic::rate_basis_of_clause(text, figure.start, figure.start + figure.length);
 			grounded.use.value_key = semantic::value_key(*figure.value);
@@ -403,10 +403,10 @@ bool writes_a_symbol(const std::string &text) {
 }
 
 compute::Code admit_query(const std::string &query, const std::string &payload,
-		const std::vector<compute::PayloadSegment> &segments, bool web) {
+		const std::vector<compute::PayloadSegment> &segments, bool web, std::string *unwritten) {
 	// A web query never carries a symbol, in any writing: nothing protected
 	// reaches a search engine. "[Org1]" stands in the material only as part of
-	// "[[Org1]]", and restoration fills it in all the same (PRIV-1).
+	// "[[Org1]]", and restoration fills it in all the same.
 	if (web && writes_a_symbol(query)) return compute::Code::QueryLiteral;
 	std::string material;
 	for (const compute::PayloadSegment &segment : segments) {
@@ -432,7 +432,10 @@ compute::Code admit_query(const std::string &query, const std::string &payload,
 	for (const semantic::RecognisedFigure &figure : semantic::FigureRecogniser::find(outside, semantic::language_of(outside))) {
 		if (figure.structural) continue;
 		const std::string written = outside.substr(figure.start, figure.length);
-		if (material.find(written) == std::string::npos) return compute::Code::QueryLiteral;
+		if (material.find(written) == std::string::npos) {
+			if (unwritten != nullptr) *unwritten = written;
+			return compute::Code::QueryLiteral;
+		}
 	}
 	// A word with a digit, or a capitalised word inside the query, names
 	// something: it must already stand in the lawyer's material.
@@ -447,7 +450,10 @@ compute::Code admit_query(const std::string &query, const std::string &payload,
 			while (!word.empty() && std::string(",.;:!?\"'()").find(word.back()) != std::string::npos) word.pop_back();
 			const bool digit = std::any_of(word.begin(), word.end(), [](char c) { return c >= '0' && c <= '9'; });
 			const bool capital = !first && !word.empty() && word[0] >= 'A' && word[0] <= 'Z';
-			if (!word.empty() && (digit || capital) && material.find(word) == std::string::npos) return compute::Code::QueryLiteral;
+			if (!word.empty() && (digit || capital) && material.find(word) == std::string::npos) {
+				if (unwritten != nullptr) *unwritten = word;
+				return compute::Code::QueryLiteral;
+			}
 			first = false;
 		}
 		index = end;

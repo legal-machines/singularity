@@ -138,12 +138,24 @@ struct TaskRunOutput {
 	std::string reason;
 	RunTask task;
 	std::optional<std::string> work_product_id;
-	// The agent's chat, when this run made it.
-	std::optional<std::string> made_chat_id;
+};
+
+// A Matter on this computer and the names that identify its client: its own
+// name and the identities its protection knows.
+struct MatterIdentities {
+	std::string matter_id;
+	std::string matter_name;
+	std::vector<std::string> names;
 };
 
 struct RunnerDependencies {
 	std::function<std::optional<MatterFolder>(const std::string &matter_id)> matter_folder;
+	// Each Matter on this computer with the names that identify its client. A
+	// colleague's note that carries one of them is that Matter's, whatever a
+	// model labelled it, and is used only where that Matter's information may
+	// be. With none installed, a note names no Matter: a test, a tool with no
+	// Matters.
+	std::function<std::vector<MatterIdentities>()> matter_identities;
 	std::function<ExtractedText(const std::filesystem::path &path)> extract;
 	std::function<AnalysisOutput(const AnalysisInput &input)> analyse;
 	std::function<TaskRunOutput(const TaskRunInput &input)> run_task;
@@ -159,7 +171,7 @@ struct RunnerDependencies {
 	std::function<std::string()> device_id;
 	// This computer's device key (Ed25519, base64, Platform/DeviceKey) and its
 	// signature: a new agent's id is bound to the key, and its card is signed
-	// with it, so no other computer can speak for it (D-128).
+	// with it, so no other computer can speak for it.
 	std::function<std::string()> device_key;
 	std::function<std::string(const std::string &message)> sign;
 	// The agent's thread (MatterChat::agent_id), the one conversation the
@@ -177,28 +189,27 @@ struct RunnerDependencies {
 	std::function<void()> take_up_mentions;
 	// A colleague's word in its thread that work just given waits behind work
 	// it is doing: posted at once, a reply to the request, so the member who
-	// asked is never left without an answer while it waits (2026-10-29: a
-	// request to Unicorn sat unanswered through a deck run of half an hour).
-	// The message's id, or "" when it could not be posted.
+	// asked is never left without an answer while it waits. The message's id,
+	// or "" when it could not be posted.
 	std::function<std::string(const Agent &agent, const AgentAssignment &work, const std::string &words)> say_waiting;
-	// The member's desk on this computer: the project, never listed or shared
-	// as a Matter, that keeps their personal chats with the firm's colleagues
-	// (D-042, D-157). Made the first time it is asked for; its id, or "" when it
-	// cannot be made. A colleague of the firm keeps its own chat there.
+	// The member's desk on this computer: the project, never listed or shared as
+	// a Matter, that keeps their personal chats with the firm's colleagues. Made
+	// the first time it is asked for; its id, or "" when it cannot be made. A
+	// colleague of the firm keeps its own chat there.
 	std::function<std::string()> desk_project;
 	// The Matters this computer carries with the firm's other computers
 	// (Matter/MatterCoordination). A colleague of the firm may be named in any
-	// of them (D-157), so its card goes into each, and every computer that
-	// carries one lists it beside the people (PHIL-10).
+	// of them, so its card goes into each, and every computer that carries one
+	// lists it beside the people.
 	std::function<std::vector<std::string>()> carried_matters;
 	// Whether the member at this computer may hire the firm's AI colleagues and
-	// choose their models: the firm's administrator (D-184), as the application
+	// choose their models: the firm's administrator, as the application
 	// installs it from the role its account flow recorded (Organisation/
 	// FirmRole). With none installed, anyone may: a test, a tool with no firm.
 	std::function<bool()> may_manage_colleagues;
 	// An administrator's change of a colleague made on another of the firm's
-	// computers (D-219), checked before the computer that runs the colleague
-	// takes it: the device key of `device_id` when it is one of the firm's
+	// computers, checked before the computer that runs the colleague takes
+	// it: the device key of `device_id` when it is one of the firm's
 	// computers checked here and its seat is the administrator's by Legal
 	// Machines' own list of the firm's seats - never by what a file in the
 	// firm's record says of itself; none otherwise.
@@ -209,8 +220,8 @@ struct RunnerDependencies {
 };
 
 // Where a colleague's own chat is kept: the Matter it was made for, in the zero
-// state, or the member's desk for a colleague of the firm (D-157). Never call it
-// with an agent lock held: the desk may have to be made.
+// state, or the member's desk for a colleague of the firm. Never call it with an
+// agent lock held: the desk may have to be made.
 inline std::string home_project_of(const Agent &agent, const RunnerDependencies &dependencies) {
 	if (agent.matter_id.empty() == false) return agent.matter_id;
 	return dependencies.desk_project ? dependencies.desk_project() : std::string();

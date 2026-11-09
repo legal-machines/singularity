@@ -44,11 +44,6 @@ struct EntityOccurrence {
 	long long mention_count = 0;
 };
 
-// A stable Project-local identity with a human-readable pseudonym
-// ("Company 1"). canonical_value/aliases are real names and remain local -
-// PRIVACY_CONTRACT.md's Project Entity Registry section - never sent to an
-// external provider: that is the ephemeral Request Restoration Map's job
-// (Phase 11), an entirely separate contract this type never touches.
 struct ProjectEntity {
 	std::string id;
 	protected_api::papinian::EntityType category;
@@ -83,11 +78,6 @@ struct ProjectEntity {
 
 enum class AmbiguityStatus { Pending, MergedSameEntity, KeptSeparate };
 
-// A candidate "these might be the same real entity" pair EntityResolver.cpp
-// raised instead of silently merging - PRIVACY_CONTRACT.md: "Ambiguity never
-// silently merges." entity_a is always the earlier-created (already
-// registered) entity; entity_b is the later mention's own newly created
-// entity, kept separate until a person resolves this.
 struct EntityAmbiguity {
 	std::string id;
 	protected_api::papinian::EntityType category;

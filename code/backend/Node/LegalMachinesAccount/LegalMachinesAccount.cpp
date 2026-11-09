@@ -15,8 +15,8 @@
 namespace singularity::node {
 namespace {
 
-// A new organisation waits for Legal Machines' approval (D-030): said as what
-// it is, never as a wrong password.
+// A new organisation waits for Legal Machines' approval: said as what it is,
+// never as a wrong password.
 const char *kAwaitingApproval = "Legal Machines has not approved your organisation yet, so this computer cannot "
 	"download the protection model. Legal Machines reviews each new organisation and writes to its contact address "
 	"once it is approved; then sign in again.";
@@ -175,7 +175,7 @@ SignInAnswer answer_of(const platform::HttpResponse &response, const char *wrong
 	answer.organisation_id = text_at(payload, "organisationId");
 	answer.seat_id = text_at(payload, "seatId");
 	// A new organisation that Legal Machines has not approved yet: the password
-	// was right, and nothing more happens until it is approved (D-030).
+	// was right, and nothing more happens until it is approved.
 	if (flag_at(payload, "awaitingApproval") == true) {
 		const Json contact = payload.contains("contact") ? payload.at("contact") : Json::object();
 		answer.masked_email = text_at(contact, "maskedEmail");
@@ -183,7 +183,7 @@ SignInAnswer answer_of(const platform::HttpResponse &response, const char *wrong
 		record_outcome("sign_in", to_string(answer.status));
 		return answer;
 	}
-	// A new organisation whose setup is not finished (D-146): it goes on with
+	// A new organisation whose setup is not finished: it goes on with
 	// two-factor authentication, opened by the token the answer carries.
 	if (flag_at(payload, "requiresSetup") == true) {
 		const std::optional<std::string> token = text_at(payload, "setupToken");
@@ -219,8 +219,8 @@ SignInAnswer answer_of(const platform::HttpResponse &response, const char *wrong
 	answer.is_contact_verified = flag_at(contact, "verified");
 	answer.display_name = text_at(payload, "displayName");
 	answer.organisation_name = text_at(payload, "organisationName");
-	// A colleague's seat signs in with no second step (D-204): the sign-in
-	// stands checked, and this computer's session is asked against it.
+	// A colleague's seat signs in with no second step: the sign-in stands
+	// checked, and this computer's session is asked against it.
 	answer.challenge_id = text_at(payload, "challengeId").value_or("");
 	answer.role = text_at(payload, "role");
 	answer.needs_two_factor_setup = text_at(payload, "twoFactorSetup") == std::optional<std::string>("required");
@@ -347,8 +347,8 @@ EmailLookup look_up_email(const AccountPoster &post, const std::string &email) {
 namespace {
 
 // A seat request the service did not take, in its own words where they are a
-// short sentence (D-204): signing in again, only the administrator, too many
-// today, or what to correct.
+// short sentence: signing in again, only the administrator, too many today,
+// or what to correct.
 [[noreturn]] void refuse_seat_request(const platform::HttpResponse &response, const char *outcome, const char *again,
 		const char *fallback) {
 	if (response.status == 401) {
@@ -378,7 +378,7 @@ platform::HttpResponse post_seat_request(const AccountPoster &session_post, cons
 		throw;
 	}
 	// Every door of the seat's session but setting up two steps is shut until
-	// it has an authenticator app (D-215): said as that, wherever it is met.
+	// it has an authenticator app: said as that, wherever it is met.
 	if (is_two_step_setup_refusal(response) == true) {
 		record_outcome(outcome, "two_step_setup_required");
 		tell_two_step_setup_required();
@@ -503,8 +503,8 @@ namespace {
 }
 
 // A second step's code as the service reads it: six digits, or a recovery
-// code's eight letters and digits (D-146) in capitals, its hyphen and spaces
-// aside; none when it is neither.
+// code's eight letters and digits in capitals, its hyphen and spaces aside;
+// none when it is neither.
 std::optional<std::string> second_step_code(const std::string &code) {
 	std::string digits;
 	bool letters = false;
@@ -519,7 +519,7 @@ std::optional<std::string> second_step_code(const std::string &code) {
 	return digits;
 }
 
-// A count an answer carries (D-218), or none.
+// A count an answer carries, or none.
 std::optional<int> count_at(const Json &payload, const char *key) {
 	if (payload.contains(key) == false || payload.at(key).is_number_integer() == false) return std::nullopt;
 	const long long count = payload.at(key).get<long long>();
@@ -553,8 +553,8 @@ std::vector<std::string> recovery_codes_in(const Json &payload, const char *oper
 	return codes;
 }
 
-// The password and the code that confirm it is the seat's own person (D-218),
-// the code as the service reads it; refused before anything is sent.
+// The password and the code that confirm it is the seat's own person, the
+// code as the service reads it; refused before anything is sent.
 std::string confirmed_by(const std::string &password, const std::string &code) {
 	if (password.empty() == true) throw AccountFailure(AccountFailureKind::InvalidInput, "Enter your password.");
 	const std::optional<std::string> sent = second_step_code(code);
@@ -830,8 +830,8 @@ SignInAnswer sign_in_with_email(const AccountPoster &post, const std::string &em
 	const std::string address = normalized_email(email);
 	if (password.empty() == true) throw AccountFailure(AccountFailureKind::InvalidInput, "Enter the seat's password.");
 
-	// The seat by its id (D-204); none opens the firm's administrator seat, as
-	// before seats.
+	// The seat by its id; none opens the firm's administrator seat, as before
+	// seats.
 	Json request{{"email", address}, {"password", password}};
 	if (trimmed_lower(seat).empty() == false) request["seat"] = normalized_seat_id(seat);
 	platform::HttpResponse response;
@@ -1051,9 +1051,9 @@ namespace {
 
 const char *kSetupExpired = "This setup has expired. Sign in to go on.";
 
-// One step of a new organisation's setup (D-146): its answer, or the failure
-// a person reads. `wrong_code` is the sentence for a code the service did not
-// take, where the step takes one.
+// One step of a new organisation's setup: its answer, or the failure a person
+// reads. `wrong_code` is the sentence for a code the service did not take,
+// where the step takes one.
 Json setup_step(const AccountPoster &post, const char *name, const std::string &path, const Json &body,
                 const char *wrong_code = nullptr) {
 	platform::HttpResponse response;
@@ -1186,12 +1186,12 @@ ContactConfirmed confirm_contact(const AccountPoster &post, const std::string &o
 	}
 	const Json payload = parsed_or_fail(response.body);
 	// An organisation is in use only where the service says so; otherwise it
-	// waits for Legal Machines' approval (D-030).
+	// waits for Legal Machines' approval.
 	ContactConfirmed confirmed;
 	confirmed.state = flag_at(payload, "activated") == true && flag_at(payload, "awaitingApproval") == false
 		? ContactConfirmation::Active
 		: ContactConfirmation::AwaitingApproval;
-	// A new organisation (D-146): the setup its confirmed email opens.
+	// A new organisation: the setup its confirmed email opens.
 	const std::optional<std::string> setup = text_at(payload, "setup");
 	const std::optional<std::string> token = text_at(payload, "setupToken");
 	if (setup.has_value() == true && token.has_value() == true && (*setup == "password" || *setup == "two_factor")) {
@@ -1255,7 +1255,7 @@ SignInAnswer verify_two_factor(const AccountPoster &post, const std::string &cha
 			answer.organisation_name = text_at(payload, "organisationName");
 			answer.display_name = text_at(payload, "displayName");
 			answer.role = text_at(payload, "role");
-			// Signed in by a recovery code (D-218): the app asks for a new
+			// Signed in by a recovery code: the app asks for a new
 			// authenticator app, and says how many codes are left.
 			answer.used_recovery_code = flag_at(payload, "usedRecoveryCode");
 			answer.recovery_codes_left = count_at(payload, "recoveryCodesLeft");
@@ -1339,7 +1339,7 @@ std::string exchange_node_session(const AccountPoster &post,
 		throw AccountFailure(AccountFailureKind::ServiceUnavailable, kServiceUnavailable);
 	}
 	// A seat with no authenticator app is given a session that sets one up and
-	// nothing else (D-215): the window leads its member there at once.
+	// nothing else: the window leads its member there at once.
 	if (text_at(payload, "twoFactorSetup") == std::optional<std::string>("required")) {
 		record_outcome("node_session", "two_step_setup_required");
 		tell_two_step_setup_required();

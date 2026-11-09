@@ -1,9 +1,9 @@
-// The model accounts onboarding connects (D-134), as the backend takes them
+// The model accounts onboarding connects, as the backend takes them
 // (Provider/ProviderRegistry): OpenAI and Anthropic by their own ids; every
 // other service by an OpenAI-compatible address under an id of its own.
 // OpenRouter is `openai_compatible`, the one form web research reads. The key
-// goes to the native side and is kept there only (AG-SEC-1); the backend
-// checks it with the service before it keeps it.
+// goes to the native side and is kept there only; the backend checks it with
+// the service before it keeps it.
 export const PROVIDERS = [
 	{ key: "openrouter", name: "OpenRouter", line: "One key for every major model", id: "openai_compatible", baseUrl: "https://openrouter.ai/api/v1", displayName: "OpenRouter" },
 	{ key: "openai", name: "OpenAI", line: "GPT and Codex models", id: "openai" },

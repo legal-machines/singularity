@@ -71,7 +71,7 @@ def domain_for(method_name: str) -> str:
     if method_name.startswith("chat."):
         return "Chat"
     # New Document methods use their own domain's name rather than the legacy
-    # matter.* wire prefix (D-001).
+    # matter.* wire prefix.
     if method_name.startswith("document."):
         return "Document"
     if method_name.startswith(("papinian.", "localModels.")):
@@ -132,21 +132,19 @@ def domain_for(method_name: str) -> str:
         return "Organisation"
     if method_name.startswith("documentReview."):
         return "DocumentReview"
-    # Singularity in Word, Excel and Outlook (D-105), implemented in Office/.
+    # Singularity in Word, Excel and Outlook, implemented in Office/.
     if method_name.startswith("office."):
         return "Office"
-    # A Matter's correspondence (D-106), implemented in Correspondence/.
+    # A Matter's correspondence, implemented in Correspondence/.
     if method_name.startswith("correspondence."):
         return "Correspondence"
     if method_name.startswith("matter."):
         return "Matter"
-    # New Native methods use project.* per D-001 (Project is the only current
-    # product term); matter.* stays only for the wire/compatibility names it
-    # already owns. Both are authored in Matter.json and implemented in the
-    # Matter domain/Bridge - project.* is not a separate contract domain.
+    # Both are authored in Matter.json and implemented in the Matter
+    # domain/Bridge - project.* is not a separate contract domain.
     if method_name.startswith("project."):
         return "Matter"
-    # The firm's coordination carries Matters between computers (D-098):
+    # The firm's coordination carries Matters between computers:
     # authored in Matter.json, implemented in Matter/MatterCoordination.
     if method_name.startswith("coordination."):
         return "Matter"

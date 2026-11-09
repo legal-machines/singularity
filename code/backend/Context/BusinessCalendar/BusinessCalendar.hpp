@@ -16,12 +16,12 @@
 // calendar. Singularity reads any such definition - English or Russian - into a
 // STRUCTURED rule, never into a guessed calendar:
 //
-//   - the weekdays it excludes ("Saturday, Sunday", «суббота, воскресенье»);
+//   - the weekdays it excludes ("Saturday, Sunday", «…»);
 //   - the closure authorities it names: banks, a central bank, the law's
 //     public holidays, government offices, an exchange, a payment system - each
 //     with the place the words give ("commercial banks in New York City or
-//     London", «банки в г. Москве»);
-//   - the days it names itself ("December 24", «31 декабря», "Good Friday");
+//     London", «…»);
+//   - the days it names itself ("December 24", «…», "Good Friday");
 //   - a definition it incorporates by reference instead ("has the meaning given
 //     in the Credit Agreement").
 //
@@ -171,7 +171,7 @@ struct BusinessDayRule {
 	RuleSource source = RuleSource::WeekdayFallback;
 	std::set<int> weekend{5, 6};
 	// The rule's own words name the weekdays it excludes ("other than a Saturday
-	// or Sunday", «кроме субботы»): a weekend day a calendar makes a working day
+	// or Sunday", «…»): a weekend day a calendar makes a working day
 	// (a Russian transfer) is then no certain business day. Otherwise the weekend
 	// is the calendars' own, and a working day they ALL make is a business day.
 	bool weekend_explicit = false;
@@ -323,17 +323,17 @@ struct RulePassage {
 	bool matter_record = false;
 };
 
-// Executed ("executed", "signed", «подписан») or a draft ("draft", "redline",
-// "superseded", «проект»), from a title and the text's own first lines - whole
+// Executed ("executed", "signed", «…») or a draft ("draft", "redline",
+// "superseded", «…»), from a title and the text's own first lines - whole
 // words only: "Overdraft Facility Agreement", "Assignment Agreement" and
-// «Договор на выполнение проектных работ» are neither.
+// «…» are neither.
 [[nodiscard]] Standing standing_of(std::string_view title, std::string_view text);
 
 // The structured reading of a definition's words.
 struct ParsedDefinition {
 	std::set<int> weekend{5, 6};
 	bool weekdays_named = false;     // the words name the weekdays (Saturday, Monday to Friday, weekend ...)
-	bool weekdays_explicit = false;  // ... by name ("Saturday", «суббота», "Monday to Friday"), not as "weekend" / «выходные»
+	bool weekdays_explicit = false;  // ... by name ("Saturday", «…», "Monday to Friday"), not as "weekend" / «…»
 	std::vector<NamedAuthority> authorities;
 	std::vector<DayRule> named_days;
 	bool no_holidays = false;        // the words name only weekdays - no holiday of any kind
@@ -343,8 +343,8 @@ struct ParsedDefinition {
 // A parsed definition resolved against the registry.
 [[nodiscard]] BusinessDayRule resolve(const ParsedDefinition &parsed, RuleSource source);
 
-// A definition of Business Day (Banking Day, Working Day, «рабочий день»,
-// «банковский день») a passage writes, as a rule; `incorporates` names the
+// A definition of Business Day (Banking Day, Working Day, «…»,
+// «…») a passage writes, as a rule; `incorporates` names the
 // document it takes the meaning from instead ("the credit agreement"), folded.
 struct Definition {
 	BusinessDayRule rule;
@@ -356,7 +356,7 @@ struct Definition {
 
 // A clause of a passage that rolls a period's end ("if the last day is not a
 // Business Day, the period ends on the next succeeding Business Day",
-// «переносится на ближайший следующий рабочий день»), as a roll word with its
+// «…»), as a roll word with its
 // span; nullopt when none.
 struct RollClause {
 	std::string roll;
@@ -369,7 +369,7 @@ struct RollClause {
 
 // A business-day rule a lawyer states in their own words. `answer` true: the
 // words answer Singularity's own question about the rule, so a plain statement of
-// one ("federal holidays", "weekdays only", «по производственному календарю»)
+// one ("federal holidays", "weekdays only", «…»)
 // is the rule. `answer` false (the request itself, a Project record): only a
 // sentence that is about business days AND says how they are counted states one
 // ("count business days as days New York banks are open"), and only with a

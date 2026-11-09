@@ -25,9 +25,9 @@ import { findMember, firstName, isViewerMember, officeLine, positionOf, roleLine
 
 import styles from "./ProfilePage.module.css";
 
-// A member's profile (D-070), in one order for a person and an AI colleague
-// (ORG-1): who it is and how to reach it; what it works on, its remit, how
-// it works and its record; and beside them the facts of the firm's file.
+// A member's profile, in one order for a person and an AI colleague: who it
+// is and how to reach it; what it works on, its remit, how it works and its
+// record; and beside them the facts of the firm's file.
 export function ProfilePage({ memberId, state }) {
 	const { open } = useNavigation();
 	const [isPointedAt, setPointedAt] = useState(false);
@@ -39,8 +39,7 @@ export function ProfilePage({ memberId, state }) {
 	const now = isColleague ? colleagueState(member.id, state) : null;
 	const away = memberAway(member, state);
 	// The prototype's people stand only for themselves: a real member is never
-	// given a prototype's facts because their names match (the owner,
-	// 2026-11-02: a new seat named Noah Kim showed the prototype's Noah Kim).
+	// given a prototype's facts because their names match.
 	const isPrototype = member.isReal != true;
 	const facts = isPrototype == false ? null : isColleague ? colleagueFacts[member.id] : personFacts[member.id];
 	const profile = isColleague || isPrototype == false ? null : fixture.profiles.find(item => item.id == member.id || item.name == member.name);
@@ -48,15 +47,15 @@ export function ProfilePage({ memberId, state }) {
 	const seatId = useSeatOf(member, isViewer);
 	const [isEditing, setEditing] = useState(false);
 	const [, setSaved] = useState(0);
-	// The firm's administrator edits who sits in any seat; a member their own
-	// (D-209).
-	const mayEdit = !isColleague && seatId != null && (isViewer || viewerMay.manageSeats) && member.isArchived != true;
+	// The firm's administrator alone edits who sits in a seat, the member's own
+	// included.
+	const mayEdit = !isColleague && seatId != null && viewerMay.manageSeats == true && member.isArchived != true;
 	// What the administrator may do to a colleague's seat, or to an AI colleague
-	// on the computer that runs it (D-214).
+	// on the computer that runs it.
 	const [managing, setManaging] = useState(null);
 	const mayManagePerson = hasNative() && !isColleague && !isViewer && seatId != null && viewerMay.manageSeats == true;
 	const mayManageColleague = hasNative() && isColleague && member.agentId != null && member.isFirmCopy != true && viewerMay.hire == true;
-	// Its profile, from any of the administrator's computers (D-219).
+	// Its profile, from any of the administrator's computers.
 	const mayEditColleague = hasNative() && isColleague && member.agentId != null && viewerMay.hire == true && member.isArchived != true;
 	const first = firstName(member);
 	const goToTeam = () => open({ kind: "team" });
@@ -88,14 +87,12 @@ export function ProfilePage({ memberId, state }) {
 	) : null;
 
 	// What scrolls under the window's band goes under it with a hard edge,
-	// no haze (the owner, 2026-11-02).
+	// no haze.
 	return (
 		<Page asInbox hardEdge bar={<SheetBar trail={[{ label: organisation.name }, { label: "Team", place: { kind: "team" } }, { label: member.name }]} />}>
 			{/* Who they are in the page's one corner - a face in proportion to
 			    the name, the office in one phrase and, under it, what they do
-			    now - and what can be done with them in the other (the owner,
-			    2026-11-02: "the avatar with its caption into the corner, the
-			    buttons into the opposite one"). */}
+			    now - and what can be done with them in the other. */}
 			<PageHead
 				asInbox
 				compact
@@ -179,10 +176,9 @@ export function ProfilePage({ memberId, state }) {
 					onClose={() => setEditing(false)} onSaved={() => { setEditing(false); setSaved(count => count + 1); }} />
 			) : null}
 			{/* One column, read from the top down, each part a panel of its own
-			    in Apple's grouped manner (the owner, 2026-11-02: "add panels,
-			    not two columns, one after another, in Apple's and Twist's
-			    style"): who they are, how they think and remember, their work,
-			    where they work and with whom, their record, what is on file. */}
+			    in Apple's grouped manner: who they are, how they think and
+			    remember, their work, where they work and with whom, their record,
+			    what is on file. */}
 			<Stack>
 				<Part title="About">
 					{isColleague ? ((member.area ?? "").trim() != "" ? <p className={parts.paragraph}>{member.area}</p> : <p className={parts.paragraph_quiet}>Nothing written yet.</p>)
@@ -222,9 +218,9 @@ export function ProfilePage({ memberId, state }) {
 	);
 }
 
-// The model a colleague thinks with, for all of its work (D-185): the one chosen
-// for it, or else the firm's default. The firm's administrator chooses it here
-// (D-184); a member reads who does.
+// The model a colleague thinks with, for all of its work: the one chosen for it,
+// or else the firm's default. The firm's administrator chooses it here; a member
+// reads who does.
 function ColleagueModel({ member }) {
 	const { open } = useNavigation();
 	const [choices, setChoices] = useState(null);
@@ -249,8 +245,7 @@ function ColleagueModel({ member }) {
 		<Part title="Model">
 			<PartRows>
 				{/* The model by its name alone; whose choice it is and through which
-				    account stay in its dialog (the owner, 2026-11-02: "this
-				    technical caption isn't needed"). */}
+				    account stay in its dialog. */}
 				<PartRow title={current == null ? "No model yet" : modelWords(current, choices.models)} line={current == null ? line : null} aside={aside} />
 			</PartRows>
 			{isChoosing ? <ModelDialog member={member} choices={choices} onClose={() => setChoosing(false)} /> : null}
@@ -286,8 +281,7 @@ function ModelDialog({ member, choices, onClose }) {
 				<Button variant="primary" onClick={save} busy={isSaving}>Save</Button>
 			</>}
 		>
-			{/* Found by its name or its maker (the owner, 2026-11-02: "make
-			    finding a model easier - a search and categories"). */}
+			{/* Found by its name or its maker. */}
 			<ModelPicker
 				models={choices.models}
 				keyOf={keyOf}
@@ -319,9 +313,9 @@ function providerWords(providerId) {
 	return provider != null ? `the firm's ${provider.name} account` : "the firm's model account";
 }
 
-// What a colleague remembers (D-159): its own notes from every conversation it
-// has in the firm, each with what it is about and who said it. Any member lets
-// one go; the colleague keeps the rest in every conversation.
+// What a colleague remembers: its own notes from every conversation it has in
+// the firm, each with what it is about and who said it. Any member lets one
+// go; the colleague keeps the rest in every conversation.
 function ColleagueMemory({ member }) {
 	const [notes, setNotes] = useState(null);
 	const [forgetting, setForgetting] = useState(null);
@@ -387,8 +381,8 @@ function ColleagueMemory({ member }) {
 	);
 }
 
-// What gathers a colleague's memory (D-206): the model its page chose, else
-// the firm's model for context work, or none; and the models a connected
+// What gathers a colleague's memory: the model its page chose, else the
+// firm's model for context work, or none; and the models a connected
 // account gives for context work, to choose from.
 async function memoryGathering(agentId) {
 	const api = nativeApp();
@@ -448,10 +442,10 @@ function MemoryModelDialog({ member, gathering, onClose }) {
 	);
 }
 
-// Whom a note is kept for and who said it, in words (the owner, 2026-11-02:
-// "a strange logic of about and from"): a member's note is used only when
-// that member takes part, a Matter's in that Matter, the firm's everywhere
-// (D-159); who said it, by their seat, under the name they have now.
+// Whom a note is kept for and who said it, in words: a member's note is
+// used only when that member takes part, a Matter's in that Matter, the
+// firm's everywhere; who said it, by their seat, under the name they have
+// now.
 function memoryLine(note) {
 	const person = nameBySeat(note.personActorId, note.personName);
 	const said = nameBySeat(note.saidByActorId, note.saidByName);
@@ -547,7 +541,7 @@ function WorksWith({ profile, onOpen }) {
 	);
 }
 
-// No member it "answers to" (D-223): an AI colleague is set over no one's
+// No member it "answers to": an AI colleague is set over no one's
 // shoulder.
 function colleagueFile(member, facts) {
 	return [
@@ -602,9 +596,9 @@ function personRecord(profile) {
 	return `${record.acceptedWorkProducts} results accepted and ${record.returnedWorkProducts} returned.${attention}${latest}`;
 }
 
-// The seat a person sits in, where the firm's record can say who they are
-// (D-209): another member's from the firm's team, the viewer's from their
-// own sign-in. None for a computer signed in to no seat.
+// The seat a person sits in, where the firm's record can say who they
+// are: another member's from the firm's team, the viewer's from their own
+// sign-in. None for a computer signed in to no seat.
 function useSeatOf(member, isViewer) {
 	const [own, setOwn] = useState(null);
 	useEffect(() => {
@@ -616,10 +610,9 @@ function useSeatOf(member, isViewer) {
 	return actor.startsWith("seat:") ? actor.slice(5) : null;
 }
 
-// Who sits in the seat, edited as it was given (D-209): written into the
-// firm's own record, which the member's computers take as theirs. In two
-// steps, as a colleague's (D-219): the profile, then a few lines about them,
-// so neither scrolls (the owner, 2026-11-02).
+// Who sits in the seat, edited as it was given: written into the firm's own
+// record, which the member's computers take as theirs. In two steps, as a
+// colleague's: the profile, then a few lines about them, so neither scrolls.
 const PERSON_STEPS = ["Profile", "About"];
 
 function EditProfileDialog({ member, seatId, isViewer, onClose, onSaved }) {
@@ -693,11 +686,9 @@ function EditProfileDialog({ member, seatId, isViewer, onClose, onSaved }) {
 }
 
 // An AI colleague's profile, edited as a lawyer's is, in two steps as
-// onboarding goes (the owner, 2026-11-02: "split it into slides, as
-// onboarding was, so that everything fits"): first its profile - a lawyer's
-// fields, its face where a person's photo stands - then its work, with the
-// steps' dots at the dialog's foot; written where the firm keeps it, on
-// every computer (D-213, D-214).
+// onboarding goes: first its profile - a lawyer's fields, its face where a
+// person's photo stands - then its work, with the steps' dots at the
+// dialog's foot; written where the firm keeps it, on every computer.
 const COLLEAGUE_STEPS = ["Profile", "Work"];
 
 export function EditColleagueProfileDialog({ member, onClose, onSaved }) {

@@ -7,8 +7,8 @@
 namespace singularity::platform {
 
 // A new message in the member's own mail app, with files attached, for them
-// to read, change and send there; Singularity never sends it (D-105, D-115).
-// `eml` is the same draft written as an unsent email (X-Unsent: 1).
+// to read, change and send there; Singularity never sends it. `eml` is the
+// same draft written as an unsent email (X-Unsent: 1).
 //
 // macOS: when Mail is the mail app (the mailto: handler), the system's
 // compose-email service opens Mail's new message with the recipient, subject,

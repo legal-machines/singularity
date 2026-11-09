@@ -5,8 +5,8 @@ import { SecretInput } from "./SecretInput.jsx";
 import styles from "./Field.module.css";
 
 // A field: its label above, its control, and one line below that either
-// helps or, when something is wrong, says what and how to put it right
-// (DESIGN.md, FOLIO-22). The control learns its id and what describes it.
+// helps or, when something is wrong, says what and how to put it right.
+// The control learns its id and what describes it.
 export function Field({ label, hint, error, optional = false, className, children }) {
 	const id = useId();
 	const noteId = useId();

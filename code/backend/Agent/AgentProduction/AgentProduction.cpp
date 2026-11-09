@@ -36,6 +36,7 @@
 #include <cctype>
 #include <chrono>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <cstdio>
@@ -83,13 +84,10 @@ std::string leader_name_of(const Agent &agent) {
 
 // Who the agent is and the work it stands for: its thread's standing
 // instructions, carried by every request in the thread, whoever sends it - the
-// firm's one way of professional communication and this colleague's role
-// (Agent/ColleagueBrief, D-101).
-// The colleague as a member of the firm (Agent::office): of the whole firm,
-// never of one Matter (the owner, 2026-10-26: "she exists not within one
-// project but within the whole firm"); whom it answers to is its office's
-// word, not the lawyer whose computer runs it.
-// Who the colleague works with in the firm (D-159's context): the member at
+// firm's one way of professional communication and this colleague's role. The
+// colleague as a member of the firm (Agent::office): of the whole firm, never
+// of one Matter; whom it answers to is its office's word, not the lawyer whose
+// computer runs it. Who the colleague works with in the firm: the member at
 // this computer and the people of the firm's Matters known here, each in the
 // office they state, and the firm's other AI colleagues in theirs - sorted, so
 // its brief stays the same bytes, and read from its cache, until the team
@@ -141,8 +139,8 @@ ColleagueRole role_of(const Agent &agent) {
 	role.practice = agent.office.practice;
 	role.area = agent.office.area;
 	// A colleague of the firm with no words of its own takes on the work its
-	// members bring it, in any Matter (D-157); one of the zero state watches the
-	// Matter it was made for.
+	// members bring it, in any Matter; one of the zero state watches the Matter
+	// it was made for.
 	role.standing_work = agent.goal.empty() == false ? agent.goal : agent.matter_id.empty() == true
 		? std::string("take on the work the firm's members bring you, in any of its Matters.")
 		: std::string("tell the lawyer what changes in the Matter's documents and what it may mean.");
@@ -189,10 +187,10 @@ void say_who_asks(const Agent &agent, TaskRunInput &input) {
 	input.asker_standing = organisation::standing_words(agent.office.ranks_with, office.position);
 }
 
-// The agent's first words in its thread (D-101): who it is, the work it is here
-// for, and when it takes it up. Of the firm, never of one Matter (D-130). Where
-// it runs is not the lawyer's concern, and what needs the lawyer's word is said
-// where it arises, not promised in advance.
+// The agent's first words in its thread: who it is, the work it is here for,
+// and when it takes it up. Of the firm, never of one Matter. Where it runs is
+// not the lawyer's concern, and what needs the lawyer's word is said where it
+// arises, not promised in advance.
 std::string introduction(const Agent &agent) {
 	std::string when;
 	switch (agent.trigger) {
@@ -264,7 +262,11 @@ std::string report_words(const Agent &agent, const AgentRun &run) {
 	return words;
 }
 
-std::string open_thread_of(const Agent &agent);
+// The agent's own thread in its home, made if it has none; "" where none can
+// be (a draft, no home here), and nothing where its home cannot be read just
+// now: whether its thread stands is not known then, and a second thread is
+// never made for it.
+std::optional<std::string> open_thread_of(const Agent &agent);
 
 // What a stopped analysis, a missing model or a refused protection means for
 // the lawyer, said in the run's own words: what happened, what is safe, what
@@ -379,7 +381,7 @@ void record_operation(const AnalysisInput &input, const std::string &task_id, co
 		task.operation_type = "agent_run";
 		task.operation_role = "reasoning";
 		// The colleague's own check: its work, begun by itself, so the Matter's
-		// bill names it (D-252).
+		// bill names it.
 		task.agent_id = input.agent_id;
 		task.agent_initiated = true;
 		task.author_name = input.agent_name;
@@ -446,7 +448,7 @@ AnalysisOutput analyse(const AnalysisInput &input) {
 			return output;
 		}
 	} else {
-		// The model chosen on its page, when one is (D-185).
+		// The model chosen on its page, when one is.
 		try {
 			const std::lock_guard<std::mutex> lock(agent_store_mutex());
 			const std::optional<Agent> agent = load_agent(input.agent_id);
@@ -670,13 +672,36 @@ std::string excerpt_of(const std::string &answer) {
 	return text.size() >= 359 ? text + "…" : text;
 }
 
-bool is_live_chat(const std::string &project_id, const std::string &chat_id) {
+// Whether a thread stands in its Matter: false when it was deleted or its
+// Matter is no longer in this workspace; nothing when that cannot be told just
+// now - the Matter's data or the workspace's list cannot be read. Any failure
+// was taken for a deletion.
+std::optional<bool> live_chat(const std::string &project_id, const std::string &chat_id) {
 	try {
 		for (const matters::MatterChat &chat : chat::list(project_id).chats)
 			if (chat.id == chat_id && chat.deleted_at.empty() == true) return true;
+		return false;
+	} catch (const matters::ProjectDataError &) {
+		return std::nullopt;
 	} catch (const std::exception &) {
 	}
-	return false;
+	try {
+		const persistence::PersistenceLock lock(persistence::persistence_mutex());
+		if (matters::load_matter(node::require_active_workspace_path(), project_id).has_value() == false) return false;
+	} catch (const std::exception &) {
+	}
+	return std::nullopt;
+}
+
+// The work's Matter cannot be read just now: neither a failure nor done. It
+// goes back to the head of the colleague's line and is taken up again after a
+// wait, never answered in another thread.
+TaskRunOutput unreadable_now(TaskRunOutput output) {
+	output.status = "interrupted";
+	output.reason = "The Matter's data can't be read right now. The work begins again in a moment.";
+	output.task.state = "interrupted";
+	output.task.message = output.reason;
+	return output;
 }
 
 // An agent that checks the Matter against the firm's Playbook: its task is a
@@ -693,8 +718,8 @@ TaskRunOutput run_playbook_review(const Agent &agent, const TaskRunInput &input,
 		output.task.message = reason;
 		return output;
 	};
-	// Singularity closed during the check (Beta 1 #16): no failure, no Stop and
-	// no note; the scheduler begins it again at the next launch.
+	// Singularity closed during the check: no failure, no Stop and no note; the
+	// scheduler begins it again at the next launch.
 	const auto closed_on = [&]() {
 		output.status = "interrupted";
 		output.reason = "Singularity closed while the agent checked the contracts. What it answered is kept in its table.";
@@ -989,14 +1014,29 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 	}
 	// Where it answers: the thread where someone named it, carrying its brief
 	// with the request; otherwise its own thread, whose brief is the chat's - in
-	// its home: the Matter it was made for, or the member's desk (D-157).
+	// its home: the Matter it was made for, or the member's desk.
 	std::string chatId;
 	bool isElsewhere = false;
-	if (input.reply_chat_id.empty() == false && is_live_chat(input.matter_id, input.reply_chat_id) == true) {
+	const std::optional<bool> isReplyLive =
+		input.reply_chat_id.empty() == true ? std::optional<bool>(false) : live_chat(input.matter_id, input.reply_chat_id);
+	if (isReplyLive.has_value() == false) return unreadable_now(std::move(output));
+	if (*isReplyLive == true) {
 		chatId = input.reply_chat_id;
 		isElsewhere = chatId != agent->chat_id.value_or("");
+	} else if (input.reply_chat_id.empty() == false) {
+		// The thread it was named in is gone - deleted, or its Matter no longer
+		// here: the work ends there, stopped. It is never answered in the
+		// colleague's own thread nor carried to its home, where it was answered
+		// before.
+		output.status = "cancelled";
+		output.reason = "The thread this work was given in was deleted, so the work was stopped.";
+		output.task.state = "stopped";
+		output.task.message = output.reason;
+		return output;
 	} else {
-		chatId = open_thread_of(*agent);
+		const std::optional<std::string> own = open_thread_of(*agent);
+		if (own.has_value() == false) return unreadable_now(std::move(output));
+		chatId = *own;
 		input.matter_id = agent->matter_id.empty() == false ? agent->matter_id : matter::desk_project_id();
 	}
 	if (chatId.empty() == true) {
@@ -1005,7 +1045,6 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 		output.task.message = output.reason;
 		return output;
 	}
-	if (isElsewhere == false && agent->chat_id != chatId) output.made_chat_id = chatId;
 	output.task.chat_id = chatId;
 	// An agent that checks against the firm's Playbook does its task as a
 	// Review Table and the changes it calls for.
@@ -1013,15 +1052,15 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 		return run_playbook_review(*agent, input, chatId, std::move(output));
 	// Work a lawyer gives any colleague is understood by the colleague first:
 	// an answer in words, a question, or work on the Matter's documents - one
-	// or several, of any kind (D-115). Only an answer in words is left to the
-	// colleague's ordinary answer below.
-	// What the colleague did in this thread, as its record keeps it: its
-	// ordinary answer has it before the question, so a question about a draft
-	// is answered from what the draft holds (D-120).
+	// or several, of any kind. Only an answer in words is left to the
+	// colleague's ordinary answer below. What the colleague did in this
+	// thread, as its record keeps it: its ordinary answer has it before the
+	// question, so a question about a draft is answered from what the draft
+	// holds.
 	std::string workRecord;
-	// A run the colleague begins itself is its talk as well (D-129): one light
-	// call, the Matter's data only as it asks for it.
-	// Who it is in the firm, and where whoever wrote to it stands.
+	// A run the colleague begins itself is its talk as well: one light call,
+	// the Matter's data only as it asks for it. Who it is in the firm, and
+	// where whoever wrote to it stands.
 	TaskRunInput told = input;
 	say_who_asks(*agent, told);
 	if (input.is_assignment == false) {
@@ -1064,7 +1103,7 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 	composition.can_ask_lawyer = false;
 	// Nobody watches an agent's run: a web search it needs keeps its place and
 	// the run returns at once, so one undecided search never holds every other
-	// agent's work (Beta 1 #14).
+	// agent's work.
 	composition.unattended = true;
 	composition.agent_initiated = input.is_assignment == false;
 	// The operation is the agent's, whatever path later carries it on - a
@@ -1117,9 +1156,9 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 	}
 	chat::ChatExecutionOutcome outcome;
 	try {
-		// It may do what the Matter's own mode lets any member do (D-158).
-		// An agent that works only on this computer sends nothing out: no web
-		// research is offered to it, and any network tool is denied.
+		// It may do what the Matter's own mode lets any member do. An agent
+		// that works only on this computer sends nothing out: no web research
+		// is offered to it, and any network tool is denied.
 		const routing::ScopedLocalOnlyWork localOnly(input.policy == AgentModelPolicy::LocalOnly);
 		outcome = chat::run_chat_request(operationId, composition);
 	} catch (const std::exception &error) {
@@ -1214,17 +1253,39 @@ TaskRunOutput run_task(const TaskRunInput &given) {
 	return output;
 }
 
-std::string open_thread_of(const Agent &agent) {
-	if (agent.status == AgentStatus::Draft) return "";
+// One opening of its own thread at a time for each colleague.
+std::mutex &opening_of(const std::string &agent_id) {
+	static std::mutex guard;
+	static std::map<std::string, std::unique_ptr<std::mutex>> each;
+	const std::lock_guard<std::mutex> lock(guard);
+	std::unique_ptr<std::mutex> &slot = each[agent_id];
+	if (slot == nullptr) slot = std::make_unique<std::mutex>();
+	return *slot;
+}
+
+std::optional<std::string> open_thread_of(const Agent &given) {
+	if (given.status == AgentStatus::Draft) return "";
+	// One at a time, with the thread it has now: two openings at once - a run
+	// and Team's list of colleagues - each made it a thread of its own.
+	const std::lock_guard<std::mutex> opening(opening_of(given.id));
+	Agent agent = given;
+	{
+		const std::lock_guard<std::mutex> lock(agent_store_mutex());
+		if (const std::optional<Agent> current = load_agent(given.id)) agent.chat_id = current->chat_id;
+	}
 	// The Matter it was made for, in the zero state, or the member's desk for a
-	// colleague of the firm (D-157).
+	// colleague of the firm.
 	const std::string home = agent.matter_id.empty() == false ? agent.matter_id : matter::desk_project_id();
 	if (home.empty() == true) return "";
 	const std::optional<MatterFolder> matter = matter_folder_of(home);
 	if (matter.has_value() == false) return "";
 	const std::string brief = agent_brief(agent);
 	std::string chatId = agent.chat_id.value_or("");
-	if (chatId.empty() == false && is_live_chat(home, chatId) == false) chatId.clear();
+	if (chatId.empty() == false) {
+		const std::optional<bool> isLive = live_chat(home, chatId);
+		if (isLive.has_value() == false) return std::nullopt;
+		if (*isLive == false) chatId.clear();
+	}
 	if (chatId.empty() == false) {
 		(void)chat::bind_agent_thread(home, chatId, agent.id, brief);
 		return chatId;
@@ -1243,8 +1304,8 @@ std::string open_thread_of(const Agent &agent) {
 		}
 	}
 	// A colleague with an office in the firm is known by it: its personal chat
-	// with a member opens as a messenger's does, with no words of its own
-	// (D-130). One that watches a folder says what it watches.
+	// with a member opens as a messenger's does, with no words of its own. One
+	// that watches a folder says what it watches.
 	if (agent.office.title.empty() == true || agent.mode == AgentMode::Changes) {
 		(void)chat::post_agent_message(home, made.id, agent.id, agent.name, introduction(agent),
 			agent.model_policy == AgentModelPolicy::LocalOnly);
@@ -1272,14 +1333,14 @@ void take_up_synced_mentions() {
 		const std::lock_guard<std::mutex> lock(agent_store_mutex());
 		for (const Agent &agent : load_agents()) {
 			if (agent.status != AgentStatus::Active && agent.status != AgentStatus::Paused) continue;
-			// A copy of the firm's colleague answers only the member here (D-213).
+			// A copy of the firm's colleague answers only the member here.
 			if (agent.is_firm_copy == true) continue;
 			agentsSince[agent.id] = agent.created_at;
 		}
 	}
 	if (agentsSince.empty() == true) return;
 	// A colleague is the firm's: it is named in any Matter of the firm known
-	// here (D-157) - never the member's desk, whose messages are posted here.
+	// here - never the member's desk, whose messages are posted here.
 	std::set<std::string> matterIds;
 	try {
 		for (const matters::Matter &known : matter::list()) matterIds.insert(known.id);
@@ -1354,16 +1415,14 @@ std::string say_waiting_of(const Agent &agent, const AgentAssignment &work, cons
 void report_run_of(const Agent &agent, const AgentRun &run) {
 	// A task's answer, or its failure, is a turn of the thread already.
 	if (run.task.has_value() == true && run.task->task_id.empty() == false) return;
-	// So is a failure the colleague's reply said there in its own words
-	// (2026-11-05: with no model set, a message was answered "I can't answer
-	// right now" and again "I couldn't do that just now").
+	// So is a failure the colleague's reply said there in its own words.
 	if (run.status == "failed" && run.task.has_value() == true && run.task->is_failure_said == true) return;
 	const std::string words = report_words(agent, run);
 	if (words.empty() == true) return;
-	const std::string chatId = open_thread_of(agent);
-	if (chatId.empty() == true) return;
+	const std::optional<std::string> chatId = open_thread_of(agent);
+	if (chatId.has_value() == false || chatId->empty() == true) return;
 	const std::string home = agent.matter_id.empty() == false ? agent.matter_id : matter::desk_project_id();
-	(void)chat::post_agent_message(home, chatId, agent.id, agent.name, words,
+	(void)chat::post_agent_message(home, *chatId, agent.id, agent.name, words,
 		agent.model_policy == AgentModelPolicy::LocalOnly);
 }
 
@@ -1403,7 +1462,8 @@ RunnerDependencies production_runner_dependencies() {
 		const std::string actor = platform::resolve_actor_identity().actor_id;
 		return actor.rfind("seat:", 0) == 0 ? actor.substr(5) : std::string();
 	};
-	dependencies.open_thread = open_thread_of;
+	// A home that cannot be read just now opens no thread yet: the agent waits.
+	dependencies.open_thread = [](const Agent &agent) { return open_thread_of(agent).value_or(std::string()); };
 	dependencies.report_run = report_run_of;
 	dependencies.say_waiting = say_waiting_of;
 	dependencies.take_up_mentions = take_up_synced_mentions;

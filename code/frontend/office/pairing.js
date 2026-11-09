@@ -1,12 +1,11 @@
-// How a pane asks to be connected: by itself, as it opens (D-191; the owner,
-// 2026-11-01: the person only accepts and presses buttons). Singularity's
+// How a pane asks to be connected: by itself, as it opens. Singularity's
 // window shows the same code and one button, and the person allows it there.
-// A request lasts three minutes (docs/OFFICE.md, OFF-5): one that ends
-// unanswered is asked again, a few times; one Singularity was told to refuse
-// is never asked again by itself. While another pane's request stands, or
-// Singularity does not answer, the pane asks again in a moment, for a few
-// minutes. A pane allowed meanwhile in another window of the same application
-// connects this one too: their token is one (the connection's transport).
+// A request lasts three minutes: one that ends unanswered is asked again, a
+// few times; one Singularity was told to refuse is never asked again by
+// itself. While another pane's request stands, or Singularity does not
+// answer, the pane asks again in a moment, for a few minutes. A pane allowed
+// meanwhile in another window of the same application connects this one too:
+// their token is one (the connection's transport).
 
 // An unanswered request is asked again four times: about fifteen minutes in all.
 export const RENEWALS = 4;

@@ -3,9 +3,9 @@ import { FileTile, kindOf, wordOf } from "../FileTile/FileTile.jsx";
 
 import styles from "./Result.module.css";
 
-// What is inside a file, said in words under its name (D-057): "9 pages with
-// tracked changes", "4 pages", "PDF document" where nothing more is known;
-// for one a later version replaced, only that.
+// What is inside a file, said in words under its name: "9 pages with tracked
+// changes", "4 pages", "PDF document" where nothing more is known; for one a
+// later version replaced, only that.
 export function fileLine(file, replacedWord) {
 	if (replacedWord != null) return replacedWord;
 	const subject = file.pages != null ? `${file.pages} ${file.pages == 1 ? "page" : "pages"}` : wordOf(kindOf(file.name));
@@ -13,9 +13,8 @@ export function fileLine(file, replacedWord) {
 }
 
 // A result as anyone in the firm hands it in, a person or an AI colleague
-// alike (the owner, 2026-10-24: "AI agents and people must have literally the
-// same tools, everywhere in the app"): its files, as lawyers send them, and
-// what its author did not check. A version a later one replaced stands back.
+// alike: its files, as lawyers send them, and what its author did not check.
+// A version a later one replaced stands back.
 export function Result({ files, notChecked, replacedWord, onOpenFile }) {
 	return (
 		<div className={styles.result}>

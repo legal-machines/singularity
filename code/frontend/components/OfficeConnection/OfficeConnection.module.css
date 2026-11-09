@@ -1,5 +1,5 @@
-/* The code a pane shows, set as every code a member compares (UI-27) and as
-   the guide sets it. */
+/* The code a pane shows, set as every code a member compares and as the
+   guide sets it. */
 .code {
 	margin: 0;
 	font: 500 28px/34px var(--font-code);

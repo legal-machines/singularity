@@ -18,7 +18,7 @@
 }
 
 /* What waits for the member reads in plain ink: a decision or a review is
-   ordinary work, never an alarm (D-174). Brick is kept for what failed. */
+   ordinary work, never an alarm. Brick is kept for what failed. */
 .status_yours {
 	font-weight: 500;
 	color: var(--ink);

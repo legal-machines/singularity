@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 
-// The sidebar's place for what the open page adds to it (D-081): the calendar
-// puts its small month and its calendars there, under the places. The
-// sidebar gives the element; a page draws into it with a portal.
+// The sidebar's place for what the open page adds to it: the calendar puts
+// its small month and its calendars there, under the places. The sidebar
+// gives the element; a page draws into it with a portal.
 let slot = null;
 const listeners = new Set();
 

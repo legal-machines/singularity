@@ -5,16 +5,16 @@ import logoMark from "../assets/logo-mark-reverse.svg";
 import styles from "./Painting.module.css";
 
 // A file beside the page, named by its path: the packaged page is one classic
-// script, where an imported file's address was left a placeholder
-// (2026-11-03). Only shown, never drawn into the painting, it may come from its
-// file; the parts the painting draws may not (artwork.js).
+// script, where an imported file's address was left a placeholder. Only shown,
+// never drawn into the painting, it may come from its file; the parts the
+// painting draws may not (artwork.js).
 const poster = "painting/poster.webp";
 
 // The living painting from the site: a still poster, and over it the same
-// painting drawn live, its figures turning to the pointer. Space pauses it,
-// R replays it; with reduced motion the poster stays. Its credit stands in the
+// painting drawn live, its figures turning to the pointer. Space pauses it, R
+// replays it; with reduced motion the poster stays. Its credit stands in the
 // corner: the artist and the work, without the museum, since this painting is
-// our adaptation, not the museum's (the owner, 2026-10-26).
+// our adaptation, not the museum's.
 export function Painting() {
 	const panel = useRef(null);
 

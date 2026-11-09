@@ -159,11 +159,11 @@ bool has_committed_document_change(const MatterTask &task);
 // Whether an implicit Retry (Master Spec Sec.66: same task, same model) is
 // honest for `task` - false for a task with nothing to recover from (it
 // already succeeded), whose error will just reproduce itself with
-// identical inputs (see providers::is_retryable()), or whose change was
+// identical inputs (see providers::is_retryable), or whose change was
 // already written (a new attempt would only write it twice). A request the
 // lawyer stopped can be retried otherwise. Run with another model (Sec.67)
 // is available for a successful task too, and redoes a written change in
-// place (SLR-3) - see is_same_model_target() for its own eligibility rule.
+// place - see is_same_model_target for its own eligibility rule.
 bool is_retry_eligible(const MatterTask &task);
 
 // Whether running `task` again against `provider_id`/`model_id` would be a
@@ -220,14 +220,21 @@ private:
   std::string code_;
 };
 
-// The Matter/Project persistence facade (D-002): for a Matter not yet cut
-// over to portable .lm truth, reads matters.json exactly as documented below.
-// For one that has been (its directory_path already has .lm set up), returns
-// its live, canonical .lm state instead - matters.json holds only a locator
-// for it (id/directoryPath), never a content snapshot. Every existing
-// domain caller (Matter/Activity/Chat/Document/Routing/WorkProduct) already
-// does load-modify-save through this function and therefore transparently
-// becomes .lm-aware with no call-site change.
+// A Matter read to show what it holds - its threads, a conversation: one whose
+// data can't be read just now (a write caught midway, a file a sync client
+// holds, a folder out of reach) is refused with ProjectDataError, never read
+// as one that holds nothing. The window then keeps what it shows and reads it
+// again. Every such read goes through this one rule.
+void require_readable(const Matter &matter);
+
+// The Matter/Project persistence facade: for a Matter not yet cut over to
+// portable .lm truth, reads matters.json exactly as documented below. For one
+// that has been (its directory_path already has .lm set up), returns its
+// live, canonical .lm state instead - matters.json holds only a locator for
+// it (id/directoryPath), never a content snapshot. Every existing domain
+// caller (Matter/Activity/Chat/Document/Routing/WorkProduct) already does
+// load-modify-save through this function and therefore transparently becomes
+// .lm-aware with no call-site change.
 //
 // matters.json semantics: returns an empty list only when neither a manifest
 // nor a recovery copy exists. If the current manifest is invalid and

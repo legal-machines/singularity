@@ -1,5 +1,6 @@
 #include "Privacy/EntityRegistry/EntityRegistry.hpp"
 
+#include "PapinianGuard/CommonWords/CommonWords.hpp"
 #include "PapinianGuard/ProtectedMarkers/ProtectedMarkers.hpp"
 #include "Platform/SecureRandom/SecureRandom.hpp"
 
@@ -121,6 +122,82 @@ std::vector<ProjectEntity> list_active_entities(const matters::Matter &matter) {
 		active.push_back(entity);
 	}
 	return active;
+}
+
+namespace {
+
+// The kinds of entity that tell one client from another; a court, a date or
+// an amount does not.
+bool identifies(EntityType type) {
+	switch (type) {
+	case EntityType::Person:
+	case EntityType::LegalEntity:
+	case EntityType::Organisation:
+	case EntityType::Address:
+	case EntityType::Email:
+	case EntityType::Phone:
+	case EntityType::BankAccount:
+	case EntityType::TaxId:
+	case EntityType::CaseNumber:
+	case EntityType::ContractIdentifier:
+		return true;
+	default:
+		return false;
+	}
+}
+
+// Three characters at least, and one word that is no ordinary word: "Northwind"
+// and "Larkspur Health" tell a client apart, "Harbor" and "Due Diligence" do not.
+bool distinctive(const std::string &name) {
+	if (name.size() < 3) return false;
+	std::string word;
+	const auto plain = [](const std::string &one) {
+		std::string trimmed = one;
+		while (trimmed.empty() == false && std::ispunct(static_cast<unsigned char>(trimmed.back())) != 0) trimmed.pop_back();
+		while (trimmed.empty() == false && std::ispunct(static_cast<unsigned char>(trimmed.front())) != 0) trimmed.erase(0, 1);
+		return trimmed;
+	};
+	const auto unusual = [&](const std::string &one) {
+		const std::string bare = plain(one);
+		return bare.size() >= 3 && protected_api::papinian::is_common_word(bare) == false;
+	};
+	for (const char character : name) {
+		if (std::isspace(static_cast<unsigned char>(character)) != 0) {
+			if (unusual(word) == true) return true;
+			word.clear();
+		} else {
+			word.push_back(character);
+		}
+	}
+	return unusual(word);
+}
+
+std::string trimmed_name(const std::string &value) {
+	std::size_t first = 0;
+	std::size_t last = value.size();
+	while (first < last && std::isspace(static_cast<unsigned char>(value[first])) != 0) ++first;
+	while (last > first && std::isspace(static_cast<unsigned char>(value[last - 1])) != 0) --last;
+	return value.substr(first, last - first);
+}
+
+} // namespace
+
+std::vector<std::string> identifying_names(const matters::Matter &matter) {
+	std::vector<std::string> names;
+	std::set<std::string> seen;
+	const auto keep = [&](const std::string &value) {
+		const std::string name = trimmed_name(value);
+		if (distinctive(name) == false || seen.insert(name).second == false) return;
+		names.push_back(name);
+	};
+	// A Matter named after its client names it.
+	keep(matter.name);
+	for (const ProjectEntity &entity : list_active_entities(matter)) {
+		if (identifies(entity.category) == false) continue;
+		keep(entity.canonical_value);
+		for (const std::string &alias : entity.aliases) keep(alias);
+	}
+	return names;
 }
 
 std::optional<ProjectEntity> find_entity(const matters::Matter &matter, const std::string &entity_id) {
@@ -342,7 +419,7 @@ std::vector<std::string> protection_values(const matters::Matter &matter, const 
 	for (const std::string &alias : values) {
 		// A list is not a name: "Company, the Evaluation Material or the",
 		// recorded as a person, gave "the" as a surname, and every "the" of a
-		// Matter's requests was masked (2026-10-29).
+		// Matter's requests was masked.
 		if (alias.find(',') != std::string::npos) continue;
 		const std::vector<std::string> words = bare_person_words(alias);
 		if (!is_full_person_name(words)) continue;

@@ -6,10 +6,10 @@
 namespace singularity::platform::seat_password_store {
 
 // Where a Legal Machines seat's password may be kept for this computer's user,
-// only when the member chooses so after signing in (D-243): on Windows, the
-// user's Credential Manager, as a generic credential that never roams
+// only when the member chooses so after signing in: on Windows, the user's
+// Credential Manager, as a generic credential that never roams
 // (CRED_PERSIST_LOCAL_MACHINE), which the person sees and can delete there
-// too. macOS and Linux keep none here yet: kind() is empty, and saving keeps
+// too. macOS and Linux keep none here yet: kind is empty, and saving keeps
 // nothing.
 //
 // Every entry's target begins with kTargetPrefix, and the account bridge names

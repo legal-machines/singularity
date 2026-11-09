@@ -1,9 +1,7 @@
 import styles from "./Badges.module.css";
 
-// What waits unread, in Legal Machines' brick (the owner, 2026-11-02: "little
-// squares in our brand red with a count, and a separate mark where you were
-// tagged directly"): an "@" square where something names the member, and the
-// count beside it. Nothing when nothing waits.
+// What waits unread, in Legal Machines' brick: an "@" square where something
+// names the member, and the count beside it. Nothing when nothing waits.
 export function Badges({ count = 0, namesViewer = false, label }) {
 	if (count <= 0 && namesViewer != true) return null;
 	const said = [namesViewer ? "names you" : null, count > 0 ? `${count} unread` : null].filter(Boolean).join(", ");

@@ -1,5 +1,5 @@
-/* Brick squares (Badges.jsx, D-202): white figures on Legal Machines' accent,
-   18 points tall, their corners a small square's, side by side. */
+/* Brick squares: white figures on Legal Machines' accent, 18 points tall,
+   their corners a small square's, side by side. */
 .badges {
 	display: inline-flex;
 	flex: none;

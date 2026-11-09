@@ -9,9 +9,9 @@ namespace singularity::agents {
 
 // The roles an AI colleague can be begun in: what it does, the mode it works
 // in, its first name and instruction, and when it works by default. This is
-// the one catalogue (Beta 1 #272). Every domain that names or checks a role
-// reads it here, and the window reads it through agent.roles, so no copy of it
-// lives in React.
+// the one catalogue. Every domain that names or checks a role reads it here,
+// and the window reads it through agent.roles, so no copy of it lives in
+// React.
 struct AgentRole {
 	// The role's id: an agent's `kind`.
 	std::string id;

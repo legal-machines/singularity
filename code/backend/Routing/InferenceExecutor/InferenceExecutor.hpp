@@ -13,6 +13,7 @@
 #include "PapinianGuard/Types/PrivacyMetadata.hpp"
 #include "PapinianGuard/Policy/Policy.hpp"
 #include "LocalModel/ModelLifecycle/ModelLifecycle.hpp"
+#include "Tool/ToolBroker/ToolBroker.hpp"
 #include "Tool/Types/ToolTypes.hpp"
 #include "ExternalResearch/Types/ExternalResearchTypes.hpp"
 #include "ExternalResearch/TurnContract/TurnContract.hpp"
@@ -110,8 +111,7 @@ std::map<std::string, std::filesystem::path> production_generative_install_paths
 struct InferenceRequest {
   std::string prompt;
 	// The pictures the member attached, sent with every model call this request
-	// makes as image inputs (D-256, Provider/Types/InputPictures.hpp); none for
-	// a request that carries words only.
+	// makes as image inputs; none for a request that carries words only.
 	std::shared_ptr<const std::vector<providers::InputPicture>> pictures;
 	// The prompt in parts, when the caller gives it so (a colleague's talk):
 	// sent as those parts, each protected on its own (ModelVisibleTurn.hpp);
@@ -154,6 +154,15 @@ struct InferenceRequest {
 	// Trusted Singularity scope for a model/tool loop. The model never constructs
 	// or alters this value; ordinary no-tool inference simply leaves it unset.
 	std::optional<tools::ToolExecutionContext> tool_execution_context;
+	// The operation the request belongs to, for a request with no tool context:
+	// its authority record (Tool/OperationAuthority) says where the work may run,
+	// and the executor reads it whatever model the caller chose
+	// (is_local_only_work, Routing/InferenceExecutor/LocalOnlyWork.hpp).
+	struct AuthorityOperation {
+		std::string project_id;
+		std::string operation_id;
+	};
+	std::optional<AuthorityOperation> authority_operation;
 	research::ResearchMode research_mode = research::ResearchMode::Auto;
 	// Optional domain-owned final-text syntax requirement. The research loop
 	// may request one format correction; domain semantics and mutations remain
@@ -442,8 +451,7 @@ struct ModelCapability {
 	// "provider_reported" (the provider's model list), "local" (local inference's figures
 	// for this computer), or "unknown" when no source gave any.
 	std::string source = "unknown";
-	// Whether the model reads pictures (D-256, providers::takes_pictures);
-	// std::nullopt where nothing says.
+	// Whether the model reads pictures; std::nullopt where nothing says.
 	std::optional<bool> takes_pictures;
 };
 
@@ -460,6 +468,18 @@ struct ModelCapability {
 // Asked while a request is prepared, so an unavailable capability is stated to
 // the model and in the result instead of being offered and failing mid-task.
 [[nodiscard]] std::optional<std::string> research_unavailable_reason(const tools::ToolExecutionContext &context);
+
+// One web step of an AI colleague's own work: a search the colleague wrote,
+// run through the research tools as a chat's searches are and held to the
+// protection its calls are held to - `policy`, and whether its model reads
+// only protected text. Its last check before anything leaves refuses a
+// [[symbol]], a value this work protected and one of the Matter's identities
+// (ResearchTools' prepare_outbound_research_request). It is put to no person
+// first: a colleague searches as a colleague does, and a firm whose settings
+// allow no web access still refuses it. The broker's attempt, as
+// ToolBroker::request gives it.
+[[nodiscard]] tools::ToolAttempt colleague_web_step(const tools::ToolExecutionContext &context,
+	const tools::ToolIntent &intent, const protected_api::Policy &policy, bool writtenFromProtectedText);
 
 // While an agent that works only on this computer runs its task on this
 // thread (Agent/AgentProduction, AgentModelPolicy::LocalOnly: "I work on this

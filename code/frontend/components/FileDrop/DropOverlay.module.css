@@ -1,8 +1,7 @@
 /* Over a place that takes files while they are dragged over it: the page's
-   own white over all it holds, so nothing shows beneath, with no frame (the
-   owner, 2026-11-05: "everything under it must be hidden while dragging, and
-   the borders must go"). It reaches as far as the place's rows do
-   (--drop-reach), and says only what is done with the files. */
+   own white over all it holds, so nothing shows beneath, with no frame. It
+   reaches as far as the place's rows do (--drop-reach), and says only what
+   is done with the files. */
 .drop {
 	position: absolute;
 	inset: calc(-1 * var(--drop-reach, 0px));

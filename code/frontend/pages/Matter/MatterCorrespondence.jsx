@@ -16,11 +16,8 @@ import { contactOf } from "../Mail/LetterPage.jsx";
 
 import styles from "./MatterCorrespondence.module.css";
 
-// A Matter's correspondence (D-106, D-180): its letters, as the Inbox lists
-// its mail, each saying how it came, and the settings of its intake (the
-// owner, 2026-11-02: "add a button for the correspondence intake settings:
-// if letters come to such an account from such a mailbox - that is the basic
-// case - and it works only with Outlook connected"; D-228).
+// A Matter's correspondence: its letters, as the Inbox lists its mail, each
+// saying how it came, and the settings of its intake.
 export function MatterCorrespondence({ matter, letters, people, isReal }) {
 	const { open } = useNavigation();
 	const [isIntakeOpen, setIntakeOpen] = useState(false);

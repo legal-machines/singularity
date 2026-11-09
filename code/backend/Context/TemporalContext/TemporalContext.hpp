@@ -27,9 +27,9 @@ namespace singularity::context::temporal_context {
 
 // What a document is, as its folder, name, title and text show it. Signed only
 // where the text shows a signature given ("/s/ Dana Morgan", "By: Dana Morgan",
-// «Подписано электронной подписью»), never from a line left to sign on, which
+// «…»), never from a line left to sign on, which
 // a draft has too. Final: no draft's marks and no blank anywhere, and every
-// line to sign on names its signatory («____ / О. В. Смирнов /») - the form an
+// line to sign on names its signatory («…») - the form an
 // executed agreement is kept in as text. One that shows none of these is
 // Agreement or Amendment - no draft relation rests on it.
 enum class Standing { Draft, Signed, Final, Agreement, DraftAmendment, SignedAmendment, FinalAmendment, Amendment, BoardRecord,

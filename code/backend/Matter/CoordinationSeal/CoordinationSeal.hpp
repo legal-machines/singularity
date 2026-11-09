@@ -13,24 +13,24 @@ namespace singularity::matter::coordination::seal {
 /*
  * Every byte one of the firm's computers sends another about a Matter is
  * sealed here, on the computer that sends it, and opened only on the one it is
- * for (D-123). Whatever carries it - the firm's own folder, a direct link
- * (Matter/CoordinationTransport, D-124) - sees opaque bytes and their length.
+ * for. Whatever carries it - the firm's own folder, a direct link - sees
+ * opaque bytes and their length.
  *
  * Keys:
  * - each shared Matter has its own key, made by the computer that shares it;
  * - each computer has its own X25519 key pair for coordination, whose public
- *   half it announces beside its Ed25519 device key (Platform/DeviceKey);
+ * half it announces beside its Ed25519 device key (Platform/DeviceKey);
  * - a Matter's key reaches a computer only sealed to that computer's own key,
  *   by a computer of the Matter, once the lawyers have compared the joining
- *   computer's code (D-095).
+ *   computer's code.
  *
  * Envelopes, by their first byte:
  * - 0x01, a change: sealed under the Matter's key; the engine's bytes inside.
  * - 0x02, a Matter's key, sealed to one computer's key, signed by the sender.
  * - 0x03, a computer asking to join a Matter: its public keys, signed by its
- *   device key. Nothing in it is secret.
+ * device key. Nothing in it is secret.
  * - 0x04, where a computer can be reached: sealed under the Matter's key,
- *   signed by its device key, with the time it expires.
+ * signed by its device key, with the time it expires.
  *
  * Everything is XChaCha20-Poly1305 under keys derived by keyed BLAKE2b
  * (Monocypher 4), with a fresh 24-byte random nonce for every seal, bound as
@@ -47,7 +47,7 @@ enum class Kind : std::uint8_t { Unknown = 0, Change = 1, KeyWrap = 2, JoinReque
 Kind kind_of(const std::string &envelope);
 
 // An envelope's id, by which every carrier and the engine recognise it, is
-// Matter/CoordinationTransport's envelope_id (D-124).
+// Matter/CoordinationTransport's envelope_id.
 
 // ---- Keys -------------------------------------------------------------------
 
@@ -132,15 +132,15 @@ struct KeyGift {
 	std::string matter_id;
 	std::string from_device;
 	// The sender's device key (Ed25519, base64): what the receiving lawyer
-	// compares, as its code, before the key is taken (D-095, D-123).
+	// compares, as its code, before the key is taken.
 	std::string from_device_key;
 	std::string to_device;
 	MatterKey key;
 	std::int64_t counter = 0;
 	// What the Matter held when its key was given - its files and their bytes
 	// -, so the lawyer taking it knows how much is coming before any of it is
-	// opened (D-207). In the header the signature and the seal cover; zero when
-	// not said.
+	// opened. In the header the signature and the seal cover; zero when not
+	// said.
 	std::uint64_t files = 0;
 	std::uint64_t bytes = 0;
 };
@@ -160,21 +160,21 @@ struct KeyOutside {
 	std::string from_device;
 	std::string from_device_key;
 	std::string to_device;
-	// The Matter's size as its giver said it (D-207); zero when not said.
+	// The Matter's size as its giver said it; zero when not said.
 	std::uint64_t files = 0;
 	std::uint64_t bytes = 0;
 };
 std::optional<KeyOutside> key_outside(const std::string &envelope);
 
-// ---- 0x06: one of the firm's model accounts, given (D-210) --------------------
+// ---- 0x06: one of the firm's model accounts, given --------------------
 
 // A model account connected on one of the firm's computers, given to another
 // that its lawyer checked: the account as that computer's settings keep it and
 // its key, sealed to the receiving computer's own X25519 key with a key pair
-// made for the seal alone, and signed by the giver's device key. It travels
-// as sealed bytes only and is opened straight into the receiving computer's
-// credential store (AG-SEC-1, AG-SEC-9). `removed`: the account is no longer
-// the firm's to use there.
+// made for the seal alone, and signed by the giver's device key. It travels as
+// sealed bytes only and is opened straight into the receiving computer's
+// credential store. `removed`: the account is no longer the firm's to use
+// there.
 struct AccountGift {
 	// The firm's record's channel, which routes it.
 	std::string matter_id;
@@ -232,10 +232,10 @@ struct AddressCard {
 	std::string matter_id;
 	std::string device_id;
 	// Where to reach it ("udp:192.168.1.20:41641", "udp:203.0.113.7:41641"),
-	// for the carriers to read (D-124).
+	// for the carriers to read.
 	std::vector<std::string> candidates;
-	// Its X25519 key (key_text), which its direct link's handshake proves
-	// (D-124): signed with the rest, so it is that device's.
+	// Its X25519 key (key_text), which its direct link's handshake
+	// proves: signed with the rest, so it is that device's.
 	std::string coordination_key;
 	std::string expires_at;
 	std::int64_t counter = 0;

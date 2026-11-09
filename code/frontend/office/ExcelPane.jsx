@@ -7,10 +7,10 @@ import { when } from "./words.js";
 
 import styles from "./pane.module.css";
 
-// Singularity in Excel (D-110): the Matter of the workbook the lawyer is in,
-// at the cells selected. The workbook stays in Excel; the Matter, its thread
-// and its colleagues belong to Singularity, and the pane shows only what
-// concerns this workbook and the cells selected:
+// Singularity in Excel: the Matter of the workbook the lawyer is in, at the
+// cells selected. The workbook stays in Excel; the Matter, its thread and its
+// colleagues belong to Singularity, and the pane shows only what concerns this
+// workbook and the cells selected.
 //   - the cells, what they hold, what the thread said about them, and a word
 //     to a colleague about them, which goes to the Matter's thread like any
 //     message, with the cells - their sheet, address and what they hold - as

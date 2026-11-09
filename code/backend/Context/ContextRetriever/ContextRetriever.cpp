@@ -313,7 +313,7 @@ ContextRetriever::retrieve(const ContextRetrievalRequest &request) {
   // never send document content the user did not actually specify - this
   // fill-up-to-capacity loop had no relevance floor at all in that mode. A
   // query with genuinely zero lexical overlap with any Project document (a
-  // bare "Привет") still had this loop pad the result out to
+  // bare "…") still had this loop pad the result out to
   // maximum_chunks from `ranked`'s stable tail-order, sending arbitrary,
   // wholly irrelevant document content to the model (and, for a cloud
   // target, through Papinian and off the device) merely because capacity

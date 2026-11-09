@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FROM_EMULATION, FROM_ONBOARDING } from "../../emulation/emulation.js";
 import styles from "./Lens.module.css";
 
-// The app's own components, curated to the chapter's function. The frame
-// fits its stage exactly: no camera crop, reply box or partly visible chrome.
-// It plays by itself and has no controls of its own (D-160).
+// The app's own components, curated to the chapter's function. The frame fits
+// its stage exactly: no camera crop, reply box or partly visible chrome. It
+// plays by itself and has no controls of its own.
 export function Lens({ scene, shown, paused = false, profile = null, onReady }) {
 	const frame = useRef(null);
 	const [ready, setReady] = useState(false);
@@ -27,7 +27,7 @@ export function Lens({ scene, shown, paused = false, profile = null, onReady }) 
 		if (ready) frame.current?.contentWindow?.postMessage({ from: FROM_ONBOARDING, type: "playback", paused: held, settle: paused }, "*");
 	}, [ready, held, paused]);
 	// The member as they introduce themselves, before any scene plays with
-	// them: the demonstration shows them in the firm as they type (D-162).
+	// them: the demonstration shows them in the firm as they type.
 	useEffect(() => {
 		if (ready) frame.current?.contentWindow?.postMessage({ from: FROM_ONBOARDING, type: "profile", profile }, "*");
 	}, [ready, profile]);

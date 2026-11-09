@@ -1,8 +1,8 @@
 // MOCK DATA - the text of the Sablewood NDA as Unicorn marked it up (version 2),
-// fictional throughout (AG-12). A paragraph is a list of runs: plain text, a
-// deletion ({ del }) or an insertion ({ ins }), each change with the note
-// that gives its reason and the clause of the Playbook it rests on. Section
-// 2.1 cites Exhibit B, which is not in the Matter's Documents.
+// fictional throughout. A paragraph is a list of runs: plain text, a deletion ({
+// del }) or an insertion ({ ins }), each change with the note that gives its
+// reason and the clause of the Playbook it rests on. Section 2.1 cites Exhibit
+// B, which is not in the Matter's Documents.
 
 export const instruments = {
 	doc_sablewood_markup: {

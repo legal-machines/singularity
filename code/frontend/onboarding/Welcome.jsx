@@ -5,11 +5,11 @@ import { ColleagueOrbit } from "./entry/ColleagueOrbit.jsx";
 import entry from "./entry/EntryForm.module.css";
 import styles from "./Welcome.module.css";
 
-// The moment the organisation is in (the owner, 2026-10-29): the painting is
-// gone and the whole window says one thing, its name, the same after a
-// registration, a sign-in or joining a firm. Then the tour shows the app and
-// sets it up, or a member who has been here goes straight back to work. A
-// registration just finished is celebrated with confetti (2026-10-30).
+// The moment the organisation is in: the painting is gone and the whole
+// window says one thing, its name, the same after a registration, a sign-in
+// or joining a firm. Then the tour shows the app and sets it up, or a member
+// who has been here goes straight back to work. A registration just finished
+// is celebrated with confetti.
 export function Welcome({ name, celebrate = false, onContinue }) {
 	const headingRef = useRef(null);
 	const groupRef = useRef(null);

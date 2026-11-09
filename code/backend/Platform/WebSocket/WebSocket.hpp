@@ -11,10 +11,9 @@
 namespace singularity::platform {
 
 // A WebSocket over TLS (RFC 6455) to a Legal Machines address: what the direct
-// link's relay is reached by (Matter/CoordinationTransport/RelayClient, D-242),
-// on port 443 as a web page is, so a network that lets nothing else through
-// still lets it. Each system's own client carries it: NSURLSession on macOS,
-// WinHTTP on Windows, libcurl on Linux.
+// link's relay is reached by, on port 443 as a web page is, so a network that
+// lets nothing else through still lets it. Each system's own client carries it:
+// NSURLSession on macOS, WinHTTP on Windows, libcurl on Linux.
 //
 // One thread may send while another receives; close() may come from any
 // thread and ends a receive that waits.

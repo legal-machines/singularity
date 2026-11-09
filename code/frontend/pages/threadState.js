@@ -5,7 +5,7 @@ import { plainWords } from "./words.js";
 
 // The workspace's state on top of the mock data: what the viewer decided,
 // replied, marked done, read and saved. It is kept in App and never written
-// anywhere (PROD-2).
+// anywhere.
 export const initialState = {
 	doneIds: [],
 	readIds: [],
@@ -14,8 +14,8 @@ export const initialState = {
 	extraEvents: {},
 	extraMessages: {},
 	readChatIds: [],
-	// How many AI colleagues the member hired in this session (D-071): a hire
-	// joins the mock data, and the count tells the pages to read it again.
+	// How many AI colleagues the member hired in this session: a hire joins
+	// the mock data, and the count tells the pages to read it again.
 	hires: 0,
 	// Direct messages the member filed from the Inbox's Unsorted: message id
 	// to the project's id.
@@ -31,8 +31,8 @@ export const initialState = {
 	// messages: post or message id to the answer.
 	answers: {},
 	// Who writes an answer now, in a mock thread (by its id) or a personal chat
-	// (by the member's id): what the app's emulation in onboarding shows
-	// (D-134). A real thread's and chat's come from the backend.
+	// (by the member's id): what the app's emulation in onboarding shows. A
+	// real thread's and chat's come from the backend.
 	typing: {},
 };
 
@@ -41,7 +41,7 @@ export const initialState = {
 export function isThreadUnread(threadId, state) {
 	if (state.unreadIds.includes(threadId)) return true;
 	// A real thread is unread while another's message in it is newer than what
-	// the member has seen (D-202).
+	// the member has seen.
 	const thread = threads.find(item => item.id == threadId);
 	if (thread?.isReal == true) return state.readIds.includes(threadId) == false && isRealThreadUnread(thread);
 	const entry = inbox.find(item => item.threadId == threadId);
@@ -61,7 +61,7 @@ export function findThread(threadId) {
 // Everything that happened in a thread, in order: its posts, its closing and
 // reopening, and what the viewer added. A real thread's closing and reopening
 // come among its posts, each with its kind (data/native.js). A deleted message
-// keeps its place without its words, in a real thread as in the demo (D-092).
+// keeps its place without its words, in a real thread as in the demo.
 export function threadEvents(thread, state) {
 	const events = thread.posts.map(post => ({ kind: "post", ...post }));
 
@@ -148,7 +148,7 @@ export function waitingCounts(state) {
 
 // What an AI colleague is doing: { text, kind, presence }, where kind is
 // "yours" (it waits for the viewer), "working" (work for the viewer under way)
-// or "idle", and presence is what its character acts out (D-013).
+// or "idle", and presence is what its character acts out.
 export function colleagueState(memberId, state) {
 	// A colleague of the real Matter is doing what the backend says it is.
 	const real = realColleagueState(memberId);
@@ -197,15 +197,15 @@ export function now() {
 }
 
 // A member's time off, as their data says it. The member at this computer
-// sets none here: the account menu no longer offers it (D-201).
+// sets none here: the account menu no longer offers it.
 export function memberAway(member) {
 	if (member.id == viewerId) return null;
 	return member.away ?? null;
 }
 
-// The one status a thread shows (PRODUCT.md, "One status per row"): what it
-// waits for, and from whom, in the order a member reads them. `words` says
-// it; `kind` picks its mark (components/Status).
+// The one status a thread shows: what it waits for, and from whom, in the
+// order a member reads them. `words` says it; `kind` picks its mark
+// (components/Status).
 export function threadStatus(thread, state) {
 	// A real thread says what its latest review waits for (data/native.js).
 	if (thread.isReal == true) return realThreadStatus(thread);

@@ -12,10 +12,9 @@ import { findMatter, findMember, formatWhen } from "../words.js";
 
 import styles from "./DocumentPage.module.css";
 
-// A document as the lawyer reads it (PRODUCT.md, "Documents" and "Work
-// products"): its text on a page of its own, each change in place, struck
-// and inserted, with the colleague's reason beside it; the versions and the
-// sources on the right.
+// A document as the lawyer reads it: its text on a page of its own, each
+// change in place, struck and inserted, with the colleague's reason beside
+// it; the versions and the sources on the right.
 export function DocumentPage({ state }) {
 	const { place, open } = useNavigation();
 	const instrument = instruments[place.documentId];

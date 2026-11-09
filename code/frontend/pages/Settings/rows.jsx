@@ -14,8 +14,7 @@ export function Group({ title, line, children }) {
 }
 
 // One setting, as an Inbox row: its sign, what it is, its state, and the one
-// thing to do with it. A row with no icon has no sign (the model accounts:
-// the owner, 2026-11-02, "remove the avatars here").
+// thing to do with it. A row with no icon has no sign.
 export function Setting({ icon, title, line, action }) {
 	return (
 		<li className={icon == null ? `${styles.row} ${styles.row_bare}` : styles.row}>

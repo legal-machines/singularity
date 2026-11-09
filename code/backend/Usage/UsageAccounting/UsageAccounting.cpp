@@ -97,8 +97,8 @@ BilledCall billed_of(const protected_api::papinian::OutboundCall& call) {
   return billed;
 }
 
-// Every model call an operation made, in the order made (D-252): only what a
-// bill shows of a call, never the markers or passages that left with it. The
+// Every model call an operation made, in the order made: only what a bill
+// shows of a call, never the markers or passages that left with it. The
 // Matter's own record of them comes first - it travels to every computer of
 // the firm, whichever ran the work; else each Routing Log entry the operation
 // wrote here. `recorded` is false when neither holds them: the work ran
@@ -305,12 +305,14 @@ UsageSummary reconcile_usage(const std::vector<matters::Matter>& projects,
       operation.operation_role = task.operation_role;
       operation.operation_status =
           task.status == matters::TaskStatus::Success ? "success" : "error";
+      // A turn's thread, or the thread an AI colleague's own call worked for.
       operation.chat_id = task.chat_id;
+      if (operation.chat_id.has_value() == false && task.work_chat_id.empty() == false) operation.chat_id = task.work_chat_id;
       operation.consilium_id = task.consilium_group_id;
       operation.workflow_run_id = task.workflow_run_id;
       operation.work_product_ids = work_products_for_operation(project, task.id);
-      // Whose work it was (D-252): a turn an AI colleague began itself is
-      // written under its name; any other names the person who asked.
+      // Whose work it was: a turn an AI colleague began itself is written
+      // under its name; any other names the person who asked.
       operation.agent_id = task.agent_id;
       operation.agent_initiated = task.agent_initiated;
       if (task.agent_initiated == true) {

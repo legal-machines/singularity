@@ -136,8 +136,6 @@ OwnedChildProcess::OwnedChildProcess(const ChildProcessSpec &spec) : state_(std:
 	for (const auto &argument : spec.arguments) command_line += L" " + quote_argument(windows::utf8_to_wide(argument));
 	std::wstring environment = environment_block(spec);
 
-	// The only handles the child inherits: NUL as stdin (it must never read
-	// the owner's console) and the owner-only log (or NUL) as stdout/stderr.
 	SECURITY_ATTRIBUTES inheritable{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
 	Handle input(CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &inheritable,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
@@ -197,9 +195,6 @@ OwnedChildProcess::OwnedChildProcess(const ChildProcessSpec &spec) : state_(std:
 	startup.StartupInfo.hStdError = output.get();
 	startup.lpAttributeList = attributes;
 	PROCESS_INFORMATION created{};
-	// Suspended until it is inside the job, so nothing it starts can escape;
-	// a new process group with no console, so the owner's Ctrl-C never
-	// reaches it.
 	const DWORD flags = CREATE_SUSPENDED | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW |
 		CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT;
 	const std::wstring executable = spec.executable.wstring();

@@ -1,11 +1,10 @@
 #pragma once
 
-// Master Spec Sec.65's error taxonomy, scoped to the codes actually
-// reachable today from the provider/protection request path (see
-// docs/alpha/phase-05-models-routing.md WP5-B). Header-only and
-// dependency-free like Provider/ModelClassification/ModelClassification.hpp, so every layer
-// that already includes Provider/ProviderRegistry/ProviderRegistry.hpp (matters/, routing/)
-// gets it without a new link target.
+// Master Spec Sec.65's error taxonomy, scoped to the codes actually reachable today from
+// the provider/protection request path. Header-only and dependency-free like
+// Provider/ModelClassification/ModelClassification.hpp, so every layer that already
+// includes Provider/ProviderRegistry/ProviderRegistry.hpp (matters/, routing/) gets it
+// without a new link target.
 
 #include <stdexcept>
 #include <cstddef>
@@ -146,8 +145,7 @@ inline bool is_retryable(TaskErrorCode code) noexcept {
 // this account does not have enough credit for this request. ..."): a billing
 // matter, which waiting never fixes and another model on the same account may
 // not either. Every layer that words a failure for a lawyer reads it here, so
-// the thread says what to do instead of "the model turned it down"
-// (2026-10-31: two runs of Griffin's reply stopped so, named as refusals).
+// the thread says what to do instead of "the model turned it down".
 inline constexpr const char *kOutOfCreditWords = " says this account does not have enough credit for this request.";
 
 // The provider whose account has no credit left, as the message names it, or

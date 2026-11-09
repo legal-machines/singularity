@@ -39,7 +39,7 @@
 /* The work scene holds its whole exchange from the first post, so nothing
    moves as the posts arrive. In the onboarding window, 720 high, that
    exchange stood about 30px taller than its stage, cut at its first face and
-   its last reaction (2026-10-31); a tenth smaller, it stands whole. */
+   its last reaction; a tenth smaller, it stands whole. */
 @media (max-height: 760px) {
 	.feature[data-scene="delegate"] :global(article) { zoom: 0.9; }
 }

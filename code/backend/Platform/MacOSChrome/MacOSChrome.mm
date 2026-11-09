@@ -86,14 +86,13 @@ void normalize_standard_window_buttons(NSWindow *window) {
 // own 32 titlebar, centred 16 down, which left them 10 above the bar's
 // commands and its guard post. They stand as far in from the edge as down from
 // the top, centred on the strip's line, with AppKit's own spacing between
-// them: 24 in and 24 down, the window's --edge (UI-29; the owner, 2026-11-02:
-// "a multiple of 4"), the strip being an --edge above and below the buttons'
-// own 14.
+// them: 24 in and 24 down, the window's --edge, the strip being an --edge
+// above and below the buttons' own 14.
 constexpr CGFloat window_strip_height = 62;
-// Onboarding's locked window uses 20 points of padding around the native
-// button group, matching --art-inset in onboarding/painting/Painting.module.css
-// (the owner, 2026-10-27). Keep AppKit's button sizes and spacing. When
-// onboarding ends they move into the main window's strip.
+// Onboarding's locked window uses 20 points of padding around the native button
+// group, matching --art-inset in onboarding/painting/Painting.module.css. Keep
+// AppKit's button sizes and spacing. When onboarding ends they move into the
+// main window's strip.
 constexpr CGFloat onboarding_content_inset = 20;
 
 CGFloat strip_height(NSWindow *window) {
@@ -215,9 +214,7 @@ void allow_display_frame_rate(WKWebView *webview) {
 // A hidden window's page keeps running, at WebKit's slower pace, instead of
 // being suspended: behind other windows, minimized or under a locked screen.
 // Suspended (WebKit's default), it heard nothing while hidden - the Inbox, its
-// count and a colleague's answer waited until the window was seen again
-// (2026-10-29: a page fell silent within ten seconds of the screen locking,
-// while the colleagues behind it went on working).
+// count and a colleague's answer waited until the window was seen again.
 void keep_hidden_page_running(WKWebView *webview) {
   if (webview == nil) return;
   if (@available(macOS 14.0, *)) {
@@ -274,8 +271,7 @@ void configure_macos_chrome(void *window_handle, void *webview_handle,
     window.collectionBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
     // Closed, the window leaves at once: AppKit's closing animation runs on
     // the main thread, which the closing then holds while work records where
-    // it stands, so the window stood frozen mid-animation for five seconds
-    // (the owner, 2026-11-01: "Cmd+W does not work").
+    // it stands, so the window stood frozen mid-animation for five seconds.
     window.animationBehavior = NSWindowAnimationBehaviorNone;
     normalize_standard_window_buttons(window);
     keep_standard_window_buttons_placed(window);

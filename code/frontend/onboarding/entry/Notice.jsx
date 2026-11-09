@@ -17,12 +17,11 @@ const g2Path = (w, h) =>
 	`L0 ${CORNER}c0 -6.721 0 -10.081 1.308 -12.648a12 12 0 0 1 5.244 -5.244c2.567 -1.308 5.927 -1.308 12.648 -1.308Z`;
 
 // What the entry says at its top, under the window's buttons, never as text
-// under a field (the owner, 2026-10-30): what went wrong ("problem"), what to
-// mind ("warning") or what just happened ("done"). `message` is
-// { key, text, tone, stays } or null. One that stays remains until it is taken
-// back, as an error until its field changes; any other goes by itself, once.
-// A new key says the same words again. It stands over the page and never
-// moves it.
+// under a field: what went wrong ("problem"), what to mind ("warning") or what
+// just happened ("done"). `message` is { key, text, tone, stays } or null. One
+// that stays remains until it is taken back, as an error until its field
+// changes; any other goes by itself, once. A new key says the same words
+// again. It stands over the page and never moves it.
 export function Notice({ message }) {
 	const [shown, setShown] = useState(null);
 	const [leaving, setLeaving] = useState(false);

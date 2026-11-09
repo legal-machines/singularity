@@ -1,8 +1,8 @@
-// The conversations Messages lists (D-042): one with each member - an AI
-// colleague or a person, side by side (UI-5) - and one with each
-// correspondent whose letters reached the firm's Matters through Outlook
-// (D-106). In the real app they come from the backend (data/native.js); in
-// the prototype from its sample chats and mail, labelled mock data (AG-12).
+// The conversations Messages lists: one with each member - an AI colleague
+// or a person, side by side - and one with each correspondent whose letters
+// reached the firm's Matters through Outlook. In the real app they come
+// from the backend (data/native.js); in the prototype from its sample chats
+// and mail, labelled mock data.
 
 import { hasNative, realConversations } from "../../data/native.js";
 import { projectMail } from "../../data/mail.js";

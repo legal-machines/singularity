@@ -198,8 +198,8 @@ Json privacy_metadata_to_json(
   };
 }
 
-// A model call as the Matter keeps it for its bill (D-252): only what a bill
-// shows - its time and route, the provider's own id for the request, the
+// A model call as the Matter keeps it for its bill: only what a bill shows -
+// its time and route, the provider's own id for the request, the
 // fingerprints of what was sent and what came back, its tokens and cost -
 // never a marker, passage, relation or table of what left.
 Json billed_call_to_json(const protected_api::papinian::OutboundCall &call) {
@@ -224,7 +224,7 @@ Json billed_call_to_json(const protected_api::papinian::OutboundCall &call) {
   text("costClassification", call.cost_classification);
   text("costMethodology", call.cost_methodology);
   // Its place in its computer's work record, and the provider's own record of
-  // its cost once asked (D-252).
+  // its cost once asked.
   text("recordChain", call.record_chain);
   number("recordIndex", call.record_index);
   if (call.confirmation.has_value()) {
@@ -1689,6 +1689,9 @@ Json task_to_json(const MatterTask &task) {
   // Written only for a turn of a document review, so every other task is
   // stored exactly as before.
   if (!task.document_review_id.empty()) value["documentReviewId"] = task.document_review_id;
+  // Written only for an AI colleague's own model call, so every other task is
+  // stored exactly as before.
+  if (!task.work_chat_id.empty()) value["workChatId"] = task.work_chat_id;
   // What a message carries - the message it quotes, the documents it hands
   // over, the reactions to it - and its edit and deletion: written only where a
   // message has them, so every other task is stored exactly as before.
@@ -1700,7 +1703,7 @@ Json task_to_json(const MatterTask &task) {
       if (!who.empty()) reactions[emoji] = who;
     if (!reactions.empty()) value["reactions"] = reactions;
   }
-  // When it reached each other member (D-212), only once one has.
+  // When it reached each other member, only once one has.
   if (!task.received.empty()) {
     Json received = Json::object();
     for (const auto &[actor, at] : task.received)
@@ -1729,8 +1732,8 @@ Json task_to_json(const MatterTask &task) {
     value["origin"] = Json{{"actorId", task.origin->actor_id}, {"by", task.origin->by},
         {"agentId", task.origin->agent_id}, {"ceiling", task.origin->ceiling}, {"localOnly", task.origin->local_only},
         {"signature", Json{{"publicKey", task.origin->public_key}, {"value", task.origin->signature}}}};
-  // Each model call's billing evidence (D-252), written only for an operation
-  // that made one, so every other task is stored exactly as before.
+  // Each model call's billing evidence, written only for an operation that
+  // made one, so every other task is stored exactly as before.
   {
     const std::vector<protected_api::papinian::OutboundCall> billed = billed_calls_of(task);
     if (billed.empty() == false) {
@@ -1807,7 +1810,7 @@ MatterTask task_from_json(const Json &value) {
 		task.origin = std::move(statement);
 	}
 	// Absent from every task written before a Matter kept its calls' billing
-	// evidence (D-252), and from any that made no model call.
+	// evidence, and from any that made no model call.
 	if (value.contains("billedCalls") && value.at("billedCalls").is_array()) {
 		for (const Json &saved : value.at("billedCalls"))
 			if (saved.is_object()) task.billed_calls.push_back(billed_call_from_json(saved));
@@ -2217,6 +2220,8 @@ MatterTask task_from_json(const Json &value) {
     task.protected_template = value.at("protectedTemplate").get<std::string>();
   if (value.contains("documentReviewId") && value.at("documentReviewId").is_string())
     task.document_review_id = value.at("documentReviewId").get<std::string>();
+  if (value.contains("workChatId") && value.at("workChatId").is_string())
+    task.work_chat_id = value.at("workChatId").get<std::string>();
   if (value.contains("quoteMessageId") && value.at("quoteMessageId").is_string())
     task.quote_message_id = value.at("quoteMessageId").get<std::string>();
   if (value.contains("attachmentDocumentIds") && value.at("attachmentDocumentIds").is_array())
@@ -2598,14 +2603,14 @@ Json matter_to_json(const Matter &matter) {
     for (const correspondence::Letter &letter : matter.correspondence) letters.push_back(correspondence::letter_to_json(letter));
     value["correspondence"] = std::move(letters);
   }
-  // Written only when the Matter has rules of its intake (D-228).
+  // Written only when the Matter has rules of its intake.
   if (!matter.correspondence_intake.empty()) {
     Json rules = Json::array();
     for (const correspondence::IntakeRule &rule : matter.correspondence_intake) rules.push_back(correspondence::intake_rule_to_json(rule));
     value["correspondenceIntake"] = std::move(rules);
   }
-  // Written only when a member recorded time on the Matter (D-181), so every
-  // other Matter is stored exactly as before.
+  // Written only when a member recorded time on the Matter, so every other
+  // Matter is stored exactly as before.
   if (!matter.time_entries.empty()) {
     Json entries = Json::array();
     for (const TimeEntry &entry : matter.time_entries) entries.push_back(time_entry_to_json(entry));
@@ -3057,12 +3062,6 @@ const char* to_string(DocumentLifecycleState state) noexcept {
 	return "processing";
 }
 
-// Managed documents have no filesystem-truth lifecycle of their own (Phase
-// 03): NotExtracted reads as still Processing (its extraction has not run
-// yet, not that nothing will ever happen), Ready/Unsupported map straight
-// across, and Empty/OcrRequired/Unreadable all collapse to the one
-// NeedsAttention Phase 08 owns - phase-08-documents-filesystem-states.md
-// Sec.9 defines exactly one flat vocabulary, not a per-source-mode variant.
 DocumentLifecycleState document_lifecycle_state(const MatterDocument& document) noexcept {
 	if (document.source_mode == DocumentSourceMode::Referenced) {
 		if (document.available == false) return DocumentLifecycleState::Unavailable;
@@ -3415,17 +3414,15 @@ bool holds_managed_copy(const std::filesystem::path &workspace_path, const std::
 }
 
 // Raw "<workspace>/.singularity-workspace/matters.json" read/write, unaware of .lm.
-// load_matters()/save_matters() below are the public facade: for a Matter
-// that has been cut over to portable .lm truth (D-002), they transparently
-// read/write .lm instead, so every existing caller (Matter/Activity/Chat/
-// Document/Routing/WorkProduct - anything that already does
-// load-modify-save through this repository) gets correct .lm-canonical
-// behavior with no call-site changes.
-// matters.json as it was last parsed, for as long as it is the same file: a
-// Project read (matter.load) happens many times in one request, and each one
-// parsed the whole manifest again. A file replaced since - every write is an
-// atomic replacement, so a new file - or changed in place is parsed again, and
-// this process's own writes let go of it at once.
+// load_matters/save_matters below are the public facade: for a Matter that has been
+// cut over to portable .lm truth, they transparently read/write .lm instead, so
+// every existing caller (Matter/Activity/Chat/ Document/Routing/WorkProduct -
+// anything that already does load-modify-save through this repository) gets correct
+// .lm-canonical behavior with no call-site changes. matters.json as it was last
+// parsed, for as long as it is the same file: a Project read (matter.load) happens
+// many times in one request, and each one parsed the whole manifest again. A file
+// replaced since - every write is an atomic replacement, so a new file - or changed
+// in place is parsed again, and this process's own writes let go of it at once.
 namespace {
 
 // The file's own identity is part of the stamp on every platform: a
@@ -3628,8 +3625,8 @@ static void write_legacy_manifest(const std::filesystem::path &workspace_path, c
 }
 
 // Whether .lm - not matters.json - is canonical for this Matter's full
-// content (D-002): true once its directory_path has a portable Project
-// folder set up. Checked fresh against the filesystem every time, never
+// content: true once its directory_path has a portable Project folder
+// set up. Checked fresh against the filesystem every time, never
 // cached, so it always reflects the real cutover state.
 static bool has_cutover_project_data(const Matter &matter) {
   if (!matter.directory_path || matter.directory_path->empty()) return false;
@@ -3668,6 +3665,15 @@ static Matter unavailable_project(const Matter &locator, ProjectDataState state,
 ProjectDataError::ProjectDataError(ProjectDataState state, const std::string &message)
     : std::runtime_error(message),
       code_(state == ProjectDataState::Damaged ? "project_data_damaged" : "project_data_unavailable") {}
+
+void require_readable(const Matter &matter) {
+  if (matter.data_state == ProjectDataState::Damaged)
+    throw ProjectDataError(matter.data_state,
+        "This Matter's Singularity data can't be read right now. Singularity reads it again by itself.");
+  if (matter.data_state == ProjectDataState::Unavailable)
+    throw ProjectDataError(matter.data_state,
+        "This Matter's folder can't be reached right now. Singularity reads it again by itself.");
+}
 
 // One entry of matters.json made into what the workspace lists for it: a
 // cut-over Project's live .lm state, or the stand-in that says why its data
@@ -3727,9 +3733,9 @@ static void hydrate_listed_matter(Matter &matter) {
   } catch (const persistence::ProjectDataAccessDenied &) {
     matter = unavailable_project(matter, ProjectDataState::Unavailable, "access_denied");
   } catch (const persistence::ProjectDataRequiresNewerVersion &) {
-    // Perfectly good data this build is simply too old to read (MIG-5). It is
-    // unavailable to this Singularity, never damaged: the answer is a newer Singularity,
-    // never repairing or starting over.
+    // Perfectly good data this build is simply too old to read. It is unavailable to
+    // this Singularity, never damaged: the answer is a newer Singularity, never
+    // repairing or starting over.
     matter = unavailable_project(matter, ProjectDataState::Unavailable, "requires_newer_version");
   } catch (const std::exception &) {
     // Corruption, an unsupported format version or a caught-mid-write
@@ -3834,7 +3840,7 @@ void save_matter(const std::filesystem::path &workspace_path, const Matter &matt
   require_savable(matter);
   require_reachable(matter);
   const Matter listed_as = persist_and_list(matter);
-  // Whoever shows this Matter reads it again, instead of polling (Beta 1 #263).
+  // Whoever shows this Matter reads it again, instead of polling.
   platform::events::publish("matter.changed", nlohmann::json{{"projectId", matter.id}});
   std::vector<Matter> listed = read_legacy_manifest(workspace_path);
   const auto found = std::find_if(listed.begin(), listed.end(), [&](const Matter &entry) { return entry.id == matter.id; });
@@ -3939,19 +3945,18 @@ std::vector<context::RetrievedContextChunk> retrieve_document_context(
   request.selected_document_ids = selected_document_ids;
   const documents::LocalDocumentExtractor extractor;
   const documents::DocumentCache cache(workspace_path, extractor);
-	// Phase 08 correction item 4: once a Matter has a real Project folder (the
-	// new Beta filesystem contract - Document/DocumentRegistry.hpp), Referenced
-	// documents (real files under that folder) are the canonical Project
-	// document corpus. A Managed document (Phase 03's explicit copy-in, living
-	// in .singularity-workspace/documents/<matterId>/, not the real Project folder) is
-	// legacy-compatibility material, not equivalent current Project source -
-	// excluded here so it can never silently participate as a second, hidden
-	// canonical corpus alongside the real one. A Matter with no real folder yet
-	// (never cut over to the new filesystem-backed model, D-001/D-002) has no
-	// Referenced documents at all, and keeps exactly its pre-Phase-08 behavior:
-	// Managed remains fully readable, since it is this Matter's only real
-	// source material - "historical/legacy compatibility remains readable
-	// where required" is preserved, not broken, by this boundary.
+	// Phase 08 correction item 4: once a Matter has a real Project folder (the new
+	// Beta filesystem contract - Document/DocumentRegistry.hpp), Referenced documents
+	// (real files under that folder) are the canonical Project document corpus. A
+	// Managed document (Phase 03's explicit copy-in, living in
+	// .singularity-workspace/documents/<matterId>/, not the real Project folder) is
+	// legacy-compatibility material, not equivalent current Project source - excluded
+	// here so it can never silently participate as a second, hidden canonical corpus
+	// alongside the real one. A Matter with no real folder yet has no Referenced
+	// documents at all, and keeps exactly its pre-Phase-08 behavior: Managed remains
+	// fully readable, since it is this Matter's only real source material -
+	// "historical/legacy compatibility remains readable where required" is preserved,
+	// not broken, by this boundary.
 	const bool hasRealProjectFolder = matter.directory_path.has_value() && matter.directory_path->empty() == false;
 	const std::unordered_set<std::string> selectedIds(
 		selected_document_ids.begin(), selected_document_ids.end());

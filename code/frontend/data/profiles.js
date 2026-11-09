@@ -1,11 +1,10 @@
-// MOCK DATA - the members' profile facts the owner's fixture leaves out (D-070).
-// Everything here is fictional (AG-12): the addresses are on the reserved
-// `.example` domain and the telephone numbers in the 555-01xx range kept for
-// fiction. A person's years agree with the fixture's age and years of
-// experience (public/mock/team/profiles.json). An AI colleague's facts are
-// the ones its work depends on: where it may work and read, what it follows
-// and can do, what it runs on and how its requests are protected, to whom it
-// answers, how far its probation has come, and what it costs.
+// Everything here is fictional: the addresses are on the reserved `.example`
+// domain and the telephone numbers in the 555-01xx range kept for fiction. A
+// person's years agree with the fixture's age and years of experience
+// (public/mock/team/profiles.json). An AI colleague's facts are the ones its
+// work depends on: where it may work and read, what it follows and can do, what
+// it runs on and how its requests are protected, to whom it answers, how far its
+// probation has come, and what it costs.
 
 export const firmDomain = "marlowefinch.example";
 
@@ -116,8 +115,8 @@ export const personFacts = {
 // An AI colleague's working facts. `answersTo` is the member it answers to;
 // `reads` is what it may open; `follows` the firm's instructions it works
 // from; `can` what it does in its area; `runs` and `protection` where and how
-// its model runs; `attention` the lawyer attention its results cost (PHIL-13);
-// `spend` its usage this month, as Usage counts it.
+// its model runs; `attention` the lawyer attention its results cost; `spend`
+// its usage this month, as Usage counts it.
 export const colleagueFacts = {
 	m_juno: {
 		email: "juno@marlowefinch.example",

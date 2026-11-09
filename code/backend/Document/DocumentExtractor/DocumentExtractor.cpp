@@ -617,7 +617,7 @@ DocumentExtractionResult LocalDocumentExtractor::extract(
 	if (format == DocumentFormat::tsv) {
 		return extract_tsv_document(request);
 	}
-	// An email file is read as its text (D-115): headers, the names of what it
+	// An email file is read as its text: headers, the names of what it
 	// carries, and its own words; a picture, by text recognition.
 	const std::string extension = lowercase_ascii(request.path.extension().string());
 	const bool is_email = format == DocumentFormat::unknown && extension == ".eml";

@@ -48,14 +48,14 @@ struct ReviewTask {
 	// version this one will be.
 	std::string previousChanges;
 	int version = 1;
-	// A clean copy from the other side (D-111): the version of the agreement
-	// the Matter held before it, and what the copy changes against it, clause
-	// by clause. Empty where the agreement carries its changes as tracked
+	// A clean copy from the other side: the version of the agreement the
+	// Matter held before it, and what the copy changes against it, clause by
+	// clause. Empty where the agreement carries its changes as tracked
 	// changes, or the Matter holds no earlier version of it.
 	std::string comparedWith;
 	std::vector<ClauseChange> changesAgainstEarlier;
-	// One part of a larger assignment (D-115): the lawyer's whole request, word
-	// for word, while `instruction` is this document's part of it; and what the
+	// One part of a larger assignment: the lawyer's whole request, word for
+	// word, while `instruction` is this document's part of it; and what the
 	// parts before this one changed, as Singularity read it back from their
 	// drafts. Both empty for a review asked for on its own.
 	std::string assignment;
@@ -68,8 +68,8 @@ struct ReviewTask {
 	std::vector<std::string> onlyPlaces;
 };
 
-// The one position of a review no Playbook covers (D-115): the lawyer's request
-// itself, which the revision assesses and carries out, and nothing besides.
+// The one position of a review no Playbook covers: the lawyer's request itself,
+// which the revision assesses and carries out, and nothing besides.
 inline constexpr const char* kRequestPositionId = "request";
 ReviewPosition requestPosition(const std::string& instruction);
 

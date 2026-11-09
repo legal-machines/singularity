@@ -62,7 +62,7 @@ constexpr std::string_view kUtf8ByteOrderMark = "\xEF\xBB\xBF";
 // Parses the whole buffer into rows (RFC 4180): a double quote opens a quoted
 // field only at the start of a field, where commas and line breaks are data
 // and "" is an escaped quote; a quote anywhere else is an ordinary character
-// ("ООО "Ромашка"", 12"). A UTF-8 byte order mark belongs to no field.
+// ("…""", 12"). A UTF-8 byte order mark belongs to no field.
 // Returns false (rather than throwing) on unterminated quoting or too many
 // rows or fields, so callers report an honest diagnostic.
 bool parse_delimited_rows(const std::string &content, char delimiter, std::vector<DelimitedRow> &rows) {

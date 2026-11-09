@@ -6,11 +6,11 @@
 
 namespace singularity::matters {
 
-// Time a member of the firm recorded on the Matter (D-181): who, on which
-// day, for how long, on what, and whether it is billed. A person's time is
-// what they record, never inferred from what Singularity saw them do. Kept
-// in the Matter's own data (MatterRepository, the "timeEntries" collection):
-// one entry is one object, written whole, so two computers' entries merge.
+// Time a member of the firm recorded on the Matter: who, on which day, for
+// how long, on what, and whether it is billed. A person's time is what they
+// record, never inferred from what Singularity saw them do. Kept in the
+// Matter's own data (MatterRepository, the "timeEntries" collection): one
+// entry is one object, written whole, so two computers' entries merge.
 struct TimeEntry {
 	std::string id;
 	std::string actor_id;

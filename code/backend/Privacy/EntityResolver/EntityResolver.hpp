@@ -27,27 +27,24 @@ enum class ResolutionKind { AttachedToExisting, CreatedNew, AmbiguityRaised };
 struct ResolutionOutcome {
 	ResolutionKind kind = ResolutionKind::CreatedNew;
 	// The entity this mention's occurrence should be recorded against -
-	// always set, including on AmbiguityRaised (the mention still gets its
-	// own consistent local identity while the ambiguity awaits review; see
-	// PRIVACY_CONTRACT.md - preprocessing never blocks on unresolved
-	// ambiguity).
+	// always set, including on AmbiguityRaised.
 	std::string entity_id;
 	std::optional<std::string> ambiguity_id;
 };
 
 // A name's surface form for matching: Unicode case folding (utf8proc),
 // quotation marks and commas dropped, whitespace collapsed, outer punctuation
-// trimmed. "ООО «Ромашка»" and "ооо ромашка" share one surface key; "Acme Ltd"
+// trimmed. "…" and "…" share one surface key; "Acme Ltd"
 // and "Acme Limited" do not.
 [[nodiscard]] std::string surface_alias_key(const std::string &value);
 
-// The surface key without its legal form (LLC/Ltd/plc/ООО/АО/...): the name
+// The surface key without its legal form (LLC/Ltd/plc/…): the name
 // base two aliases must share to be the same entity. Exposed for tests and
 // context keys; production resolution uses resolve_mention().
 [[nodiscard]] std::string normalize_alias(const std::string &value);
 
 // The class of the legal form a name carries ("ltd" for both "Ltd" and
-// "Limited", "ooo" for "ООО" and "Общество с ограниченной ответственностью"),
+// "Limited", "ooo" for "…" and "…"),
 // empty when it carries none. Names sharing a base but carrying different
 // classes are different legal entities until a person says otherwise.
 [[nodiscard]] std::string legal_form_class(const std::string &value);
@@ -76,7 +73,7 @@ struct ResolutionOutcome {
 //     same category never merges automatically: a brand-new entity is created
 //     for this mention and an EntityAmbiguity links the two for human review,
 //     unless a prior KeptSeparate resolution already covers exactly this pair.
-//     Names differing only in legal form ("plc"/"Limited", "ООО"/"АО") and a
+//     Names differing only in legal form ("plc"/"Limited", "…") and a
 //     formless name matching several entities land here.
 //  3. Otherwise, a brand-new entity is created with a freshly assigned
 //     pseudonym (EntityRegistry.hpp's make_new_entity()).

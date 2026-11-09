@@ -72,7 +72,8 @@ nlohmann::json open(const nlohmann::json& params) {
 // referenced document for some other purpose should keep both.
 nlohmann::json list_documents(const nlohmann::json& params) {
 	const std::string matterId = params.at("matterId").get<std::string>();
-	const matters::Matter result = matter::list_documents(matterId);
+	// The window's list never waits for a document to be read.
+	const matters::Matter result = matter::list_documents_without_waiting(matterId);
 
 	// Phase 10 (Privacy - entities and Project coverage): once real Document
 	// extraction is current, this Project's own local protection
@@ -121,7 +122,8 @@ nlohmann::json create_folder(const nlohmann::json& params) {
 nlohmann::json add_external_file(const nlohmann::json& params) {
   return matter_bridge::serialize(document::add_external_file(params.at("matterId").get<std::string>(),
       params.at("destinationFolderRelativePath").get<std::string>(),
-      params.at("sourceAbsolutePath").get<std::string>(), params.value("move", false), params.value("keepBoth", false)));
+      params.at("sourceAbsolutePath").get<std::string>(), params.value("move", false), params.value("keepBoth", false),
+      /*reads_in_background=*/true));
 }
 
 nlohmann::json add_external_folder(const nlohmann::json& params) {

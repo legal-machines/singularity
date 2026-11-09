@@ -8,9 +8,9 @@
 
 .me {
 	display: grid;
-	/* The face and the name alone: no chevrons beside them (the owner,
-	   2026-11-02); the row itself opens the account's menu. The face, 36,
-	   stands centred by its two lines, 20 and 18. */
+	/* The face and the name alone: no chevrons beside them; the row
+	   itself opens the account's menu. The face, 36, stands centred by
+	   its two lines, 20 and 18. */
 	grid-template-columns: 36px minmax(0, 1fr);
 	align-items: center;
 	column-gap: 10px;
@@ -41,8 +41,8 @@
 	text-overflow: ellipsis;
 }
 
-/* The member's office beneath the name by size, weight and transparency
-   (the owner, 2026-11-02). */
+/* The member's office beneath the name by size, weight and
+   transparency. */
 .me_line {
 	overflow: hidden;
 	font: var(--type-sidebar-detail);

@@ -22,9 +22,9 @@
 // the relation (or a new symbol for a derived value) ever leaves. Nothing here
 // reads files, keeps state or talks to anyone.
 //
-// A value is read from the text it is written in ("18 400 000 (восемнадцать
-// миллионов четыреста тысяч) рублей 00 копеек", "$2.8 million", "0,1 % за
-// каждый день просрочки", "July 2026", "B12 = 0.001 (shown as a percentage)"),
+// A value is read from the text it is written in ("18 400 000 (…
+// …) … 00 …", "$2.8 million", "0,1 % …
+// …", "July 2026", "B12 = 0.001 (shown as a percentage)"),
 // and one value written many ways is one value: value_key is the same for
 // every writing of it. Arithmetic is exact (fractions, never binary floating
 // point); a date is the interval of days it names, so "July 2026" is neither
@@ -161,31 +161,31 @@ struct ParseHints {
 };
 
 // The one value a protected span writes, or nothing when the text is not
-// wholly one value. "July 1" and «1 июля» are a day of the year.
+// wholly one value. "July 1" and «…» are a day of the year.
 [[nodiscard]] std::optional<Value> parse_value(std::string_view text, const ParseHints &hints = {});
 
 // The period a rate written at text[start, end) is for, as its own clause
 // says - after it to the clause's end ("5% interest per annum", "8% annual
-// interest", "0.1% of the unpaid amount for each day of delay", «0,1 % от
-// неоплаченной суммы за каждый день просрочки», «12 % годовых»), else before
+// interest", "0.1% of the unpaid amount for each day of delay", «0,1 % …
+// …», «…»), else before
 // it ("an annual rate of 8%"). One vocabulary with parse_value(). A word that
-// may name a year of something else ("annual", "a day", «годовых») counts only
+// may name a year of something else ("annual", "a day", «…») counts only
 // beside the rate; another rate written in figures ends the search. None when
 // the clause names no period.
 [[nodiscard]] RateBasis rate_basis_of_clause(std::string_view text, std::size_t start, std::size_t end);
 
-// The currency a label names, as its code: "Amount ($)" USD, «Итого, ₽» RUB,
-// «Сумма, руб.» RUB, "Fee (EUR)" EUR, "Price, US dollars" USD; "" when it names
+// The currency a label names, as its code: "Amount ($)" USD, «…» RUB,
+// «…» RUB, "Fee (EUR)" EUR, "Price, US dollars" USD; "" when it names
 // none. What a table's column header says its figures are counted in.
 [[nodiscard]] std::string currency_named(std::string_view label);
 
-// The measure a label names for the bare figure beside or under it: «Дней
-// просрочки», "Days overdue", «Просрочка, дней» a count of days (business days
-// with «рабочих» / "business"); months, hours and minutes likewise; «Кол-во»,
+// The measure a label names for the bare figure beside or under it: «…
+// …», "Days overdue", «…» a count of days (business days
+// with «…» / "business"); months, hours and minutes likewise; «…»,
 // "Number of", "Quantity" a count. Strict, so money keeps its label: only the
-// plural of a unit ("per day", «в день» are a rate's), never a label with a
-// figure ("Late fee (after 30 days)") or one naming a currency («Неустойка за
-// дни просрочки, ₽»). Nothing when it names none.
+// plural of a unit ("per day", «…» are a rate's), never a label with a
+// figure ("Late fee (after 30 days)") or one naming a currency («…
+// …, ₽»). Nothing when it names none.
 struct NamedMeasure {
 	Kind kind = Kind::Duration;              // Duration or Count
 	DurationUnit unit = DurationUnit::Day;   // a Duration's unit
@@ -193,8 +193,7 @@ struct NamedMeasure {
 [[nodiscard]] std::optional<NamedMeasure> measure_named(std::string_view label);
 
 // A whole number written in English or Russian words, in any case:
-// "one hundred and five", "twenty-one thousand", "восемнадцать миллионов
-// четыреста тысяч", "пятидесяти миллионов".
+// "one hundred and five", "twenty-one thousand", "…
 [[nodiscard]] std::optional<Rational> parse_number_words(std::string_view text);
 
 enum class Truth { True, False, Undetermined };
@@ -265,20 +264,20 @@ enum class DateRelation { Before, After, SameDay, SamePeriod, Contains, Within, 
 [[nodiscard]] DateRelation relate_dates(const temporal::TemporalValue &a, const temporal::TemporalValue &b);
 
 // How a result is written, from a statement's `as ...`: money, $, €, £, ¥, ₽,
-// руб., рублей, USD, EUR, GBP, JPY, RUB; percent; number; integer; days,
+// …, USD, EUR, GBP, JPY, RUB; percent; number; integer; days,
 // weeks, months, years; date; yes/no; words (alone or with a currency).
 enum class FormatStyle { Default, Money, Percent, Number, Integer, Days, Weeks, Months, Years, Date, YesNo };
 struct Format {
 	FormatStyle style = FormatStyle::Default;
 	std::string currency;  // asked currency code, "" for the value's own
-	std::string mark;      // how it is written when asked: "$", "руб.", "рублей", "USD"
+	std::string mark;      // how it is written when asked: "$", "…", "USD"
 	bool words = false;
 };
 [[nodiscard]] std::optional<Format> parse_format(std::string_view text);
 
 // The value as the lawyer reads it: EN "$21,350.00", "0.1%", "July 31, 2026",
 // "45 days"; RU "828 000 ₽", "1 183 452,05 ₽" (no-break grouping, decimal
-// comma), "0,1 %", "31 июля 2026 г.", "22 дня"; a dotted source date stays
+// comma), "0,1 %", "…"; a dotted source date stays
 // dotted. Throws AlgebraError when the format does not fit the value.
 [[nodiscard]] std::string display(const Value &value, const Format &format = {}, Language language = Language::English);
 
@@ -287,10 +286,10 @@ struct Format {
 [[nodiscard]] int minor_unit_places(std::string_view currency);
 
 // A whole number in words: "twenty-one thousand three hundred fifty",
-// "восемьсот двадцать восемь тысяч" (`feminine` for a feminine noun: одна, две).
+// "…" (`feminine` for a feminine noun: …).
 [[nodiscard]] std::string number_in_words(Int128 number, Language language, bool feminine = false);
 
-// The Russian noun form a count takes: 1 день, 2 дня, 5 дней, 21 день, 111 дней.
+// The Russian noun form a count takes: 1 …, 2 …, 5 …, 21 …, 111 …
 [[nodiscard]] std::string russian_plural(Int128 count, std::string_view one, std::string_view few, std::string_view many);
 
 // Russian when Cyrillic letters outnumber Latin ones.
@@ -428,7 +427,7 @@ struct RecognisedFigure {
 	std::optional<Value> value;
 	bool structural = false;
 	// A number word under ten standing alone in prose, with no unit, currency
-	// or percent ("one of the parties", «два экземпляра»): still a figure, but
+	// or percent ("one of the parties", «…»): still a figure, but
 	// one plain prose writes as a word.
 	bool incidental = false;
 };

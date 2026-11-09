@@ -542,9 +542,9 @@ std::string title_from_prompt(const std::string &prompt, std::size_t most) {
 	return collapsed;
 }
 
-// What a finished result is kept as, decided here from the result itself
-// (Beta 1 #270): the same answer is kept the same way whoever keeps it - the
-// window, the CLI, an AI app or an AI colleague.
+// What a finished result is kept as, decided here from the result itself:
+// the same answer is kept the same way whoever keeps it - the window, the
+// CLI, an AI app or an AI colleague.
 std::string retained_type_of(const matters::MatterTask &task, const std::optional<nlohmann::json> &document) {
 	if (document) {
 		const std::string kind = document->value("kind", std::string());

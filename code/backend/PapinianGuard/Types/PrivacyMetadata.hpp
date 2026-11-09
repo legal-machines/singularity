@@ -155,7 +155,7 @@ struct OutboundOperation {
 	std::string relation_sensitivity = "ordinary";
 };
 
-// A picture a model call carried as it is, unmasked (D-256): the member's own
+// A picture a model call carried as it is, unmasked: the member's own
 // attachment, named as the Matter names it, with its size and SHA-256 - never
 // its bytes.
 struct OutboundPicture {
@@ -164,7 +164,7 @@ struct OutboundPicture {
 	std::string sha256;
 };
 
-// What the provider's own record says a call cost, where it keeps one (D-252):
+// What the provider's own record says a call cost, where it keeps one:
 // OpenRouter's generation record, asked by the call's id with the firm's key
 // after the call. Kept beside the cost the call reported, never in its place.
 struct CostConfirmation {
@@ -203,11 +203,11 @@ struct OutboundCall {
 	// external evidence it opened.
 	std::string url;
 	std::string payload_sha256;
-	// What came back for a model call, as the bill of its work reads it
-	// (D-252): the provider's own id for the request, the fingerprint of the
-	// response, and this call's own tokens and cost, as the provider reported
-	// them. Empty for a call made before Singularity kept them, or one that
-	// failed before its answer came.
+	// What came back for a model call, as the bill of its work reads it: the
+	// provider's own id for the request, the fingerprint of the response, and
+	// this call's own tokens and cost, as the provider reported them. Empty
+	// for a call made before Singularity kept them, or one that failed before
+	// its answer came.
 	std::string provider_request_id;
 	std::string response_sha256;
 	std::optional<long long> input_tokens;
@@ -219,7 +219,7 @@ struct OutboundCall {
 	// "actual" or "estimated", and how it was known ("provider_reported").
 	std::string cost_classification;
 	std::string cost_methodology;
-	// The provider that served it, where a gateway names it (D-116).
+	// The provider that served it, where a gateway names it.
 	std::string served_by;
 	// Which marker numbering the call's markers belong to. Every protection
 	// table numbers its markers afresh ("[[E1]]" again), and one operation can
@@ -230,11 +230,11 @@ struct OutboundCall {
 	std::string symbol_scope;
 	// Each passage of a protected model request as it left, each once.
 	std::vector<OutboundPassage> passages;
-	// The pictures it carried as they are (D-256), each once.
+	// The pictures it carried as they are, each once.
 	std::vector<OutboundPicture> pictures;
-	// This computer's record of the model call (D-252, Usage/WorkRecord): the
-	// chain it was written into and its place there. Empty for a call made
-	// before Singularity kept the record, or on a computer that keeps none.
+	// This computer's record of the model call: the chain it was written into
+	// and its place there. Empty for a call made before Singularity kept the
+	// record, or on a computer that keeps none.
 	std::string record_chain;
 	std::optional<long long> record_index;
 	// The provider's own record of its cost, once asked (usage.confirmCosts).

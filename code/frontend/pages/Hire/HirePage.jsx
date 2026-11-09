@@ -16,16 +16,13 @@ import tour from "../../onboarding/tour/Tour.module.css";
 
 import styles from "./HirePage.module.css";
 
-// Hiring an AI colleague (D-071), as onboarding hires the first (the owner,
-// 2026-11-02: "rebuild creating an AI agent in onboarding's style, filling
-// the window"): the whole window, its words on white on the left and the
-// colleague taking shape on the right, one step a slide, Back and the steps'
-// dots at its foot. It asks what a colleague's profile holds (D-219): its
-// face and name; its role on the firm's scale, its own words for its
-// position and its practice; its area, what it does and how it works. It
-// joins the whole firm, never one Matter (D-157), and is set over no one's
-// shoulder: no member it "answers to" (the owner, 2026-11-02: "writing that
-// there is Luddism"; PHIL-16).
+// Hiring an AI colleague, as onboarding hires the first: the whole window,
+// its words on white on the left and the colleague taking shape on the
+// right, one step a slide, Back and the steps' dots at its foot. It asks
+// what a colleague's profile holds: its face and name; its role on the
+// firm's scale, its own words for its position and its practice; its area,
+// what it does and how it works. It joins the whole firm, never one Matter,
+// and is set over no one's shoulder: no member it "answers to".
 const STEPS = [
 	{ title: "Who they are.", line: "Start with a name and a face. They join the whole firm, not one Matter." },
 	{ title: "Their place in the firm.", line: "The role they hold on the firm's scale, their position and their practice." },
@@ -241,8 +238,7 @@ function TheirArea({ draft, change }) {
 
 // The colleague as the firm will meet it, taking shape as the slides are
 // filled: its face, name and position, then its area once it is written -
-// never service words, nor what it does and how it works (the owner,
-// 2026-11-02).
+// never service words, nor what it does and how it works.
 function Colleague({ draft }) {
 	const name = draft.name.trim() || "Your colleague";
 	const member = { id: "hire-colleague", kind: "ai_colleague", name, species: draft.species };

@@ -67,7 +67,7 @@ void mark_evidence(std::vector<ProtectedTable> &tables, const std::vector<std::s
 [[nodiscard]] std::vector<ProtectedTable> tables_in_passages(const std::vector<std::string> &raw_passages);
 
 // Band schedules enumerated in contract prose (DESIGN4 §6.6): "from X to Y -
-// r %", "above X: r %", «от X до Y — r %», «свыше X» ..., one band per line or
+// r %", "above X: r %", «…», one band per line or
 // per semicolon clause. Each threshold and band value is the symbol of the
 // fact it is, or a figure the material writes openly.
 [[nodiscard]] std::vector<ProtectedSchedule> schedules_in(

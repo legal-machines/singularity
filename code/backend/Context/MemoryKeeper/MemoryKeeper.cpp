@@ -106,8 +106,8 @@ void set_progress(const std::string &project_id, const std::function<void(Status
 }
 
 struct Snapshot {
-	// The brief the rewrite builds on: empty when AI may not use the stored one
-	// (kept from AI, or written before a value was withdrawn: Beta 1 #77).
+	// The brief the rewrite builds on: empty when AI may not use the stored
+	// one.
 	std::string brief;
 	// The brief as it was stored when the rewrite began. The rewrite is written
 	// only while the stored brief is still exactly this (write_project).
@@ -202,7 +202,7 @@ bool write_project(const std::string &project_id, const std::optional<std::strin
 		const std::string previous = before == project->context_items.end() ? std::string() : before->value;
 		// The brief changed while the model was writing - cleared, edited, written
 		// by another rewrite: what the model wrote from the old one is dropped,
-		// never written over the new state (Beta 1 #77).
+		// never written over the new state.
 		if (expected_stored_brief != nullptr && previous != *expected_stored_brief) return false;
 		context::ContextItemSource source;
 		source.kind = source_kind;

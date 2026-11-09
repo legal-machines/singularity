@@ -78,7 +78,7 @@ std::optional<std::string> get_provider_credential(const std::string &provider_i
     if (data == nil) {
       if (error != nil && error.code != NSFileReadNoSuchFileError) {
         // Locked: unreadable for now, and readable again once the Mac is
-        // unlocked - told apart, so a reader can wait (D-169).
+        // unlocked - told apart, so a reader can wait.
         if ([error.domain isEqualToString:NSCocoaErrorDomain] && error.code == NSFileReadNoPermissionError)
           throw CredentialUnavailable(readable_credential_failure(error, true));
         throw std::runtime_error(readable_credential_failure(error, true));

@@ -13,11 +13,11 @@ namespace singularity::professional {
 // dictionary ("contains_any"-style hardcoding). A real live acceptance run
 // this same session proved such a dictionary has BOTH failure directions at
 // once and cannot be patched into safety by adding more phrases: it silently
-// invented a document mutation for "Дай мне краткое содержание выбранного
-// документа" (nothing in that sentence should ever touch a file) while
+// invented a document mutation for "…
+// …" (nothing in that sentence should ever touch a file) while
 // simultaneously failing to recognize "Make the recommendations shorter and
 // stricter, and raise the severity" as the same-object follow-up edit it
-// obviously is (no "update"/"edit" root, no "риск" root - a real, working
+// obviously is (no "update"/"edit" root, no "…" root - a real, working
 // paraphrase a lawyer would actually type). Growing the dictionary to cover
 // one case reliably breaks the other, because natural language has no fixed,
 // enumerable vocabulary for "this is a mutation" - only a model that actually

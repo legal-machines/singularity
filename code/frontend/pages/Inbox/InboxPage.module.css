@@ -1,5 +1,5 @@
 /* One reading surface. Space orders the queue; a project's colour belongs
-   to its small mark, never to a slab behind the conversation (D-164). */
+   to its small mark, never to a slab behind the conversation. */
 .sheet {
 	/* The rows' grounds (.item), lightest to deepest: a read row under the
 	   pointer, an unread row, an unread row under the pointer - the sidebar's
@@ -16,8 +16,7 @@
 	background: var(--sheet);
 }
 /* No room kept for a scrollbar: the window's own scrollbars float over the
-   page, and a page keeps its margins whether it scrolls or not (the owner,
-   2026-11-02: a long profile stood further in than a short one). */
+   page, and a page keeps its margins whether it scrolls or not. */
 .feed_scroll {
 	flex: 1;
 	min-height: 0;
@@ -32,7 +31,7 @@
 	margin-right: auto;
 	padding: 0 clamp(24px, 3.5vw, 64px);
 }
-/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s (UI-23). */
+/* Its 30/36 title's baseline, 28.3 into its head, rests on "Inbox"'s. */
 .head {
 	padding-top: calc(var(--sidebar-label-baseline) - 28.3px + var(--firm-row));
 }
@@ -41,7 +40,7 @@
 	letter-spacing: -0.02em;
 }
 .title_room { visibility: hidden; }
-/* 12 under the title, as Team's line stands (the owner, 2026-11-02). */
+/* 12 under the title, as Team's line stands. */
 .summary {
 	margin-top: 12px;
 	font: var(--type-body);
@@ -92,11 +91,9 @@
 	color: var(--ink-3);
 }
 .lines { display: flex; flex-direction: column; }
-/* What is unread stands on a ground of its own, with no dot (the owner,
-   2026-11-02: "remove the unread dot in the Inbox - let unread simply have a
-   background, but then set the hover - look at the sidebar's palette"). The
-   grounds are the sidebar's steps, so a read row under the pointer never
-   looks unread: each state is one step deeper than the one below it. */
+/* What is unread stands on a ground of its own, with no dot. The grounds are
+   the sidebar's steps, so a read row under the pointer never looks unread:
+   each state is one step deeper than the one below it. */
 .item {
 	--row-ground: transparent;
 	--row-hover: var(--inbox-read-hover);
@@ -173,8 +170,8 @@
 }
 .line_text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .line_head { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-/* A thread's title leads its row, by weight (the owner, 2026-11-02: "the
-   thread's title should be bolder"); an unread one a step heavier. */
+/* A thread's title leads its row, by weight; an unread one a step
+   heavier. */
 .line_title {
 	overflow: hidden;
 	font: 500 15px/21px var(--font-sans);

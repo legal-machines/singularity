@@ -98,7 +98,7 @@ const Letter *letter_with_message_id(const matters::Matter &matter, const std::s
 }
 
 // The rule of the Matter's intake the letter answers to, or null: the account
-// it reached and the mailbox it came from, each exactly (D-228).
+// it reached and the mailbox it came from, each exactly.
 const IntakeRule *intake_rule_for(const matters::Matter &matter, const MessageFacts &facts) {
 	const std::string mailbox = lowered(one_line(facts.mailbox, 320));
 	const std::string from = address_of(facts.from);
@@ -131,9 +131,9 @@ Suggestion suggest_among(const std::vector<matters::Matter> &matters, const Mess
 		return suggestion;
 	}
 
-	// A rule of a Matter's intake (D-228): the account it reached and the
-	// mailbox it came from. One Matter's rule files it there; more than one is
-	// for the member to choose.
+	// A rule of a Matter's intake: the account it reached and the mailbox it
+	// came from. One Matter's rule files it there; more than one is for the
+	// member to choose.
 	for (const matters::Matter &matter : matters) {
 		const IntakeRule *rule = intake_rule_for(matter, facts);
 		if (rule == nullptr) continue;
@@ -241,7 +241,7 @@ Suggestion suggest_among(const std::vector<matters::Matter> &matters, const Mess
 	return suggestion;
 }
 
-// ---- An email a member puts in the Matter's folder (D-180) ---------------------
+// ---- An email a member puts in the Matter's folder ---------------------
 
 namespace {
 

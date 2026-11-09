@@ -10,7 +10,7 @@ const numberWords = [
 // Whether a member is the person reading. In onboarding's sample firm, which
 // is Gabriel's until the person introduces themselves (emulation/world.js),
 // nobody but the person is: a colleague joining the firm read "Gabriel Moore
-// (you)" (2026-10-31).
+// (you)".
 export function isViewerMember(memberId) {
 	return memberId == viewerId && (isEmulation == false || memberId == DEMO_MEMBER);
 }
@@ -35,7 +35,7 @@ export function emphasised(text) {
 }
 
 // A text as a one-line preview shows it - an inbox row, the sidebar's Recent:
-// its emphasis as plain words, never its asterisks (D-120).
+// its emphasis as plain words, never its asterisks.
 export function plainWords(text) {
 	return emphasised(text).map(piece => piece.text).join("");
 }
@@ -46,20 +46,18 @@ export function findMatter(matterId) {
 }
 
 // A member's place in the firm, in one line, as a US firm's directory sets
-// it: the position, then the practice in brackets, never joined by a dot
-// (D-057, D-058): "Senior Associate (Labor & Employment)". An AI colleague's
-// position is its role, and a badge beside its name says it is one (UI-5).
+// it: the position, then the practice in brackets, never joined by a dot:
+// "Senior Associate (Labor & Employment)". An AI colleague's position is its
+// role, and a badge beside its name says it is one.
 export function roleLine(member) {
 	const position = positionOf(member);
 	return member.practice != null ? `${position} (${member.practice})` : position;
 }
 
-// A member's office in one phrase, its parts in one order (the owner,
-// 2026-11-02: "the role is the most basic - it comes first everywhere, or
-// alone; then the position, and that within the practice"): their role on
-// the firm's scale, then their own words for their position, in their
-// practice - "Partner, IP Lead in Intellectual Property", "Partner in Mergers
-// & Acquisitions", "Counsel, Head of Finance". A part not given is left out,
+// A member's office in one phrase, its parts in one order: their role on the
+// firm's scale, then their own words for their position, in their practice -
+// "Partner, IP Lead in Intellectual Property", "Partner in Mergers &
+// Acquisitions", "Counsel, Head of Finance". A part not given is left out,
 // and a position that says the role again is said once.
 export function officeLine(member) {
 	if (member == null) return "";
@@ -85,7 +83,7 @@ function positionWordsOf(member) {
 	return (words ?? "").trim();
 }
 
-// The firm's one scale of positions, the highest first (D-059).
+// The firm's one scale of positions, the highest first.
 export const positionLevels = ["Partner", "Senior Counsel", "Of Counsel", "Counsel", "Senior Associate", "Associate", "Paralegal"];
 
 // Members in the firm's order: by the level of their position, then by
@@ -106,9 +104,8 @@ export function byFirmOrder(first, second) {
 // A member's role on the firm's scale, as a US firm writes it: "Senior
 // Associate"; an AI colleague's, the position it ranks with.
 export function positionOf(member) {
-	// The role first, and alone where one thing is said (the owner,
-	// 2026-11-02); the member's own words for their position only where no
-	// role is given.
+	// The role first, and alone where one thing is said; the member's own
+	// words for their position only where no role is given.
 	return roleOf(member) || positionWordsOf(member) || (member.role ?? "");
 }
 

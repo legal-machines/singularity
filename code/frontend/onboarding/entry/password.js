@@ -1,10 +1,9 @@
-// How strong the administrator's new password is (the owner, 2026-10-29: "a
-// password for the admin, recommending a strong one"): an estimate of the
-// guesses it would take, from its length and the kinds of characters in it,
-// less what leans on something a guesser tries first - a common password or
-// word, the organisation's own name or email, a year, a repeat or a run along
-// the keyboard or the alphabet. Legal Machines takes 12 characters at least;
-// a password this estimate calls weak is not taken either, and the words say
+// How strong the administrator's new password is: an estimate of the guesses
+// it would take, from its length and the kinds of characters in it, less what
+// leans on something a guesser tries first - a common password or word, the
+// organisation's own name or email, a year, a repeat or a run along the
+// keyboard or the alphabet. Legal Machines takes 12 characters at least; a
+// password this estimate calls weak is not taken either, and the words say
 // why.
 export const MIN_PASSWORD_LENGTH = 12;
 
@@ -18,7 +17,7 @@ const COMMON = [
 // Rows of a keyboard and the alphabets, read either way.
 const RUNS = [
 	"abcdefghijklmnopqrstuvwxyz", "0123456789", "qwertyuiop", "asdfghjkl", "zxcvbnm",
-	"абвгдеёжзийклмнопрстуфхцчшщъыьэюя", "йцукенгшщзхъ", "фывапролджэ", "ячсмитьбю",
+	"\u0430\u0431\u0432\u0433\u0434\u0435\u0451\u0436\u0437\u0438\u0439\u043a\u043b\u043c\u043d\u043e\u043f\u0440\u0441\u0442\u0443\u0444\u0445\u0446\u0447\u0448\u0449\u044a\u044b\u044c\u044d\u044e\u044f", "\u0439\u0446\u0443\u043a\u0435\u043d\u0433\u0448\u0449\u0437\u0445\u044a", "\u0444\u044b\u0432\u0430\u043f\u0440\u043e\u043b\u0434\u0436\u044d", "\u044f\u0447\u0441\u043c\u0438\u0442\u044c\u0431\u044e",
 ];
 // What a guesser substitutes back: p@ssw0rd is password.
 const LEET = { "@": "a", "4": "a", "8": "b", "3": "e", "6": "g", "1": "l", "!": "i", "0": "o", "$": "s", "5": "s", "7": "t", "+": "t", "2": "z" };

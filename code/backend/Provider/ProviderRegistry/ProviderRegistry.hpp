@@ -216,6 +216,13 @@ public:
       std::move(usage), std::move(finish_reason));
 }
 
+// Whether a failure is a model's refusal (model_refusal_error): the one unusable
+// generation that carries no code of its own. Asking again only repeats it, at
+// a cost, where an answer that could not be read is worth another try.
+[[nodiscard]] inline bool is_model_refusal(const TaskError &error) noexcept {
+  return error.code() == TaskErrorCode::Unknown && dynamic_cast<const UnusableGeneration *>(&error) != nullptr;
+}
+
 struct GenerationResult {
   std::string text;
   UsageMetadata usage;
@@ -233,12 +240,12 @@ struct GenerationResult {
   std::vector<ModelToolCall> tool_calls;
   // The provider's own id for this response ("gen-..." from OpenRouter,
   // "chatcmpl-..." from OpenAI, "msg_..." from Anthropic), by which its own
-  // records name the request and what it charged (D-252). Empty when the
-  // response carried none.
+  // records name the request and what it charged. Empty when the response
+  // carried none.
   std::string response_id;
   // SHA-256 of the response body exactly as Singularity read it (a streamed
   // answer as its events were put together): it proves which answer a cost
-  // belongs to without keeping or showing the answer (D-252).
+  // belongs to without keeping or showing the answer.
   std::string response_sha256;
 };
 
@@ -251,8 +258,8 @@ struct GenerationResult {
 struct FinalPayloadView {
   std::string serialized_body;
   std::vector<std::string> content_segments;
-  // The SHA-256 of each picture the body carries (D-256), in the order it does:
-  // the final check holds every image in the body to the member's own.
+  // The SHA-256 of each picture the body carries, in the order it does: the
+  // final check holds every image in the body to the member's own.
   std::vector<std::string> picture_sha256;
 };
 
@@ -340,9 +347,9 @@ GenerationResult generate(const std::string &provider_id, const std::string &api
 						  const std::optional<GenerationToolControl> &tool_control = std::nullopt,
 						  ReasoningEffort reasoning_effort = ReasoningEffort::Default);
 
-// OpenRouter's own record of one generation (D-252): what it charged, the
-// tokens it counted and who served it, as its /generation answer gives them,
-// with the SHA-256 of that answer as it came.
+// OpenRouter's own record of one generation: what it charged, the tokens it
+// counted and who served it, as its /generation answer gives them, with the
+// SHA-256 of that answer as it came.
 struct GenerationRecord {
   std::optional<long long> cost_micros;
   std::optional<long long> input_tokens;

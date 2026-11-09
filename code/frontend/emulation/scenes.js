@@ -2,17 +2,13 @@ import { scenes as screenplay } from "../onboarding/entry/conversation.js";
 import { SCENARIOS, scenarioFor } from "./scenarios.js";
 import { DD_THREAD, YOU, fileOf, profileOf, titleWork } from "./world.js";
 
-// MOCK DATA - the scenes onboarding plays in the app (D-134), one for each of
-// its steps. They expand the screenplay of onboarding's first page
-// (onboarding/entry/conversation.js; its record: design/output/
-// onboarding-legora-entry-2026-10-28/singularity-ma-test-scenario.md): the
-// same people and AI colleagues and the same direction of every ask and
-// answer, written out as the firm's members write to each other in the app's
-// threads (the owner, 2026-10-28: "expand the texts only in the emulation of
-// the real interface"). The member at the keyboard gives the work in their
-// own name and field once they have introduced themselves (D-162); until
-// then it is Gabriel, the partner on the deal. What they do goes through the
-// app's own functions.
+// MOCK DATA - the scenes onboarding plays in the app, one for each of its
+// steps. They expand the screenplay of onboarding's first page: the same
+// people and AI colleagues and the same direction of every ask and answer,
+// written out as the firm's members write to each other in the app's threads.
+// The member at the keyboard gives the work in their own name and field once
+// they have introduced themselves; until then it is Gabriel, the partner on
+// the deal. What they do goes through the app's own functions.
 
 // The deal's exchanges, by their place in the screenplay (S001 is 0): what
 // the asker says, then what the one asked answers.
@@ -22,8 +18,8 @@ export const WRITTEN = {
 };
 
 // The second page's two exchanges in the member's field: they give Kitsune
-// the work, Kitsune answers with its plan and its one file (the owner,
-// 2026-10-30: "only one file"), and hands Evelyn her part.
+// the work, Kitsune answers with its plan and its one file, and hands
+// Evelyn her part.
 function delegation() {
 	const profile = profileOf();
 	const work = scenarioFor(profile.practice);
@@ -70,7 +66,7 @@ export const SCENES = {
 		cue.reveal(DD_THREAD, plan);
 		cue.presence(handed.from, "work");
 		// Let the current rest pass finish naturally before work begins, so
-		// changing clips never cuts a face in mid-pose (D-069).
+		// changing clips never cuts a face in mid-pose.
 		if (!cue.calm) await cue.until('main [data-species="kitsune"][data-state="work"]', null, 6500);
 		await cue.wait(1000);
 		cue.reveal(DD_THREAD, assignment);

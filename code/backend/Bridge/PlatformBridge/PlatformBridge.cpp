@@ -85,7 +85,7 @@ nlohmann::json decline_files_and_projects(const nlohmann::json &) {
 
 nlohmann::json choose_files_and_projects(const std::optional<std::string> &selected_path) {
 	// Granting access to a folder never switches the workspace whose registry
-	// lists the Projects (BB-25): existing Projects stay listed.
+	// lists the Projects: existing Projects stay listed.
 	if (selected_path.has_value() == true) (void)node_bridge::grant_folder_access(*selected_path);
 	if (selected_path.has_value() == true) {
 		save_decision(platform::FilesAccessDecision::Granted, false);
@@ -125,9 +125,9 @@ std::string permission_key(const Json &params) {
 
 } // namespace
 
-// The certificate Office's panes need (D-244) is the Office domain's own, asked
-// there; the system's other permissions are the platform's. The Bridge only
-// names which one answers. It is always listed, not needed where no Office is
+// The certificate Office's panes need is the Office domain's own, asked there;
+// the system's other permissions are the platform's. The Bridge only names
+// which one answers. It is always listed, not needed where no Office is
 // installed, so onboarding shows its row only where Office is.
 constexpr const char *kOfficeCertificate = "officeCertificate";
 

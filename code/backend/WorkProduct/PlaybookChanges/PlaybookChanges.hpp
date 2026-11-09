@@ -28,9 +28,8 @@ struct PreparedChange {
 	std::string chat_id;
 	std::string operation_id;
 	// The request's state: "waiting_for_approval" when its change waits for the
-	// lawyer, "waiting_for_answer" when it asked the lawyer first (an AI
-	// colleague's request, Beta 1 #261), "completed", "failed", "stopped", or
-	// "interrupted" when Singularity closed on it.
+	// lawyer, "waiting_for_answer" when it asked the lawyer first, "completed",
+	// "failed", "stopped", or "interrupted" when Singularity closed on it.
 	std::string state;
 	std::string message;
 	// The question it asked, in a line, while it waits for the answer.

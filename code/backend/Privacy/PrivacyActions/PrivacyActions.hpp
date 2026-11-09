@@ -52,8 +52,7 @@ struct ProjectOverview {
 	long long entity_count = 0;
 	long long pending_ambiguity_count = 0;
 	// "ready" | "loading" | "not_ready" - Papinian Guard's own local
-	// readiness, kept deliberately separate from the coverage numbers above
-	// (PRIVACY_CONTRACT.md: never one percentage for every meaning).
+	// readiness, kept deliberately separate from the coverage numbers above.
 	// "loading" is the normal state for the first seconds after launch; this
 	// read never waits for the warm-up to finish.
 	std::string guard_status;
@@ -62,12 +61,10 @@ struct ProjectOverview {
 
 ProjectOverview get_overview(const std::string &id);
 
-// One document of a Project as a model receives it (the owner, 2026-11-02: "a
-// switch between how a person sees it and how the machine sees it, with what
-// was masked and what it was masked to"): its passages as written and as this
-// computer's Papinian Guard masks them, under one table, so a name is the
-// same symbol in every passage. For the window to show only: the table is
-// this preview's own, never a request's, and nothing of it is kept.
+// One document of a Project as a model receives it: its passages as written
+// and as this computer's Papinian Guard masks them, under one table, so a
+// name is the same symbol in every passage. For the window to show only: the
+// table is this preview's own, never a request's, and nothing of it is kept.
 struct DocumentProtectionPreview {
 	// Whether this computer's Papinian Guard masks what goes out (its policy is
 	// not Off); not, and a passage goes out as written.
@@ -117,9 +114,8 @@ struct EntityDetail {
 
 EntityDetail get_entity_detail(const std::string &id, const std::string &entity_id);
 
-// `decision` is "same" or "separate" - "Same organisation" / "Keep separate"
-// (phase-10-privacy-entities-coverage.md). Returns the surviving entity id on
-// "same"; empty on "separate".
+// `decision` is "same" or "separate" - "Same organisation" / "Keep separate".
+// Returns the surviving entity id on "same"; empty on "separate".
 std::string resolve_ambiguity(const std::string &id, const std::string &ambiguity_id, const std::string &decision);
 
 // "Split identity" - returns the newly created entity's id.

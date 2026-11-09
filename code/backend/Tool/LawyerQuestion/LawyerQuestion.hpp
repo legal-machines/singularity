@@ -123,7 +123,7 @@ inline std::optional<std::string> text_of(const nlohmann::json &value, const cha
 	return cleaned(value.at(key).get<std::string>());
 }
 
-// An option that only says "something else" - Other, Other (specify), Другое -
+// An option that only says "something else" - Other, Other (specify), … -
 // repeats the field every question already has for the lawyer's own words, so
 // it is left out rather than shown twice.
 inline bool only_says_other(const std::string &label) {

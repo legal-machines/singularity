@@ -1,10 +1,10 @@
 // MOCK DATA - Evelyn Hart's calendars at Marlowe Finch LLP, around Friday,
-// October 23, 2026 (AG-12, PROD-2). Every name and event is fictional. Its
-// deadlines and meetings are those of the Matters' threads; an AI colleague
-// keeps its own scheduled work here as a person keeps a meeting; the time the
-// viewer recorded comes from data/billing.js. The connected accounts are
-// simulated: no Microsoft or Google account is reached (D-079). Nothing here
-// is read from, or written to, the backend.
+// October 23, 2026. Every name and event is fictional. Its deadlines and
+// meetings are those of the Matters' threads; an AI colleague keeps its own
+// scheduled work here as a person keeps a meeting; the time the viewer
+// recorded comes from data/billing.js. The connected accounts are simulated:
+// no Microsoft or Google account is reached. Nothing here is read from, or
+// written to, the backend.
 
 // The calendars, each in a pigment of Folio's palette (styles/tokens.css).
 export const calendars = [
@@ -17,7 +17,7 @@ export const calendars = [
 	{ id: "cal_holidays", name: "Holidays in United States", color: "#8b6a4b", group: "other" },
 ];
 
-// The accounts the member's calendars and mail connect to (D-079).
+// The accounts the member's calendars and mail connect to.
 export const accounts = [
 	{ id: "outlook", provider: "Microsoft 365", product: "Outlook", address: "evelyn.hart@marlowefinch.example", connected: true },
 	{ id: "google", provider: "Google", product: "Google Calendar", address: "evelyn.hart.personal@gmail.example", connected: false },

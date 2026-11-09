@@ -6,12 +6,12 @@
 
 namespace singularity::document_intelligence {
 
-// The Document Intelligence & Preparation Layer (working name; the owner,
-// 2026-10-24): a professional document turned into material a model can
-// work on - its structure understood, what a task needs selected, what must
-// stay here kept here, and every word a model cites traceable back to the
-// place the source holds it. Model-independent: nothing here knows which
-// model reads it, or whether one reads it at all.
+// The Document Intelligence & Preparation Layer: a professional document
+// turned into material a model can work on - its structure understood, what
+// a task needs selected, what must stay here kept here, and every word a
+// model cites traceable back to the place the source holds it.
+// Model-independent: nothing here knows which model reads it, or whether
+// one reads it at all.
 
 // Who a source is: the file Singularity read, byte for byte. A source is
 // never changed by anything in this layer.

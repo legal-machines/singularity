@@ -44,16 +44,18 @@ constexpr const char *kComputerKeySecret = "lm-coordination-x25519";
 // A computer that asked to join and holds no key yet asks again this often.
 constexpr std::int64_t kAskAgainSeconds = 600;
 // A computer tells each Matter's others where its direct link may be reached
-// (0x04, D-124) at once when that changes, and again this often; a card holds
-// for a day.
+// at once when that changes, and again this often; a card holds for a day.
 constexpr std::int64_t kCardAgainSeconds = 6 * 60 * 60;
 constexpr std::int64_t kCardLastsSeconds = 24 * 60 * 60;
 // A computer that gave a Matter's invitation takes requests to join it from
-// computers no card names for this long after (D-127).
+// computers no card names for this long after.
 constexpr std::int64_t kLobbySeconds = 60 * 60;
 // What is said where no carrier reaches the firm's other computers.
 constexpr const char *kNoWay = "This computer cannot reach the firm's other computers: no folder of the firm is chosen, "
 	"and its direct link could not open on this network.";
+// What is said of a Matter sealed for another organisation.
+constexpr const char *kOtherOrganisations = "This Matter belongs to another organisation: it is shared with its "
+	"computers again once you sign in to that organisation here.";
 
 std::mutex &round_mutex() {
 	static std::mutex mutex;
@@ -247,25 +249,25 @@ struct Linked {
 	// runs; after a restart they are taught to it again from here.
 	std::map<std::string, seal::AddressCard> cards;
 	// The computer whose invitation this one joined by, and where its direct
-	// link may be reached (LMM2, D-127): called until the Matter's key comes.
+	// link may be reached: called until the Matter's key comes.
 	std::string inviter_device;
 	std::string inviter_key;
 	std::vector<std::string> inviter_candidates;
 	// When this computer last gave the Matter's invitation (seconds since
 	// 1970): its lobby stays open an hour after.
 	std::int64_t invited_at = 0;
-	// A personal channel's two members, by actor id, sorted (D-128); empty for
-	// a Matter.
+	// A personal channel's two members, by actor id, sorted; empty for a
+	// Matter.
 	std::vector<std::string> pair;
 	// For a channel with an AI colleague: the computer that runs it, as first
 	// verified here, by device and device key. No other is taken for it.
 	std::string agent_host;
 	std::string agent_host_key;
-	// The members of the firm this computer's lawyer offered the Matter to
-	// (D-205), by actor id, with when (seconds since 1970): their computers a
-	// lawyer here checked are given its key as they ask.
+	// The members of the firm this computer's lawyer offered the Matter to,
+	// by actor id, with when (seconds since 1970): their computers a lawyer
+	// here checked are given its key as they ask.
 	std::map<std::string, std::int64_t> offered_to;
-	// The firm's record only (D-210): what of the firm's model accounts this
+	// The firm's record only: what of the firm's model accounts this
 	// computer gave each computer - by device and account, a fingerprint of
 	// what was given, never the key - and the accounts other computers gave
 	// this one, by account, with the computer that gave it: never given on.
@@ -312,8 +314,6 @@ Records parseRecords(const std::string &bytes) {
 	Records records;
 	if (bytes.empty() == true) return records;
 	const Json value = Json::parse(bytes, nullptr, false);
-	// A record of the relay that carried Matters before D-123 is not read: its
-	// Matters are shared again.
 	if (value.is_object() == false || value.value("version", 0) != 2) return records;
 	records.firm_folder = fs::u8path(value.value("firmFolder", std::string()));
 	for (const Json &entry : value.value("matters", Json::array())) {
@@ -569,7 +569,7 @@ void keepMatterKey(Linked &linked, const seal::MatterKey &key) {
 }
 
 // This computer's own keys are made once, whoever asks first: the round, or
-// the firm's computers saying this one (D-205), which never waits for a round.
+// the firm's computers saying this one, which never waits for a round.
 std::mutex &computerKeysMutex() {
 	static std::mutex *const held = new std::mutex();
 	return *held;
@@ -843,10 +843,10 @@ std::map<std::string, std::set<std::string>> &taken_ids() {
 }
 
 // When this computer last took, from each other computer of a Matter, a sealed
-// envelope that opened under the Matter's key (D-137): by this computer and
-// the Matter, then by device. For as long as the program runs, under the
-// round's lock; never written to the record. An envelope that did not open,
-// one for another computer and one taken before never count.
+// envelope that opened under the Matter's key: by this computer and the
+// Matter, then by device. For as long as the program runs, under the round's
+// lock; never written to the record. An envelope that did not open, one for
+// another computer and one taken before never count.
 std::map<std::string, std::map<std::string, std::string>> &heardFrom() {
 	static std::map<std::string, std::map<std::string, std::string>> *const heard =
 		new std::map<std::string, std::map<std::string, std::string>>();
@@ -861,7 +861,7 @@ void hear(const std::string &me, const std::string &matter_id, const std::string
 // computer and the Matter, then by device, each file's SHA-256, size and the
 // counter of the change it is. For as long as the program runs, under the
 // round's lock; never written to the record. What of it this computer holds
-// is how far the Matter has come (D-207).
+// is how far the Matter has come.
 struct HeldThere {
 	std::string sha256;
 	std::uint64_t size = 0;
@@ -933,10 +933,10 @@ bool comesAfter(std::int64_t counter, const std::string &device, std::int64_t ot
 // A document's change that says which version it was made from. Made from the
 // version here, or where none is, it replaces it: a document deleted here and
 // changed there comes back, and nothing is lost. Made beside a version here
-// that its computer had not seen, the two are concurrent and both are kept
-// (COORD-4): on every computer the later one keeps the name and the other
-// stands beside it, named for whose it is, so the Matter's computers end with
-// the same files and no version is ever written over.
+// that its computer had not seen, the two are concurrent and both are kept:
+// on every computer the later one keeps the name and the other stands beside
+// it, named for whose it is, so the Matter's computers end with the same
+// files and no version is ever written over.
 Taken applyDocumentChange(Linked &linked, const ChangeBody &body, std::int64_t counter, const std::string &sender,
 		const std::string &me, const fs::path &file) {
 	LinkedMatter &link = linked.view;
@@ -998,9 +998,9 @@ Taken applyBody(Linked &linked, const ChangeBody &body, std::int64_t counter, co
 	std::error_code error;
 	if (isOlder == true) {
 		// An earlier change of the same computer is superseded by its own later
-		// one; a Matter's record is one computer's, and the newer stands
-		// (docs/MATTER_STORAGE.md); an earlier change to a document from another
-		// computer is kept beside it, never lost and never written over it.
+		// one; a Matter's record is one computer's, and the newer stands; an
+		// earlier change to a document from another computer is kept beside it,
+		// never lost and never written over it.
 		if (marked->second.sender == sender || isRecord == true || body.deleted == true) return Taken::Done;
 		if (platform::sha256_hex_digest(body.content) != body.sha256) return Taken::Done;
 		if (fs::is_regular_file(*file, error) == true && shaOf(link.matter_id, body.path, *file) == body.sha256) return Taken::Done;
@@ -1061,13 +1061,12 @@ Taken takeChange(Linked &linked, const std::string &envelope, const std::string 
 	return applyBody(linked, *body, opened->header.counter, opened->header.from_device, me);
 }
 
-// ---- Personal channels (D-128) --------------------------------------------------------------
+// ---- Personal channels --------------------------------------------------------------
 //
-// The private conversation of two members, carried like a Matter between their
-// computers only: kept beside this computer's records, never in a Matter's
-// folder or the firm's storage (ORG-15). Its key goes, with no invitation and
-// no new comparison of codes, to each computer of either member that a lawyer
-// here confirmed in a Matter they share; and it is taken only from one.
+// The private conversation of two members, carried like a Matter between their computers only:
+// kept beside this computer's records, never in a Matter's folder or the firm's storage. Its
+// key goes, with no invitation and no new comparison of codes, to each computer of either
+// member that a lawyer here confirmed in a Matter they share; and it is taken only from one.
 
 std::set<std::string> &taughtThisRun();
 
@@ -1114,36 +1113,22 @@ bool isPersonalId(const std::string &id) {
 	return id.rfind(kPersonalPrefix, 0) == 0;
 }
 
-// The firm's own record (D-203): a channel carried as a personal one is, whose
-// members are every member of the firm. Its one "member" says so.
+// The firm's own record: a channel carried as a personal one is, whose members
+// are every member of the firm. Its one "member" says so.
 const std::string kFirmMembers = "*firm";
 
 bool isFirmChannel(const Linked &linked) {
 	return linked.pair.size() == 1 && linked.pair.front() == kFirmMembers;
 }
 
-// Whether a confirmed computer is of this computer's own firm: its member's
-// record names the same organisation, whatever its case and spaces (D-203).
-std::string organisationKey(std::string name) {
-	std::string kept;
-	bool wasSpace = true;
-	for (const char character : name) {
-		const bool isSpace = character == ' ' || character == '\t';
-		if (isSpace) {
-			if (wasSpace == false) kept += ' ';
-		} else {
-			kept += static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
-		}
-		wasSpace = isSpace;
-	}
-	while (kept.empty() == false && kept.back() == ' ') kept.pop_back();
-	return kept;
-}
-
-bool isOfMyFirm(const std::string &organisation) {
+// Whether a confirmed computer is of this computer's own firm: of the very
+// organisation, by Legal Machines' id for it, that this computer's member is
+// signed in to. Never by its name: two firms may share one. Signed in to
+// none, no computer is.
+bool isOfMyFirm(const std::string &organisation_id) {
 	const Environment &environment = installed();
-	const std::string mine = environment.organisation_name ? organisationKey(environment.organisation_name()) : std::string();
-	return organisationKey(organisation) == mine;
+	const std::string mine = environment.organisation_id ? environment.organisation_id() : std::string();
+	return mine.empty() == false && organisation_id == mine;
 }
 
 // The firm's record's id here, from the organisation this computer's member
@@ -1161,6 +1146,42 @@ bool isPersonal(const Linked &linked) {
 	return linked.pair.empty() == false;
 }
 
+// What each Matter's seal said this round, by its id: read once a round.
+std::map<std::string, bool> &otherOrganisationsThisRound() {
+	static std::map<std::string, bool> *const kept = new std::map<std::string, bool>();
+	return *kept;
+}
+
+// Whether a Matter here is sealed for another organisation than the one this
+// computer's member is signed in to: it is not carried, to anyone or from
+// anyone, and its members' computers count for nothing here, until this
+// computer is signed in to that organisation again. A personal channel has
+// no seal: it is the two members' own.
+bool isOtherOrganisations(const Linked &linked) {
+	if (isPersonal(linked) == true) return false;
+	const Environment &environment = installed();
+	if (!environment.is_other_organisations) return false;
+	const auto known = otherOrganisationsThisRound().find(linked.view.matter_id);
+	if (known != otherOrganisationsThisRound().end()) return known->second;
+	bool isOther = true;
+	try {
+		isOther = environment.is_other_organisations(linked.view.folder, linked.view.matter_id);
+	} catch (const std::exception &) {
+		// A seal that can't be read carries nothing: the Matter waits.
+	}
+	otherOrganisationsThisRound()[linked.view.matter_id] = isOther;
+	return isOther;
+}
+
+// Whether a record here waits, carried neither way: a Matter sealed for another
+// organisation, or the firm's record of another organisation this computer was
+// signed in to. Its changes are sealed into no carrier, so no one holding its
+// key from before reads them.
+bool isElsewhere(const Linked &linked) {
+	if (isFirmChannel(linked) == true) return linked.view.matter_id != firmChannelId();
+	return isOtherOrganisations(linked);
+}
+
 // A computer of a Matter's member a lawyer here confirmed: its member, its
 // device key, its X25519 key and where it may be reached.
 struct Colleague {
@@ -1168,8 +1189,10 @@ struct Colleague {
 	std::string device_key;
 	std::string coordination_key;
 	std::vector<std::string> candidates;
-	// The organisation its member's record names (D-203).
-	std::string organisation;
+	// The organisation it is of, by Legal Machines' id: the one its lawyer was
+	// signed in to where a lawyer here checked it, or the one its member's
+	// record names.
+	std::string organisation_id;
 };
 
 // Who a Matter's computer is, as its member records say: asked again a minute
@@ -1201,9 +1224,9 @@ std::optional<ConfirmedComputer> confirmedComputer(const fs::path &matter_folder
 // request gave for it.
 std::map<std::string, Colleague> confirmedColleagues(const Records &records, const std::string &me) {
 	std::map<std::string, Colleague> found;
-	// The firm's computers a lawyer here checked (D-205), of this computer's own
-	// firm by the check itself; one a shared Matter also names is taken from it
-	// below, where its record says more.
+	// The firm's computers a lawyer here checked, of this computer's own firm by
+	// the check itself; one a shared Matter also names is taken from it below,
+	// where its record says more.
 	const Environment &environment = installed();
 	if (environment.checked_firm_computers) {
 		std::vector<CheckedFirmComputer> checked;
@@ -1218,11 +1241,13 @@ std::map<std::string, Colleague> confirmedColleagues(const Records &records, con
 			colleague.device_key = computer.device_key;
 			colleague.coordination_key = computer.coordination_key;
 			colleague.candidates = computer.candidates;
-			colleague.organisation = environment.organisation_name ? environment.organisation_name() : std::string();
+			// The organisation it was checked in: of this computer's firm only
+			// while this computer is signed in to that one.
+			colleague.organisation_id = computer.organisation_id;
 		}
 	}
 	for (const Linked &linked : records.matters) {
-		if (isPersonal(linked) == true || linked.view.state != "carried") continue;
+		if (isPersonal(linked) == true || linked.view.state != "carried" || isOtherOrganisations(linked) == true) continue;
 		std::map<std::string, std::pair<std::string, std::vector<std::string>>> keys;
 		for (const auto &[device, coordination_key] : linked.view.given) keys[device] = {coordination_key, {}};
 		if (linked.inviter_device.empty() == false && linked.accepted_devices.count(linked.inviter_device) > 0) {
@@ -1236,7 +1261,9 @@ std::map<std::string, Colleague> confirmedColleagues(const Records &records, con
 			Colleague &colleague = found[device];
 			colleague.actor_id = computer->actor_id;
 			colleague.device_key = computer->device_key;
-			colleague.organisation = computer->organisation;
+			// A checked computer's organisation stands; a Matter's member record
+			// says it only where nothing else did.
+			if (colleague.organisation_id.empty() == true) colleague.organisation_id = computer->organisation_id;
 			colleague.coordination_key = key.first;
 			if (colleague.candidates.empty() == true) colleague.candidates = key.second;
 		}
@@ -1244,7 +1271,7 @@ std::map<std::string, Colleague> confirmedColleagues(const Records &records, con
 	return found;
 }
 
-// Whether a lawyer here checked another of the firm's computers (D-205).
+// Whether a lawyer here checked another of the firm's computers.
 bool hasCheckedFirmComputers() {
 	const Environment &environment = installed();
 	if (!environment.checked_firm_computers) return false;
@@ -1283,7 +1310,7 @@ void listenForPersonalChannels(Records &records, const std::map<std::string, Col
 	const std::string actor = myActor();
 	const std::vector<std::string> hosted = hostedAgents();
 	// The firm's record is listened for by every computer that knows another of
-	// the firm's, so one a computer made arrives without an invitation (D-203).
+	// the firm's, so one a computer made arrives without an invitation.
 	if (colleagues.empty() == false) {
 		const std::string firm = firmChannelId();
 		if (find(records, firm) == nullptr) records.matters.push_back(newFirmChannel(firm));
@@ -1327,7 +1354,7 @@ std::optional<AgentHostClaim> agentClaim(const fs::path &matter_folder, const st
 }
 
 // The computer that runs the AI colleague `agent_id`, for its channel `linked`,
-// when a Matter's card says so and every check holds (D-128):
+// when a Matter's card says so and every check holds.
 // - a colleague's id made from its host's key must come from that key and the
 //   card's nonce, so no other computer can speak for it; an older id, random,
 //   has no nonce;
@@ -1380,8 +1407,12 @@ std::optional<std::pair<std::string, Colleague>> agentHost(const Records &record
 std::map<std::string, Colleague> channelComputers(const Records &records, Linked &linked,
 		const std::map<std::string, Colleague> &colleagues) {
 	std::map<std::string, Colleague> computers;
+	// A firm's record left here from another organisation this computer was
+	// signed in to goes to no one: only the record of the one it is signed
+	// in to travels.
+	if (isFirmChannel(linked) == true && linked.view.matter_id != firmChannelId()) return computers;
 	for (const auto &[device, colleague] : colleagues) {
-		if (isFirmChannel(linked) == true ? isOfMyFirm(colleague.organisation)
+		if (isFirmChannel(linked) == true ? isOfMyFirm(colleague.organisation_id)
 				: std::find(linked.pair.begin(), linked.pair.end(), colleague.actor_id) != linked.pair.end()) {
 			computers[device] = colleague;
 		}
@@ -1403,7 +1434,10 @@ bool isOfPair(const Linked &linked, const std::string &actor_id) {
 // Whether a confirmed computer is one of a channel's: of either member of a
 // personal channel, or of this computer's own firm for the firm's record.
 bool isOfChannel(const Linked &linked, const Colleague &colleague) {
-	if (isFirmChannel(linked) == true) return colleague.actor_id.empty() == false && isOfMyFirm(colleague.organisation);
+	if (isFirmChannel(linked) == true) {
+		return linked.view.matter_id == firmChannelId() && colleague.actor_id.empty() == false
+			&& isOfMyFirm(colleague.organisation_id);
+	}
 	return isOfPair(linked, colleague.actor_id);
 }
 
@@ -1521,7 +1555,7 @@ Taken takeKey(Linked &linked, const std::string &envelope, const std::string &me
 			link.offering.push_back(OfferingComputer{outside->from_device, outside->from_device_key,
 				installed().code_of ? installed().code_of(outside->from_device_key) : std::string(), outside->files, outside->bytes});
 		} else if (outside->bytes > 0) {
-			// What is coming, as the giving computer said it last (D-207).
+			// What is coming, as the giving computer said it last.
 			offered->files = outside->files;
 			offered->bytes = outside->bytes;
 		}
@@ -1555,7 +1589,7 @@ Taken takeJoinRequest(Linked &linked, const std::string &envelope, const std::st
 	return Taken::Done;
 }
 
-// ---- Where the firm's computers are (0x04, D-124) -------------------------------------------
+// ---- Where the firm's computers are -------------------------------------------
 
 // What this computer last told each Matter's computers of where it may be
 // reached: for as long as the program runs, under the round's lock.
@@ -1593,10 +1627,10 @@ Taken takeCard(Linked &linked, const std::string &envelope, const std::string &m
 	// Kept for when this computer holds the Matter's key.
 	const std::optional<seal::MatterKey> key = matterKey(linked.view.matter_id, outside->key_id);
 	if (key.has_value() == false) return Taken::Waiting;
-	// Learned only of a computer a lawyer here confirmed (D-095, D-123): the card
-	// is checked against the device key held for it, never against one it names.
-	// One not confirmed yet waits until it is, or until a card sealed when its
-	// counter says (microseconds since 1970) has run out.
+	// Learned only of a computer a lawyer here confirmed: the card is checked
+	// against the device key held for it, never against one it names. One not
+	// confirmed yet waits until it is, or until a card sealed when its counter
+	// says (microseconds since 1970) has run out.
 	const std::optional<std::string> deviceKey = confirmedKeyOf(linked, device);
 	if (deviceKey.has_value() == false) {
 		const std::int64_t sealedAt = outside->header.counter / 1000000;
@@ -1615,7 +1649,7 @@ Taken takeCard(Linked &linked, const std::string &envelope, const std::string &m
 	return Taken::Done;
 }
 
-// ---- What is passed on (D-140) --------------------------------------------------------------
+// ---- What is passed on --------------------------------------------------------------
 
 // A change another computer sealed, passed on as it came to the Matter's other
 // computers this one knows: a computer sends to those it knows, and a computer
@@ -1721,7 +1755,7 @@ void sendInventory(Linked &linked, const std::vector<std::shared_ptr<transport::
 		const std::string &me, const std::string &to_device, const Listing &listing);
 
 // The Matter whole, to computers just let in: what it holds first, so each
-// knows how much is coming before the files do (D-207), then each file.
+// knows how much is coming before the files do, then each file.
 void sendSnapshots(Linked &linked, const std::vector<std::shared_ptr<transport::Transport>> &transports, const seal::MatterKey &key,
 		const std::string &me, const Listing &listing) {
 	if (linked.snapshot_for.empty() == true) return;
@@ -1802,7 +1836,7 @@ Taken takeInventory(Linked &linked, const std::string &envelope, const std::stri
 	if (inventory.has_value() == false) return Taken::Done;
 	const std::string other = inventory->header.from_device;
 	hear(me, link.matter_id, other);
-	// What it holds, so the lawyer is told how far the Matter has come (D-207).
+	// What it holds, so the lawyer is told how far the Matter has come.
 	std::map<std::string, HeldThere> &said = heldThere()[me + "\n" + link.matter_id][other];
 	said.clear();
 	for (const seal::InventoryEntry &entry : inventory->files) said[entry.path] = HeldThere{entry.sha256, entry.size, entry.counter};
@@ -1815,9 +1849,9 @@ Taken takeInventory(Linked &linked, const std::string &envelope, const std::stri
 	for (const seal::InventoryEntry &entry : inventory->files) held[entry.path] = &entry;
 	// What the other computer lacks, or holds older, goes again as the change it
 	// was - its counter and its author's name - whoever made it: a Matter of
-	// three lawyers comes together though a change of one reached the others
-	// only through this computer, and was lost on the way (D-140). Each file
-	// goes only where the other's counter for it is older, so nothing comes back.
+	// three lawyers comes together though a change of one reached the others only
+	// through this computer, and was lost on the way. Each file goes only where
+	// the other's counter for it is older, so nothing comes back.
 	for (const auto &[path, file] : listing.files) {
 		const auto mark = linked.marks.find(path);
 		if (mark == linked.marks.end()) continue;
@@ -1854,12 +1888,12 @@ Taken takeInventory(Linked &linked, const std::string &envelope, const std::stri
 }
 
 // Every computer of the Matter a lawyer here confirmed, told to the direct
-// link (D-127): the newest checked card of each - its key and addresses -, a
-// computer given the key here by the X25519 key its confirmed request named,
-// and the one whose invitation this computer joined by once its key was
-// accepted here. The link keeps them only while the program runs, so they are
-// taught again after a restart; within a run, each only when what is known of
-// it changed. One refused since is never taught.
+// link: the newest checked card of each - its key and addresses -, a computer
+// given the key here by the X25519 key its confirmed request named, and the
+// one whose invitation this computer joined by once its key was accepted
+// here. The link keeps them only while the program runs, so they are taught
+// again after a restart; within a run, each only when what is known of it
+// changed. One refused since is never taught.
 std::set<std::string> &taughtThisRun() {
 	static std::set<std::string> *const taught = new std::set<std::string>();
 	return *taught;
@@ -1902,8 +1936,8 @@ std::vector<std::string> teachPeers(const Linked &linked) {
 }
 
 // The computer whose invitation this one joined by, told to the direct link
-// as a computer of the Matter (LMM2, D-127): the request to join goes there,
-// and its key gift comes back the same way.
+// as a computer of the Matter: the request to join goes there, and its key
+// gift comes back the same way.
 void teachInviter(const Linked &linked) {
 	if (linked.inviter_device.empty() == true || linked.inviter_key.empty() == true || !installed().learned) return;
 	seal::AddressCard inviter;
@@ -1930,7 +1964,7 @@ void askToJoin(Linked &linked, const std::vector<std::shared_ptr<transport::Tran
 
 // Tells the Matter's other computers where this computer's direct link may be
 // reached, with its X25519 key, under the Matter's key and its own device's
-// signature (0x04, D-124): at once when that changes, and every few hours.
+// signature: at once when that changes, and every few hours.
 void sendCard(Linked &linked, const std::vector<std::shared_ptr<transport::Transport>> &transports, const seal::MatterKey &key,
 		const std::string &me, const seal::ComputerKeys &mine) {
 	const Environment &environment = installed();
@@ -1955,7 +1989,7 @@ void sendCard(Linked &linked, const std::vector<std::shared_ptr<transport::Trans
 
 void giveKeyTo(Linked *linked, const std::string &device_id, const std::vector<std::shared_ptr<transport::Transport>> &transports);
 
-// ---- The firm's model accounts (0x06, D-210) -----------------------------------------
+// ---- The firm's model accounts -----------------------------------------
 
 // What of an account was given to a computer, as a fingerprint: the account's
 // entry and key as they were, never the key itself.
@@ -2079,8 +2113,8 @@ void giveAccounts(Linked &linked, const std::vector<std::shared_ptr<transport::T
 	for (FirmAccount &account : here) crypto_wipe(reinterpret_cast<std::uint8_t *>(account.credential.data()), account.credential.size());
 }
 
-// The confirmed computers of the members a Matter was offered to (D-205), told
-// to the direct link as the Matter's, so their request to join is heard.
+// The confirmed computers of the members a Matter was offered to, told to the
+// direct link as the Matter's, so their request to join is heard.
 void teachOffered(const Linked &linked, const std::map<std::string, Colleague> &colleagues) {
 	const Environment &environment = installed();
 	if (linked.offered_to.empty() == true || !environment.learned) return;
@@ -2100,7 +2134,7 @@ void teachOffered(const Linked &linked, const std::map<std::string, Colleague> &
 
 // A computer that asks to join a Matter offered to its member, and is that
 // member's as a lawyer here confirmed it, with the very keys it asks with, is
-// given the Matter's key: the lawyer chose that member (D-205).
+// given the Matter's key: the lawyer chose that member.
 void giveOffered(Linked &linked, const std::vector<std::shared_ptr<transport::Transport>> &transports,
 		const std::map<std::string, Colleague> &colleagues) {
 	if (linked.offered_to.empty() == true || linked.view.state != "carried" || isPersonal(linked) == true) return;
@@ -2127,7 +2161,7 @@ void giveOffered(Linked &linked, const std::vector<std::shared_ptr<transport::Tr
 
 // `colleagues` are a personal channel's computers (none for a Matter); `firm`
 // every computer of the firm a lawyer here confirmed, for a Matter given to a
-// member by choosing them (D-205).
+// member by choosing them.
 void roundFor(Linked &linked, const std::vector<std::shared_ptr<transport::Transport>> &transports, const std::string &me,
 		const seal::ComputerKeys &mine, const std::map<std::string, Colleague> &colleagues, const std::map<std::string, Colleague> &firm) {
 	LinkedMatter &link = linked.view;
@@ -2214,8 +2248,8 @@ void roundFor(Linked &linked, const std::vector<std::shared_ptr<transport::Trans
 			}
 		}
 	}
-	// The window shows what came at once (D-127): it reads the Matter again on
-	// this news, which this computer's own rounds do not wake on.
+	// The window shows what came at once: it reads the Matter again on this
+	// news, which this computer's own rounds do not wake on.
 	if (changesTaken > 0) {
 		platform::events::publish("matter.changed", nlohmann::json{{"projectId", link.matter_id}, {"from", "coordination"}});
 	}
@@ -2252,10 +2286,10 @@ std::vector<std::shared_ptr<transport::Transport>> carriers(const Records &recor
 	return environment.transports(records.firm_folder, computerKeys());
 }
 
-// How far a Matter has come to this computer from each other (D-207). Before
-// its key is taken here: what each offer said the Matter is, and the sealed
-// bytes of it already on this computer. After: of what each computer said it
-// holds, each file this computer holds as it was said, or a later change of
+// How far a Matter has come to this computer from each other. Before its key
+// is taken here: what each offer said the Matter is, and the sealed bytes of
+// it already on this computer. After: of what each computer said it holds,
+// each file this computer holds as it was said, or a later change of
 // - so a file changed or deleted since is never waited for. A Matter whole
 // here is no transfer.
 std::vector<Transfer> receivingOf(const Linked &linked, const std::string &me, const std::vector<std::string> &connected) {
@@ -2310,8 +2344,8 @@ CoordinationStatus statusOf(const Records &records) {
 	if (environment.code_of && environment.device_key) result.device_code = environment.code_of(environment.device_key());
 	const std::string actor = myActor();
 	const std::string me = environment.device_id ? environment.device_id() : std::string();
-	// Whether a Matter or the firm's record travels, as the lawyer is told it
-	// (D-137), and what of it is on its way, and how far it has come (D-207).
+	// Whether a Matter or the firm's record travels, as the lawyer is told
+	// it, and what of it is on its way, and how far it has come.
 	const auto travelling = [&](const Linked &linked) {
 		LinkedMatter view = linked.view;
 		view.offered_to = linked.offered_to;
@@ -2327,9 +2361,10 @@ CoordinationStatus statusOf(const Records &records) {
 			result.matters.push_back(travelling(linked));
 			continue;
 		}
-		// The firm's record is no conversation of the member's: it is said apart.
+		// The firm's record is no conversation of the member's: it is said apart,
+		// the one of the organisation signed in to alone.
 		if (isFirmChannel(linked) == true) {
-			result.firm = travelling(linked);
+			if (linked.view.matter_id == firmChannelId()) result.firm = travelling(linked);
 			continue;
 		}
 		LinkedMatter channel = linked.view;
@@ -2357,7 +2392,7 @@ Rounds &rounds() {
 }
 
 // What the app said it wrote to a shared Matter, by Matter, waiting for the
-// round thread: sent before anything else is read (D-127).
+// round thread: sent before anything else is read.
 struct Written {
 	std::mutex mutex;
 	std::map<std::string, std::set<std::string>> paths;
@@ -2585,7 +2620,7 @@ CoordinationStatus share_matter(const std::string &matter_id, const std::string 
 namespace {
 
 // Asks to join by an invitation; with `giver_device_key`, the key gift of the
-// computer that offered the Matter is taken as it comes (D-205).
+// computer that offered the Matter is taken as it comes.
 CoordinationStatus joinBy(const Invitation &invitation, const fs::path &folder, const std::string &giver_device_key) {
 	const std::lock_guard<std::mutex> lock(round_mutex());
 	if (isPersonalId(invitation.matter_id) == true) throw std::invalid_argument("That is not an invitation to a Matter.");
@@ -2606,7 +2641,7 @@ CoordinationStatus joinBy(const Invitation &invitation, const fs::path &folder, 
 		linked->inviter_key = invitation.coordination_key;
 		linked->inviter_candidates = invitation.candidates;
 	}
-	// A computer both lawyers checked (D-205): its key gift needs no code
+	// A computer both lawyers checked: its key gift needs no code
 	// compared, since the lawyer here accepted the Matter it offered.
 	if (giver_device_key.empty() == false && invitation.device_id.empty() == false) {
 		if (std::find(linked->view.accepted_senders.begin(), linked->view.accepted_senders.end(), giver_device_key)
@@ -2740,7 +2775,7 @@ void giveKeyTo(Linked *linked, const std::string &device_id, const std::vector<s
 	const Environment &environment = installed();
 	// Its direct link is spoken with by the X25519 key its request named, the
 	// request whose code the lawyer here compared, at the address it called
-	// from (D-127).
+	// from.
 	if (environment.learned) {
 		seal::AddressCard asker;
 		asker.matter_id = matter_id;
@@ -2755,8 +2790,8 @@ void giveKeyTo(Linked *linked, const std::string &device_id, const std::vector<s
 	gift.to_device = device_id;
 	gift.key = *key;
 	gift.counter = nextCounter(linked->view);
-	// What of the Matter travels, as the snapshot that follows will send it, so
-	// the lawyer taking it knows how much is coming before any of it opens (D-207).
+	// What of the Matter travels, as the snapshot that follows will send it, so the
+	// lawyer taking it knows how much is coming before any of it opens.
 	const Listing listing = travelling(linked->view);
 	gift.files = listing.files.size();
 	for (const auto &[path, file] : listing.files) {
@@ -2837,13 +2872,11 @@ CoordinationStatus accept_key(const std::string &matter_id, const std::string &d
 	return statusOf(records);
 }
 
-// The computers whose codes the person here compared when taking a Matter
-// count as their members' once a member record states their key: taking a
-// Matter with the giver's code compared is the comparison Compare codes asks
-// for, so it is not asked again for that computer (2026-10-29: Marcus compared
-// Dana's code taking Project Frost, then was asked again before Unicorn took up
-// her request). Each is looked at until it counts, then no more while Singularity
-// runs.
+// The computers whose codes the person here compared when taking a Matter count
+// as their members' once a member record states their key: taking a Matter with
+// the giver's code compared is the comparison Compare codes asks for, so it is
+// not asked again for that computer. Each is looked at until it counts, then no
+// more while Singularity runs.
 std::set<std::string> &comparedSettled() {
 	static std::set<std::string> settled;
 	return settled;
@@ -2868,11 +2901,14 @@ void sync_once() {
 		platform::trace::Span round("coordination", "round");
 		const std::lock_guard<std::mutex> lock(round_mutex());
 		const double started = platform::trace::now_ms();
+		// Each Matter's seal is read afresh each round: the organisation signed
+		// in to here may have changed since the last.
+		otherOrganisationsThisRound().clear();
 		Records records = load();
 		round.add("loadMs", platform::trace::now_ms() - started);
 		if (records.matters.empty() == true) {
-			// A computer whose lawyer checked another of the firm's (D-205) listens
-			// for the firm's record, though it carries no Matter yet.
+			// A computer whose lawyer checked another of the firm's listens for the
+			// firm's record, though it carries no Matter yet.
 			if (hasCheckedFirmComputers() == false) return;
 			records.matters.push_back(newFirmChannel(firmChannelId()));
 		}
@@ -2898,7 +2934,7 @@ void sync_once() {
 		}
 		const std::map<std::string, Colleague> none;
 		// What the app said it just wrote goes at once, before any folder is read;
-		// the rounds below find it sent and read on (D-127).
+		// the rounds below find it sent and read on.
 		std::map<std::string, std::set<std::string>> named;
 		{
 			Written &kept = written();
@@ -2908,7 +2944,7 @@ void sync_once() {
 		std::size_t sentAtOnce = 0;
 		for (Linked &linked : records.matters) {
 			const auto paths = named.find(linked.view.matter_id);
-			if (paths == named.end() || linked.view.state != "carried") continue;
+			if (paths == named.end() || linked.view.state != "carried" || isElsewhere(linked) == true) continue;
 			const std::optional<seal::MatterKey> key = matterKey(linked.view.matter_id, linked.view.key_id);
 			if (key.has_value() == false) continue;
 			for (const std::string &path : paths->second) {
@@ -2934,6 +2970,10 @@ void sync_once() {
 		round.add("sentAtOnce", sentAtOnce);
 		for (Linked &linked : records.matters) {
 			platform::trace::Span matter("coordination", "matterRound", {{"files", linked.view.known.size()}});
+			if (isElsewhere(linked) == true) {
+				if (isFirmChannel(linked) == false) linked.view.last_error = kOtherOrganisations;
+				continue;
+			}
 			try {
 				const auto computers = channels.find(linked.view.matter_id);
 				roundFor(linked, transports, me, mine, computers == channels.end() ? none : computers->second, colleagues);
@@ -2957,8 +2997,8 @@ void start() {
 	state.is_stopping = false;
 	state.is_running = true;
 	// What this computer writes to a Matter goes at once: a person's message, an
-	// AI colleague's record, a document's change (D-127). Its own news of what
-	// came does not wake it.
+	// AI colleague's record, a document's change. Its own news of what came does
+	// not wake it.
 	static std::once_flag observing;
 	std::call_once(observing, []() {
 		platform::events::observe([](const std::string &name, const nlohmann::json &payload) {

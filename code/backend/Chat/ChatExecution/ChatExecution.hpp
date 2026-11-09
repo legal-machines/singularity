@@ -13,10 +13,9 @@
 
 namespace singularity::chat {
 
-// The real, backend-owned lifecycle of ONE Chat operation. Every state here
-// is a fact this process can actually observe - never a stage invented to
-// make a progress card look busier than the pipeline is
-// (phase-24-chat-execution-results-sources.md's "Truthful stages only"):
+// The real, backend-owned lifecycle of ONE Chat operation. Every state here is a
+// fact this process can actually observe - never a stage invented to make a
+// progress card look busier than the pipeline is.
 //
 //   Preparing  Phase 21 source resolution and Phase 22 operation setup are
 //              genuinely running (prepare_chat_request()). Nothing has been
@@ -191,9 +190,9 @@ ChatExecutionOutcome resume_chat_operation(const std::string &project_id,
 	const std::string &operation_id);
 
 // Whether a request's work stays on this computer and what it really runs on
-// there (Beta 1 #44): the same decision the send makes, said without sending.
-// Nothing when it may run anywhere. The application installs it as the
-// composer's kept-here resolver (ChatOutboundPreview).
+// there: the same decision the send makes, said without sending. Nothing when
+// it may run anywhere. The application installs it as the composer's
+// kept-here resolver (ChatOutboundPreview).
 std::optional<KeptHereModel> kept_here_model(const ChatRequestComposition &composition);
 
 // Whether an agent works only on this computer (Agent/ owns its policy): a

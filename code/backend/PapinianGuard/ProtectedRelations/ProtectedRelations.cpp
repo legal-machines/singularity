@@ -38,19 +38,19 @@ std::string fold(std::string_view text) {
 		}
 		if (index + 1 < text.size()) {
 			const unsigned char next = static_cast<unsigned char>(text[index + 1]);
-			if (byte == 0xD0 && next >= 0x90 && next <= 0x9F) {  // А-П
+			if (byte == 0xD0 && next >= 0x90 && next <= 0x9F) {  // …
 				result += static_cast<char>(0xD0);
 				result += static_cast<char>(next + 0x20);
 				++index;
 				continue;
 			}
-			if (byte == 0xD0 && next >= 0xA0 && next <= 0xAF) {  // Р-Я
+			if (byte == 0xD0 && next >= 0xA0 && next <= 0xAF) {  // …
 				result += static_cast<char>(0xD1);
 				result += static_cast<char>(next - 0x20);
 				++index;
 				continue;
 			}
-			if (byte == 0xD0 && next == 0x81) {  // Ё
+			if (byte == 0xD0 && next == 0x81) {  // …
 				result += "\xD1\x91";
 				++index;
 				continue;
@@ -81,8 +81,8 @@ bool letter_before(const std::string &text, std::size_t position) {
 }
 
 // Where `word` stands in `folded` as words stand - "rent" in "Base Rent", never
-// in "current" or "Parent"; a stem written "цен*" in «цена», «цены», never in
-// «процент». An entry ending in '*' is a stem any ending may follow; any other
+// in "current" or "Parent"; a stem written "…" in «…», never in
+// «…». An entry ending in '*' is a stem any ending may follow; any other
 // is the whole word (or phrase), or it with a plural "s"/"es".
 std::size_t word_position(const std::string &folded, std::string_view word) {
 	const bool stem = !word.empty() && word.back() == '*';
@@ -215,12 +215,12 @@ std::vector<std::string> split_sentences(const std::string &line) {
 bool reads_as_rule(const std::string &folded) {
 	return contains_any(folded, {"within", "no later than", "not later than", "deadline", "notice", "days after",
 		"days of", "days before", "business day", "cure", "objection", "expire", "due", "increase", "effective",
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",          // не позднее
-		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",                  // в течение
-		"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                                  // срок
-		"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9",                                                  // дней
-		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x81\xD1\x80\xD0\xBE\xD1\x87",                          // просроч
-		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBB"});                        // уведомл
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",          // …
+		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",                  // …
+		"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                                  // …
+		"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9",                                                  // …
+		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x81\xD1\x80\xD0\xBE\xD1\x87",                          // …
+		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBB"});                        // …
 }
 
 // Content words, cut to a stem of five letters: what a question and a line share.
@@ -366,12 +366,12 @@ RowKind row_kind(const SheetRow &row) {
 	// The row's own label - its first cell - not a note further along it.
 	const std::string label = !row.cells.empty() && row.cells.front().text() ? fold(row.cells.front().raw) : std::string();
 	// Part of the rows, or a position rather than a sum: "Subtotal", "Q1 subtotal",
-	// «Промежуточный итог», "Balance", "Balance carried forward", «Сальдо», «Остаток».
+	// «…», "Balance", "Balance carried forward", «…».
 	if (any_whole_word(label, {"subtotal", "subtotals", "sub-total", "balance", "balances", "carried", "brought",
-			"\xD0\xBF\xD1\x80\xD0\xBE\xD0\xBC\xD0\xB5\xD0\xB6\xD1\x83\xD1\x82\xD0\xBE\xD1\x87\xD0\xBD*",  // промежуточн*
-			"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                                          // сальдо
-			"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD0\xBA",                                  // остаток
-			"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBD\xD0\xBE\xD1\x81*"}))                               // перенос*
+			"\xD0\xBF\xD1\x80\xD0\xBE\xD0\xBC\xD0\xB5\xD0\xB6\xD1\x83\xD1\x82\xD0\xBE\xD1\x87\xD0\xBD*",  // …*
+			"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                                          // …
+			"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD0\xBA",                                  // …
+			"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD0\xBD\xD0\xBE\xD1\x81*"}))                               // …*
 		return RowKind::Summary;
 	bool sums = false;
 	for (const Cell &cell : row.cells) {
@@ -383,10 +383,10 @@ RowKind row_kind(const SheetRow &row) {
 			return RowKind::Summary;
 		if (formula.rfind("=sum(", 0) == 0) sums = true;
 	}
-	// "Total", "Grand total", "Sum", «Итого», «Итог», «Всего».
+	// "Total", "Grand total", "Sum", «…».
 	if (any_whole_word(label, {"total", "totals", "sum",
-			"\xD0\xB8\xD1\x82\xD0\xBE\xD0\xB3*",                  // итог* (итого, итоги)
-			"\xD0\xB2\xD1\x81\xD0\xB5\xD0\xB3\xD0\xBE"}))          // всего
+			"\xD0\xB8\xD1\x82\xD0\xBE\xD0\xB3*",                  // …* (…)
+			"\xD0\xB2\xD1\x81\xD0\xB5\xD0\xB3\xD0\xBE"}))          // …
 		return RowKind::Total;
 	return sums ? RowKind::Total : RowKind::Body;
 }
@@ -505,8 +505,8 @@ struct Builder {
 
 // What a money column of a ledger holds, by its header's words: the amount
 // due, the amount paid, an offset against what is due - or Unclear, when the
-// header shifts or negates such a word ("Unpaid", "Prepaid", "Overdue", «Не
-// оплачено», «Переплата») or names two roles at once. Debit and Credit are
+// header shifts or negates such a word ("Unpaid", "Prepaid", "Overdue", «…
+// …», «…») or names two roles at once. Debit and Credit are
 // kept apart: which of them is the payment depends on whose ledger it is.
 enum class Role { None, Due, Paid, Offset, Debit, Credit, Unclear };
 
@@ -514,36 +514,36 @@ Role column_role(const std::string &header) {
 	// Whole words, or stems ('*'), in the header's folded words.
 	static const std::vector<std::string> dueWords{"billed", "bill", "due", "charged", "charge", "invoiced", "invoice",
 		"accrued", "accrual", "owed", "owing", "payable", "scheduled",
-		"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",                          // начисл*
-		"\xD0\xB2\xD1\x8B\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB*",                  // выставл*
-		"\xD0\xB3\xD1\x80\xD0\xB0\xD1\x84\xD0\xB8\xD0\xBA*"};                         // график*
+		"\xD0\xBD\xD0\xB0\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",                          // …*
+		"\xD0\xB2\xD1\x8B\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB*",                  // …*
+		"\xD0\xB3\xD1\x80\xD0\xB0\xD1\x84\xD0\xB8\xD0\xBA*"};                         // …*
 	static const std::vector<std::string> paidWords{"paid", "pay", "received", "receipt", "payment", "remitted",
 		"remittance", "collected", "settled",
-		"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",                                  // оплач*
-		"\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",                                  // уплач*
-		"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                  // оплат*
-		"\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                  // уплат*
-		"\xD0\xBF\xD0\xBE\xD1\x81\xD1\x82\xD1\x83\xD0\xBF*",                          // поступ*
-		"\xD0\xBF\xD0\xBE\xD0\xBB\xD1\x83\xD1\x87\xD0\xB5\xD0\xBD*",                  // получен*
-		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",          // перечисл*
-		"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6*", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x91\xD0\xB6*"};  // платеж*, платёж*
+		"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",                                  // …*
+		"\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x87*",                                  // …*
+		"\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                  // …*
+		"\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*",                                  // …*
+		"\xD0\xBF\xD0\xBE\xD1\x81\xD1\x82\xD1\x83\xD0\xBF*",                          // …*
+		"\xD0\xBF\xD0\xBE\xD0\xBB\xD1\x83\xD1\x87\xD0\xB5\xD0\xBD*",                  // …*
+		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB*",          // …*
+		"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6*", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x91\xD0\xB6*"};  // …*, …*
 	static const std::vector<std::string> offsetWords{"offset", "set-off", "setoff", "credit memo", "credit note",
-		"\xD0\xB7\xD0\xB0\xD1\x87\xD1\x91\xD1\x82*", "\xD0\xB7\xD0\xB0\xD1\x87\xD0\xB5\xD1\x82*"};  // зачёт*, зачет*
+		"\xD0\xB7\xD0\xB0\xD1\x87\xD1\x91\xD1\x82*", "\xD0\xB7\xD0\xB0\xD1\x87\xD0\xB5\xD1\x82*"};  // …*, …*
 	static const std::vector<std::string> positionWords{"balance", "outstanding", "remaining", "arrears",
-		"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                           // сальдо
-		"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3*",                                          // долг*
-		"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD*",          // задолжен*
-		"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82*"};                                 // остат*
+		"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                           // …
+		"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3*",                                          // …*
+		"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD*",          // …*
+		"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82*"};                                 // …*
 	// A word that turns a role into another, glued on or standing before it.
 	static const std::vector<std::string> shifts{"un", "non-", "non", "pre", "over", "under", "not ",
-		"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE",                                           // недо
-		"\xD0\xBD\xD0\xB5 ", "\xD0\xBD\xD0\xB5",                                      // не
-		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5",                                           // пере
-		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4"};                                          // пред
+		"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE",                                           // …
+		"\xD0\xBD\xD0\xB5 ", "\xD0\xBD\xD0\xB5",                                      // …
+		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5",                                           // …
+		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4"};                                          // …
 	const auto any = [](const std::string &text, const std::vector<std::string> &words) {
 		return std::any_of(words.begin(), words.end(), [&](const std::string &word) { return has_word(text, word); });
 	};
-	// A role word with a shift before it: "unpaid", "prepaid", "overdue", «неоплачено», «не оплачено».
+	// A role word with a shift before it: "unpaid", "prepaid", "overdue", «…».
 	for (std::size_t at = 0; at < header.size(); ++at) {
 		if (letter_before(header, at)) continue;
 		for (const std::string &shift : shifts) {
@@ -556,7 +556,7 @@ Role column_role(const std::string &header) {
 				}
 		}
 	}
-	// "Payment due", «К оплате», «К уплате», "Amount due": the amount due, whose
+	// "Payment due", «…», "Amount due": the amount due, whose
 	// payment word names what is owed.
 	std::string rest = header;
 	bool due = false;
@@ -570,9 +570,9 @@ Role column_role(const std::string &header) {
 	due = due || any(rest, dueWords);
 	const bool paid = any(rest, paidWords);
 	const bool offset = any(rest, offsetWords);
-	const bool debit = has_word(rest, "debit") || has_word(rest, "\xD0\xB4\xD0\xB5\xD0\xB1\xD0\xB5\xD1\x82*");  // дебет*
+	const bool debit = has_word(rest, "debit") || has_word(rest, "\xD0\xB4\xD0\xB5\xD0\xB1\xD0\xB5\xD1\x82*");  // …*
 	const bool credit = has_word(rest, "credit") || has_word(rest, "credits") || has_word(rest, "credited")
-		|| has_word(rest, "\xD0\xBA\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB8\xD1\x82*");                                      // кредит*
+		|| has_word(rest, "\xD0\xBA\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB8\xD1\x82*");                                      // …*
 	if (any(rest, positionWords)) return (due || paid || offset) ? Role::Unclear : Role::None;
 	const int named = (due ? 1 : 0) + (paid ? 1 : 0) + (offset ? 1 : 0) + (debit ? 1 : 0) + (credit && !offset ? 1 : 0);
 	if (named > 1) return Role::Unclear;
@@ -666,7 +666,7 @@ void table_relations(Builder &out, const std::vector<Sheet> &sheets) {
 			for (const Cell &cell : row->cells) columns.insert(cell.column);
 		std::map<Role, std::string> roles;
 		// A money column whose part in the balance its header does not say -
-		// "Base Rent" beside "CAM Charges" and "Amount Paid", "Late Fee", «Пени» -
+		// "Base Rent" beside "CAM Charges" and "Amount Paid", "Late Fee", «…» -
 		// is a charge or a credit Singularity cannot place: a balance that left it out
 		// told a tenant who owed money that it had overpaid (reviewer, 26 Sep 2026).
 		bool unplaced = false;
@@ -802,10 +802,10 @@ void table_relations(Builder &out, const std::vector<Sheet> &sheets) {
 // ---------------------------------------------------------------------------
 // (b) Stepped amounts
 
-// What an amount is named by - "Base Rent", «арендная плата», "License Fee" -
+// What an amount is named by - "Base Rent", «…», "License Fee" -
 // as an item and the words (or stems, '*') it is written in, the most specific
 // first. Matched as words stand: "rent" never in "current" or "Parent", "fee"
-// never in "coffee", «цена» never in «процент» or «лицензионный».
+// never in "coffee", «…» never in «…» or «…».
 struct Item {
 	const char *name;
 	std::vector<std::string> words;
@@ -814,27 +814,27 @@ struct Item {
 const std::vector<Item> &items() {
 	static const std::vector<Item> all{
 		{"base rent", {"base rent", "basic rent", "minimum rent", "fixed rent", "minimum annual rent"}},
-		{"license fee", {"license fee", "licence fee", "royalty", "royalties", "\xD1\x80\xD0\xBE\xD1\x8F\xD0\xBB\xD1\x82\xD0\xB8",  // роялти
-			"\xD0\xBB\xD0\xB8\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB7\xD0\xB8\xD0\xBE\xD0\xBD\xD0\xBD*"}},                                // лицензионн*
+		{"license fee", {"license fee", "licence fee", "royalty", "royalties", "\xD1\x80\xD0\xBE\xD1\x8F\xD0\xBB\xD1\x82\xD0\xB8",  // …
+			"\xD0\xBB\xD0\xB8\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB7\xD0\xB8\xD0\xBE\xD0\xBD\xD0\xBD*"}},                                // …*
 		{"salary", {"salary", "salaries", "wage", "wages", "base pay",
-			"\xD0\xBE\xD0\xBA\xD0\xBB\xD0\xB0\xD0\xB4*",                                   // оклад*
-			"\xD0\xB7\xD0\xB0\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x82\xD0\xBD*",           // заработн*
-			"\xD0\xB7\xD0\xB0\xD1\x80\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*"}},                 // зарплат*
-		{"rent", {"rent", "rental", "\xD0\xB0\xD1\x80\xD0\xB5\xD0\xBD\xD0\xB4\xD0\xBD*"}},  // арендн*
-		{"fee", {"fee", "fees", "retainer", "\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB3\xD1\x80\xD0\xB0\xD0\xB6\xD0\xB4*"}},  // вознагражд*
-		{"premium", {"premium", "premiums", "\xD0\xBF\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB8*"}},  // преми*
-		{"price", {"price", "prices", "\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB0", "\xD1\x86\xD0\xB5\xD0\xBD\xD1\x8B",  // цена цены
-			"\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB5", "\xD1\x86\xD0\xB5\xD0\xBD\xD1\x83", "\xD1\x86\xD0\xB5\xD0\xBD\xD0\xBE\xD0\xB9",  // цене цену ценой
-			"\xD1\x81\xD1\x82\xD0\xBE\xD0\xB8\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82*"}},         // стоимост*
+			"\xD0\xBE\xD0\xBA\xD0\xBB\xD0\xB0\xD0\xB4*",                                   // …*
+			"\xD0\xB7\xD0\xB0\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x82\xD0\xBD*",           // …*
+			"\xD0\xB7\xD0\xB0\xD1\x80\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82*"}},                 // …*
+		{"rent", {"rent", "rental", "\xD0\xB0\xD1\x80\xD0\xB5\xD0\xBD\xD0\xB4\xD0\xBD*"}},  // …*
+		{"fee", {"fee", "fees", "retainer", "\xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB3\xD1\x80\xD0\xB0\xD0\xB6\xD0\xB4*"}},  // …*
+		{"premium", {"premium", "premiums", "\xD0\xBF\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB8*"}},  // …*
+		{"price", {"price", "prices", "\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB0", "\xD1\x86\xD0\xB5\xD0\xBD\xD1\x8B",  // …
+			"\xD1\x86\xD0\xB5\xD0\xBD\xD0\xB5", "\xD1\x86\xD0\xB5\xD0\xBD\xD1\x83", "\xD1\x86\xD0\xB5\xD0\xBD\xD0\xBE\xD0\xB9",  // …
+			"\xD1\x81\xD1\x82\xD0\xBE\xD0\xB8\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82*"}},         // …*
 		{"installment", {"installment", "installments", "instalment", "instalments",
-			"\xD0\xB2\xD0\xB7\xD0\xBD\xD0\xBE\xD1\x81*"}},                                 // взнос*
+			"\xD0\xB2\xD0\xB7\xD0\xBD\xD0\xBE\xD1\x81*"}},                                 // …*
 		{"interest", {"interest"}},
 		{"charge", {"charge", "charges"}},
-		{"payment", {"payment", "payments", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6*",  // платеж*
-			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x91\xD0\xB6*"}},                         // платёж*
-		{"plata", {"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB0", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x8B",  // плата платы
-			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x83",  // плате плату
-			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xBE\xD0\xB9"}},                          // платой
+		{"payment", {"payment", "payments", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6*",  // …*
+			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x91\xD0\xB6*"}},                         // …*
+		{"plata", {"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB0", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x8B",  // …
+			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5", "\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD1\x83",  // …
+			"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xBE\xD0\xB9"}},                          // …
 	};
 	return all;
 }
@@ -858,7 +858,7 @@ const Item *item_of(const std::string &folded) {
 }
 
 // Ordinal words for the days of a month, English and Russian (the Russian as a
-// stem any case may end): "fifth", «пятого», «двадцать пятое».
+// stem any case may end): "fifth", «…».
 std::optional<unsigned> ordinal_word(const std::string &folded) {
 	static const std::vector<std::pair<std::string, unsigned>> english{{"first", 1}, {"second", 2}, {"third", 3},
 		{"fourth", 4}, {"fifth", 5}, {"sixth", 6}, {"seventh", 7}, {"eighth", 8}, {"ninth", 9}, {"tenth", 10},
@@ -875,14 +875,14 @@ std::optional<unsigned> ordinal_word(const std::string &folded) {
 		{"\xD1\x88\xD0\xB5\xD1\x81\xD1\x82\xD0\xBD\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 16}, {"\xD1\x81\xD0\xB5\xD0\xBC\xD0\xBD\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 17},
 		{"\xD0\xB2\xD0\xBE\xD1\x81\xD0\xB5\xD0\xBC\xD0\xBD\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 18}, {"\xD0\xB4\xD0\xB5\xD0\xB2\xD1\x8F\xD1\x82\xD0\xBD\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 19},
 		{"\xD0\xB4\xD0\xB2\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 20}, {"\xD1\x82\xD1\x80\xD0\xB8\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82", 30}};
-	// "twenty-fifth", «двадцать пятого»: a tens word and a unit.
+	// "twenty-fifth", «…»: a tens word and a unit.
 	const auto one = [&](const std::string &word) -> std::optional<unsigned> {
 		for (const auto &[form, day] : english)
 			if (word == form) return day;
-		// A Russian stem takes an ending of at most four letters: «пятого», «третье».
+		// A Russian stem takes an ending of at most four letters: «…».
 		for (const auto &[stem, day] : russian)
 			if (word.size() > stem.size() && word.compare(0, stem.size(), stem) == 0 && word.size() - stem.size() <= 8) {
-				// «пятнадцатого» begins with «пят» too: the longest stem that fits wins below.
+				// «…» begins with «…» too: the longest stem that fits wins below.
 				bool longer = false;
 				for (const auto &[other, otherDay] : russian)
 					if (other.size() > stem.size() && word.compare(0, other.size(), other) == 0) longer = true;
@@ -906,7 +906,7 @@ std::optional<unsigned> ordinal_word(const std::string &folded) {
 	const std::optional<unsigned> unit = one(words.back());
 	if (words.front() == "twenty") return unit && *unit < 10 ? std::optional<unsigned>(20 + *unit) : std::nullopt;
 	if (words.front() == "thirty") return unit && *unit == 1 ? std::optional<unsigned>(31) : std::nullopt;
-	// «двадцать пятого», «тридцать первого»: the tens written as a number word.
+	// «…»: the tens written as a number word.
 	if (words.front() == "\xD0\xB4\xD0\xB2\xD0\xB0\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82\xD1\x8C")
 		return unit && *unit < 10 ? std::optional<unsigned>(20 + *unit) : std::nullopt;
 	if (words.front() == "\xD1\x82\xD1\x80\xD0\xB8\xD0\xB4\xD1\x86\xD0\xB0\xD1\x82\xD1\x8C")
@@ -916,10 +916,10 @@ std::optional<unsigned> ordinal_word(const std::string &folded) {
 }
 
 // "on the first day of each month", "the fifth (5th) day of each month", "on
-// the 1st of each month", «не позднее 5-го числа», «до 10 (десятого) числа
-// каждого месяца», «пятого числа»: the day of the month an amount is due on,
+// the 1st of each month", «…», «… 10 (…) …
+// …», «…»: the day of the month an amount is due on,
 // when a sentence gives one. A day that moves - "the last (business) day of the
-// month", «последнего рабочего дня месяца» - is no one day, and gives none.
+// month", «…» - is no one day, and gives none.
 std::optional<unsigned> due_day_of_month(const std::string &folded) {
 	static const std::regex english(
 		"(?:\\b(\\d{1,2})(?:st|nd|rd|th)?|\\b([a-z]+(?:-[a-z]+)?))(?: \\((?:\\d{1,2})(?:st|nd|rd|th)?\\))?"
@@ -927,7 +927,7 @@ std::optional<unsigned> due_day_of_month(const std::string &folded) {
 	static const std::regex russian(
 		"(?:(\\d{1,2})(?:-?(?:\\xD0\\xB3\\xD0\\xBE|\\xD0\\xB5|\\xD0\\xBE\\xD0\\xB5|\\xD0\\xBE\\xD0\\xB3\\xD0\\xBE))?"
 		"|((?:[\\xD0\\xD1][\\x80-\\xBF])+(?: (?:[\\xD0\\xD1][\\x80-\\xBF])+)?))"
-		" (?:\\([^)]{1,30}\\) )?\\xD1\\x87\\xD0\\xB8\\xD1\\x81\\xD0\\xBB");  // числ
+		" (?:\\([^)]{1,30}\\) )?\\xD1\\x87\\xD0\\xB8\\xD1\\x81\\xD0\\xBB");  // …
 	const auto valid = [](unsigned day) { return day >= 1 && day <= 31 ? std::optional<unsigned>(day) : std::nullopt; };
 	for (std::sregex_iterator match(folded.begin(), folded.end(), english), end; match != end; ++match) {
 		if ((*match)[1].matched) return valid(static_cast<unsigned>(std::stoul((*match)[1].str())));
@@ -935,8 +935,8 @@ std::optional<unsigned> due_day_of_month(const std::string &folded) {
 	}
 	for (std::sregex_iterator match(folded.begin(), folded.end(), russian), end; match != end; ++match) {
 		if ((*match)[1].matched) return valid(static_cast<unsigned>(std::stoul((*match)[1].str())));
-		// «до пятого числа», «не позднее двадцать пятого числа»: the ordinal is the
-		// last word or two before «числа».
+		// «…»: the ordinal is the
+		// last word or two before «…».
 		const std::string words = (*match)[2].str();
 		if (const std::optional<unsigned> day = ordinal_word(words)) return valid(*day);
 		const std::size_t space = words.find(' ');
@@ -946,51 +946,51 @@ std::optional<unsigned> due_day_of_month(const std::string &folded) {
 	return std::nullopt;
 }
 
-// Which way a sentence moves an amount: up ("increases", "escalates", «индексируется»,
-// «увеличивается»), down ("adjusted downward", "reduced", «снижается»), both, or neither.
+// Which way a sentence moves an amount: up ("increases", "escalates", «…»,
+// «…»), down ("adjusted downward", "reduced", «…»), both, or neither.
 enum class Direction { None, Up, Down, Both };
 
 Direction direction_of(const std::string &folded) {
 	const bool up = any_whole_word(folded, {"increase*", "escalat*", "rise", "rises", "rising", "raise", "raised", "raises",
 		"bump*", "uplift*", "step up", "steps up", "stepped up", "go up", "goes up", "grow", "grows",
-		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x87*",                // увелич*
-		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB8\xD1\x80*",  // индексир*
-		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB0\xD1\x86*",  // индексац*
-		"\xD0\xBF\xD0\xBE\xD0\xB2\xD1\x8B\xD1\x88*",                         // повыш*
-		"\xD0\xB2\xD0\xBE\xD0\xB7\xD1\x80\xD0\xB0\xD1\x81\xD1\x82*"});        // возраст*
+		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x87*",                // …*
+		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB8\xD1\x80*",  // …*
+		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81\xD0\xB0\xD1\x86*",  // …*
+		"\xD0\xBF\xD0\xBE\xD0\xB2\xD1\x8B\xD1\x88*",                         // …*
+		"\xD0\xB2\xD0\xBE\xD0\xB7\xD1\x80\xD0\xB0\xD1\x81\xD1\x82*"});        // …*
 	const bool down = any_whole_word(folded, {"decrease*", "reduc*", "lower", "lowered", "lowers", "downward*",
 		"decline*", "abate*", "abatement", "cut", "cuts",
-		"\xD1\x81\xD0\xBD\xD0\xB8\xD0\xB6*",                                 // сниж*
-		"\xD1\x83\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88*",                 // уменьш*
-		"\xD0\xBF\xD0\xBE\xD0\xBD\xD0\xB8\xD0\xB6*"});                       // пониж*
+		"\xD1\x81\xD0\xBD\xD0\xB8\xD0\xB6*",                                 // …*
+		"\xD1\x83\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88*",                 // …*
+		"\xD0\xBF\xD0\xBE\xD0\xBD\xD0\xB8\xD0\xB6*"});                       // …*
 	return up && down ? Direction::Both : up ? Direction::Up : down ? Direction::Down : Direction::None;
 }
 
 // Words that make a step anything but one fixed rate: bounds ("not less than 2%
-// nor more than 5%", «не более»), an index it follows ("CPI", "cost of living",
-// «индекс потребительских цен», «инфляция»), a choice ("the greater of").
+// nor more than 5%"…"CPI", "cost of living",
+// «…»), a choice ("the greater of").
 bool step_is_conditional(const std::string &folded) {
 	return any_whole_word(folded, {"not less than", "not more than", "no less than", "no more than", "not to exceed",
 		"at least", "at most", "minimum", "maximum", "floor", "ceiling", "cap", "capped", "up to", "greater of", "lesser of",
 		"higher of", "lower of", "whichever", "between", "cpi", "consumer price*", "price index*", "cost of living",
 		"cost-of-living", "inflation*", "index-linked", "indexed to",
-		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                     // не менее
-		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                     // не более
-		"\xD0\xBD\xD0\xB5 \xD0\xB2\xD1\x8B\xD1\x88\xD0\xB5",                             // не выше
-		"\xD0\xBD\xD0\xB5 \xD0\xBD\xD0\xB8\xD0\xB6\xD0\xB5",                             // не ниже
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88*",            // не превыш*
-		"\xD0\xBC\xD0\xB0\xD0\xBA\xD1\x81\xD0\xB8\xD0\xBC\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xBD*",  // максимальн*
-		"\xD0\xBC\xD0\xB8\xD0\xBD\xD0\xB8\xD0\xBC\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xBD*",     // минимальн*
-		"\xD0\xB2 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB0\xD1\x85",     // в пределах
-		"\xD0\xBF\xD0\xBE\xD1\x82\xD1\x80\xD0\xB5\xD0\xB1\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD1\x81\xD0\xBA*",  // потребительск*
-		"\xD0\xB8\xD0\xBD\xD1\x84\xD0\xBB\xD1\x8F\xD1\x86*",                             // инфляц*
-		"\xD0\xB8\xD0\xBF\xD1\x86"});                                                    // ипц
+		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                     // …
+		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                     // …
+		"\xD0\xBD\xD0\xB5 \xD0\xB2\xD1\x8B\xD1\x88\xD0\xB5",                             // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBD\xD0\xB8\xD0\xB6\xD0\xB5",                             // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88*",            // …*
+		"\xD0\xBC\xD0\xB0\xD0\xBA\xD1\x81\xD0\xB8\xD0\xBC\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xBD*",  // …*
+		"\xD0\xBC\xD0\xB8\xD0\xBD\xD0\xB8\xD0\xBC\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xBD*",     // …*
+		"\xD0\xB2 \xD0\xBF\xD1\x80\xD0\xB5\xD0\xB4\xD0\xB5\xD0\xBB\xD0\xB0\xD1\x85",     // …
+		"\xD0\xBF\xD0\xBE\xD1\x82\xD1\x80\xD0\xB5\xD0\xB1\xD0\xB8\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD1\x81\xD0\xBA*",  // …*
+		"\xD0\xB8\xD0\xBD\xD1\x84\xD0\xBB\xD1\x8F\xD1\x86*",                             // …*
+		"\xD0\xB8\xD0\xBF\xD1\x86"});                                                    // …
 }
 
 // Whether a step lasts only a while: "reduced by 50% for three (3) months",
 // "for a period of six months", "until the Rent Commencement Date", "during
-// the first Lease Year", an abatement, «в течение трех месяцев», «на период»,
-// «до окончания». Read to hold a comparison back, never to make one: a step
+// the first Lease Year", an abatement, «…»,
+// «…». Read to hold a comparison back, never to make one: a step
 // that ends leaves the ledger's later rows no measure of it.
 bool step_is_temporary(const std::string &folded) {
 	static const std::regex forPeriod(
@@ -1001,13 +1001,13 @@ bool step_is_temporary(const std::string &folded) {
 	if (std::regex_search(folded, forPeriod)) return true;
 	return any_whole_word(folded, {"until", "till", "through", "thru", "during", "abate*", "abatement", "free rent",
 		"rent holiday", "holiday", "waive*", "temporar*", "one-time", "one time", "for the first", "for the next",
-		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",           // в течение
-		"\xD0\xBD\xD0\xB0 \xD0\xBF\xD0\xB5\xD1\x80\xD0\xB8\xD0\xBE\xD0\xB4",           // на период
-		"\xD0\xBD\xD0\xB0 \xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                           // на срок
-		"\xD0\xB4\xD0\xBE \xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x87\xD0\xB0\xD0\xBD\xD0\xB8*",  // до окончани*
-		"\xD0\xB4\xD0\xBE \xD0\xB4\xD0\xB0\xD1\x82\xD1\x8B",                           // до даты
-		"\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xBD*",                   // временн*
-		"\xD0\xBA\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xBA\xD1\x83\xD0\xBB*"});                 // каникул*
+		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",           // …
+		"\xD0\xBD\xD0\xB0 \xD0\xBF\xD0\xB5\xD1\x80\xD0\xB8\xD0\xBE\xD0\xB4",           // …
+		"\xD0\xBD\xD0\xB0 \xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                           // …
+		"\xD0\xB4\xD0\xBE \xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x87\xD0\xB0\xD0\xBD\xD0\xB8*",  // …*
+		"\xD0\xB4\xD0\xBE \xD0\xB4\xD0\xB0\xD1\x82\xD1\x8B",                           // …
+		"\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB5\xD0\xBD\xD0\xBD*",                   // …*
+		"\xD0\xBA\xD0\xB0\xD0\xBD\xD0\xB8\xD0\xBA\xD1\x83\xD0\xBB*"});                 // …*
 }
 
 struct Step {
@@ -1026,11 +1026,11 @@ struct Step {
 };
 
 // Every rate a sentence writes in figures itself: "3%", "(3%)", "3 percent",
-// "2.5 per cent", «5 (пять) процентов», «0,1 %». Each as its fraction and as written.
+// "2.5 per cent", «…», «0,1 %». Each as its fraction and as written.
 std::vector<std::pair<Rational, std::string>> literal_rates(const std::string &sentence) {
 	static const std::regex percent(
 		"(\\d{1,3}(?:[.,]\\d{1,4})?)\\s?(?:\\([^)0-9]{1,40}\\)\\s?)?"
-		"(?:%|percent\\b|per cent\\b|pct\\b|\\xD0\\xBF\\xD1\\x80\\xD0\\xBE\\xD1\\x86\\xD0\\xB5\\xD0\\xBD\\xD1\\x82)");  // процент
+		"(?:%|percent\\b|per cent\\b|pct\\b|\\xD0\\xBF\\xD1\\x80\\xD0\\xBE\\xD1\\x86\\xD0\\xB5\\xD0\\xBD\\xD1\\x82)");  // …
 	const std::string folded = fold(sentence);
 	std::vector<std::pair<Rational, std::string>> rates;
 	for (std::sregex_iterator match(folded.begin(), folded.end(), percent), end; match != end; ++match) {
@@ -1094,7 +1094,7 @@ void step_relations(Builder &out, const std::vector<Sentence> &sentences, const 
 			for (const Sentence &other : sentences) {
 				if (other.passage != sentence.passage || &other == &sentence || !mentions(other.folded, *step.item)) continue;
 				// Where the amount is set, not where it is merely mentioned ("withheld
-				// $61,300 of Base Rent"): "shall pay monthly Base Rent of", «составляет».
+				// $61,300 of Base Rent"): "shall pay monthly Base Rent of", «…».
 				if (!contains_any(other.folded, {"monthly", "per month", "annual", "per annum", "per year", "shall pay",
 						"shall be", "is set at", "\xD0\xB5\xD0\xB6\xD0\xB5\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x87",
 						"\xD0\xB2 \xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86", "\xD1\x81\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD0\xB2\xD0\xBB\xD1\x8F\xD0\xB5\xD1\x82",
@@ -1124,7 +1124,7 @@ void step_relations(Builder &out, const std::vector<Sentence> &sentences, const 
 		}
 		if (!step.day && !step.literal_day && !any_whole_word(sentence.folded, {"each year", "annually", "every year",
 				"per year", "yearly", "each lease year", "each contract year", "each calendar year", "each anniversary",
-				"every anniversary", "\xD0\xB5\xD0\xB6\xD0\xB5\xD0\xB3\xD0\xBE\xD0\xB4*"}))  // ежегод*
+				"every anniversary", "\xD0\xB5\xD0\xB6\xD0\xB5\xD0\xB3\xD0\xBE\xD0\xB4*"}))  // …*
 			continue;
 		steps.push_back(step);
 		if (steps.size() >= 3) break;
@@ -1314,7 +1314,7 @@ struct DurationRule {
 	std::string written;      // the duration as the sentence writes it
 };
 
-// "ten (10) business days", "5 business days", «10 (десяти) календарных дней».
+// "ten (10) business days", "5 business days", «…».
 std::vector<DurationRule> durations_in(const std::string &sentence) {
 	std::vector<DurationRule> found;
 	static const std::regex english(
@@ -1583,7 +1583,7 @@ void date_relations(Builder &out, const std::vector<Sentence> &sentences, const 
 	}
 
 	// Deadlines a rule sets from a date: "within ten (10) days of this
-	// notice", «не позднее 10 календарных дней после окончания квартала».
+	// notice", «…».
 	std::vector<long long> allDays;
 	std::map<long long, std::size_t> rowOfDay;
 	for (const Sentence &sentence : sentences)
@@ -1627,7 +1627,7 @@ void date_relations(Builder &out, const std::vector<Sentence> &sentences, const 
 			const bool endWords = contains_any(rest, {"end of", "\xD0\xBE\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x87\xD0\xB0\xD0\xBD",
 				"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x86", "\xD0\xB8\xD1\x81\xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD"});
 			if (!anchor && endWords) {
-				// The end of a period a workbook labels: "Конец квартала", "Quarter end".
+				// The end of a period a workbook labels: "…", "Quarter end".
 				std::string period;
 				for (const char *noun : {"quarter", "month", "year", "\xD0\xBA\xD0\xB2\xD0\xB0\xD1\x80\xD1\x82\xD0\xB0\xD0\xBB",
 						"\xD0\xBC\xD0\xB5\xD1\x81\xD1\x8F\xD1\x86", "\xD0\xB3\xD0\xBE\xD0\xB4"})
@@ -1679,9 +1679,9 @@ void date_relations(Builder &out, const std::vector<Sentence> &sentences, const 
 			// a business day with no roll known is a bound, never exact.
 			// A roll clause the contract limits to payments reaches this period only
 			// when the rule's own sentence is about paying.
-			const bool payment = contains_any(sentence.folded, {"pay", "\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",  // оплат
-				"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6", "\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",  // платеж уплат
-				"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB"});  // перечисл
+			const bool payment = contains_any(sentence.folded, {"pay", "\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",  // …
+				"\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82\xD0\xB5\xD0\xB6", "\xD1\x83\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",  // …
+				"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB5\xD1\x87\xD0\xB8\xD1\x81\xD0\xBB"});  // …
 			business_calendar::DayBound bound;
 			if (rule.business) bound = business_calendar::deadline_bound(*dayRule, from, before ? -rule.count : rule.count);
 			else bound = business_calendar::calendar_period_end(dayRule ? &*dayRule : nullptr, from + (before ? -rule.count : rule.count),
@@ -2026,79 +2026,79 @@ std::vector<Intent> intents_of(std::string_view question) {
 		if (present && std::find(intents.begin(), intents.end(), intent) == intents.end()) intents.push_back(intent);
 	};
 	add(Intent::Total, any_word(folded, {"total", "in sum", "sum of", "aggregate", "altogether", "combined", "in all",
-		"\xD0\xB8\xD1\x82\xD0\xBE\xD0\xB3",                                             // итог
-		"\xD0\xB2\xD1\x81\xD0\xB5\xD0\xB3\xD0\xBE",                                     // всего
-		"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB0\xD1\x8F \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",     // общая сумм
-		"\xD0\xBE\xD0\xB1\xD1\x89\xD1\x83\xD1\x8E \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",     // общую сумм
-		"\xD0\xB2 \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB5",                            // в сумме
-		"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB0\xD1\x80"}));                           // суммар
+		"\xD0\xB8\xD1\x82\xD0\xBE\xD0\xB3",                                             // …
+		"\xD0\xB2\xD1\x81\xD0\xB5\xD0\xB3\xD0\xBE",                                     // …
+		"\xD0\xBE\xD0\xB1\xD1\x89\xD0\xB0\xD1\x8F \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",     // …
+		"\xD0\xBE\xD0\xB1\xD1\x89\xD1\x83\xD1\x8E \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC",     // …
+		"\xD0\xB2 \xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB5",                            // …
+		"\xD1\x81\xD1\x83\xD0\xBC\xD0\xBC\xD0\xB0\xD1\x80"}));                           // …
 	add(Intent::Shortfall, any_word(folded, {"short", "underpa", "underbill", "owe", "outstanding", "balance", "arrear",
 		"unpaid", "deficien", "overpa", "overdue", "how much",
-		"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",             // недоплат
-		"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD",             // задолжен
-		"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3",                                             // долг
-		"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD0\xBA",                     // остаток
-		"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                             // сальдо
-		"\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBB\xD1\x8C\xD0\xBA\xD0\xBE"}));                   // сколько
+		"\xD0\xBD\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBF\xD0\xBB\xD0\xB0\xD1\x82",             // …
+		"\xD0\xB7\xD0\xB0\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB6\xD0\xB5\xD0\xBD",             // …
+		"\xD0\xB4\xD0\xBE\xD0\xBB\xD0\xB3",                                             // …
+		"\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD0\xBA",                     // …
+		"\xD1\x81\xD0\xB0\xD0\xBB\xD1\x8C\xD0\xB4\xD0\xBE",                             // …
+		"\xD1\x81\xD0\xBA\xD0\xBE\xD0\xBB\xD1\x8C\xD0\xBA\xD0\xBE"}));                   // …
 	add(Intent::Compare, any_word(folded, {"compare", "more than", "less than", "exceed", "greater", "higher", "lower",
 		"below", "above", "at least", "at most", "enough", "meet", "threshold", "equal", "match", "same as", "within the cap",
-		"\xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5",                             // больше
-		"\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",                             // меньше
-		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88",                             // превыш
-		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                    // не менее
-		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                    // не более
-		"\xD0\xB4\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD1\x87",             // достаточ
-		"\xD1\x81\xD0\xBE\xD0\xBE\xD1\x82\xD0\xB2\xD0\xB5\xD1\x82\xD1\x81\xD1\x82\xD0\xB2", // соответств
-		"\xD1\x80\xD0\xB0\xD0\xB2\xD0\xBD"}));                                          // равн
+		"\xD0\xB1\xD0\xBE\xD0\xBB\xD1\x8C\xD1\x88\xD0\xB5",                             // …
+		"\xD0\xBC\xD0\xB5\xD0\xBD\xD1\x8C\xD1\x88\xD0\xB5",                             // …
+		"\xD0\xBF\xD1\x80\xD0\xB5\xD0\xB2\xD1\x8B\xD1\x88",                             // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBC\xD0\xB5\xD0\xBD\xD0\xB5\xD0\xB5",                    // …
+		"\xD0\xBD\xD0\xB5 \xD0\xB1\xD0\xBE\xD0\xBB\xD0\xB5\xD0\xB5",                    // …
+		"\xD0\xB4\xD0\xBE\xD1\x81\xD1\x82\xD0\xB0\xD1\x82\xD0\xBE\xD1\x87",             // …
+		"\xD1\x81\xD0\xBE\xD0\xBE\xD1\x82\xD0\xB2\xD0\xB5\xD1\x82\xD1\x81\xD1\x82\xD0\xB2", // …
+		"\xD1\x80\xD0\xB0\xD0\xB2\xD0\xBD"}));                                          // …
 	const bool penalty = any_word(folded, {"penalt", "interest", "late fee", "default rate", "per day", "daily",
-		"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA",             // неустойк
-		"\xD0\xBF\xD0\xB5\xD0\xBD\xD0\xB8",                                             // пени
-		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82"});                    // процент
+		"\xD0\xBD\xD0\xB5\xD1\x83\xD1\x81\xD1\x82\xD0\xBE\xD0\xB9\xD0\xBA",             // …
+		"\xD0\xBF\xD0\xB5\xD0\xBD\xD0\xB8",                                             // …
+		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x86\xD0\xB5\xD0\xBD\xD1\x82"});                    // …
 	add(Intent::Deadline, penalty || any_word(folded, {"deadline", "due", "timely", "on time", "late", "by when",
 		"no later", "within", "expire", "cure", "notice period", "cut-off", "cutoff",
-		"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                             // срок
-		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",    // не позднее
-		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",            // в течение
-		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x81\xD1\x80\xD0\xBE\xD1\x87",                     // просроч
-		"\xD0\xB2\xD0\xBE\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD1\x8F",                     // вовремя
-		"\xD1\x81\xD0\xB2\xD0\xBE\xD0\xB5\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB5\xD0\xBD", // своевремен
-		"\xD0\xB8\xD1\x81\xD1\x82\xD0\xB5\xD0\xBA"}));                                  // истек
+		"\xD1\x81\xD1\x80\xD0\xBE\xD0\xBA",                                             // …
+		"\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xB7\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB5",    // …
+		"\xD0\xB2 \xD1\x82\xD0\xB5\xD1\x87\xD0\xB5\xD0\xBD\xD0\xB8\xD0\xB5",            // …
+		"\xD0\xBF\xD1\x80\xD0\xBE\xD1\x81\xD1\x80\xD0\xBE\xD1\x87",                     // …
+		"\xD0\xB2\xD0\xBE\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD1\x8F",                     // …
+		"\xD1\x81\xD0\xB2\xD0\xBE\xD0\xB5\xD0\xB2\xD1\x80\xD0\xB5\xD0\xBC\xD0\xB5\xD0\xBD", // …
+		"\xD0\xB8\xD1\x81\xD1\x82\xD0\xB5\xD0\xBA"}));                                  // …
 	add(Intent::BusinessDays, any_word(folded, {"business day", "working day", "banking day",
-		"\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD1\x85 \xD0\xB4\xD0\xBD",    // рабочих дн
-		"\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD0\xB5 \xD0\xB4\xD0\xBD",    // рабочие дн
-		"\xD0\xB1\xD0\xB0\xD0\xBD\xD0\xBA\xD0\xBE\xD0\xB2\xD1\x81\xD0\xBA\xD0\xB8\xD1\x85 \xD0\xB4\xD0\xBD"})); // банковских дн
+		"\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD1\x85 \xD0\xB4\xD0\xBD",    // …
+		"\xD1\x80\xD0\xB0\xD0\xB1\xD0\xBE\xD1\x87\xD0\xB8\xD0\xB5 \xD0\xB4\xD0\xBD",    // …
+		"\xD0\xB1\xD0\xB0\xD0\xBD\xD0\xBA\xD0\xBE\xD0\xB2\xD1\x81\xD0\xBA\xD0\xB8\xD1\x85 \xD0\xB4\xD0\xBD"})); // …
 	add(Intent::DaysBetween, penalty || any_word(folded, {" days", "how long", "how many", "period", "between",
 		"before", "after", "since", "until",
-		"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9",                                             // дней
-		"\xD0\xB4\xD0\xBD\xD1\x8F",                                                     // дня
-		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB8\xD0\xBE\xD0\xB4",                             // период
-		"\xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83",                                     // между
-		"\xD0\xB4\xD0\xBE ",                                                            // до
-		"\xD0\xBF\xD0\xBE\xD1\x81\xD0\xBB\xD0\xB5"}));                                  // после
+		"\xD0\xB4\xD0\xBD\xD0\xB5\xD0\xB9",                                             // …
+		"\xD0\xB4\xD0\xBD\xD1\x8F",                                                     // …
+		"\xD0\xBF\xD0\xB5\xD1\x80\xD0\xB8\xD0\xBE\xD0\xB4",                             // …
+		"\xD0\xBC\xD0\xB5\xD0\xB6\xD0\xB4\xD1\x83",                                     // …
+		"\xD0\xB4\xD0\xBE ",                                                            // …
+		"\xD0\xBF\xD0\xBE\xD1\x81\xD0\xBB\xD0\xB5"}));                                  // …
 	add(Intent::Escalation, any_word(folded, {"increase", "escalat", "step-up", "step up", "adjust", "indexa", "raise",
 		"old rate", "new rate",
-		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x87",                             // увелич
-		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81",                             // индекс
-		"\xD0\xBF\xD0\xBE\xD0\xB2\xD1\x8B\xD1\x88"}));                                  // повыш
+		"\xD1\x83\xD0\xB2\xD0\xB5\xD0\xBB\xD0\xB8\xD1\x87",                             // …
+		"\xD0\xB8\xD0\xBD\xD0\xB4\xD0\xB5\xD0\xBA\xD1\x81",                             // …
+		"\xD0\xBF\xD0\xBE\xD0\xB2\xD1\x8B\xD1\x88"}));                                  // …
 	add(Intent::Contact, any_word(folded, {"address", "email", "e-mail", "phone", "contact", "notice to", "send ",
 		"be sent", "sent to", "deliver", "serve ", "letter to", "write to", "where must", "where should", "where do",
-		"\xD0\xB0\xD0\xB4\xD1\x80\xD0\xB5\xD1\x81",                                     // адрес
-		"\xD0\xBF\xD0\xBE\xD1\x87\xD1\x82",                                             // почт
-		"\xD1\x82\xD0\xB5\xD0\xBB\xD0\xB5\xD1\x84\xD0\xBE\xD0\xBD",                     // телефон
-		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD0\xB0\xD0\xBA\xD1\x82",                     // контакт
-		"\xD0\xBD\xD0\xB0\xD0\xBF\xD1\x80\xD0\xB0\xD0\xB2"}));                          // направ
+		"\xD0\xB0\xD0\xB4\xD1\x80\xD0\xB5\xD1\x81",                                     // …
+		"\xD0\xBF\xD0\xBE\xD1\x87\xD1\x82",                                             // …
+		"\xD1\x82\xD0\xB5\xD0\xBB\xD0\xB5\xD1\x84\xD0\xBE\xD0\xBD",                     // …
+		"\xD0\xBA\xD0\xBE\xD0\xBD\xD1\x82\xD0\xB0\xD0\xBA\xD1\x82",                     // …
+		"\xD0\xBD\xD0\xB0\xD0\xBF\xD1\x80\xD0\xB0\xD0\xB2"}));                          // …
 	add(Intent::Chronology, any_word(folded, {"chronolog", "timeline", "sequence", "order of events", "when ", "what date",
 		"which date",
-		"\xD1\x85\xD1\x80\xD0\xBE\xD0\xBD\xD0\xBE\xD0\xBB\xD0\xBE\xD0\xB3",             // хронолог
-		"\xD0\xBF\xD0\xBE\xD1\x81\xD0\xBB\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xB2\xD0\xB0\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD", // последовательн
-		"\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xB4\xD0\xB0"}));                                  // когда
+		"\xD1\x85\xD1\x80\xD0\xBE\xD0\xBD\xD0\xBE\xD0\xBB\xD0\xBE\xD0\xB3",             // …
+		"\xD0\xBF\xD0\xBE\xD1\x81\xD0\xBB\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xB2\xD0\xB0\xD1\x82\xD0\xB5\xD0\xBB\xD1\x8C\xD0\xBD", // …
+		"\xD0\xBA\xD0\xBE\xD0\xB3\xD0\xB4\xD0\xB0"}));                                  // …
 	add(Intent::SheetCheck, any_word(folded, {"spreadsheet", "workbook", "ledger", "sheet", "schedule", "table", "column",
 		"excel", "reconcil", "check the calc", "verify",
-		"\xD1\x82\xD0\xB0\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x86",                             // таблиц
-		"\xD1\x80\xD0\xB5\xD0\xB5\xD1\x81\xD1\x82\xD1\x80",                             // реестр
-		"\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82",             // ведомост
-		"\xD1\x80\xD0\xB0\xD1\x81\xD1\x87\xD1\x91\xD1\x82", "\xD1\x80\xD0\xB0\xD1\x81\xD1\x87\xD0\xB5\xD1\x82", // расчёт расчет
-		"\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x80"}));                          // провер
+		"\xD1\x82\xD0\xB0\xD0\xB1\xD0\xBB\xD0\xB8\xD1\x86",                             // …
+		"\xD1\x80\xD0\xB5\xD0\xB5\xD1\x81\xD1\x82\xD1\x80",                             // …
+		"\xD0\xB2\xD0\xB5\xD0\xB4\xD0\xBE\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82",             // …
+		"\xD1\x80\xD0\xB0\xD1\x81\xD1\x87\xD1\x91\xD1\x82", "\xD1\x80\xD0\xB0\xD1\x81\xD1\x87\xD0\xB5\xD1\x82", // …
+		"\xD0\xBF\xD1\x80\xD0\xBE\xD0\xB2\xD0\xB5\xD1\x80"}));                          // …
 	return intents;
 }
 

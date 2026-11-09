@@ -22,10 +22,10 @@ enum class SourcePolicyMode { Relevant, Selected };
 
 // One local Project document excerpt actually available to compose a
 // not-yet-sent Chat request from - a pre-send preview/handoff shape for
-// Chat composition (Phase 21, phase-21-chat-composer-sources.md), never the
-// provider-facing evidence context::ResolvedSourceReference represents
-// (that is only assigned once a real model request is actually assembled -
-// see Context/SourceMarkers/SourceMarkers.hpp).
+// Chat composition, never the provider-facing evidence
+// context::ResolvedSourceReference represents (that is only assigned once a
+// real model request is actually assembled - see
+// Context/SourceMarkers/SourceMarkers.hpp).
 struct ResolvedChatSource {
   std::string document_id;
   std::string document_name;
@@ -48,16 +48,15 @@ struct ChatSourceResolution {
   std::vector<ResolvedChatSource> sources;
 };
 
-// Resolves this Project's real source policy for one not-yet-sent Chat
-// query - the narrow, backend-owned composition/source-resolution handoff
-// Phase 24's real Send invokes to build actual requests from (see
-// phase-21-chat-composer-sources.md's "Phase boundary correction"). Never
-// runs a model, never creates a MatterTask: built entirely from the
-// existing local Project document pool (matter::list_documents(), the same
-// steady-state reconciled read Bridge/DocumentBridge/DocumentBridge.cpp's
-// own list_documents() already uses) filtered through the existing
-// ContextRetriever (matters::retrieve_document_context()) - no second
-// retrieval system, no document/chunk copy kept anywhere in Chat state.
+// Resolves this Project's real source policy for one not-yet-sent Chat query -
+// the narrow, backend-owned composition/source-resolution handoff Phase 24's
+// real Send invokes to build actual requests from. Never runs a model, never
+// creates a MatterTask: built entirely from the existing local Project
+// document pool (matter::list_documents, the same steady-state reconciled read
+// Bridge/DocumentBridge/DocumentBridge.cpp's own list_documents already uses)
+// filtered through the existing ContextRetriever
+// (matters::retrieve_document_context) - no second retrieval system, no
+// document/chunk copy kept anywhere in Chat state.
 //
 // `mode` is the explicit, caller-stated source-policy mode - never inferred
 // from `selected_document_ids`. Each mode enforces its own fail-closed rule
@@ -67,7 +66,6 @@ struct ChatSourceResolution {
 //     "only these documents" at once) and is rejected outright, never
 //     silently ignored - the existing ContextRetriever then selects locally
 //     relevant excerpts from every AI-ready Project document; never "send
-//     the whole Project" (PROJECT_CONTRACT.md).
 //   - Selected: `selected_document_ids` must be non-empty - an empty
 //     selection fails closed and NEVER falls back to Relevant, since that
 //     silent reinterpretation is exactly the ambiguity this contract

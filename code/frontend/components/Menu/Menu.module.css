@@ -1,9 +1,7 @@
 /* A menu floats above the sheet: a white paper with a frame and a shadow,
    its items rows of the sidebar's own (Sidebar.module.css, .tab): an
    18-point icon, a 14/20 label, 30 points tall, 2 apart, at the places'
-   pitch whatever group they belong to (the owner, 2026-11-02: "redesign the
-   rest in the common style, without horizontal lines"; "the green distance
-   must be the same as the red"). */
+   pitch whatever group they belong to. */
 
 .menu {
 	position: fixed;
@@ -102,7 +100,7 @@
 	text-overflow: ellipsis;
 }
 
-/* A code in place of a label, in letters of one width (UI-27). */
+/* A code in place of a label, in letters of one width. */
 .label_code {
 	font-family: var(--font-code);
 	font-weight: 500;
@@ -131,4 +129,10 @@
 	font: var(--type-meta);
 	letter-spacing: var(--track-meta);
 	color: var(--ink-3);
+}
+
+/* A menu opened from a dialog stands over the dialog's white, as a popover
+   does (Popover.module.css). */
+:global(html[data-dialog-open]) .menu {
+	z-index: calc(var(--layer-dialog) + 1);
 }

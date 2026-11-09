@@ -23,13 +23,10 @@ namespace singularity::research {
 // lawyer after the next launch; once answered, the resumed run continues from
 // this record with the answer, making no model call it already made.
 //
-// The loop only saves and reads; where a pause lives and when it is dropped is
-// the operation owner's (Chat/ChatExecution: in the Project's `.lm` Cache,
-// dropped when the operation finishes, is stopped, or is answered while its run
-// still waits). A pause holds no restoration mapping: its prompt is the loop's
-// own text, protected again on every call. The protection table its calls were
-// numbered by is named only by its random scope id; a resumed attempt numbers a
-// table of its own, afresh, from the same local text.
+// A pause holds no restoration mapping: its prompt is the loop's own text, protected
+// again on every call. The protection table its calls were numbered by is named only by
+// its random scope id; a resumed attempt numbers a table of its own, afresh, from the
+// same local text.
 //
 // {
 //   "version": 1,

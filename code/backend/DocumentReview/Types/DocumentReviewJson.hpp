@@ -184,7 +184,7 @@ inline DocumentReview reviewFromJson(const nlohmann::json& value) {
 	return review;
 }
 
-// ---- An assignment's record (D-119) ---------------------------------------------------
+// ---- An assignment's record ---------------------------------------------------
 
 namespace json_detail {
 
@@ -206,7 +206,7 @@ inline nlohmann::json assignmentStepToJson(const AssignmentStepRecord& step) {
 		{"statusWords", step.statusWords}, {"remaining", step.remaining}, {"calls", step.calls}, {"retries", step.retries},
 		{"recoveries", step.recoveries}};
 	// Written only where there is something to keep, so an older step is
-	// stored exactly as before (D-143).
+	// stored exactly as before.
 	if (step.writtenSha256.empty() == false) value["writtenSha256"] = step.writtenSha256;
 	if (step.decisions.empty() == false) {
 		nlohmann::json decisions = nlohmann::json::array();

@@ -1,9 +1,9 @@
 import styles from "./Parts.module.css";
 
-// A page's parts, one under another, each a panel in Apple's grouped manner
-// (the owner, 2026-11-02): a person's or a colleague's profile, a Matter. The
-// page's own words in a panel use `parts.paragraph`, `parts.paragraph_quiet`
-// and `parts.paragraph_lines`.
+// A page's parts, one under another, each a panel in Apple's grouped manner:
+// a person's or a colleague's profile, a Matter. The page's own words in a
+// panel use `parts.paragraph`, `parts.paragraph_quiet` and
+// `parts.paragraph_lines`.
 export const parts = styles;
 
 export function Stack({ children }) {

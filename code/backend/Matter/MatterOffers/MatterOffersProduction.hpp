@@ -9,8 +9,8 @@
 
 namespace singularity::matter::offers {
 
-// A Matter given to a member of the firm by choosing them, as the app does it
-// (D-205): through this computer's coordination, its device key and the firm's
+// A Matter given to a member of the firm by choosing them, as the app does it:
+// through this computer's coordination, its device key and the firm's
 // computers a lawyer here checked (Matter/FirmComputers).
 
 struct Given {

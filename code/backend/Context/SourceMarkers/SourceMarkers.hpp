@@ -139,7 +139,7 @@ render_source_handles(const std::string &text, const std::vector<ResolvedSourceR
 // answer carried in a chat's history. A model writes its citations side by side
 // and right against a word ("…Records and Audit[SOURCE:DOC_3:CHUNK_2]
 // [SOURCE:DOC_5:CHUNK_1] reply"), and named in place they ran together:
-// "…9. Records and AuditCorvane reply - …md", «№ ДС-08/2025Дистрибьюторское».
+// "…9. Records and AuditCorvane reply - …md", «…».
 // Glued so, a name or a code in a label is no longer a word of its own. Here
 // each run of handles standing together is named once, apart from the words
 // around it: " (Source: A; B)".

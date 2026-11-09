@@ -29,10 +29,10 @@ AiAppDependencies production_ai_app_dependencies();
 // by this computer's own record of it; false for an agent it does not know.
 bool agent_works_only_here(const std::string &agent_id);
 
-// The work a lawyer gives a colleague in a thread (D-091, D-115), carried out
-// by a domain this one does not depend on (DocumentReview): the colleague
-// understands the request first, then answers in words, asks, or works on the
-// Matter's documents. The application installs it when it starts
+// The work a lawyer gives a colleague in a thread, carried out by a domain
+// this one does not depend on (DocumentReview): the colleague understands the
+// request first, then answers in words, asks, or works on the Matter's
+// documents. The application installs it when it starts
 // (document_review::installForColleagues); a build without it leaves every
 // request to the colleague's ordinary answer in its thread.
 struct ThreadDocumentWork {
@@ -46,11 +46,11 @@ struct ThreadDocumentWork {
 	std::function<std::optional<TaskRunOutput>(const Agent &agent, const TaskRunInput &input, const std::string &chat_id,
 		const std::string &brief, TaskRunOutput output)> run;
 	// The record of the work this colleague did in the thread, which its
-	// ordinary answer is given before it answers a question about that work
-	// (D-120); empty where there is none.
+	// ordinary answer is given before it answers a question about that
+	// work; empty where there is none.
 	std::function<std::string(const std::string &matter_id, const std::string &chat_id, const std::string &agent_id)> record_of;
 	// A run the colleague begins itself - its schedule, a change it noticed,
-	// another colleague's report - carried as its talk (D-129): `why` is its
+	// another colleague's report - carried as its talk: `why` is its
 	// standing work and why it runs now. Nothing where it is left to the
 	// former answer.
 	std::function<std::optional<TaskRunOutput>(const Agent &agent, const TaskRunInput &input, const std::string &chat_id,

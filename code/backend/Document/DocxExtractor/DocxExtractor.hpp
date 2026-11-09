@@ -116,23 +116,22 @@ struct DocxPatchApplyResult {
   std::string detail;
 };
 
-// A change to table cells alone (phase-24-1-research-document-intelligence-
-// project-actions.md, "Overwrite semantics"): the register a firm keeps, its
-// finding written into the cell the model named. Re-reads the live file,
-// resolves every operation's locator against the current word/document.xml
-// exactly as extract_docx_tables() names rows and columns, and re-checks
-// expected_old_value itself - the physical writer never trusts the caller's
-// validation alone. Each cell is then written as a tracked change by the
-// patch's revision_author: its old words struck beside the new ones, a new
-// background recorded as a change to the cell's look - the same tracked writer
-// every other Word change goes through, so a partner accepts or rejects it in
-// Word. Nothing outside the named cells is touched. Writes to a temporary
-// package first, reopens it, and only then atomically replaces `documentPath`;
-// when any operation fails to resolve, or the staged package fails its checks,
-// the real file is never touched at all.
-// `verify_staged`, when given, is asked about the fully written staged package
-// before it replaces `documentPath` (e.g. that exactly the patched cells now
-// hold their new values); a false answer leaves the document untouched.
+// A change to table cells alone: the register a firm keeps, its finding
+// written into the cell the model named. Re-reads the live file, resolves
+// every operation's locator against the current word/document.xml exactly as
+// extract_docx_tables names rows and columns, and re-checks expected_old_value
+// itself - the physical writer never trusts the caller's validation alone.
+// Each cell is then written as a tracked change by the patch's
+// revision_author: its old words struck beside the new ones, a new background
+// recorded as a change to the cell's look - the same tracked writer every
+// other Word change goes through, so a partner accepts or rejects it in Word.
+// Nothing outside the named cells is touched. Writes to a temporary package
+// first, reopens it, and only then atomically replaces `documentPath`; when
+// any operation fails to resolve, or the staged package fails its checks, the
+// real file is never touched at all. `verify_staged`, when given, is asked
+// about the fully written staged package before it replaces `documentPath`
+// (e.g. that exactly the patched cells now hold their new values); a false
+// answer leaves the document untouched.
 [[nodiscard]] DocxPatchApplyResult apply_docx_table_cell_patch(
     const std::filesystem::path &documentPath, const DocumentPatch &patch,
     const std::function<bool(const std::filesystem::path &)> &verify_staged = {});

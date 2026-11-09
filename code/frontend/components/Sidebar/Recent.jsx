@@ -11,12 +11,11 @@ import { clearRecent, onRecentCleared, recentConversations, removeFromRecent } f
 
 import styles from "./Recent.module.css";
 
-// The conversations where something was written last - a direct message or
-// a thread of any Matter, the latest three (recent.js) - each by a face: a
-// direct message's member, and in a thread whoever wrote last (the owner,
-// 2026-11-02). No message excerpts or timestamps. The backend reopens a real
-// Matter before a thread's address is followed, so another Matter's thread
-// opens.
+// The conversations where something was written last - a direct message or a
+// thread of any Matter, the latest three (recent.js) - each by a face: a
+// direct message's member, and in a thread whoever wrote last. No message
+// excerpts or timestamps. The backend reopens a real Matter before a
+// thread's address is followed, so another Matter's thread opens.
 export function Recent({ entries: given = null, state = initialState, opened = {} }) {
 	// Read again as the backend says something was written.
 	useRealWork();
@@ -74,7 +73,7 @@ export function Recent({ entries: given = null, state = initialState, opened = {
 	return (
 		<nav className={styles.section} aria-label="Recent places">
 			{/* Clear stands by the heading under the pointer, as a sidebar's own
-			    section offers it (the owner, 2026-11-04). */}
+			    section offers it. */}
 			<div className={styles.heading} onContextMenu={event => openMenu(event, null)}>
 				<h2>Recent</h2>
 				<button className={styles.clear} type="button" aria-label="Clear Recent" onClick={clearAll}>Clear</button>
